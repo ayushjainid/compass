@@ -728,6 +728,7 @@ async function deleteAccount() {
 }
 async function signOutNow() {
   await flushAll();
+  try { const pre = "compass:" + ST.uid + ":"; Object.keys(localStorage).filter(k => k.startsWith(pre)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   teardown(); S.authState = "loading"; render();
   try { await FB.signOut(ST.auth); } catch (e) {}
 }
@@ -1061,6 +1062,7 @@ function rLanding() {
       <div class="tile"><h3>No ads, no tracking</h3><p>Compass loads no analytics and shows no ads. It uses your name, email and photo only to sign you in.</p></div>
       <div class="tile"><h3>Leave whenever you like</h3><p>Export everything as a file at any time, or delete your account and all your data from the account menu.</p></div>
     </div>
+    <p class="note">Read the full <a class="textlink" href="/privacy">privacy policy</a>.</p>
   </section>
 
   <section class="lsec" id="install">
@@ -1095,7 +1097,7 @@ function rLanding() {
     ${err}
   </section>
 
-  <footer class="lfoot"><span>Compass · Free and private</span><span>life-compass.web.app</span></footer>`;
+  <footer class="lfoot"><span>Compass · Free and private</span><span style="display:flex;gap:16px;flex-wrap:wrap"><a class="textlink" href="/privacy">Privacy policy</a><a class="textlink" href="/terms">Terms of service</a></span></footer>`;
 }
 function renderGate() {
   $("#weeknav").hidden = true; $("#tabbar").hidden = true; $("#acctBtn").hidden = true; $("#obbar").innerHTML = ""; $("#heading").textContent = ""; $("#sheetRoot").innerHTML = "";
