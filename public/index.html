@@ -753,7 +753,8 @@ async function init() {
   render();
   const cfg = Object.assign({}, window.COMPASS_FIREBASE_CONFIG || {});
   if (!cfg.apiKey || /PASTE/i.test(cfg.apiKey)) { S.authState = "noconfig"; render(); return; }
-  // The project's own default domains are pre-configured for sign-in; other sites keep the firebaseapp.com auth domain.
+  // Sign-in runs through the address people see (life-compass.web.app, set in firebase-config.js),
+  // so Google's screen never shows the internal project name. The project's own default domains use themselves.
   if (cfg.projectId && (location.hostname === cfg.projectId + ".web.app" || location.hostname === cfg.projectId + ".firebaseapp.com")) cfg.authDomain = location.hostname;
   const app = FB.initializeApp(cfg);
   ST.auth = FB.getAuth(app);

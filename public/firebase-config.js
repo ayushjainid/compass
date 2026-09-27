@@ -3,7 +3,7 @@
 // measurementId is here for completeness; Compass does not load Google Analytics.
 window.COMPASS_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDQj13lOxUPHQGsJGdXFt4wE1uoDH5V3n8",
-  authDomain: "compass-ayush.firebaseapp.com",
+  authDomain: "life-compass.web.app",
   projectId: "compass-ayush",
   storageBucket: "compass-ayush.firebasestorage.app",
   messagingSenderId: "21302101961",
