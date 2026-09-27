@@ -643,7 +643,8 @@ async function init() {
   render();
   const cfg = Object.assign({}, window.COMPASS_FIREBASE_CONFIG || {});
   if (!cfg.apiKey || /PASTE/i.test(cfg.apiKey)) { S.authState = "noconfig"; render(); return; }
-  if (/\.(web\.app|firebaseapp\.com)$/.test(location.hostname)) cfg.authDomain = location.hostname;
+  // The project's own default domains are pre-configured for sign-in; other sites keep the firebaseapp.com auth domain.
+  if (cfg.projectId && (location.hostname === cfg.projectId + ".web.app" || location.hostname === cfg.projectId + ".firebaseapp.com")) cfg.authDomain = location.hostname;
   const app = FB.initializeApp(cfg);
   ST.auth = FB.getAuth(app);
   try { ST.fs = FB.initializeFirestore(app, { localCache: FB.persistentLocalCache({ tabManager: FB.persistentMultipleTabManager() }) }); }

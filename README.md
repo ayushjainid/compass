@@ -60,7 +60,7 @@ npx firebase-tools use --add             # pick your project, alias it "default"
 npx firebase-tools deploy                # publishes the app AND the database rules
 ```
 
-The last command prints your address: **`https://YOUR-PROJECT-ID.web.app`**. Open it and sign in with Google.
+The last command prints your address. This project publishes to **`https://life-compass.web.app`** (set by `"site"` in `firebase.json`). Remove that line to publish to `https://YOUR-PROJECT-ID.web.app` instead. Open it and sign in with Google.
 
 To update later, edit the files and run `npx firebase-tools deploy` again.
 
@@ -103,7 +103,7 @@ Your setup, weeks, people and theme come across.
 
 ## Troubleshooting
 
-- **"This address isn't allowed to sign in yet"**: add the domain under Authentication → Settings → Authorized domains. `*.web.app` and `*.firebaseapp.com` for your project are allowed automatically.
+- **"This address isn't allowed to sign in yet"**: add the domain under Authentication → Settings → Authorized domains. Only your project's own `PROJECT-ID.web.app` and `PROJECT-ID.firebaseapp.com` are allowed automatically; extra sites like `life-compass.web.app` must be added.
 - **"Google sign-in isn't turned on"**: redo step 2.
 - **"Your database is refusing saves"**: the rules weren't published. Run `npx firebase-tools deploy --only firestore:rules` (route A) or paste them in the console (route B).
 - **Blank page saying "Almost there"**: `firebase-config.js` still has `PASTE_…` values.
