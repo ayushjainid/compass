@@ -1,0 +1,15 @@
+{
+  "name": "compass",
+  "version": "1.0.0",
+  "description": "Compass: a life compass with Google sign-in",
+  "scripts": {
+    "build:sdk": "esbuild src/firebase.js --bundle --format=esm --minify --target=es2020 --outfile=public/vendor/firebase.js",
+    "serve": "npx firebase-tools emulators:start --only hosting",
+    "deploy": "npx firebase-tools deploy"
+  },
+  "dependencies": {
+    "esbuild": "^0.25.12",
+    "firebase": "^12.19.0"
+  },
+  "private": true
+}

@@ -1,0 +1,1550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F3F5F2">
+<meta name="description" content="Compass turns what matters to you into a few small weekly floors, and shows whether your life is trending the right way.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Compass">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<title>Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#E9EDEA; --ink:#17201E; --ink2:#46524E; --muted:#6F7B77; --line:#D9DFDB;
+  --accent:#23466F; --accent-soft:#E2E9F3; --on-accent:#FFFFFF; --brass:#A36F1C; --brass-soft:#F4EAD8;
+  --good:#2C7552; --good-soft:#DFEFE5; --warn:#A8620E; --warn-soft:#F6E9D6; --scrim:rgba(18,26,24,.38);
+  --display:"Newsreader", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#88938F; --line:#2D3533;
+    --accent:#93B3DC; --accent-soft:#1E2A39; --on-accent:#0D1623; --brass:#D8A75C; --brass-soft:#33291A;
+    --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#88938F; --line:#2D3533;
+  --accent:#93B3DC; --accent-soft:#1E2A39; --on-accent:#0D1623; --brass:#D8A75C; --brass-soft:#33291A;
+  --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;padding-inline:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+button:disabled{cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:600px;margin:0 auto;padding-block:8px 110px}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px 6px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font:600 22px/1 var(--display);letter-spacing:-.01em}
+.brand svg{width:28px;height:28px;overflow:visible}
+.hneedle{transform-box:view-box;transform-origin:16px 16px;--tilt:0deg;--amp:3deg;animation:wobble 3.4s ease-in-out infinite}
+@keyframes wobble{0%,100%{transform:rotate(calc(var(--tilt) - var(--amp)))}50%{transform:rotate(calc(var(--tilt) + var(--amp)))}}
+.weeknav{display:flex;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
+.weeknav button{width:36px;height:36px;border-radius:50%;font-size:20px;color:var(--ink2)}
+.weeknav button:hover{background:var(--sunk)}
+.weeknav .lbl{min-width:118px;text-align:center;font-weight:500}
+.weeknav .lbl small{display:block;font-size:11px;color:var(--muted);font-weight:400;letter-spacing:.04em;text-transform:uppercase}
+.statusline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);padding-block:0 10px}
+.sync{display:inline-flex;align-items:center;gap:6px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync.ok i{background:var(--good)} .sync.busy i{background:var(--brass)}
+.banner{background:var(--warn-soft);color:var(--ink);border-radius:var(--r);padding:10px 12px;font-size:13.5px;margin-block:0 12px}
+
+/* type */
+h1{font:600 34px/1.08 var(--display);margin:10px 0 8px;letter-spacing:-.015em;text-wrap:balance}
+h2{font:600 24px/1.15 var(--display);margin:18px 0 4px;text-wrap:balance;letter-spacing:-.01em}
+h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:22px 0 8px}
+.lede{color:var(--ink2);margin:0 0 6px;max-width:62ch}
+.hint{font-size:13px;color:var(--muted)}
+.src{font-size:11.5px;color:var(--muted);font-style:italic}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.card + .card{margin-top:10px}
+.pad{padding:14px}
+
+/* day strip */
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
+.strip button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;border-radius:10px;font-variant-numeric:tabular-nums}
+.strip .wd{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.strip .ring{--p:0;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--sunk) 0);font-weight:600;font-size:13px;transition:--p .4s}
+.strip .ring span{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center}
+.strip .ring.full{background:var(--good)}
+.strip button[aria-pressed="true"]{background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.strip button.today .wd{color:var(--brass);font-weight:600}
+.strip button:disabled{opacity:.35}
+
+/* check rows */
+.check{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 14px;min-height:52px}
+.check + .check{border-top:1px solid var(--line)}
+.check .box{flex:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--muted);display:grid;place-items:center;transition:background .15s,border-color .15s}
+.check[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent);animation:pop .28s cubic-bezier(.3,1.7,.5,1)}
+.check[aria-pressed="true"] .box::after{content:"";width:6px;height:11px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.check .lbl{display:flex;flex-direction:column;min-width:0}
+.check .lbl small{color:var(--muted);font-size:12.5px}
+.check .tail{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+@keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
+
+/* journal & fields */
+.jf,.field{display:flex;flex-direction:column;gap:4px;padding:12px 14px}
+.jf + .jf,.field + .field{border-top:1px solid var(--line)}
+.jf label,.field label,.flabel{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+textarea,input[type=text],select,input[type=time],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;resize:vertical}
+textarea{min-height:44px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:inline-flex;background:var(--sunk);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{padding:7px 12px;border-radius:8px;font-size:13.5px;color:var(--ink2)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:500}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 12px 8px 10px;font-size:14px;min-height:40px;transition:transform .12s}
+.chip b{font-weight:600;color:var(--accent)}
+.chip .n{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.chip.done{background:var(--good-soft);border-color:transparent}
+.chip.done .n{color:var(--good)}
+.chip.fun{background:var(--brass-soft);border-color:transparent}
+.chip.fun b{color:var(--brass)}
+.chip:active{transform:scale(.95)}
+.chip.sel{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.chip.sel b{color:var(--on-accent)}
+
+/* values */
+.val{padding:12px 14px}
+.val + .val{border-top:1px solid var(--line)}
+.vhead{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.vhead b{font-weight:600}
+.core{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--brass);margin-left:6px}
+.pill{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums;display:inline-block}
+.pill.clear{background:var(--good-soft);color:var(--good)}
+.pill.open{background:var(--accent-soft);color:var(--accent)}
+.pill.missed{background:var(--warn-soft);color:var(--warn)}
+.pill.rest{background:var(--sunk);color:var(--muted)}
+.pill.stamp{animation:stamp .55s cubic-bezier(.3,1.6,.5,1)}
+@keyframes stamp{0%{transform:scale(.3) rotate(-12deg);opacity:0}100%{transform:none;opacity:1}}
+.floors{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:3px}
+.floors li{display:flex;gap:8px;font-size:13.5px;color:var(--ink2)}
+.floors li span:first-child{flex:1}
+.floors li .f{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.floors li.ok{color:var(--muted)} .floors li.ok .f{color:var(--good)}
+
+/* counters */
+.ctr{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:56px}
+.ctr + .ctr{border-top:1px solid var(--line)}
+.ctr .lbl{flex:1;display:flex;flex-direction:column;min-width:0}
+.ctr .lbl small{color:var(--muted);font-size:12.5px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:36px;height:36px;border-radius:50%;background:var(--sunk);font-size:18px;line-height:1}
+.stepper button.plus{background:var(--accent);color:var(--on-accent)}
+.stepper .v{min-width:52px;text-align:center;font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums}
+.stepper .v.met{color:var(--good)}
+
+.row{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.switch{position:relative;width:48px;height:28px;border-radius:999px;background:var(--sunk);flex:none;transition:background .15s;border:1px solid var(--line)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.3,1.5,.5,1)}
+.switch[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(20px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:9px 14px;font-weight:500;border:1px solid var(--line);background:var(--surface);min-height:40px;text-decoration:none;color:inherit}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn.quiet{border-color:transparent;color:var(--ink2);padding-inline:8px;background:transparent}
+.btn.danger{color:var(--warn)}
+.btn.small{min-height:32px;padding:5px 10px;font-size:13.5px}
+.btn:disabled{opacity:.5}
+.linkbtn{color:var(--accent);font-weight:500;text-decoration:none;white-space:nowrap}
+.linkbtn:hover{text-decoration:underline}
+
+/* felt */
+.felt{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.felt button{border:1px solid var(--line);border-radius:10px;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--surface)}
+.felt button b{font:600 22px/1 var(--display)}
+.felt button small{font-size:11px;color:var(--muted)}
+.felt button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);animation:pop .28s cubic-bezier(.3,1.7,.5,1)}
+.felt button[aria-pressed="true"] small{color:var(--on-accent);opacity:.8}
+
+.trip{border-left:3px solid var(--warn);background:var(--warn-soft);border-radius:0 var(--r) var(--r) 0;padding:10px 12px;font-size:14px}
+.trip + .trip{margin-top:6px}
+.spark{width:100%;height:auto;display:block}
+.spark text{fill:var(--muted);font:500 10px var(--mono)}
+
+/* suggestions */
+.sugg{display:flex;gap:12px;padding:12px 14px;align-items:flex-start}
+.sugg + .sugg{border-top:1px solid var(--line)}
+.sugg .glyph{flex:none;width:30px;height:30px;border-radius:50%;background:var(--brass-soft);display:grid;place-items:center}
+.sugg .glyph svg{width:16px;height:16px;stroke:var(--brass);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sugg .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.sugg .body b{font-weight:600}
+.sugg .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.coach{white-space:pre-wrap;font-size:14.5px;line-height:1.55}
+.thinking{display:inline-flex;gap:4px;align-items:center;color:var(--muted)}
+.thinking i{width:6px;height:6px;border-radius:50%;background:var(--brass);animation:bounce 1s infinite ease-in-out}
+.thinking i:nth-child(2){animation-delay:.15s}.thinking i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-5px);opacity:1}}
+
+/* people */
+.person{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:56px}
+.person + .person{border-top:1px solid var(--line)}
+.person .who{flex:1;min-width:0}
+.person .who b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person .who small{color:var(--muted);font-size:12.5px}
+.due{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.due.over{background:var(--warn-soft);color:var(--warn)} .due.now{background:var(--accent-soft);color:var(--accent)} .due.later{background:var(--sunk);color:var(--muted)}
+.addrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:12px 14px}
+@media (max-width:420px){.addrow.three{grid-template-columns:1fr 1fr}.addrow.three input{grid-column:1/-1}}
+
+/* component rows (design) */
+.comp{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 14px;min-height:54px}
+.comp + .comp{border-top:1px solid var(--line)}
+.comp .lbl{flex:1;min-width:0;display:flex;flex-direction:column}
+.comp .lbl small{color:var(--muted);font-size:12.5px}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:5px;background:var(--sunk);color:var(--muted)}
+.tag.mvw{background:var(--accent-soft);color:var(--accent)} .tag.fun{background:var(--brass-soft);color:var(--brass)} .tag.ai{background:var(--good-soft);color:var(--good)}
+.chev{color:var(--muted);font-size:18px}
+.vgroup{margin-top:14px}
+.vgroup .gh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.vgroup .gh b{font:600 18px/1.2 var(--display)}
+
+/* meter */
+.meter{padding:12px 14px}
+.meter .bar{height:10px;border-radius:999px;background:var(--sunk);overflow:hidden;margin:8px 0 6px}
+.meter .fill{height:100%;border-radius:999px;background:var(--accent);transition:width .6s cubic-bezier(.2,.8,.2,1),background .3s}
+.meter.over .fill{background:var(--warn)}
+.meter .nums{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;animation:fade .2s}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-height:90vh;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:up .28s cubic-bezier(.2,.9,.3,1)}
+.sheet .in{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 4px}
+.sheet .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet .fl{display:flex;flex-direction:column;gap:4px}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+.daypick{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.daypick button{border:1px solid var(--line);border-radius:8px;padding:7px 0;font-size:12.5px}
+.daypick button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+
+/* onboarding */
+.ob{padding-block:8px 20px}
+.ob .stepin{animation:rise .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.progress{display:flex;gap:6px;margin:6px 0 8px}
+.progress i{height:4px;flex:1;border-radius:2px;background:var(--line);transition:background .3s}
+.progress i.on{background:var(--accent)}
+.hero{display:grid;place-items:center;padding-block:12px 4px}
+.hero svg{width:min(190px,52vw);height:auto;overflow:visible}
+.bneedle{transform-box:view-box;transform-origin:100px 100px;animation:seek 2.4s cubic-bezier(.3,.9,.3,1) both}
+@keyframes seek{0%{transform:rotate(-120deg)}25%{transform:rotate(70deg)}45%{transform:rotate(-35deg)}62%{transform:rotate(18deg)}78%{transform:rotate(-7deg)}90%{transform:rotate(3deg)}100%{transform:rotate(0)}}
+.ringpulse{transform-box:view-box;transform-origin:100px 100px;animation:pulse 2.4s ease-out 1.8s infinite}
+@keyframes pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.25);opacity:0}}
+.feel{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.vcards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+@media (max-width:440px){.vcards{grid-template-columns:1fr}}
+.vcard{position:relative;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 12px 10px;display:flex;flex-direction:column;gap:4px;transition:transform .18s cubic-bezier(.3,1.6,.5,1),border-color .15s,background .15s}
+.vcard b{font-weight:600;padding-right:26px}
+.vcard small{color:var(--ink2);font-size:13px}
+.vcard .src{margin-top:2px}
+.vcard .tick{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center}
+.vcard[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.015)}
+.vcard[aria-pressed="true"] .tick{background:var(--accent);border-color:var(--accent);animation:pop .3s cubic-bezier(.3,1.7,.5,1)}
+.vcard[aria-pressed="true"] .tick::after{content:"";width:5px;height:9px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.vcard.corecard[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft)}
+.vcard.corecard[aria-pressed="true"] .tick{background:var(--brass);border-color:var(--brass)}
+.route{display:grid;gap:10px;margin-top:12px}
+.route .card{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.route .step{display:flex;gap:12px;padding:14px}
+.route .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font:600 15px var(--display)}
+.route .step b{display:block;font-weight:600;margin-bottom:2px}
+.obbar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:10}
+.obbar .in{max-width:600px;margin:0 auto;display:flex;gap:10px;justify-content:space-between;align-items:center}
+.stickymeter{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;padding:8px 16px;background:var(--bg)}
+
+/* themes */
+body{transition:background-color .35s ease,color .35s ease}
+.card,.chip,.tabbar,.obbar,.sheet{transition:background-color .35s ease,border-color .35s ease}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.swatch{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px 8px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:12.5px;color:var(--ink2)}
+.swatch .dot{width:38px;height:38px;border-radius:50%;box-shadow:inset 0 0 0 3px var(--sw-surface),0 0 0 1px var(--line);background:linear-gradient(135deg,var(--sw-accent) 0 52%,var(--sw-brass) 52% 100%)}
+.swatch[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--accent)}
+.swatch[aria-pressed="true"] .dot{animation:pop .35s cubic-bezier(.3,1.7,.5,1)}
+
+/* tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:10}
+.tabbar .in{max-width:600px;margin:0 auto;display:grid;grid-auto-flow:column;grid-auto-columns:1fr}
+.tabbar button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11.5px;color:var(--muted);border-radius:10px}
+.tabbar button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-selected="true"]{color:var(--accent);font-weight:600}
+.tabbar .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7px;border-radius:50%;background:var(--warn)}
+
+/* bursts & celebration */
+.burst{position:fixed;width:7px;height:7px;border-radius:50%;pointer-events:none;z-index:50;animation:fly .65s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13.5px;z-index:40;animation:rise .3s;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* sign-in & account */
+.signin{display:flex;flex-direction:column;align-items:center;text-align:center;padding-block:10px 40px}
+.signin .lede{margin-inline:auto}
+.gbtn{display:inline-flex;align-items:center;gap:12px;background:#FFFFFF;color:#1F1F1F;border:1px solid #747775;border-radius:999px;padding:0 20px 0 14px;height:48px;font:500 15px/1 "Roboto",var(--sans);margin-top:18px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.gbtn:hover{background:#F8F9FA}
+.gbtn:disabled{opacity:.6}
+.gbtn svg{width:20px;height:20px}
+.fine{font-size:12.5px;color:var(--muted);max-width:44ch;margin:14px auto 0}
+.avatar{width:32px;height:32px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:14px;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.topright{display:flex;align-items:center;gap:6px}
+.greet{font:500 15px/1.3 var(--sans);color:var(--ink2);margin:4px 0 2px}
+.acct{display:flex;align-items:center;gap:12px}
+.acct .avatar{width:44px;height:44px;font-size:18px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <g class="hneedle" id="hneedle"><path d="M16 4.5l3.2 11.5H12.8z" fill="var(--brass)"/><path d="M16 27.5l-3.2-11.5h6.4z" fill="var(--muted)"/></g>
+        <circle cx="16" cy="16" r="1.8" fill="var(--surface)" stroke="currentColor" stroke-width="1"/></svg>
+      Compass
+    </div>
+    <div class="topright">
+    <div class="weeknav" id="weeknav">
+      <button data-act="prevWk" aria-label="Previous week">‹</button>
+      <div class="lbl" id="wkLabel"></div>
+      <button data-act="nextWk" aria-label="Next week">›</button>
+    </div>
+    <button class="avatar" id="acctBtn" data-act="account" aria-label="Account" hidden></button>
+    </div>
+  </header>
+  <div class="statusline" id="statusline"><span class="sync" id="sync"><i></i><span>Connecting…</span></span><span id="heading"></span></div>
+  <div class="banner" id="banner" hidden></div>
+  <main id="main"></main>
+</div>
+<div id="sheetRoot"></div>
+<div id="obbar"></div>
+<nav class="tabbar" aria-label="Sections" id="tabbar"><div class="in" role="tablist" id="tabs"></div></nav>
+
+<script src="/firebase-config.js"></script>
+<script type="module">
+import * as FB from "/vendor/firebase.js";
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const dkey = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const parse = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const monday = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return addDays(x, -((x.getDay() + 6) % 7)); };
+const wid = mon => "w-" + dkey(mon);
+const todayKey = () => dkey(new Date());
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const WD = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const RR = ["MO","TU","WE","TH","FR","SA","SU"];
+const fmtShort = d => MON[d.getMonth()] + " " + d.getDate();
+const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
+const uidGen = () => Math.random().toString(36).slice(2, 10);
+const clone = o => JSON.parse(JSON.stringify(o ?? null));
+const monthKey = (d = new Date()) => d.getFullYear() + "-" + pad(d.getMonth() + 1);
+const hrs = h => h >= 10 ? Math.round(h) + "" : (Math.round(h * 2) / 2).toString();
+const reduced = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+
+/* ============ research library ============ */
+const VALUE_LIB = [
+  { id: "rel",    name: "Deep relationships", why: "Close ties are the strongest single predictor of health and happiness.", src: "Holt-Lunstad et al. 2010" },
+  { id: "solve",  name: "Problem solving",    why: "Visible progress on meaningful work is the top driver of a good workday.", src: "Amabile & Kramer 2011" },
+  { id: "create", name: "Creativity",         why: "Small everyday creative acts lift mood the next day.", src: "Conner, DeYoung & Silvia 2018" },
+  { id: "mind",   name: "Mental fitness",     why: "Reappraisal and mindfulness steady mood under stress.", src: "Webb et al. 2012; Goyal et al. 2014" },
+  { id: "body",   name: "Physical fitness",   why: "Exercise rivals therapy for mood; regular sleep matters as much as long sleep.", src: "Noetel et al. 2024; Windred et al. 2024" },
+  { id: "serve",  name: "Service",            why: "Helping others reliably raises your own well-being.", src: "Dunn et al. 2008; Hui et al. 2020" },
+  { id: "money",  name: "Financial security", why: "Money worry taxes attention; a floor of security frees it.", src: "Mani et al. 2013" },
+  { id: "world",  name: "Travel & novelty",   why: "New experiences and awe counter getting used to everything.", src: "Van Boven & Gilovich 2003; Bai et al. 2021" },
+  { id: "learn",  name: "Learning",           why: "Growing competence is one of three core psychological needs.", src: "Deci & Ryan, SDT" },
+  { id: "time",   name: "Time you own",       why: "Unscheduled time protects autonomy; over-scheduled leisure starts to feel like work.", src: "Tonietto & Malkoc 2016" },
+];
+const COMP_LIB = [
+  { id: "reach",     value: "rel",    name: "Reach out to someone close", cadence: "daily",   target: 5, hours: 0.2, mvw: true, note: "A call, voice note or message" },
+  { id: "quality",   value: "rel",    name: "Quality time with someone close", cadence: "weekly", target: 2, hours: 2 },
+  { id: "queue",     value: "rel",    name: "Catch-up calls", cadence: "weekly", target: 2, hours: 0.4, people: true, note: "Compass picks who is due from your People list" },
+  { id: "milestone", value: "rel",    name: "Plan something together", cadence: "monthly", target: 1, hours: 1 },
+  { id: "deep",      value: "solve",  name: "Deep-work block", cadence: "weekly", target: 2, hours: 1.5, note: "90 minutes, phone in another room" },
+  { id: "win",       value: "solve",  name: "Ship one small win", cadence: "weekly", target: 1, hours: 1 },
+  { id: "creative",  value: "create", name: "Creative session", cadence: "weekly", target: 1, hours: 1 },
+  { id: "practice",  value: "create", name: "Practise an instrument or craft", cadence: "weekly", target: 2, hours: 0.4, note: "20 minutes counts" },
+  { id: "med",       value: "mind",   name: "Meditate", cadence: "daily", target: 5, hours: 0.17, note: "10 minutes, right after waking" },
+  { id: "journal",   value: "mind",   name: "Three-line journal", cadence: "daily", target: 5, hours: 0.05, mvw: true, auto: "journal", note: "Ticks itself when you write your three lines" },
+  { id: "therapy",   value: "mind",   name: "Therapy or reflection session", cadence: "weekly", target: 1, hours: 1, mvw: true },
+  { id: "social",    value: "mind",   name: "Social media under 1 hr", cadence: "daily", target: 5, hours: 0 },
+  { id: "gym",       value: "body",   name: "Workout", cadence: "weekly", target: 3, hours: 1, mvw: true, mvwTarget: 1, note: "A 30-minute home session counts" },
+  { id: "sleep",     value: "body",   name: "Slept 7+ hours", cadence: "daily", target: 5, hours: 0, mvw: true },
+  { id: "sports",    value: "body",   name: "Play a sport", cadence: "weekly", target: 1, hours: 1.5 },
+  { id: "walk",      value: "body",   name: "Walk outside", cadence: "daily", target: 4, hours: 0.3 },
+  { id: "ngo",       value: "serve",  name: "Volunteer session", cadence: "weekly", target: 1, hours: 3 },
+  { id: "kind",      value: "serve",  name: "One deliberate kind act", cadence: "weekly", target: 3, hours: 0.1 },
+  { id: "lifeTax",   value: "money",  name: "Money check-in", cadence: "weekly", target: 1, hours: 0.25, note: "Bills, splits and spending in 15 minutes" },
+  { id: "autosave",  value: "money",  name: "Review automatic savings", cadence: "monthly", target: 1, hours: 0.5 },
+  { id: "novelty",   value: "world",  name: "One new or awe-inspiring thing", cadence: "monthly", target: 1, hours: 3 },
+  { id: "trip",      value: "world",  name: "Plan or take a trip", cadence: "monthly", target: 1, hours: 2 },
+  { id: "read",      value: "learn",  name: "Read", cadence: "daily", target: 4, hours: 0.33, note: "20 minutes" },
+  { id: "course",    value: "learn",  name: "Course or study session", cadence: "weekly", target: 2, hours: 1 },
+  { id: "recovery",  value: "time",   name: "Protected empty block", cadence: "weekly", target: 1, hours: 3, mvw: true, note: "Nothing goes here, ever" },
+];
+const FUN_LIB = ["Listen to an album properly", "Photography walk", "Concert or live music", "Read for pleasure", "Cook something new", "Game night", "Long walk with no plan", "Sketching"];
+const FEELINGS = ["Calm", "Connected", "Proud", "Curious", "Strong", "Free", "Useful", "Loved", "Focused", "Playful"];
+const DEFAULT_IFTHEN = [
+  "If I'm travelling → Minimum Viable Week, plus one journal line",
+  "If I'm sick → sleep only; nothing else counts against me",
+  "If work gets heavy → drop satellites first, never sleep",
+  "If I miss something twice → shrink it to a 2-minute version",
+];
+const TIERS = { t1: { name: "Close friend", every: 14 }, t2: { name: "Friend", every: 30 }, rel: { name: "Relative", every: 14 } };
+
+/* The original Compass setup (keeps earlier logs working: same ids). */
+function templateDraft() {
+  const L = id => Object.assign({}, COMP_LIB.find(c => c.id === id));
+  const comps = [
+    { id: "parents", value: "rel", name: "Parents call", cadence: "daily", target: 6, hours: 0.5, mvw: true, note: "Even 5 minutes counts" },
+    { id: "friend", value: "rel", name: "Tier 0 friend touchpoint", cadence: "daily", target: 6, hours: 0.1, mvw: true, note: "Any length" },
+    { id: "friendHrs", value: "rel", name: "Tier 0 friend time", cadence: "weekly", target: 3, unit: "h", step: 0.5, hours: 1, note: "Batched hours", block: { days: [4], time: "19:30", dur: 180 } },
+    { id: "sib", value: "rel", name: "Sibling calls", cadence: "weekly", target: 2, hours: 0.33, block: { days: [1, 4], time: "21:00", dur: 20 } },
+    Object.assign(L("queue"), { name: "Rotation calls", block: { days: [2, 5], time: "12:30", dur: 20 } }),
+    { id: "apps", value: "rel", name: "Dating apps", cadence: "daily", target: 5, hours: 0.4, note: "20–30 min on a timer, never in bed" },
+    { id: "dating", value: "rel", name: "Offline dating event", cadence: "weekly", target: 1, hours: 3, alt: "B", block: { days: [5], time: "10:00", dur: 240 } },
+    Object.assign(L("deep"), { name: "Career deep work", block: { days: [0, 3], time: "19:30", dur: 90 } }),
+    Object.assign(L("creative"), { note: "Painting, writing, DJing, electronic music", block: { days: [2], time: "19:00", dur: 60 } }),
+    { id: "guitar", value: "create", name: "Guitar", cadence: "weekly", target: 2, hours: 0.33, note: "20 minutes", block: { days: [2, 6], time: "20:15", dur: 20 } },
+    L("med"), L("journal"), L("social"),
+    Object.assign(L("therapy"), { name: "Therapy", block: { days: [1], time: "17:30", dur: 60 } }),
+    Object.assign(L("gym"), { name: "Gym", block: { days: [0, 2, 4], time: "07:00", dur: 60 } }),
+    L("sleep"),
+    Object.assign(L("sports"), { name: "Sports", note: "Badminton, table tennis, tennis", block: { days: [1], time: "19:00", dur: 90 } }),
+    { id: "skin", value: "body", name: "Skincare AM + PM", cadence: "daily", target: 5, hours: 0.1 },
+    Object.assign(L("ngo"), { name: "NGO session", alt: "A", note: "Environmental health, kids", block: { days: [5], time: "10:00", dur: 240 } }),
+    Object.assign(L("lifeTax"), { name: "Life Tax: Splitwise + Monarch", block: { days: [6], time: "18:30", dur: 25 } }),
+    L("novelty"),
+    Object.assign(L("recovery"), { name: "Sunday recovery block", block: { days: [6], time: "14:00", dur: 180 } }),
+    { id: "music", fun: true, name: "Listen to music", cadence: "weekly", target: 0, hours: 0 },
+    { id: "photo", fun: true, name: "Photography", cadence: "weekly", target: 0, hours: 0 },
+    { id: "concert", fun: true, name: "Concert", cadence: "weekly", target: 0, hours: 0 },
+    { id: "reading", fun: true, name: "Reading", cadence: "weekly", target: 0, hours: 0 },
+  ].map(c => Object.assign(c, { on: true }));
+  return {
+    goal: "", feel: [], values: ["rel", "solve", "create", "mind", "body", "serve", "money", "world", "time"], custom: [],
+    comps, seen: [], capacity: 22, template: true,
+    cores: [{ value: "solve", text: "Move to a better-paid, more technically challenging role" }, { value: "rel", text: "Partner search, and where to live near my parents" }],
+    ifthen: ["If work travel → MVW + parents call + journal line", "If sick → sleep only; nothing else counts against me", "If work crunch → drop satellites, then one gym session; never sleep or therapy", "If a rejection streak → app-free reset week; bring it to therapy", "If a parent's health event → everything drops except parents, therapy, sleep", "If motivation collapse → 2-minute versions of anchors only"],
+  };
+}
+
+/* ============ colour themes ============ */
+const SEM = {
+  light: { good: "#2C7552", "good-soft": "#DFEFE5", warn: "#A8620E", "warn-soft": "#F6E9D6", scrim: "rgba(18,26,24,.38)" },
+  dark:  { good: "#72C69D", "good-soft": "#16302A", warn: "#E3A65C", "warn-soft": "#33281A", scrim: "rgba(0,0,0,.55)" },
+};
+const K = ["bg","surface","sunk","ink","ink2","muted","line","accent","accent-soft","on-accent","brass","brass-soft"];
+const P = (a, b) => ({ light: Object.fromEntries(K.map((k, i) => [k, a[i]])), dark: Object.fromEntries(K.map((k, i) => [k, b[i]])) });
+const PALETTES = [
+  { id: "harbor", name: "Harbor", ...P(["#F3F5F2","#FFFFFF","#E9EDEA","#17201E","#46524E","#6F7B77","#D9DFDB","#23466F","#E2E9F3","#FFFFFF","#A36F1C","#F4EAD8"], ["#101514","#191F1E","#232B29","#E7ECEA","#B4BEBA","#88938F","#2D3533","#93B3DC","#1E2A39","#0D1623","#D8A75C","#33291A"]) },
+  { id: "sage",   name: "Sage",   ...P(["#F2F4EF","#FFFFFF","#E6EBE3","#1A221C","#4A564D","#717D74","#D6DDD3","#3E6B4E","#E1EDE4","#FFFFFF","#A86E30","#F5E9DA"], ["#0F1411","#18201A","#212B24","#E6ECE7","#B2BDB5","#86928A","#2A342D","#8CC5A0","#1A2E21","#0C1A11","#DDA46A","#34281B"]) },
+  { id: "ocean",  name: "Ocean",  ...P(["#F1F5F6","#FFFFFF","#E3ECEE","#142024","#445A60","#6D8288","#D3DFE2","#0F6A7A","#DCEEF1","#FFFFFF","#B8731A","#F7EBD7"], ["#0D1416","#151E21","#1E292C","#E3EDEF","#AFC0C4","#82969B","#283437","#6CC7D6","#15303A","#06191D","#E6AA55","#33281A"]) },
+  { id: "dusk",   name: "Dusk",   ...P(["#F5F3F6","#FFFFFF","#EBE7EE","#1F1A24","#524A5A","#7A7282","#DDD7E2","#5B3F7A","#ECE5F3","#FFFFFF","#AE4E64","#F6E3E7"], ["#131016","#1C1820","#26212B","#ECE8F0","#BDB5C5","#8F8798","#312B37","#BFA2E0","#2A2136","#1A1024","#E68CA0","#3A2129"]) },
+  { id: "canyon", name: "Canyon", ...P(["#F6F3EF","#FFFFFF","#ECE6DF","#231B16","#5A4D44","#82756B","#E0D8CF","#9A4A2A","#F5E4DA","#FFFFFF","#2B7472","#DCEEEC"], ["#15110E","#1F1915","#2A221D","#F0E9E3","#C4B8AE","#968A80","#362C25","#E59A74","#3A2519","#22120A","#6CC3BF","#183231"]) },
+  { id: "graphite", name: "Graphite", ...P(["#F4F4F3","#FFFFFF","#E8E8E6","#171717","#4A4A48","#737370","#DADAD7","#262626","#E6E6E4","#FFFFFF","#8A6D3B","#EFE8DC"], ["#111111","#1B1B1B","#252525","#EDEDEC","#BBBBB8","#8C8C89","#2F2F2E","#E8E8E6","#2B2B2B","#141414","#D2B27A","#302A1F"]) },
+];
+let themeKey = "";
+function themePref() { let g = null; try { g = JSON.parse(localStorage.getItem("compass-theme") || "null"); } catch (e) {} const t = (S.docs.settings || {}).theme || g || {}; return { palette: t.palette || "harbor", mode: t.mode || "system" }; }
+function isDark(mode) {
+  if (mode === "dark") return true; if (mode === "light") return false;
+  const a = document.documentElement.getAttribute("data-theme");
+  if (a === "dark") return true; if (a === "light") return false;
+  try { return matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) { return false; }
+}
+function applyTheme() {
+  const t = themePref(), dark = isDark(t.mode), key = t.palette + ":" + dark;
+  if (key === themeKey) return; themeKey = key;
+  const pal = PALETTES.find(p => p.id === t.palette) || PALETTES[0], mode = dark ? "dark" : "light";
+  const root = document.documentElement.style;
+  Object.entries(Object.assign({}, pal[mode], SEM[mode])).forEach(([k, v]) => root.setProperty("--" + k, v));
+  root.setProperty("color-scheme", mode);
+  const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = pal[mode].bg;
+}
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { themeKey = ""; applyTheme(); }); } catch (e) {}
+new MutationObserver(() => { themeKey = ""; applyTheme(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+function themePicker() {
+  const t = themePref();
+  return `<div class="swatches" role="group" aria-label="Colour theme">${PALETTES.map(p => { const c = p[isDark(t.mode) ? "dark" : "light"]; return `<button class="swatch" data-act="palette" data-v="${p.id}" aria-pressed="${t.palette === p.id}" style="--sw-accent:${c.accent};--sw-brass:${c.brass};--sw-surface:${c.surface}"><span class="dot"></span>${esc(p.name)}</button>`; }).join("")}</div>
+  <div style="margin-top:10px"><div class="seg" role="group" aria-label="Light or dark">${[["system", "Match device"], ["light", "Light"], ["dark", "Dark"]].map(([k, l]) => `<button data-act="themeMode" data-v="${k}" aria-pressed="${t.mode === k}">${l}</button>`).join("")}</div></div>`;
+}
+
+/* ============ state ============ */
+const S = {
+  authState: "loading", user: null, authBusy: false, authErr: "", importMsg: "",
+  tab: "today", viewMon: monday(new Date()), selDay: todayKey(),
+  docs: {}, hist: {}, mode: "connecting", last: {}, confirm: null, pendingRender: false,
+  ob: null, sheet: null, prevClear: {}, calMsg: {}, coach: null, tailor: null, sample: null, mcp: null, toast: null,
+};
+const curWid = () => wid(S.viewMon);
+const settings = () => S.docs.settings || (S.docs.settings = {});
+const people = () => { const p = S.docs.people || (S.docs.people = {}); p.list = p.list || []; return p; };
+const profile = () => S.docs.profile || null;
+const onboarded = () => !!(profile() && profile().onboarded);
+function weekDoc(id = curWid()) {
+  if (!S.docs[id]) S.docs[id] = S.hist[id] ? clone(S.hist[id]) : { kind: "week", start: id.slice(2), days: {}, c: {}, r: {} };
+  const w = S.docs[id]; w.days = w.days || {}; w.c = w.c || {}; w.r = w.r || {}; return w;
+}
+const anyWeek = id => S.docs[id] || S.hist[id] || null;
+
+/* ============ storage: Firestore (per Google account) + local cache ============ */
+const LS = {
+  key(id) { return "compass:" + (ST.uid || "anon") + ":" + id; },
+  get(id) { try { const v = localStorage.getItem(LS.key(id)); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  set(id, v) { try { localStorage.setItem(LS.key(id), JSON.stringify(v)); } catch (e) {} },
+};
+const ST = { fs: null, auth: null, uid: null, subs: {} };
+const T = {}, IN = {}, DIRTY = {};
+const fsCode = e => (e && e.code || "").replace(/-/g, "_");
+function ref(id) {
+  const r = FB.doc(ST.fs, "users", ST.uid, "docs", id);
+  const wrap = s => ({ exists: s.exists(), data: () => s.data() });
+  return {
+    set: data => FB.setDoc(r, data),
+    get: async () => wrap(await FB.getDoc(r)),
+    onSnapshot: (next, err) => FB.onSnapshot(r, s => next(wrap(s)), e => err && err({ code: fsCode(e) })),
+  };
+}
+function touch(id) {
+  S.last[id] = Date.now(); LS.set(id, S.docs[id]);
+  if (S.mode !== "db") return;
+  clearTimeout(T[id]); T[id] = setTimeout(() => { T[id] = null; flush(id); }, 600); updSync();
+}
+async function flush(id) {
+  if (S.mode !== "db" || !S.docs[id]) return;
+  if (IN[id]) { DIRTY[id] = true; return; }
+  IN[id] = true; updSync();
+  try { await ref(id).set(clone(S.docs[id])); }
+  catch (e) {
+    const code = fsCode(e);
+    if (code === "unavailable" || code === "resource_exhausted" || code === "deadline_exceeded" || code === "aborted") setTimeout(() => touch(id), 2000 + Math.random() * 1500);
+    else if (code === "permission_denied") showBanner("Your database is refusing saves. Deploy firestore.rules from the project (see the README), then reload.");
+    else showBanner("Couldn't save a change (" + (e && e.code || "unknown error") + "). It's kept on this device.");
+  }
+  IN[id] = false;
+  if (DIRTY[id]) { DIRTY[id] = false; flush(id); }
+  updSync();
+}
+function applyRemote(id, data) {
+  if (T[id] || IN[id] || Date.now() - (S.last[id] || 0) < 2500) return;
+  if (data) { S.docs[id] = clone(data); LS.set(id, S.docs[id]); if (id === "profile" && data.onboarded && S.ob && S.ob.auto && S.ob.step === 0) S.ob = null; scheduleRender(); }
+  else if (S.docs[id] && Object.keys(S.docs[id]).length) touch(id);
+}
+function subscribe(id) {
+  if (S.mode !== "db" || ST.subs[id]) return;
+  ST.subs[id] = ref(id).onSnapshot(snap => applyRemote(id, snap.exists ? snap.data() : null), err => {
+    delete ST.subs[id];
+    if (err && err.code === "permission_denied") showBanner("Your database is refusing reads. Deploy firestore.rules from the project (see the README), then reload.");
+    else setTimeout(() => subscribe(id), 4000);
+  });
+}
+function unsubscribe(id) { if (ST.subs[id]) { ST.subs[id](); delete ST.subs[id]; } }
+async function loadHistory() {
+  if (S.mode !== "db") return;
+  try {
+    const snap = await FB.getDocs(FB.query(FB.collection(ST.fs, "users", ST.uid, "docs"), FB.where("kind", "==", "week")));
+    snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => (a.data.start < b.data.start ? 1 : -1)).slice(0, 80).forEach(d => { S.hist[d.id] = d.data; });
+    scheduleRender();
+  } catch (e) {}
+}
+function loadLocalAll() {
+  ["settings", "people", "profile"].forEach(id => { const v = LS.get(id); if (v) S.docs[id] = v; });
+  const pre = LS.key("w-");
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(pre)) { const id = k.slice(pre.length - 2); const v = LS.get(id); if (v) S.hist[id] = v; } } } catch (e) {}
+  const w = LS.get(curWid()); if (w) S.docs[curWid()] = w;
+}
+function showBanner(t) { const b = $("#banner"); b.textContent = t; b.hidden = false; }
+function hideBanner() { const b = $("#banner"); b.hidden = true; }
+function updSync() {
+  const el = $("#sync"); const busy = Object.values(T).some(Boolean) || Object.values(IN).some(Boolean);
+  el.className = "sync " + (S.mode === "db" ? (busy ? "busy" : "ok") : "");
+  el.querySelector("span").textContent = S.authState !== "in" ? "" : S.mode === "db" ? (busy ? (navigator.onLine === false ? "Offline · saved on this device" : "Saving…") : "Synced to your Google account") : "Connecting…";
+  el.hidden = S.authState !== "in";
+}
+let profileReady = false;
+async function flushAll() {
+  const pending = Object.keys(T).filter(k => T[k]);
+  pending.forEach(k => { clearTimeout(T[k]); T[k] = null; });
+  await Promise.all(pending.map(k => flush(k).catch(() => {})));
+}
+function teardown() {
+  Object.keys(ST.subs).forEach(unsubscribe);
+  S.docs = {}; S.hist = {}; S.ob = null; S.sheet = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
+  ST.uid = null; S.mode = "connecting"; profileReady = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
+}
+function authMessage(e) {
+  const c = e && e.code;
+  if (!c || c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") return "";
+  if (c === "auth/unauthorized-domain") return `This address (${location.hostname}) isn't allowed to sign in yet. Add it in Firebase → Authentication → Settings → Authorized domains.`;
+  if (c === "auth/network-request-failed") return "You're offline. Connect to the internet and try again.";
+  if (c === "auth/operation-not-allowed" || c === "auth/configuration-not-found") return "Google sign-in isn't turned on for this Firebase project yet. Enable it under Authentication → Sign-in method.";
+  if (c === "auth/too-many-requests") return "Too many attempts. Wait a minute and try again.";
+  return "Sign-in didn't work (" + c + "). Try again.";
+}
+async function signIn() {
+  if (!ST.auth || S.authBusy) return;
+  S.authBusy = true; S.authErr = ""; render();
+  const prov = new FB.GoogleAuthProvider(); prov.setCustomParameters({ prompt: "select_account" });
+  try { await FB.signInWithPopup(ST.auth, prov); }
+  catch (e) {
+    if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")) { try { await FB.signInWithRedirect(ST.auth, prov); return; } catch (e2) { S.authErr = authMessage(e2); } }
+    else S.authErr = authMessage(e);
+  }
+  S.authBusy = false; render();
+}
+async function signOutNow() {
+  await flushAll();
+  teardown(); S.authState = "loading"; render();
+  try { await FB.signOut(ST.auth); } catch (e) {}
+}
+function exportData() {
+  const docs = {};
+  Object.entries(S.hist).forEach(([k, v]) => { docs[k] = v; });
+  Object.entries(S.docs).forEach(([k, v]) => { if (v) docs[k] = v; });
+  const blob = new Blob([JSON.stringify({ app: "compass", version: 2, exportedAt: new Date().toISOString(), docs }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "compass-" + todayKey() + ".json";
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+async function importData(file) {
+  try {
+    const j = JSON.parse(await file.text());
+    if (!j || j.app !== "compass" || typeof j.docs !== "object") throw new Error("not a Compass export");
+    const ids = Object.keys(j.docs).filter(k => /^(profile|settings|people|w-\d{4}-\d{2}-\d{2})$/.test(k));
+    ids.forEach(id => { S.docs[id] = clone(j.docs[id]); if (id.startsWith("w-")) S.hist[id] = clone(j.docs[id]); touch(id); });
+    S.ob = null; S.importMsg = `Imported ${ids.filter(i => i.startsWith("w-")).length} weeks and your setup.`;
+  } catch (e) { S.importMsg = "That file isn't a Compass export. Choose the .json file Compass saved."; }
+  render();
+}
+async function init() {
+  render();
+  const cfg = Object.assign({}, window.COMPASS_FIREBASE_CONFIG || {});
+  if (!cfg.apiKey || /PASTE/i.test(cfg.apiKey)) { S.authState = "noconfig"; render(); return; }
+  if (/\.(web\.app|firebaseapp\.com)$/.test(location.hostname)) cfg.authDomain = location.hostname;
+  const app = FB.initializeApp(cfg);
+  ST.auth = FB.getAuth(app);
+  try { ST.fs = FB.initializeFirestore(app, { localCache: FB.persistentLocalCache({ tabManager: FB.persistentMultipleTabManager() }) }); }
+  catch (e) { ST.fs = FB.initializeFirestore(app, {}); }
+  FB.getRedirectResult(ST.auth).catch(e => { S.authErr = authMessage(e); render(); });
+  FB.onAuthStateChanged(ST.auth, async u => {
+    if (!u) { if (ST.uid) teardown(); S.authState = "signedOut"; S.user = null; S.authBusy = false; render(); return; }
+    if (ST.uid === u.uid) return;
+    teardown();
+    ST.uid = u.uid; S.user = { name: u.displayName || "", email: u.email || "", photo: u.photoURL || "" };
+    S.authState = "in"; S.authBusy = false; S.mode = "db"; hideBanner();
+    loadLocalAll(); render();
+    try { const p = await ref("profile").get(); if (p.exists) { S.docs.profile = clone(p.data()); LS.set("profile", S.docs.profile); } } catch (e) {}
+    profileReady = true;
+    ["profile", "settings", "people", curWid()].forEach(subscribe);
+    loadHistory(); render();
+  });
+}
+addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
+
+/* ============ model ============ */
+const comps = () => (profile() && profile().components) || [];
+const compById = id => comps().find(c => c.id === id);
+function valueList() {
+  const p = profile() || {}; const custom = p.customValues || [];
+  return (p.values || []).map(id => VALUE_LIB.find(v => v.id === id) || custom.find(v => v.id === id)).filter(Boolean);
+}
+const valueName = id => { const v = VALUE_LIB.find(x => x.id === id) || ((profile() || {}).customValues || []).find(x => x.id === id); return v ? v.name : "Other"; };
+const isCore = v => ((profile() || {}).cores || []).some(c => c.value === v);
+function weekKind(start) {
+  const n = Math.round((parse(start) - parse("2026-09-21")) / (7 * 864e5)) + (settings().parity || 0);
+  return ((n % 2) + 2) % 2 === 0 ? "A" : "B";
+}
+function isMvw(w, id) {
+  const pre = !!(settings().preMvw || {})[id];
+  return w && w.mvw !== undefined ? !!w.mvw : pre;
+}
+const hasJournal = d => { const j = (d && d.j) || {}; return [j.win, j.spark, j.grat].some(s => (s || "").trim()); };
+function compHave(c, w, id) {
+  if (c.cadence === "daily") {
+    if (!w) return 0; const mon = parse(id.slice(2)); let n = 0;
+    for (let i = 0; i < 7; i++) { const d = (w.days || {})[dkey(addDays(mon, i))]; if (!d) continue; if (c.auto === "journal" ? hasJournal(d) : (d.a || {})[c.id]) n++; }
+    return n;
+  }
+  if (c.cadence === "monthly") {
+    const m = (settings().months || {})[monthKey(parse(id.slice(2)))] || {};
+    return ((m.c || {})[c.id] || 0) + (c.id === "novelty" && m.noveltyDone ? 1 : 0);
+  }
+  const v = ((w && w.c) || {})[c.id] || 0;
+  return v + (c.id === "lifeTax" && w && w.r && w.r.lifeTax && !v ? 1 : 0);
+}
+function activeComps(id, w = anyWeek(id)) {
+  const mvw = isMvw(w, id), kind = weekKind(id.slice(2));
+  return comps().filter(c => !c.fun && (!c.alt || c.alt === kind) && (!mvw || c.mvw));
+}
+function floorsFor(id) {
+  const w = anyWeek(id), mvw = isMvw(w, id);
+  return activeComps(id, w).map(c => ({ c, v: c.value, have: compHave(c, w, id), need: mvw ? (c.mvwTarget ?? c.target) : c.target }));
+}
+const weekOver = id => todayKey() > dkey(addDays(parse(id.slice(2)), 6));
+function valueStatus(v, F, id) {
+  const it = F.filter(f => f.v === v);
+  if (!it.length) return { s: "rest", t: isMvw(anyWeek(id), id) ? "Paused" : "Resting", it };
+  const met = it.filter(f => f.have >= f.need).length;
+  if (met === it.length) return { s: "clear", t: "Cleared", it };
+  const weeklyUnmet = it.filter(f => f.have < f.need && f.c.cadence !== "monthly").length;
+  if (!weeklyUnmet) return { s: "open", t: "This month", it };
+  if (weekOver(id)) return { s: "missed", t: weeklyUnmet + " missed", it };
+  return { s: "open", t: met + " of " + it.length, it };
+}
+function capacity(list) {
+  return list.filter(c => !c.fun && c.on !== false).reduce((s, c) => {
+    const per = c.cadence === "monthly" ? c.target / 4.3 : c.target;
+    return s + (c.hours || 0) * per * (c.alt ? 0.5 : 1);
+  }, 0);
+}
+const cadenceText = c => c.fun ? "Fun menu · never scored" : c.cadence === "daily" ? `${c.target} of 7 days` : c.cadence === "monthly" ? `${c.target}× a month` : `${c.target}${c.unit || ""}${c.unit ? "" : "×"} a week`;
+
+/* ============ suggestions (the Compass engine) ============ */
+function compHistory(c) {
+  const cur = monday(new Date()), out = [];
+  for (let i = 1; i <= 6; i++) {
+    const id = wid(addDays(cur, -7 * i)), w = anyWeek(id);
+    if (!w || isMvw(w, id) || (c.alt && c.alt !== weekKind(id.slice(2))) || c.cadence === "monthly") continue;
+    out.push(compHave(c, w, id) >= c.target);
+  }
+  return out;
+}
+const ICON = {
+  scale: '<svg viewBox="0 0 24 24"><path d="M12 4v16M5 8h14M7 8l-3 6a3 3 0 006 0zM17 8l-3 6a3 3 0 006 0z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></svg>',
+  heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.5-7 10-7 10z"/></svg>',
+};
+function suggestions() {
+  const p = profile(); if (!p) return [];
+  const out = [], all = comps(), scored = all.filter(c => !c.fun);
+  const cap = capacity(all), avail = p.capacity || 20;
+  if (cap > avail * 1.05) out.push({ icon: "scale", title: `Your floors need about ${hrs(cap)} hrs a week; you said you have ${avail}.`, body: "A plan that doesn't fit becomes a scoreboard you lose. Lower one floor or move something to your fun menu.", src: "Schwartz et al. 2002, satisficing", act: { label: "Adjust components", do: "gotoCompass" } });
+  valueList().forEach(v => {
+    if (!scored.some(c => c.value === v.id)) {
+      const lib = COMP_LIB.find(c => c.value === v.id && !all.some(x => x.id === c.id));
+      out.push({ icon: "plus", title: `Nothing tracks ${v.name} yet.`, body: lib ? `Start tiny: “${lib.name}”, ${cadenceText(lib)}.` : "Add one small floor so it shows up in your week.", src: v.src, act: lib ? { label: "Add it", do: "addLib", id: lib.id } : { label: "Add one", do: "addComp", value: v.id } });
+    }
+  });
+  scored.forEach(c => {
+    const h = compHistory(c);
+    if (h.length >= 3 && h.slice(0, 4).filter(x => !x).length >= 3 && c.target > 1)
+      out.push({ icon: "down", title: `${c.name} has been missed ${h.slice(0, 4).filter(x => !x).length} of the last ${Math.min(4, h.length)} weeks.`, body: `Lower it from ${c.target} to ${c.target - 1}. A floor you clear beats a ceiling you miss, and you can raise it again next season.`, src: "Lally et al. 2010; Schwartz et al. 2002", act: { label: `Lower to ${c.target - 1}`, do: "lower", id: c.id } });
+    else if (h.length >= 6 && h.every(Boolean))
+      out.push({ icon: "star", title: `${c.name} looks automatic now.`, body: "Six clean weeks. Leave it running on autopilot and put fresh energy into a Core.", src: "Lally et al. 2010, habit automaticity" });
+  });
+  if (!all.some(c => c.fun)) out.push({ icon: "heart", title: "You have no fun menu.", body: "List a few things you do purely for joy. Compass never scores them; scheduling fun precisely makes it feel like work.", src: "Tonietto & Malkoc 2016", act: { label: "Add fun things", do: "gotoCompass" } });
+  if (!scored.some(c => c.mvw)) out.push({ icon: "shield", title: "Nothing survives a hard week.", body: "Pick two or three things that stay on during illness, travel or crunch. Everything else pauses without guilt.", src: "Gollwitzer & Sheeran 2006", act: { label: "Choose them", do: "gotoCompass" } });
+  if (!all.some(c => c.value === "time") && !(p.values || []).includes("time")) out.push({ icon: "shield", title: "No time is protected from the plan.", body: "One empty block a week keeps the system from filling every hour.", src: "Deci & Ryan, autonomy", act: { label: "Add an empty block", do: "addLib", id: "recovery" } });
+  const w = anyWeek(wid(addDays(monday(new Date()), -7))) || anyWeek(wid(monday(new Date())));
+  const starved = (w && w.r && w.r.felt && w.r.felt <= 2 && w.r.starved) || [];
+  starved.forEach(n => { const v = VALUE_LIB.find(x => x.name === n); if (v && !out.some(o => o.title.includes(v.name))) out.push({ icon: "heart", title: `You said ${v.name.toLowerCase()} was starved.`, body: "Give it one protected block next week before anything else goes in.", src: v.src }); });
+  return out;
+}
+function tripwires() {
+  const out = [], cur = monday(new Date());
+  const wk = i => { const id = wid(addDays(cur, -7 * i)); return { id, w: anyWeek(id) }; };
+  const felt = i => { const x = wk(i).w; return x && x.r && x.r.felt; };
+  if ([0, 1, 2].every(i => felt(i) && felt(i) <= 2) || [1, 2, 3].every(i => felt(i) && felt(i) <= 2)) out.push("Felt-sense has been 2 or lower for three weeks. Which need is being starved?");
+  if ([0, 1, 2].every(i => { const x = wk(i); return isMvw(x.w, x.id); })) out.push("Minimum Viable Week has run past two weeks. Re-plan the season rather than push through.");
+  const sleep = compById("sleep"), a = wk(1);
+  if (sleep && a.w && Object.keys(a.w.days || {}).length >= 4 && compHave(sleep, a.w, a.id) < 4) out.push("Fewer than 4 good nights of sleep last week. Protect bedtime before adding anything.");
+  return out;
+}
+
+/* ============ edits ============ */
+function editWeek(fn) { const id = curWid(); fn(weekDoc(id)); touch(id); }
+function editSettings(fn) { fn(settings()); touch("settings"); }
+function editPeople(fn) { fn(people()); touch("people"); }
+function editProfile(fn) { fn(S.docs.profile); touch("profile"); }
+function dayObj(w, k) { const d = w.days[k] || (w.days[k] = {}); d.a = d.a || {}; d.j = d.j || {}; return d; }
+function bump(c, delta) {
+  if (c.cadence === "monthly") {
+    editSettings(s => { s.months = s.months || {}; const m = s.months[monthKey(S.viewMon)] = s.months[monthKey(S.viewMon)] || {}; m.c = m.c || {}; m.c[c.id] = Math.max(0, (m.c[c.id] || 0) + delta); });
+  } else {
+    editWeek(w => { const st = (c.step || 1) * delta; w.c[c.id] = Math.max(0, Math.round(((w.c[c.id] || 0) + st) * 2) / 2); });
+  }
+}
+
+/* ============ animation bits ============ */
+function burst(el, color, n = 8) {
+  if (!el || reduced()) return;
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement("span"); d.className = "burst";
+    const a = (Math.PI * 2 * i) / n + Math.random() * .4, dist = 22 + Math.random() * 18;
+    d.style.left = cx - 3.5 + "px"; d.style.top = cy - 3.5 + "px"; d.style.background = color || "var(--accent)";
+    d.style.setProperty("--dx", Math.cos(a) * dist + "px"); d.style.setProperty("--dy", Math.sin(a) * dist + "px");
+    document.body.appendChild(d); setTimeout(() => d.remove(), 700);
+  }
+}
+function toast(t) { S.toast = t; const old = $(".toast"); if (old) old.remove(); const el = document.createElement("div"); el.className = "toast"; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), 2600); }
+function setNeedle(frac) {
+  const n = $("#hneedle"); if (!n) return;
+  const tilt = (1 - frac) * 38; n.style.setProperty("--tilt", tilt.toFixed(1) + "deg"); n.style.setProperty("--amp", (1 + (1 - frac) * 6).toFixed(1) + "deg");
+}
+const bigCompass = (settle = true) => `<svg viewBox="0 0 200 200" aria-hidden="true">
+  <circle class="ringpulse" cx="100" cy="100" r="86" fill="none" stroke="var(--brass)" stroke-width="2"/>
+  <circle cx="100" cy="100" r="86" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+  <circle cx="100" cy="100" r="74" fill="none" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 6"/>
+  ${["N", "E", "S", "W"].map((l, i) => { const a = i * Math.PI / 2, x = 100 + Math.sin(a) * 60, y = 100 - Math.cos(a) * 60 + 5; return `<text x="${x}" y="${y}" text-anchor="middle" style="font:600 14px var(--display);fill:${l === "N" ? "var(--brass)" : "var(--muted)"}">${l}</text>`; }).join("")}
+  <g class="${settle ? "bneedle" : ""}"><path d="M100 36l10 64H90z" fill="var(--brass)"/><path d="M100 164l-10-64h20z" fill="var(--muted)"/></g>
+  <circle cx="100" cy="100" r="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/></svg>`;
+
+/* ============ render root ============ */
+function scheduleRender() {
+  const a = document.activeElement;
+  if (a && a.closest && (a.closest("#main") || a.closest("#sheetRoot")) && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) { S.pendingRender = true; return; }
+  render();
+}
+document.addEventListener("focusout", () => setTimeout(() => { if (S.pendingRender) { S.pendingRender = false; scheduleRender(); } }, 60));
+
+const TABS = [
+  { t: "today", name: "Today", svg: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
+  { t: "week", name: "Week", svg: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>' },
+  { t: "people", name: "People", svg: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>' },
+  { t: "review", name: "Review", svg: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>' },
+  { t: "compass", name: "Compass", svg: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>' },
+];
+const GLOGO = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+function renderGate() {
+  $("#weeknav").hidden = true; $("#tabbar").hidden = true; $("#acctBtn").hidden = true; $("#obbar").innerHTML = ""; $("#heading").textContent = ""; $("#sheetRoot").innerHTML = "";
+  let body = "";
+  if (S.authState === "loading") body = `<div class="hero">${bigCompass()}</div>`;
+  else if (S.authState === "noconfig") body = `<div class="signin"><div class="hero">${bigCompass(false)}</div><h1>Almost there.</h1><p class="lede">Compass needs your Firebase project's settings. Paste them into <b>firebase-config.js</b>, then deploy again. The README walks through it.</p></div>`;
+  else body = `<div class="signin"><div class="hero">${bigCompass()}</div>
+      <h1>Know where your life is heading.</h1>
+      <p class="lede">Compass turns what matters to you into a few small floors, checks them once a week, and tells you when you're drifting.</p>
+      <button class="gbtn" data-act="signin" ${S.authBusy ? "disabled" : ""}>${GLOGO}<span>${S.authBusy ? "Signing in…" : "Sign in with Google"}</span></button>
+      ${S.authErr ? `<p class="banner" style="margin-top:14px;text-align:left">${esc(S.authErr)}</p>` : ""}
+      <p class="fine">Your data is private to your Google account and syncs to every device you sign in on. Compass only sees your name, email and profile photo.</p></div>`;
+  $("#main").innerHTML = body; updSync();
+}
+function renderAvatar() {
+  const b = $("#acctBtn"), u = S.user; if (!u) { b.hidden = true; return; }
+  b.hidden = false;
+  const initial = esc((u.name || u.email || "?").trim().charAt(0).toUpperCase());
+  const html = u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.textContent='${initial}'">` : initial;
+  if (b.dataset.k !== (u.photo || initial)) { b.innerHTML = html; b.dataset.k = u.photo || initial; }
+}
+function render() {
+  applyTheme();
+  if (S.authState !== "in") return renderGate();
+  renderAvatar();
+  const inOb = !onboarded() || !!S.ob;
+  $("#weeknav").hidden = inOb; $("#statusline").hidden = false; $("#tabbar").hidden = inOb;
+  if (inOb) {
+    if (!profileReady) { $("#main").innerHTML = `<div class="hero">${bigCompass()}</div>`; $("#obbar").innerHTML = ""; updSync(); return; }
+    if (!S.ob) { startOnboarding(false); S.ob.auto = true; }
+    renderOnboarding(); updSync(); return;
+  }
+  $("#obbar").innerHTML = "";
+  const hasPeople = comps().some(c => c.people);
+  if (S.tab === "people" && !hasPeople) S.tab = "today";
+  const id = curWid(), mon = S.viewMon, sun = addDays(mon, 6);
+  const isCur = dkey(mon) === dkey(monday(new Date()));
+  $("#wkLabel").innerHTML = esc(fmtShort(mon) + " – " + (mon.getMonth() === sun.getMonth() ? sun.getDate() : fmtShort(sun))) + "<small>" + (isCur ? "This week" : (mon > new Date() ? "Upcoming" : "Past week")) + "</small>";
+  const F = floorsFor(id), vals = valueList();
+  const st = vals.map(v => valueStatus(v.id, F, id));
+  const cleared = st.filter(s => s.s === "clear").length, scoredN = st.filter(s => s.s !== "rest").length;
+  const mvw = isMvw(anyWeek(id), id), hasAlt = comps().some(c => c.alt);
+  $("#heading").textContent = (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared" + (hasAlt ? " · Week " + weekKind(dkey(mon)) : "");
+  setNeedle(scoredN ? cleared / scoredN : 0);
+  const trips = tripwires(), sugg = suggestions();
+  $("#tabs").innerHTML = TABS.filter(t => t.t !== "people" || hasPeople).map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
+  $("#main").innerHTML = ({ today: rToday, week: rWeek, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
+  renderSheet(); updSync();
+}
+
+/* ============ TODAY ============ */
+function rToday(id) {
+  const w = anyWeek(id) || { days: {}, c: {} }, mon = S.viewMon, tk = todayKey();
+  const keys = [...Array(7)].map((_, i) => dkey(addDays(mon, i)));
+  if (!keys.includes(S.selDay)) S.selDay = keys.includes(tk) ? tk : keys[0];
+  const act = activeComps(id, w);
+  const daily = act.filter(c => c.cadence === "daily");
+  const strip = keys.map((k, i) => {
+    const d = (w.days || {})[k] || {};
+    const n = daily.filter(c => c.auto === "journal" ? hasJournal(d) : (d.a || {})[c.id]).length, tot = Math.max(daily.length, 1);
+    const p = Math.round(n / tot * 100);
+    return `<button data-act="day" data-k="${k}" aria-pressed="${k === S.selDay}" class="${k === tk ? "today" : ""}" ${k > tk ? "disabled" : ""} aria-label="${WD[i]} ${parse(k).getDate()}, ${n} of ${daily.length} done">
+      <span class="wd">${WD[i]}</span><span class="ring ${p >= 100 ? "full" : ""}" style="--p:${p}"><span>${parse(k).getDate()}</span></span></button>`;
+  }).join("");
+  const d = (w.days || {})[S.selDay] || {}, a = d.a || {}, j = d.j || {};
+  const selDate = parse(S.selDay);
+  const title = S.selDay === tk ? "Today" : WD[(selDate.getDay() + 6) % 7] + ", " + fmtShort(selDate);
+  const checks = daily.filter(c => c.auto !== "journal").map(c => `<button class="check" data-act="anchor" data-k="${esc(c.id)}" aria-pressed="${!!a[c.id]}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span>${c.note ? `<small>${esc(c.note)}</small>` : ""}</span><span class="tail">${compHave(c, w, id)}/${c.target}</span></button>`).join("");
+  const chip = c => { const v = compHave(c, w, id), need = c.target; return `<button class="chip ${v >= need ? "done" : ""}" data-act="inc" data-k="${esc(c.id)}"><b>+</b>${esc(c.name)}<span class="n">${v}${c.unit || ""}/${need}${c.unit || ""}</span></button>`; };
+  const weekly = act.filter(c => c.cadence === "weekly"), monthly = act.filter(c => c.cadence === "monthly");
+  const fun = comps().filter(c => c.fun);
+  const funCount = fun.reduce((s, c) => s + ((w.c || {})[c.id] || 0), 0);
+  const jc = daily.find(c => c.auto === "journal");
+  const hr = new Date().getHours(), part = hr < 5 ? "evening" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
+  const first = ((S.user && S.user.name) || "").split(" ")[0];
+  return `
+  ${S.selDay === tk ? `<p class="greet">Good ${part}${first ? ", " + esc(first) : ""}.</p>` : ""}
+  <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
+  <h2>${esc(title)}</h2>
+  <p class="lede">Tap what happened. One miss is noise; two in a row is the pattern to catch.</p>
+  ${checks ? `<h3>Daily</h3><div class="card">${checks}</div>` : ""}
+  ${weekly.length ? `<h3>Log for the week</h3><div class="chips">${weekly.map(chip).join("")}</div>` : ""}
+  ${monthly.length ? `<h3>This month</h3><div class="chips">${monthly.map(chip).join("")}</div>` : ""}
+  ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => `<button class="chip fun" data-act="fun" data-k="${esc(c.id)}"><b>♥</b>${esc(c.name)}${(w.c || {})[c.id] ? `<span class="n">${w.c[c.id]}</span>` : ""}</button>`).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it.</p>` : ""}
+  <h3>Journal · three lines${jc ? ` · ${compHave(jc, w, id)}/${jc.target} days` : ""}</h3>
+  <div class="card">
+    <div class="jf"><label for="j-win">Win</label><textarea id="j-win" data-j="win" rows="1" placeholder="One thing that moved forward">${esc(j.win)}</textarea></div>
+    <div class="jf"><label for="j-spark">Spark or reappraisal</label><textarea id="j-spark" data-j="spark" rows="1" placeholder="A realization, or a kinder way to see something hard">${esc(j.spark)}</textarea></div>
+    <div class="jf"><label for="j-grat">Grateful for</label><textarea id="j-grat" data-j="grat" rows="1" placeholder="Someone or something specific">${esc(j.grat)}</textarea></div>
+    <div class="jf"><label>Toward or away from who I want to be?</label>
+      <div class="seg" role="group"><button data-act="cp" data-v="toward" aria-pressed="${d.cp === "toward"}">Toward</button><button data-act="cp" data-v="away" aria-pressed="${d.cp === "away"}">Away</button><button data-act="cp" data-v="mixed" aria-pressed="${d.cp === "mixed"}">Mixed</button></div></div>
+  </div>`;
+}
+
+/* ============ WEEK ============ */
+function suggCard(list, limit) {
+  const items = list.slice(0, limit ?? list.length);
+  if (!items.length) return "";
+  return `<div class="card">${items.map((s, i) => `<div class="sugg"><span class="glyph">${ICON[s.icon] || ICON.star}</span><div class="body"><b>${esc(s.title)}</b><span>${esc(s.body)}</span>${s.src ? `<span class="src">${esc(s.src)}</span>` : ""}${s.act ? `<div class="acts"><button class="btn small primary" data-act="sugg" data-i="${list.indexOf(s)}">${esc(s.act.label)}</button></div>` : ""}</div></div>`).join("")}</div>`;
+}
+function rWeek(id, F, trips, sugg) {
+  const w = anyWeek(id) || { c: {} }, kind = weekKind(id.slice(2)), mvw = isMvw(w, id);
+  const vals = valueList().map(v => {
+    const st = valueStatus(v.id, F, id), key = id + ":" + v.id;
+    const stamp = st.s === "clear" && S.prevClear[key] === false; S.prevClear[key] = st.s === "clear";
+    const fl = st.it.map(f => `<li class="${f.have >= f.need ? "ok" : ""}"><span>${esc(f.c.name)}${f.c.cadence === "daily" ? " · days" : f.c.cadence === "monthly" ? " · month" : ""}</span><span class="f">${f.have}${f.c.unit || ""}/${f.need}${f.c.unit || ""}${f.have >= f.need ? " ✓" : ""}</span></li>`).join("");
+    return `<div class="val"><div class="vhead"><b>${esc(v.name)}${isCore(v.id) ? '<span class="core">Core</span>' : ""}</b><span class="pill ${st.s}${stamp ? " stamp" : ""}">${esc(st.t)}</span></div>${fl ? `<ul class="floors">${fl}</ul>` : `<p class="hint" style="margin:6px 0 0">${mvw ? "Paused during a Minimum Viable Week." : "Nothing scored this week."}</p>`}</div>`;
+  }).join("");
+  const alts = comps().filter(c => c.alt);
+  const ctrs = activeComps(id, w).filter(c => c.cadence !== "daily").map(c => {
+    const v = compHave(c, w, id);
+    return `<div class="ctr"><div class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}</small></div>
+      <div class="stepper"><button data-act="dec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button><span class="v ${v >= c.target ? "met" : ""}">${v}${c.unit || ""}/${c.target}${c.unit || ""}</span><button class="plus" data-act="inc" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}">+</button></div></div>`;
+  }).join("");
+  return `
+  ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg, 2)}` : ""}
+  <h2>Floors this week</h2>
+  <p class="lede">A floor is the minimum that already counts as a good week. Clearing it is success, not a consolation prize.</p>
+  <div class="card">${vals || `<p class="pad hint">No values yet.</p>`}</div>
+  <h3>Mode</h3>
+  <div class="card pad"><div class="row"><div><b>Minimum Viable Week</b><div class="hint">For illness, travel, crunch or a hard stretch. Only your safety-net components count.</div></div>
+    <button class="switch" role="switch" aria-checked="${mvw}" data-act="mvw" aria-label="Minimum Viable Week"></button></div></div>
+  ${alts.length ? `<div class="card pad"><div class="row"><div><b>Week ${kind}</b><div class="hint">Alternating: ${alts.map(c => esc(c.name) + " (" + c.alt + ")").join(", ")}.</div></div><button class="btn" data-act="swapKind">Swap</button></div></div>` : ""}
+  ${ctrs ? `<h3>Counts</h3><div class="card">${ctrs}</div>` : ""}`;
+}
+
+/* ============ PEOPLE ============ */
+function rPeople(id) {
+  const list = people().list, tk = todayKey();
+  const pc = comps().find(c => c.people);
+  const scored = list.map(p => { const every = TIERS[p.tier] ? TIERS[p.tier].every : 14, since = p.last ? daysBetween(p.last, tk) : null; return { p, since, left: since === null ? -999 : every - since }; }).sort((a, b) => a.left - b.left);
+  const dueTag = x => x.since === null ? `<span class="due now">Not called yet</span>` : x.left < 0 ? `<span class="due over">${-x.left}d overdue</span>` : x.left <= 2 ? `<span class="due now">Due ${x.left === 0 ? "today" : "in " + x.left + "d"}</span>` : `<span class="due later">In ${x.left}d</span>`;
+  const row = x => `<div class="person"><div class="who"><b>${esc(x.p.name)}</b><small>${esc((TIERS[x.p.tier] || TIERS.t1).name)} · every ${(TIERS[x.p.tier] || TIERS.t1).every} days${x.since !== null ? " · last " + (x.since === 0 ? "today" : x.since + "d ago") : ""}</small></div>${dueTag(x)}
+    ${S.confirm === x.p.id ? `<button class="btn danger small" data-act="pDelYes" data-id="${x.p.id}">Remove</button><button class="btn quiet small" data-act="pDelNo">Keep</button>` : `<button class="btn primary small" data-act="pCalled" data-id="${x.p.id}">Called</button><button class="btn quiet small" data-act="pDel" data-id="${x.p.id}" aria-label="Remove ${esc(x.p.name)}">✕</button>`}</div>`;
+  const have = pc ? compHave(pc, anyWeek(id), id) : 0;
+  return `
+  <h2>Rotation</h2>
+  <p class="lede">Tap <b>Called</b> and the list reorders itself, so you never track who's next.${pc ? ` This week: <b>${have} of ${pc.target}</b> ${esc(pc.name.toLowerCase())}.` : ""}</p>
+  ${list.length ? `<h3>Up next</h3><div class="card">${scored.slice(0, 3).map(row).join("")}</div>` : ""}
+  <h3>Add someone</h3>
+  <form class="card addrow three" id="pForm"><input type="text" id="pName" placeholder="Name" aria-label="Name" required maxlength="60">
+    <select id="pTier" aria-label="How often">${Object.entries(TIERS).map(([k, t]) => `<option value="${k}">${t.name} · every ${t.every}d</option>`).join("")}</select>
+    <button class="btn primary" type="submit">Add</button></form>
+  ${list.length > 3 ? `<h3>Everyone</h3><div class="card">${scored.slice(3).map(row).join("")}</div>` : ""}
+  ${!list.length ? `<p class="hint" style="margin-top:12px">Add the friends and relatives you want to stay in touch with. The people you see daily are better tracked as daily components.</p>` : ""}`;
+}
+
+/* ============ REVIEW ============ */
+function spark() {
+  const cur = monday(new Date()), pts = [];
+  for (let i = 11; i >= 0; i--) { const m = addDays(cur, -7 * i), w = anyWeek(wid(m)); pts.push({ m, f: w && w.r && w.r.felt }); }
+  if (pts.filter(p => p.f).length < 2) return `<p class="hint" style="margin:0">Your trend appears here after two weekly reviews.</p>`;
+  const W = 320, H = 110, L = 22, R = 10, Tp = 12, B = 22;
+  const x = i => L + i * (W - L - R) / 11, y = v => Tp + (5 - v) * (H - Tp - B) / 4;
+  let path = "", on = false;
+  pts.forEach((p, i) => { if (p.f) { path += (on ? "L" : "M") + x(i).toFixed(1) + " " + y(p.f).toFixed(1); on = true; } else on = false; });
+  const lastI = pts.map(p => !!p.f).lastIndexOf(true);
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="Felt-sense over the last 12 weeks">
+    ${[1, 3, 5].map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 3.5}" text-anchor="end">${v}</text>`).join("")}
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p, i) => p.f ? `<circle cx="${x(i)}" cy="${y(p.f)}" r="${i === lastI ? 5 : 4}" fill="${i === lastI ? "var(--brass)" : "var(--accent)"}" stroke="var(--surface)" stroke-width="2"><title>Week of ${fmtShort(p.m)}: ${p.f} of 5</title></circle>` : "").join("")}
+    <text x="${x(0)}" y="${H - 6}">${fmtShort(pts[0].m)}</text><text x="${x(11)}" y="${H - 6}" text-anchor="end">${fmtShort(pts[11].m)}</text>
+    <text x="${Math.min(x(lastI) + 8, W - R - 4)}" y="${y(pts[lastI].f) - 9}" text-anchor="${lastI > 9 ? "end" : "start"}" style="fill:var(--ink)">${pts[lastI].f}</text></svg>`;
+}
+function coachCard() {
+  if (!S.sample) return "";
+  const c = S.coach;
+  return `<h3>Coaching note</h3><div class="card pad">
+    ${c && c.text ? `<div class="coach">${esc(c.text)}</div>` : c && c.busy ? `<span class="thinking"><i></i><i></i><i></i>&nbsp;Reading your last four weeks…</span>` : `<p class="hint" style="margin:0 0 10px">Claude reads your goal, components and the last four weeks, then suggests three concrete adjustments grounded in the Compass research. Uses your Claude usage.</p>`}
+    ${c && c.err ? `<p class="hint" style="margin:8px 0 0">${esc(c.err)}</p>` : ""}
+    <div class="acts" style="margin-top:10px;display:flex;gap:8px">${c && c.busy ? `<button class="btn small" data-act="coachStop">Stop</button>` : `<button class="btn small primary" data-act="coach">${c && c.text ? "Ask again" : "Get a coaching note"}</button>`}</div></div>`;
+}
+function rReview(id, F, trips, sugg) {
+  const w = anyWeek(id) || { r: {} }, r = w.r || {};
+  const nextId = wid(addDays(S.viewMon, 7)), pre = !!(settings().preMvw || {})[nextId];
+  const inbox = settings().inbox || [], ym = monthKey(new Date()), mo = (settings().months || {})[ym] || {};
+  const vals = valueList(), cur = monday(new Date());
+  const open = F.filter(f => f.have < f.need && f.c.cadence !== "daily");
+  const trend = vals.map(v => {
+    const marks = [4, 3, 2, 1].map(i => { const wi = wid(addDays(cur, -7 * i)); if (!anyWeek(wi)) return "·"; const s = valueStatus(v.id, floorsFor(wi), wi).s; return s === "clear" || s === "rest" ? "●" : "○"; });
+    return `<li><span>${esc(v.name)}</span><span class="f">${marks.join(" ")}</span></li>`;
+  }).join("");
+  const needs = vals.map(v => v.name).concat(["Rest", "Time I own"]).filter((x, i, a) => a.indexOf(x) === i);
+  const firstSunday = new Date().getDay() === 0 && new Date().getDate() <= 7;
+  return `
+  ${trips.length ? `<h2>Tripwires</h2><p class="lede">These trigger a review, not blame.</p>${trips.map(t => `<div class="trip">${esc(t)}</div>`).join("")}` : ""}
+  <h2>Sunday review</h2>
+  <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
+  <h3>1 · Floors</h3>
+  <div class="card pad"><ul class="floors" style="margin:0">${vals.map(v => { const st = valueStatus(v.id, F, id); return `<li class="${st.s === "clear" ? "ok" : ""}"><span>${esc(v.name)}</span><span class="f">${st.s === "clear" ? "✓" : st.s === "rest" ? "–" : st.s === "open" && st.t === "This month" ? "…" : "✗"}</span></li>`; }).join("")}</ul></div>
+  ${open.length ? `<p class="hint" style="margin:10px 0 6px">Forgot to log something?</p><div class="chips">${open.map(f => `<button class="chip" data-act="inc" data-k="${esc(f.c.id)}"><b>+</b>${esc(f.c.name)}<span class="n">${f.have}/${f.need}</span></button>`).join("")}</div>` : ""}
+  <h3>2 · Am I at peace with where this is trending?</h3>
+  <div class="felt" role="group">${[1, 2, 3, 4, 5].map(n => `<button data-act="felt" data-v="${n}" aria-pressed="${r.felt === n}"><b>${n}</b><small>${["Adrift", "Uneasy", "Steady", "Good", "At peace"][n - 1]}</small></button>`).join("")}</div>
+  ${r.felt && r.felt <= 2 ? `<p class="hint" style="margin:10px 0 6px">Which need was starved?</p><div class="chips">${needs.map(n => `<button class="chip ${(r.starved || []).includes(n) ? "sel" : ""}" data-act="starve" data-v="${esc(n)}">${esc(n)}</button>`).join("")}</div>` : ""}
+  <h3>3 · What made this week fun?</h3>
+  <textarea id="r-fun" data-r="fun" rows="2" placeholder="Protect it next week">${esc(r.fun)}</textarea>
+  <h3>4 · Next week</h3>
+  <div class="card pad"><div class="row"><div><b>Pre-declare a Minimum Viable Week</b><div class="hint">Travel, a deadline or a family event coming up.</div></div><button class="switch" role="switch" aria-checked="${pre}" data-act="preMvw" aria-label="Minimum Viable Week next week"></button></div></div>
+  <h3>5 · Capture inbox</h3>
+  <p class="hint" style="margin:0 0 8px">Open loops go here during the week. On Sunday, place up to three into next week and clear them.</p>
+  <div class="card">
+    ${inbox.map(it => `<div class="person"><div class="who"><span>${esc(it.t)}</span></div><button class="btn quiet small" data-act="inboxDel" data-id="${it.id}">Done</button></div>`).join("")}
+    <form class="addrow" id="inForm" style="grid-template-columns:1fr auto"><input type="text" id="inText" placeholder="Something on your mind" aria-label="New inbox item" maxlength="140"><button class="btn" type="submit">Add</button></form>
+  </div>
+  <div style="margin-top:16px"><button class="btn primary" data-act="reviewDone" id="reviewDoneBtn">${r.done ? "Reviewed ✓" : "Mark review done"}</button></div>
+  ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
+  ${coachCard()}
+  <h3>Felt-sense, last 12 weeks</h3>
+  <div class="card pad">${spark()}</div>
+  <h3>${esc(MONTHS[new Date().getMonth()])}${firstSunday ? " · monthly check today" : ""}</h3>
+  <div class="card">
+    <div class="field"><span class="flabel">Last four weeks, per value</span><ul class="floors" style="margin:2px 0 0">${trend}</ul><span class="hint">● cleared or resting · ○ missed · dot if not tracked</span></div>
+    <div class="field"><label for="m-adjust">One adjustment for next month</label><input type="text" id="m-adjust" data-m="adjust" value="${esc(mo.adjust)}" placeholder="Only one"></div>
+  </div>`;
+}
+
+/* ============ COMPASS (design) ============ */
+function compRow(c) {
+  const tags = [c.mvw && !c.fun ? '<span class="tag mvw">Safety net</span>' : "", c.alt ? `<span class="tag">Week ${c.alt}</span>` : "", c.people ? '<span class="tag">People</span>' : "", c.block ? `<span class="tag">${c.gcal ? "On calendar" : "Has a time"}</span>` : "", c.ai ? '<span class="tag ai">Tailored</span>' : ""].join("");
+  return `<button class="comp" data-act="editComp" data-id="${esc(c.id)}"><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}${c.hours && !c.fun ? " · ~" + hrs(c.hours * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? .5 : 1)) + " h/wk" : ""}</small>${tags ? `<span class="tags" style="margin-top:4px">${tags}</span>` : ""}</span><span class="chev">›</span></button>`;
+}
+function meter(list, avail, idPrefix = "") {
+  const cap = capacity(list), pct = Math.min(100, cap / Math.max(avail, 1) * 100), over = cap > avail * 1.05;
+  return `<div class="card meter ${over ? "over" : ""}"><div class="row"><b>Weekly load</b><span class="hint">${over ? "Over what you have. Trim before you start." : "Fits, with room to breathe."}</span></div>
+    <div class="bar"><div class="fill" style="width:${pct.toFixed(1)}%"></div></div>
+    <div class="nums"><span>${hrs(cap)} h of floors</span><span>${avail} h available</span></div>
+    <input type="range" min="4" max="50" step="1" value="${avail}" id="${idPrefix}cap" data-cap="1" aria-label="Hours a week you can give"></div>`;
+}
+function rCompass(id, F, trips, sugg) {
+  const p = profile(), vals = valueList(), all = comps();
+  const withBlocks = all.filter(c => c.block);
+  const calLine = S.mcp ? "Adds each block to your Google Calendar as a repeating event." : "Opens Google Calendar with the event filled in.";
+  return `
+  <h2>Your compass</h2>
+  <div class="card">
+    <div class="field"><label for="p-goal">Where I'm heading</label><textarea id="p-goal" data-p="goal" rows="3" placeholder="How you want a good year to feel, and what you want to be moving toward">${esc(p.goal)}</textarea></div>
+    ${(p.feel || []).length ? `<div class="field"><span class="flabel">How I want it to feel</span><div class="chips">${p.feel.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div></div>` : ""}
+  </div>
+  <h3>Load</h3>
+  ${meter(all, p.capacity || 20)}
+  ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
+  <h3>Values and components</h3>
+  <p class="hint" style="margin:0 0 4px">Components are the small, trackable pieces. Each one flows into Today, the weekly floors, the review, the safety net and your calendar. Tap one to change it.</p>
+  ${vals.map(v => {
+    const list = all.filter(c => c.value === v.id && !c.fun);
+    return `<div class="vgroup"><div class="gh"><b>${esc(v.name)}${isCore(v.id) ? '<span class="core">Core</span>' : ""}</b><button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button></div>
+      ${list.length ? `<div class="card">${list.map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Nothing yet. Add one small floor.</p>`}</div>`;
+  }).join("")}
+  <div class="vgroup"><div class="gh"><b>Fun menu</b><button class="btn quiet small" data-act="addComp" data-value="__fun">+ Add</button></div>
+    ${all.some(c => c.fun) ? `<div class="card">${all.filter(c => c.fun).map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Things you do purely for joy. Never scored.</p>`}</div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="addValue">+ Add a value</button></div>
+  <h3>Season</h3>
+  <p class="hint" style="margin:0 0 8px">Up to two Cores get most of your energy for 12 to 18 months. Everything else is a satellite, explored without guilt. Tap a value to make it a Core.</p>
+  <div class="chips">${vals.map(v => `<button class="chip ${isCore(v.id) ? "sel" : ""}" data-act="toggleCore" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div>
+  ${(p.cores || []).length ? `<div class="card" style="margin-top:10px">${p.cores.map((c, i) => `<div class="field"><label for="core-${i}">Core ${i + 1} · ${esc(valueName(c.value))}</label><input type="text" id="core-${i}" data-core="${i}" value="${esc(c.text)}" placeholder="What this Core means this season"></div>`).join("")}</div>` : ""}
+  <h3>If-then rules</h3>
+  <textarea id="p-if" data-p="ifthen" rows="5">${esc((p.ifthen || []).join("\n"))}</textarea>
+  <p class="hint">One per line. Every lapse writes a new rule. <span class="src">Gollwitzer & Sheeran 2006</span></p>
+  <h3>Calendar · ${withBlocks.filter(c => c.gcal).length} of ${withBlocks.length} added</h3>
+  <p class="hint" style="margin:0 0 8px">Give a component a day and time in its settings, then add it here. ${calLine}</p>
+  ${withBlocks.length ? `<div class="card">${withBlocks.map(c => calRow(c)).join("")}</div>` : `<p class="hint">No component has a time yet.</p>`}
+  <h3>Colours</h3>
+  <div class="card pad">${themePicker()}</div>
+  <h3>Your data</h3>
+  <div class="card pad"><div class="row"><div><b>Export or import</b><div class="hint">A .json backup of everything. Import also brings data over from the Claude version of Compass.</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export</button><label class="btn" for="importFile">Import</label><input type="file" id="importFile" accept="application/json,.json" hidden></div></div>
+    ${S.importMsg ? `<p class="hint" style="margin:10px 0 0">${esc(S.importMsg)}</p>` : ""}</div>
+  <h3>Start over</h3>
+  <div class="card pad"><div class="row"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div></div>`;
+}
+function calRow(c) {
+  const b = c.block, msg = S.calMsg[c.id];
+  const when = `${b.days.map(d => WD[d]).join(", ")} · ${b.time} · ${b.dur >= 60 ? b.dur / 60 + " h" : b.dur + " min"}${c.alt ? " · every other week" : ""}`;
+  const action = S.mcp
+    ? (c.gcal ? `<span class="pill clear">Added</span>` : msg === "adding" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn small primary" data-act="calAdd" data-id="${esc(c.id)}">Add</button>`)
+    : `<a class="linkbtn" href="${gcalLink(c)}" target="_blank" rel="noopener">Open in Google Calendar ↗</a>`;
+  return `<div class="person"><div class="who"><b>${esc(c.name)}</b><small>${esc(when)}</small>${msg && msg !== "adding" ? `<small style="display:block;color:var(--warn)">${esc(msg)}</small>` : ""}</div>${action}${!S.mcp ? `<button class="btn quiet small" data-act="calMark" data-id="${esc(c.id)}" aria-pressed="${!!c.gcal}">${c.gcal ? "✓ Added" : "Mark added"}</button>` : ""}</div>`;
+}
+
+/* ============ component editor sheet ============ */
+function renderSheet() {
+  const root = $("#sheetRoot"), sh = S.sheet;
+  if (!sh) { root.innerHTML = ""; return; }
+  if (sh.type === "pick") {
+    const taken = new Set(comps().map(c => c.id));
+    const lib = sh.value === "__fun" ? FUN_LIB.filter(n => !comps().some(c => c.fun && c.name === n)).map(n => ({ name: n, fun: true })) : COMP_LIB.filter(c => c.value === sh.value && !taken.has(c.id));
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Add a component"><div class="in"><div class="grab"></div>
+      <h2 style="margin:0">Add to ${esc(sh.value === "__fun" ? "your fun menu" : valueName(sh.value))}</h2>
+      ${lib.length ? `<div class="card">${lib.map((c, i) => `<button class="comp" data-act="pickLib" data-i="${i}"><span class="lbl"><span>${esc(c.name)}</span><small>${esc(c.fun ? "Fun menu · never scored" : cadenceText(c))}${c.note ? " · " + esc(c.note) : ""}</small></span><span class="chev">+</span></button>`).join("")}</div>` : ""}
+      <button class="btn" data-act="customComp">Write my own</button>
+      <button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
+    S.sheet.lib = lib; return;
+  }
+  if (sh.type === "account") {
+    const u = S.user || {};
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Account"><div class="in"><div class="grab"></div>
+      <div class="acct"><span class="avatar">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc((u.name || u.email || "?").charAt(0).toUpperCase())}</span><div><b>${esc(u.name || "Signed in")}</b><div class="hint">${esc(u.email)}</div></div></div>
+      <p class="hint" style="margin:0">Signed in with Google. Your Compass syncs to every device where you sign in with this account.</p>
+      <button class="btn" data-act="export">Export my data</button>
+      <button class="btn danger" data-act="signout">Sign out</button>
+      <button class="btn quiet" data-act="closeSheet">Close</button></div></div>`;
+    return;
+  }
+  if (sh.type === "value") {
+    const have = new Set((profile().values || []));
+    const lib = VALUE_LIB.filter(v => !have.has(v.id));
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Add a value"><div class="in"><div class="grab"></div>
+      <h2 style="margin:0">Add a value</h2>
+      <div class="vcards">${lib.map(v => `<button class="vcard" data-act="addValueId" data-v="${v.id}" aria-pressed="false"><span class="tick"></span><b>${esc(v.name)}</b><small>${esc(v.why)}</small><span class="src">${esc(v.src)}</span></button>`).join("")}</div>
+      <form class="addrow" id="customValueForm" style="grid-template-columns:1fr auto;padding:0"><input type="text" id="cvName" placeholder="Or name your own value" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>
+      <button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
+    return;
+  }
+  const c = sh.draft;
+  const vals = valueList();
+  root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Edit component"><div class="in"><div class="grab"></div>
+    <h2 style="margin:0">${sh.isNew ? "New component" : "Edit component"}</h2>
+    <div class="fl"><label class="flabel" for="c-name">Name</label><input type="text" id="c-name" data-c="name" value="${esc(c.name)}" maxlength="60"></div>
+    <div class="fl"><label class="flabel" for="c-note">Note</label><input type="text" id="c-note" data-c="note" value="${esc(c.note)}" maxlength="90" placeholder="Optional, e.g. 20 minutes counts"></div>
+    <div class="row"><div><b>Fun menu</b><div class="hint">Never scored, never scheduled. Just logged for joy.</div></div><button class="switch" role="switch" aria-checked="${!!c.fun}" data-act="cToggle" data-f="fun" aria-label="Fun menu"></button></div>
+    ${c.fun ? "" : `
+    <div class="fl"><label class="flabel" for="c-value">Serves</label><select id="c-value" data-c="value">${vals.map(v => `<option value="${esc(v.id)}" ${v.id === c.value ? "selected" : ""}>${esc(v.name)}</option>`).join("")}</select></div>
+    <div class="fl"><span class="flabel">How often</span><div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="cCad" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div></div>
+    <div class="two">
+      <div class="fl"><label class="flabel">${c.cadence === "daily" ? "Days a week (floor)" : c.cadence === "monthly" ? "Times a month (floor)" : "Per week (floor)"}</label><div class="stepper"><button data-act="cTarget" data-d="-1" aria-label="Lower floor">−</button><span class="v">${c.target}${c.unit || ""}</span><button class="plus" data-act="cTarget" data-d="1" aria-label="Raise floor">+</button></div></div>
+      <div class="fl"><label class="flabel" for="c-hours">Hours each time</label><input type="number" id="c-hours" data-c="hours" min="0" max="12" step="0.25" value="${c.hours || 0}"></div>
+    </div>
+    <div class="row"><div><b>Safety net</b><div class="hint">Stays on during a Minimum Viable Week.</div></div><button class="switch" role="switch" aria-checked="${!!c.mvw}" data-act="cToggle" data-f="mvw" aria-label="Safety net"></button></div>
+    ${c.cadence === "weekly" ? `<div class="row"><div><b>People rotation</b><div class="hint">Logging a call on People counts here.</div></div><button class="switch" role="switch" aria-checked="${!!c.people}" data-act="cToggle" data-f="people" aria-label="People rotation"></button></div>
+    <div class="fl"><span class="flabel">Alternating weeks</span><div class="seg">${[["", "Every week"], ["A", "Week A"], ["B", "Week B"]].map(([k, l]) => `<button data-act="cAlt" data-v="${k}" aria-pressed="${(c.alt || "") === k}">${l}</button>`).join("")}</div></div>` : ""}
+    <div class="row"><div><b>Give it a time</b><div class="hint">Puts it on your calendar as a repeating block.</div></div><button class="switch" role="switch" aria-checked="${!!c.block}" data-act="cBlock" aria-label="Give it a time"></button></div>
+    ${c.block ? `<div class="daypick">${WD.map((d, i) => `<button data-act="cDay" data-v="${i}" aria-pressed="${c.block.days.includes(i)}">${d}</button>`).join("")}</div>
+      <div class="two"><div class="fl"><label class="flabel" for="c-time">Starts</label><input type="time" id="c-time" data-cb="time" value="${c.block.time}"></div>
+      <div class="fl"><label class="flabel" for="c-dur">Minutes</label><input type="number" id="c-dur" data-cb="dur" min="5" max="600" step="5" value="${c.block.dur}"></div></div>` : ""}`}
+    <div class="row" style="margin-top:6px"><button class="btn primary" data-act="saveComp">${sh.isNew ? "Add component" : "Save"}</button>
+      ${sh.isNew ? `<button class="btn quiet" data-act="closeSheet">Cancel</button>` : S.confirm === "del:" + c.id ? `<button class="btn danger" data-act="delCompYes">Delete it</button>` : `<button class="btn quiet danger" data-act="delComp">Delete</button>`}</div>
+    ${!sh.isNew && !c.fun ? `<p class="hint">Deleting keeps past logs but stops counting it.</p>` : ""}</div></div>`;
+}
+function openComp(c, isNew) { S.sheet = { type: "comp", isNew, draft: clone(c) }; S.confirm = null; }
+
+/* ============ calendar ============ */
+const tz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { return ""; } };
+function firstOcc(c) {
+  const b = c.block, now = new Date(), [h, m] = b.time.split(":").map(Number);
+  for (let i = 0; i < 21; i++) {
+    const d = addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), i); d.setHours(h, m, 0, 0);
+    if (d <= now || !b.days.includes((d.getDay() + 6) % 7)) continue;
+    if (c.alt && weekKind(dkey(monday(d))) !== c.alt) continue;
+    return d;
+  }
+  return addDays(now, 1);
+}
+const rrule = c => "RRULE:FREQ=WEEKLY;" + (c.alt ? "INTERVAL=2;" : "") + "BYDAY=" + c.block.days.slice().sort().map(d => RR[d]).join(",");
+function isoOff(d) {
+  const o = -d.getTimezoneOffset(), s = o >= 0 ? "+" : "-", a = Math.abs(o);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00${s}${pad(Math.floor(a / 60))}:${pad(a % 60)}`;
+}
+function gcalLink(c) {
+  const s = firstOcc(c), e = new Date(s.getTime() + c.block.dur * 60000);
+  const f = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "T" + pad(d.getHours()) + pad(d.getMinutes()) + "00";
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(c.name) + "&dates=" + f(s) + "/" + f(e) +
+    (tz() ? "&ctz=" + encodeURIComponent(tz()) : "") + "&recur=" + encodeURIComponent(rrule(c)) + "&details=" + encodeURIComponent("Compass · " + valueName(c.value) + ". Hold it loosely.");
+}
+async function calAdd(c) {
+  if (!S.mcp || S.calMsg[c.id] === "adding") return;
+  S.calMsg[c.id] = "adding"; render();
+  const s = firstOcc(c), e = new Date(s.getTime() + c.block.dur * 60000);
+  const input = { summary: c.name, startTime: isoOff(s), endTime: isoOff(e), recurrenceData: [rrule(c)], description: "Compass · " + valueName(c.value) + " floor. Hold it loosely." };
+  if (tz()) input.timeZone = tz();
+  try {
+    await S.mcp.callTool("Google Calendar", "create_event", input);
+    delete S.calMsg[c.id];
+    editProfile(p => { const x = p.components.find(y => y.id === c.id); if (x) x.gcal = true; });
+    toast("Added to Google Calendar");
+  } catch (err) {
+    const code = err && err.code;
+    S.calMsg[c.id] = code === "needs_reauth" ? "Reconnect Google Calendar in claude.ai Settings → Connectors, then try again."
+      : code === "server_not_connected" || code === "selection_required" ? "Connect Google Calendar in claude.ai Settings → Connectors."
+      : code === "not_in_manifest" ? "Calendar access is turned off for Compass. Allow it when asked, then try again."
+      : code === "blocked_by_policy" || code === "approval_required" ? "Your organization blocks adding calendar events from here."
+      : code === "tool_error" ? "Google Calendar said: " + (err.message || "it couldn't create the event") + ". Reconnecting it with calendar permissions usually fixes this."
+      : code === "server_unavailable" || code === "upstream_error" ? "Google Calendar didn't answer. The event may still have been created, so check your calendar before trying again."
+      : "Couldn't reach Google Calendar from this view.";
+  }
+  render();
+}
+
+/* ============ Claude: tailoring + coaching ============ */
+function profileSummary() {
+  const p = profile() || {};
+  const lines = valueList().map(v => `- ${v.name}${isCore(v.id) ? " (CORE)" : ""}: ` + comps().filter(c => c.value === v.id && !c.fun).map(c => `${c.name} [${cadenceText(c)}${c.mvw ? ", safety net" : ""}]`).join("; "));
+  return `Goal: ${p.goal || "(not written)"}\nWants life to feel: ${(p.feel || []).join(", ") || "(not given)"}\nHours per week available for floors: ${p.capacity || 20}; current load ≈ ${hrs(capacity(comps()))} h\nValues and components:\n${lines.join("\n")}\nFun menu: ${comps().filter(c => c.fun).map(c => c.name).join(", ") || "(none)"}\nIf-then rules: ${(p.ifthen || []).join(" | ") || "(none)"}`;
+}
+function recentWeeks() {
+  const cur = monday(new Date()), out = [];
+  for (let i = 0; i < 4; i++) {
+    const id = wid(addDays(cur, -7 * i)), w = anyWeek(id); if (!w) continue;
+    const F = floorsFor(id);
+    const missed = F.filter(f => f.have < f.need).map(f => `${f.c.name} ${f.have}/${f.need}`);
+    const wins = Object.values(w.days || {}).map(d => d.j && d.j.win).filter(Boolean).slice(0, 3).map(s => s.slice(0, 120));
+    out.push(`Week of ${id.slice(2)}${isMvw(w, id) ? " (Minimum Viable Week)" : ""}${i === 0 ? " (in progress)" : ""}: felt ${w.r && w.r.felt || "?"}/5; starved: ${(w.r && w.r.starved || []).join(", ") || "-"}; below floor: ${missed.join(", ") || "none"}; wins: ${wins.join(" / ") || "-"}; fun: ${(w.r && w.r.fun || "-").slice(0, 120)}`);
+  }
+  return out.join("\n") || "No weeks logged yet.";
+}
+const PRINCIPLES = "Compass principles: values are directions, not destinations (ACT); satisfy three needs, relatedness, competence and autonomy (Self-Determination Theory); floors not ceilings (satisficing beats maximizing); seasons with at most two Core values; conflicting goals lower well-being; schedule the effortful, keep fun as an unscored menu; if-then plans (implementation intentions); habit-stack onto existing routines; never miss twice; self-compassion after lapses; a Minimum Viable Week for hard stretches; weekly felt-sense review.";
+async function runCoach() {
+  if (!S.sample) return;
+  S.coach = { busy: true, text: "", ctl: new AbortController() }; render();
+  const prompt = `You are a warm, direct coach using the Compass framework. ${PRINCIPLES}\n\nThe person's setup:\n${profileSummary()}\n\nTheir last four weeks:\n${recentWeeks()}\n\nWrite exactly three numbered suggestions, each 45 words or fewer. Each names one concrete change they can make in the app (lower or raise a specific floor, swap or add a component, add an if-then rule, protect time, adjust a Core) and says in plain words which principle it follows. Speak to them as "you". No preamble and no closing line.`;
+  try {
+    await S.sample(prompt, { signal: S.coach.ctl.signal, cache: false, onText: ({ text }) => { S.coach.text = text; S.coach.busy = true; scheduleRender(); } });
+    S.coach.busy = false;
+  } catch (e) {
+    S.coach.busy = false; S.coach.text = e && e.text || S.coach.text;
+    const code = e && e.code;
+    if (code === "not_granted" || code === "sampling_disabled" || code === "not_declared" || code === "capability_disabled" || code === "capability_removed") { S.sample = null; }
+    else if (code !== "cancelled") S.coach.err = code === "rate_limited" ? "You've hit a usage limit for now. Try again later." : code === "refused" ? "Claude couldn't answer that one." : "Something interrupted the note. Try again.";
+  }
+  render();
+}
+async function runTailor() {
+  const d = S.ob.d; if (!S.sample || S.tailor === "busy") return;
+  S.tailor = "busy"; renderOnboarding();
+  const vals = d.values.map(id => ({ id, name: (VALUE_LIB.find(v => v.id === id) || d.custom.find(v => v.id === id) || {}).name }));
+  const prompt = `${PRINCIPLES}\n\nA person is setting up Compass.\nGoal in their words: ${d.goal || "(not given)"}\nWants life to feel: ${d.feel.join(", ") || "(not given)"}\nHours per week they can give to floors: ${d.capacity}\nValues: ${JSON.stringify(vals)}\n\nSuggest 1 to 2 small, specific, trackable components per value that fit their goal, sized as floors (the minimum that already counts as a good week), so the total fits their hours. Also suggest up to 3 if-then rules for predictable disruptions.\nReply with only JSON: {"components":[{"value":"<value id from the list>","name":"<short action, max 40 chars>","cadence":"daily|weekly|monthly","target":<days per week for daily (1-7), times per week for weekly (1-7), times per month for monthly (1-4)>,"hoursEach":<number>,"safetyNet":<true if it should survive a hard week>,"why":"<max 16 words: the principle>"}],"ifthen":["If … → …"]}`;
+  try {
+    const res = await S.sample.json(prompt);
+    const list = (res && Array.isArray(res.components)) ? res.components : [];
+    let added = 0;
+    list.forEach(x => {
+      if (!x || !d.values.includes(x.value) || !x.name) return;
+      const cadence = ["daily", "weekly", "monthly"].includes(x.cadence) ? x.cadence : "weekly";
+      const max = cadence === "monthly" ? 4 : 7;
+      const target = Math.max(1, Math.min(max, Math.round(Number(x.target) || 1)));
+      d.comps.filter(c => c.value === x.value && !c.touched && !c.ai).forEach(c => c.on = false);
+      d.comps.push({ id: "ai-" + uidGen(), value: x.value, name: String(x.name).slice(0, 60), cadence, target, hours: Math.max(0, Math.min(10, Number(x.hoursEach) || 0.5)), mvw: !!x.safetyNet, note: String(x.why || "").slice(0, 90), ai: true, on: true });
+      added++;
+    });
+    (res && Array.isArray(res.ifthen) ? res.ifthen : []).slice(0, 3).forEach(r => { r = String(r).slice(0, 140); if (r && !d.ifthen.includes(r)) d.ifthen.push(r); });
+    S.tailor = added ? "done" : "empty";
+  } catch (e) {
+    const code = e && e.code;
+    if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) { S.sample = null; S.tailor = null; }
+    else S.tailor = code === "rate_limited" ? "limit" : "error";
+  }
+  renderOnboarding();
+}
+
+/* ============ ONBOARDING ============ */
+const OB_STEPS = ["welcome", "goal", "values", "comps", "season", "safety", "plan"];
+function startOnboarding(fromExisting) {
+  const p = profile();
+  let d;
+  if (fromExisting && p) {
+    d = { goal: p.goal || "", feel: p.feel || [], values: (p.values || []).slice(), custom: clone(p.customValues || []), comps: clone(p.components || []).map(c => Object.assign(c, { on: true, touched: true })), seen: COMP_LIB.map(c => c.id), capacity: p.capacity || 20, cores: clone(p.cores || []), ifthen: (p.ifthen || []).slice() };
+  } else d = { goal: "", feel: [], values: [], custom: [], comps: [], seen: [], capacity: 20, cores: [], ifthen: DEFAULT_IFTHEN.slice() };
+  S.ob = { step: fromExisting ? 1 : 0, d }; S.tailor = null; S.coach = null;
+}
+function ensureCandidates(d) {
+  d.values.forEach(v => {
+    let n = d.comps.filter(c => c.value === v && c.on).length;
+    COMP_LIB.filter(c => c.value === v && !d.seen.includes(c.id)).forEach(c => {
+      d.seen.push(c.id);
+      if (d.comps.some(x => x.id === c.id)) return;
+      d.comps.push(Object.assign({}, c, { on: d.template ? n === 0 : n < 2 }));
+      n++;
+    });
+  });
+}
+const obOn = d => d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value)));
+function hasOldLogs() { return Object.keys(S.hist).length > 0 || Object.keys(S.docs).some(k => k.startsWith("w-") && Object.keys((S.docs[k] || {}).days || {}).length); }
+function renderOnboarding() {
+  applyTheme();
+  const { step, d } = S.ob, key = OB_STEPS[step];
+  const prog = `<div class="progress" aria-label="Step ${step + 1} of ${OB_STEPS.length}">${OB_STEPS.map((_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
+  let html = "", next = "Continue", canNext = true, back = step > 0;
+  if (key === "welcome") {
+    html = `<div class="hero">${bigCompass()}</div>
+      <h1>Know where your life is heading.</h1>
+      <p class="lede">Compass turns what matters to you into a few small floors, checks them once a week, and tells you when you're drifting. Relaxed because you know the direction, not because you're doing nothing.</p>
+      <div class="card pad" style="margin-top:14px"><b>Pick your colours</b><div style="margin-top:10px">${themePicker()}</div></div>
+      <div class="card pad" style="margin-top:10px"><b>What setup covers</b><div class="hint" style="margin-top:4px">Your goal · the values that matter · small components for each · up to two Cores for this season · a safety net for hard weeks. About five minutes.</div></div>
+      ${hasOldLogs() || (profile() && !profile().onboarded) ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>You have earlier logs</b><div class="hint">Start from the original Compass setup to keep them counting.</div></div><button class="btn" data-act="obTemplate">Use it</button></div></div>` : `<p style="margin-top:12px"><button class="btn quiet" data-act="obTemplate">Or start from the full Compass template</button></p>`}`;
+    next = "Set my compass";
+  } else if (key === "goal") {
+    html = `<h1>Picture a good year from now.</h1>
+      <p class="lede">How do you want it to feel, and what are you moving toward? A direction, not a destination.</p>
+      <textarea id="ob-goal" data-ob="goal" rows="5" placeholder="e.g. I want to feel calm and proud: learning and growing in tech, doing good for my community, and staying close to family and friends.">${esc(d.goal)}</textarea>
+      <h3>It should feel</h3>
+      <div class="feel">${FEELINGS.map(f => `<button class="chip ${d.feel.includes(f) ? "sel" : ""}" data-act="obFeel" data-v="${f}">${f}</button>`).join("")}</div>
+      <p class="src" style="margin-top:14px">Values as directions: Acceptance and Commitment Therapy (Hayes)</p>`;
+    canNext = d.goal.trim().length > 3 || d.feel.length > 0;
+  } else if (key === "values") {
+    html = `<h1>What matters to you?</h1>
+      <p class="lede">Pick 3 to 7. Each one is backed by research on what makes life feel good and meaningful.</p>
+      <div class="vcards">${VALUE_LIB.concat(d.custom).map(v => `<button class="vcard" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${d.values.includes(v.id)}"><span class="tick"></span><b>${esc(v.name)}</b>${v.why ? `<small>${esc(v.why)}</small><span class="src">${esc(v.src)}</span>` : `<small>Your own value</small>`}</button>`).join("")}</div>
+      <form class="addrow" id="obCustomValue" style="grid-template-columns:1fr auto;padding:12px 0 0"><input type="text" id="obCv" placeholder="Add your own, e.g. Faith, Family, Craft" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>`;
+    canNext = d.values.length >= 1; next = d.values.length ? `Continue with ${d.values.length}` : "Pick at least one";
+  } else if (key === "comps") {
+    ensureCandidates(d);
+    html = `<div class="stickymeter">${meter(obOn(d), d.capacity, "ob")}</div>
+      <h1>Small pieces, each a floor.</h1>
+      <p class="lede">These are your components. Keep what fits; each floor is the minimum that already counts as a good week. You can change everything later.</p>
+      ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
+      ${d.values.map(vid => {
+        const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid);
+        const list = d.comps.filter(c => c.value === vid && !c.fun);
+        return `<div class="vgroup"><div class="gh"><b>${esc(v.name)}</b><span class="hint">${list.filter(c => c.on).length} on</span></div><div class="card">
+          ${list.map(c => `<button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${esc(cadenceText(c))}${c.note ? " · " + esc(c.note) : ""}</small></span></button>`).join("")}
+          <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(v.name)}"><button class="btn small" type="submit">Add</button></form></div></div>`;
+      }).join("")}
+      <div class="vgroup"><div class="gh"><b>Fun menu</b><span class="hint">never scored</span></div>
+        <div class="chips">${FUN_LIB.concat(d.comps.filter(c => c.fun && !FUN_LIB.includes(c.name)).map(c => c.name)).map(n => { const on = d.comps.some(c => c.fun && c.name === n && c.on); return `<button class="chip ${on ? "sel" : ""}" data-act="obFun" data-v="${esc(n)}">${esc(n)}</button>`; }).join("")}</div>
+        <form class="addrow" id="obFunAdd" style="grid-template-columns:1fr auto;padding:10px 0 0"><input type="text" id="obFunText" placeholder="Something you do just for joy" maxlength="50" aria-label="Add a fun thing"><button class="btn small" type="submit">Add</button></form></div>`;
+    canNext = obOn(d).some(c => !c.fun);
+  } else if (key === "season") {
+    html = `<h1>Pick up to two Cores.</h1>
+      <p class="lede">For the next 12 to 18 months, two values get most of your energy. The rest become satellites, still tracked, explored without guilt. Chasing everything at once is how goals start fighting each other.</p>
+      <div class="vcards">${d.values.map(vid => { const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid); const on = d.cores.some(c => c.value === vid); return `<button class="vcard corecard" data-act="obCore" data-v="${esc(vid)}" aria-pressed="${on}"><span class="tick"></span><b>${esc(v.name)}</b><small>${on ? "Core" : "Satellite"}</small></button>`; }).join("")}</div>
+      ${d.cores.length ? `<div class="card" style="margin-top:12px">${d.cores.map((c, i) => `<div class="field"><label for="ob-core-${i}">What does ${esc((VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name)} mean this season?</label><input type="text" id="ob-core-${i}" data-obcore="${i}" value="${esc(c.text)}" placeholder="e.g. Land a more challenging role by summer"></div>`).join("")}</div>` : ""}
+      <p class="src" style="margin-top:14px">Emmons & King 1988; Riediger & Freund 2004</p>`;
+  } else if (key === "safety") {
+    const on = obOn(d).filter(c => !c.fun);
+    html = `<h1>Build a safety net.</h1>
+      <p class="lede">When you're sick, travelling or swamped, flip on a Minimum Viable Week. Only these stay on; everything else pauses with no guilt.</p>
+      <div class="card">${on.map(c => `<button class="check" data-act="obMvw" data-id="${esc(c.id)}" aria-pressed="${!!c.mvw}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}</small></span></button>`).join("")}</div>
+      <h3>If-then rules</h3>
+      <p class="hint" style="margin:0 0 8px">Deciding in advance makes follow-through much more likely. One per line.</p>
+      <textarea id="ob-if" data-ob="ifthen" rows="5">${esc(d.ifthen.join("\n"))}</textarea>
+      <p class="src" style="margin-top:8px">Gollwitzer & Sheeran 2006</p>`;
+  } else if (key === "plan") {
+    const on = obOn(d).filter(c => !c.fun), fun = obOn(d).filter(c => c.fun), cap = capacity(on);
+    const coreNames = d.cores.map(c => (VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name);
+    const steps = [
+      ["Floors, not ceilings", `${on.length} small floors, about ${hrs(cap)} hours a week${cap > d.capacity * 1.05 ? `, more than the ${d.capacity} you have. Consider trimming.` : `, inside the ${d.capacity} you have.`} Clearing a floor counts as a good week.`, "Schwartz et al. 2002"],
+      ["A season with a direction", coreNames.length ? `${coreNames.join(" and ")} ${coreNames.length === 1 ? "gets" : "get"} most of your energy until next year. Everything else is a satellite.` : "No Cores yet. Everything is weighted equally, which is fine to start; pick Cores at your first monthly check.", "Emmons & King 1988"],
+      ["A safety net", `${on.filter(c => c.mvw).length} things survive a hard week, and ${d.ifthen.filter(Boolean).length} if-then rules decide ahead of time.`, "Gollwitzer & Sheeran 2006"],
+      ["Joy stays loose", fun.length ? `${fun.length} fun things on a menu, never scored.` : "Add a fun menu later. Scheduling joy precisely makes it feel like work.", "Tonietto & Malkoc 2016"],
+      ["A loop that shows you the trend", "Three journal lines at night. A 25-minute Sunday review with one question: am I at peace with where this is trending?", "Amabile & Kramer 2011; Seligman et al. 2005"],
+    ];
+    html = `<div class="hero">${bigCompass()}</div>
+      <h1>Here's how you'll get there.</h1>
+      ${d.goal ? `<p class="lede">“${esc(d.goal.slice(0, 220))}${d.goal.length > 220 ? "…" : ""}”</p>` : ""}
+      <div class="route">${steps.map((s, i) => `<div class="card" style="animation-delay:${.15 + i * .12}s"><div class="step"><span class="num">${i + 1}</span><div><b>${esc(s[0])}</b><span>${esc(s[1])}</span><div class="src">${esc(s[2])}</div></div></div></div>`).join("")}</div>`;
+    next = "Start using Compass";
+  }
+  $("#main").innerHTML = `<div class="ob">${prog}<div class="stepin" id="obStep">${html}</div></div>`;
+  $("#obbar").innerHTML = `<div class="obbar"><div class="in">${back ? `<button class="btn quiet" data-act="obBack">Back</button>` : (onboarded() ? `<button class="btn quiet" data-act="obCancel">Cancel</button>` : "<span></span>")}<button class="btn primary" data-act="obNext" ${canNext ? "" : "disabled"}>${esc(next)}</button></div></div>`;
+  $("#tabbar").hidden = true; $("#weeknav").hidden = true; $("#heading").textContent = "";
+  setNeedle(1);
+}
+function finishOnboarding() {
+  const d = S.ob.d;
+  const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; return x; });
+  S.docs.profile = Object.assign({}, profile() || {}, {
+    v: 2, onboarded: true, goal: d.goal.trim(), feel: d.feel, values: d.values, customValues: d.custom,
+    components, capacity: d.capacity, cores: d.cores.filter(c => d.values.includes(c.value)), ifthen: d.ifthen.map(s => s.trim()).filter(Boolean),
+    updatedAt: new Date().toISOString(),
+  });
+  touch("profile");
+  S.ob = null; S.tab = "today"; render();
+  toast("Your compass is set");
+  const btn = $("#hneedle"); if (btn) burst(btn.closest("svg"), "var(--brass)", 14);
+}
+
+/* ============ events ============ */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act, k = b.dataset.k, tk = todayKey();
+  const ob = S.ob && S.ob.d;
+  switch (act) {
+    /* onboarding */
+    case "obNext": if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
+    case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); window.scrollTo(0, 0); return renderOnboarding();
+    case "obCancel": S.ob = null; return render();
+    case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
+    case "obFeel": { const v = b.dataset.v; ob.feel = ob.feel.includes(v) ? ob.feel.filter(x => x !== v) : ob.feel.concat(v); const was = ob.feel.includes(v); updateOb(); if (was) burst(document.querySelector(`[data-act="obFeel"][data-v="${CSS.escape(v)}"]`), "var(--accent)", 6); return; }
+    case "obValue": { const v = b.dataset.v; if (ob.values.includes(v)) { ob.values = ob.values.filter(x => x !== v); ob.cores = ob.cores.filter(c => c.value !== v); } else { if (ob.values.length >= 9) return toast("Nine is plenty. Fewer values, clearer direction."); ob.values.push(v); } updateOb(); if (ob.values.includes(v)) burst(document.querySelector(`[data-act="obValue"][data-v="${CSS.escape(v)}"] .tick`), "var(--accent)"); return; }
+    case "obComp": { const c = ob.comps.find(x => x.id === b.dataset.id); if (c) { c.on = !c.on; c.touched = true; } updateOb(); if (c && c.on) burst(document.querySelector(`[data-act="obComp"][data-id="${CSS.escape(c.id)}"] .box`)); return; }
+    case "obFun": { const n = b.dataset.v; const c = ob.comps.find(x => x.fun && x.name === n); if (c) c.on = !c.on; else ob.comps.push({ id: "fun-" + uidGen(), fun: true, name: n, cadence: "weekly", target: 0, hours: 0, on: true }); return updateOb(); }
+    case "obCore": { const v = b.dataset.v; if (ob.cores.some(c => c.value === v)) ob.cores = ob.cores.filter(c => c.value !== v); else { if (ob.cores.length >= 2) return toast("Two Cores at most. Make one a satellite first."); ob.cores.push({ value: v, text: "" }); } updateOb(); if (ob.cores.some(c => c.value === v)) burst(document.querySelector(`[data-act="obCore"][data-v="${CSS.escape(v)}"] .tick`), "var(--brass)"); return; }
+    case "obMvw": { const c = ob.comps.find(x => x.id === b.dataset.id); if (c) c.mvw = !c.mvw; return updateOb(); }
+    case "obTailor": return runTailor();
+    case "palette": case "themeMode": {
+      const t = themePref(); if (act === "palette") t.palette = b.dataset.v; else t.mode = b.dataset.v;
+      try { localStorage.setItem("compass-theme", JSON.stringify(t)); } catch (e) {} editSettings(s => { s.theme = t; }); themeKey = "";
+      if (S.ob) { updateOb(); } else render();
+      if (act === "palette") burst(document.querySelector(`[data-act="palette"][data-v="${CSS.escape(t.palette)}"] .dot`), "var(--brass)", 10);
+      return;
+    }
+    case "signin": signIn(); return;
+    case "signout": signOutNow(); return;
+    case "account": S.sheet = { type: "account" }; break;
+    case "export": exportData(); return;
+    /* app */
+    case "tab": S.tab = b.dataset.t; S.confirm = null; if (S.tab === "review") loadHistory(); window.scrollTo(0, 0); break;
+    case "prevWk": case "nextWk": {
+      const old = curWid(); S.viewMon = addDays(S.viewMon, act === "prevWk" ? -7 : 7); const nid = curWid();
+      if (old !== wid(monday(new Date()))) unsubscribe(old);
+      if (!S.docs[nid]) { const l = LS.get(nid); if (l) S.docs[nid] = l; }
+      subscribe(nid); break;
+    }
+    case "day": S.selDay = k; break;
+    case "anchor": { let on; editWeek(w => { const d = dayObj(w, S.selDay); d.a[k] = !d.a[k]; on = d.a[k]; }); render(); if (on) burst(document.querySelector(`.check[data-k="${CSS.escape(k)}"] .box`)); return; }
+    case "cp": editWeek(w => { const d = dayObj(w, S.selDay); d.cp = d.cp === b.dataset.v ? null : b.dataset.v; }); break;
+    case "inc": case "dec": {
+      const c = compById(k); if (!c) return;
+      const before = compHave(c, anyWeek(curWid()), curWid());
+      bump(c, act === "inc" ? 1 : -1); render();
+      if (act === "inc") { const after = compHave(c, anyWeek(curWid()), curWid()); const el = document.querySelector(`[data-act="inc"][data-k="${CSS.escape(k)}"]`); if (before < c.target && after >= c.target) { burst(el, "var(--good)", 12); toast(`${c.name}: floor cleared`); } else burst(el, "var(--accent)", 5); }
+      return;
+    }
+    case "fun": { const c = compById(k); if (!c) return; editWeek(w => { w.c[k] = (w.c[k] || 0) + 1; }); render(); burst(document.querySelector(`[data-act="fun"][data-k="${CSS.escape(k)}"]`), "var(--brass)", 10); return; }
+    case "mvw": editWeek(w => { w.mvw = !isMvw(w, curWid()); }); break;
+    case "swapKind": editSettings(s => { s.parity = ((s.parity || 0) + 1) % 2; }); break;
+    case "felt": editWeek(w => { const v = +b.dataset.v; w.r.felt = w.r.felt === v ? null : v; }); break;
+    case "starve": editWeek(w => { const a = w.r.starved || [], v = b.dataset.v; w.r.starved = a.includes(v) ? a.filter(x => x !== v) : a.concat(v); }); break;
+    case "reviewDone": { let done; editWeek(w => { w.r.done = !w.r.done; w.r.doneAt = tk; done = w.r.done; }); render(); if (done) { burst($("#reviewDoneBtn"), "var(--good)", 14); toast("Week reviewed. See you next Sunday."); } return; }
+    case "preMvw": editSettings(s => { s.preMvw = s.preMvw || {}; const n = wid(addDays(S.viewMon, 7)); if (s.preMvw[n]) delete s.preMvw[n]; else s.preMvw[n] = true; }); break;
+    case "inboxDel": editSettings(s => { s.inbox = (s.inbox || []).filter(x => x.id !== b.dataset.id); }); break;
+    case "pCalled": {
+      editPeople(p => { const x = p.list.find(y => y.id === b.dataset.id); if (x) x.last = tk; });
+      const pc = comps().find(c => c.people);
+      if (pc && curWid() === wid(monday(new Date()))) bump(pc, 1);
+      render(); burst(document.querySelector(`[data-act="pCalled"]`), "var(--good)"); return;
+    }
+    case "pDel": S.confirm = b.dataset.id; break;
+    case "pDelNo": S.confirm = null; break;
+    case "pDelYes": editPeople(p => { p.list = p.list.filter(y => y.id !== b.dataset.id); }); S.confirm = null; break;
+    case "coach": runCoach(); return;
+    case "coachStop": if (S.coach && S.coach.ctl) S.coach.ctl.abort(); return;
+    case "sugg": {
+      const s = suggestions()[+b.dataset.i]; if (!s || !s.act) return;
+      const a = s.act;
+      if (a.do === "gotoCompass") { S.tab = "compass"; window.scrollTo(0, 0); }
+      else if (a.do === "addLib") { const lib = COMP_LIB.find(c => c.id === a.id); if (lib) { editProfile(p => { if (!p.values.includes(lib.value)) p.values.push(lib.value); p.components.push(clone(lib)); }); toast(`Added “${lib.name}”`); } }
+      else if (a.do === "addComp") { S.sheet = { type: "pick", value: a.value }; }
+      else if (a.do === "lower") { editProfile(p => { const c = p.components.find(x => x.id === a.id); if (c && c.target > 1) c.target--; }); toast("Floor lowered. Clear it, then raise it later."); }
+      break;
+    }
+    /* compass tab */
+    case "editComp": { const c = compById(b.dataset.id); if (c) openComp(c, false); break; }
+    case "addComp": S.sheet = { type: "pick", value: b.dataset.value }; break;
+    case "addValue": S.sheet = { type: "value" }; break;
+    case "addValueId": editProfile(p => { if (!p.values.includes(b.dataset.v)) p.values.push(b.dataset.v); }); S.sheet = { type: "pick", value: b.dataset.v }; break;
+    case "pickLib": { const x = S.sheet.lib[+b.dataset.i]; if (!x) return; const c = x.fun ? { id: "fun-" + uidGen(), fun: true, name: x.name, cadence: "weekly", target: 0, hours: 0 } : clone(x); openComp(c, true); break; }
+    case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
+    case "closeSheet": S.sheet = null; S.confirm = null; break;
+    case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
+    case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; } break; }
+    case "cTarget": { const c = S.sheet.draft, max = c.cadence === "monthly" ? 4 : c.cadence === "daily" ? 7 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, (c.target || 0) + (+b.dataset.d) * st)); break; }
+    case "cAlt": { const c = S.sheet.draft; if (b.dataset.v) c.alt = b.dataset.v; else delete c.alt; break; }
+    case "cBlock": { const c = S.sheet.draft; if (c.block) delete c.block; else c.block = { days: c.cadence === "daily" ? [0, 1, 2, 3, 4, 5, 6] : [0], time: "19:00", dur: Math.max(15, Math.round((c.hours || 0.5) * 60 / 5) * 5) }; c.gcal = false; break; }
+    case "cDay": { const c = S.sheet.draft, v = +b.dataset.v; c.block.days = c.block.days.includes(v) ? c.block.days.filter(x => x !== v) : c.block.days.concat(v).sort(); if (!c.block.days.length) c.block.days = [v]; c.gcal = false; break; }
+    case "saveComp": {
+      const sh = S.sheet, c = sh.draft; if (!(c.name || "").trim()) { toast("Give it a name first."); return; }
+      c.name = c.name.trim();
+      editProfile(p => { const i = p.components.findIndex(x => x.id === c.id); if (i >= 0) p.components[i] = c; else p.components.push(c); if (c.value && !p.values.includes(c.value)) p.values.push(c.value); });
+      S.sheet = null; toast(sh.isNew ? `Added “${c.name}”` : "Saved"); break;
+    }
+    case "delComp": S.confirm = "del:" + S.sheet.draft.id; break;
+    case "delCompYes": { const id = S.sheet.draft.id; editProfile(p => { p.components = p.components.filter(x => x.id !== id); }); S.sheet = null; S.confirm = null; toast("Deleted"); break; }
+    case "toggleCore": editProfile(p => { p.cores = p.cores || []; const v = b.dataset.v; if (p.cores.some(c => c.value === v)) p.cores = p.cores.filter(c => c.value !== v); else if (p.cores.length < 2) p.cores.push({ value: v, text: "" }); else toast("Two Cores at most."); }); break;
+    case "calAdd": { const c = compById(b.dataset.id); if (c) calAdd(c); return; }
+    case "calMark": editProfile(p => { const c = p.components.find(x => x.id === b.dataset.id); if (c) c.gcal = !c.gcal; }); break;
+    case "redoOb": startOnboarding(true); window.scrollTo(0, 0); break;
+    default: return;
+  }
+  render();
+});
+function updateOb() {
+  // re-render the onboarding step without replaying the entrance animation
+  const y = window.scrollY; renderOnboarding(); const st = $("#obStep"); if (st) st.classList.remove("stepin"); window.scrollTo(0, y);
+}
+document.addEventListener("submit", e => {
+  e.preventDefault(); const f = e.target;
+  if (f.id === "pForm") { const name = $("#pName").value.trim(); if (!name) return; editPeople(p => { p.list.push({ id: uidGen(), name, tier: $("#pTier").value, last: null }); }); render(); const n = $("#pName"); if (n) n.focus(); }
+  else if (f.id === "inForm") { const t = $("#inText").value.trim(); if (!t) return; editSettings(s => { s.inbox = (s.inbox || []).concat({ id: uidGen(), t }); }); render(); const n = $("#inText"); if (n) n.focus(); }
+  else if (f.id === "obCustomValue") { const n = $("#obCv").value.trim(); if (!n) return; const id = "v-" + uidGen(); S.ob.d.custom.push({ id, name: n }); S.ob.d.values.push(id); updateOb(); }
+  else if (f.classList.contains("obAdd")) { const inp = f.querySelector("input"), n = inp.value.trim(); if (!n) return; S.ob.d.comps.push({ id: "c-" + uidGen(), value: f.dataset.value, name: n, cadence: "weekly", target: 1, hours: 0.5, on: true, touched: true }); updateOb(); }
+  else if (f.id === "obFunAdd") { const n = $("#obFunText").value.trim(); if (!n) return; S.ob.d.comps.push({ id: "fun-" + uidGen(), fun: true, name: n, cadence: "weekly", target: 0, hours: 0, on: true }); updateOb(); }
+  else if (f.id === "customValueForm") { const n = $("#cvName").value.trim(); if (!n) return; const id = "v-" + uidGen(); editProfile(p => { p.customValues = (p.customValues || []).concat({ id, name: n }); p.values.push(id); }); S.sheet = { type: "pick", value: id }; render(); }
+});
+document.addEventListener("input", e => {
+  const t = e.target, ds = t.dataset;
+  if (ds.j) editWeek(w => { dayObj(w, S.selDay).j[ds.j] = t.value; });
+  else if (ds.r) editWeek(w => { w.r[ds.r] = t.value; });
+  else if (ds.m) editSettings(s => { s.months = s.months || {}; const m = s.months[monthKey()] = s.months[monthKey()] || {}; m[ds.m] = t.value; });
+  else if (ds.p === "goal") editProfile(p => { p.goal = t.value; });
+  else if (ds.p === "ifthen") editProfile(p => { p.ifthen = t.value.split("\n"); });
+  else if (ds.core !== undefined) editProfile(p => { if (p.cores[+ds.core]) p.cores[+ds.core].text = t.value; });
+  else if (ds.ob === "goal") { S.ob.d.goal = t.value; const nb = document.querySelector('[data-act="obNext"]'); if (nb) nb.disabled = !(t.value.trim().length > 3 || S.ob.d.feel.length); }
+  else if (ds.ob === "ifthen") S.ob.d.ifthen = t.value.split("\n");
+  else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value; }
+  else if (ds.c && S.sheet && S.sheet.draft) { S.sheet.draft[ds.c] = ds.c === "hours" ? Math.max(0, Number(t.value) || 0) : t.value; }
+  else if (ds.cb && S.sheet && S.sheet.draft && S.sheet.draft.block) { S.sheet.draft.block[ds.cb] = ds.cb === "dur" ? Math.max(5, Number(t.value) || 30) : t.value; S.sheet.draft.gcal = false; }
+  else if (ds.cap) {
+    const v = +t.value;
+    if (S.ob) { S.ob.d.capacity = v; } else editProfile(p => { p.capacity = v; });
+    const m = t.closest(".meter"); if (m) { const list = S.ob ? obOn(S.ob.d) : comps(); const cap = capacity(list), over = cap > v * 1.05; m.classList.toggle("over", over); m.querySelector(".fill").style.width = Math.min(100, cap / Math.max(v, 1) * 100).toFixed(1) + "%"; m.querySelector(".nums span:last-child").textContent = v + " h available"; m.querySelector(".row .hint").textContent = over ? "Over what you have. Trim before you start." : "Fits, with room to breathe."; }
+  }
+});
+document.addEventListener("change", e => {
+  const t = e.target, ds = t.dataset;
+  if (t.id === "importFile" && t.files && t.files[0]) { importData(t.files[0]); t.value = ""; return; }
+  if (ds.c === "value" && S.sheet && S.sheet.draft) S.sheet.draft.value = t.value;
+  else if (ds.j || ds.cap) scheduleRender();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && S.sheet) { S.sheet = null; render(); } });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") { if (S.selDay !== todayKey() && dkey(S.viewMon) === dkey(monday(new Date()))) S.selDay = todayKey(); scheduleRender(); }
+});
+
+init();
+</script>
+</body>
+</html>
