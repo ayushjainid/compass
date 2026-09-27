@@ -12,7 +12,13 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<title>Compass</title>
+<title>Compass · Know where your life is heading</title>
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://life-compass.web.app/">
+<meta property="og:title" content="Compass · Know where your life is heading">
+<meta property="og:description" content="A few small weekly floors, a Sunday check-in and a safety net for hard weeks. Free, private, grounded in research.">
+<meta property="og:image" content="https://life-compass.web.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -298,6 +304,91 @@ body{transition:background-color .35s ease,color .35s ease}
 @keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13.5px;z-index:40;animation:rise .3s;max-width:calc(100% - 32px);text-align:center}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* ---------- landing ---------- */
+html{scroll-behavior:smooth}
+body.landing .wrap{max-width:1120px;padding-block:0 32px}
+body.landing .top,body.landing #statusline{display:none}
+.lnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px;background:var(--bg);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lnav .brand svg{width:26px;height:26px}
+.lnav .links{display:flex;gap:26px;font-size:14.5px}
+.lnav .links a{color:var(--ink2);text-decoration:none}
+.lnav .links a:hover{color:var(--ink)}
+@media (max-width:820px){.lnav .links{display:none}}
+.navcta{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:500;font-size:14px}
+.navcta svg{width:16px;height:16px}
+.eyebrow{display:block;font:600 12px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.lhero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding-block:44px 80px}
+.lhero h1{font:600 clamp(42px,6.2vw,74px)/1.02 var(--display);letter-spacing:-.028em;margin:16px 0 20px;text-wrap:balance}
+.big{font-size:clamp(17px,1.55vw,19.5px);line-height:1.55;color:var(--ink2);max-width:33em;margin:0}
+.ctas{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:28px}
+.ctas .gbtn{margin-top:0}
+.textlink{color:var(--accent);font-weight:500;text-decoration:none}
+.textlink:hover{text-decoration:underline}
+.meta{margin-top:20px;font-size:13.5px;color:var(--muted);display:flex;gap:6px 16px;flex-wrap:wrap}
+.meta span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:7px;vertical-align:middle}
+@media (max-width:880px){.lhero{grid-template-columns:1fr;gap:40px;padding-block:24px 56px}}
+.demo{position:relative;padding:28px}
+.demo .halo{position:absolute;inset:0;border-radius:50%;border:1.5px dashed var(--line);pointer-events:none}
+.dcard{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 70px -30px rgba(15,25,35,.32);padding:18px 20px 8px;max-width:440px;margin-inline:auto}
+.dhead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:10px}
+.dhead b{font:600 19px/1.2 var(--display)}
+.dhead small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;font-variant-numeric:tabular-nums}
+.dneedle{width:46px;height:46px;flex:none}
+.dneedle g{transform-box:view-box;transform-origin:23px 23px;transition:transform .8s cubic-bezier(.3,1.4,.5,1)}
+.drow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.drow .n{font-weight:600;font-size:14.5px}
+.drow .c{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:5px;grid-column:1/-1}
+.dots i{width:100%;max-width:34px;height:7px;border-radius:4px;background:var(--sunk);transition:background .35s}
+.dots i.on{background:var(--accent)}
+.drow.done .dots i.on{background:var(--good)}
+.dfoot{font-size:12px;color:var(--muted);padding:10px 0 8px;border-top:1px solid var(--line)}
+.lsec{padding-block:80px;border-top:1px solid var(--line)}
+.lsec h2{font:600 clamp(30px,4vw,46px)/1.08 var(--display);letter-spacing:-.02em;margin:14px 0 14px;max-width:17em;text-wrap:balance}
+.lsec .big{margin-bottom:36px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media (max-width:900px){.grid3{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.grid3,.grid2{grid-template-columns:1fr}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:8px}
+.tile h3{font:600 20px/1.2 var(--display);letter-spacing:-.01em;color:var(--ink);text-transform:none;margin:0}
+.tile p{margin:0;color:var(--ink2);line-height:1.55}
+.tile cite{font-style:italic;font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:6px}
+.stepnum{font:600 12.5px/1 var(--mono);color:var(--brass);letter-spacing:.06em}
+.viz{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.viz .chip{min-height:32px;padding:5px 11px;font-size:13px}
+.vline{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding-block:3px}
+.vline span:last-child{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.vbar{height:8px;border-radius:999px;background:var(--sunk);overflow:hidden}
+.vbar i{display:block;height:100%;width:45%;background:var(--accent);border-radius:999px}
+.vfelt{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.vfelt span{border:1px solid var(--line);border-radius:8px;text-align:center;padding:6px 0;font:600 16px var(--display);background:var(--surface)}
+.vfelt span.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:640px){.vs{grid-template-columns:1fr}}
+.vscol{border-radius:16px;padding:22px;border:1px solid var(--line)}
+.vscol.them{background:transparent}
+.vscol.us{background:var(--surface);box-shadow:0 0 0 1.5px var(--accent)}
+.vscol b{font:600 19px var(--display)}
+.vscol ul{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:10px}
+.vscol li{display:flex;gap:10px;line-height:1.45;color:var(--ink2)}
+.vscol li::before{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:1px}
+.vscol.them li::before{content:"✕";background:var(--sunk);color:var(--muted)}
+.vscol.us li::before{content:"✓";background:var(--good-soft);color:var(--good)}
+.note{font-size:13.5px;color:var(--muted);margin-top:22px;max-width:60ch}
+.faq{display:grid;gap:10px;max-width:760px}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 18px}
+.faq summary{cursor:pointer;list-style:none;padding:14px 0;font-weight:600;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--muted);font-weight:400;font-size:20px;line-height:1;transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 16px;color:var(--ink2);line-height:1.55}
+.finale{text-align:center;padding-block:90px 70px;border-top:1px solid var(--line)}
+.finale h2{margin-inline:auto}
+.finale .ctas{justify-content:center}
+.lfoot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding-block:22px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
 /* sign-in & account */
 .signin{display:flex;flex-direction:column;align-items:center;text-align:center;padding-block:10px 40px}
 .signin .lede{margin-inline:auto}
@@ -616,6 +707,25 @@ async function signIn() {
   }
   S.authBusy = false; render();
 }
+async function deleteAccount() {
+  const user = ST.auth && ST.auth.currentUser; if (!user) return;
+  S.delMsg = "Deleting…"; render();
+  try {
+    await flushAll(); Object.keys(ST.subs).forEach(unsubscribe);
+    const snap = await FB.getDocs(FB.collection(ST.fs, "users", ST.uid, "docs"));
+    await Promise.all(snap.docs.map(d => FB.deleteDoc(d.ref)));
+    try { const pre = "compass:" + ST.uid + ":"; Object.keys(localStorage).filter(k => k.startsWith(pre)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    try { await FB.deleteUser(user); }
+    catch (e) {
+      if (e && e.code === "auth/requires-recent-login") { await FB.reauthenticateWithPopup(user, new FB.GoogleAuthProvider()); await FB.deleteUser(user); }
+      else throw e;
+    }
+    S.delMsg = ""; S.sheet = null; S.confirm = null;
+  } catch (e) {
+    S.delMsg = e && e.code === "auth/popup-closed-by-user" ? "Your data was deleted. To remove the account itself, confirm with Google and try again." : "Couldn't finish deleting (" + (e && e.code || "unknown error") + "). Try again.";
+    render();
+  }
+}
 async function signOutNow() {
   await flushAll();
   teardown(); S.authState = "loading"; render();
@@ -651,11 +761,12 @@ async function init() {
   catch (e) { ST.fs = FB.initializeFirestore(app, {}); }
   FB.getRedirectResult(ST.auth).catch(e => { S.authErr = authMessage(e); render(); });
   FB.onAuthStateChanged(ST.auth, async u => {
-    if (!u) { if (ST.uid) teardown(); S.authState = "signedOut"; S.user = null; S.authBusy = false; render(); return; }
+    if (!u) { try { localStorage.removeItem("compass-was-signed-in"); } catch (e) {} if (ST.uid) teardown(); S.authState = "signedOut"; S.user = null; S.authBusy = false; render(); return; }
     if (ST.uid === u.uid) return;
     teardown();
     ST.uid = u.uid; S.user = { name: u.displayName || "", email: u.email || "", photo: u.photoURL || "" };
-    S.authState = "in"; S.authBusy = false; S.mode = "db"; hideBanner();
+    S.authState = "in"; S.authBusy = false; S.mode = "db"; hideBanner(); window.scrollTo(0, 0);
+    try { localStorage.setItem("compass-was-signed-in", "1"); } catch (e) {}
     loadLocalAll(); render();
     try { const p = await ref("profile").get(); if (p.exists) { S.docs.profile = clone(p.data()); LS.set("profile", S.docs.profile); } } catch (e) {}
     profileReady = true;
@@ -833,9 +944,166 @@ const TABS = [
   { t: "compass", name: "Compass", svg: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>' },
 ];
 const GLOGO = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+const DEMO = [
+  { v: "Deep relationships", c: "Parents call", unit: "days", need: 6, start: 4 },
+  { v: "Physical fitness", c: "Workout", unit: "this week", need: 3, start: 1 },
+  { v: "Problem solving", c: "Deep-work block", unit: "this week", need: 2, start: 0 },
+  { v: "Mental fitness", c: "Three-line journal", unit: "days", need: 5, start: 3 },
+];
+let demoT = null;
+function stopDemo() { if (demoT) { clearTimeout(demoT); demoT = null; } }
+function paintDemo(have) {
+  const root = $("#demo"); if (!root) return;
+  let cleared = 0;
+  DEMO.forEach((d, i) => {
+    const row = root.querySelector(`[data-row="${i}"]`), done = have[i] >= d.need; if (done) cleared++;
+    row.classList.toggle("done", done);
+    row.querySelector(".c").textContent = `${d.c} · ${have[i]}/${d.need} ${d.unit}`;
+    row.querySelectorAll(".dots i").forEach((dot, j) => dot.classList.toggle("on", j < have[i]));
+    const pill = row.querySelector(".pill"), wasDone = pill.classList.contains("clear");
+    pill.className = "pill " + (done ? "clear" : "open") + (done && !wasDone ? " stamp" : "");
+    pill.textContent = done ? "Cleared" : `${have[i]} of ${d.need}`;
+  });
+  root.querySelector("#demoHead").textContent = cleared === DEMO.length ? "Every floor cleared. On course." : `${cleared} of ${DEMO.length} values cleared`;
+  root.querySelector(".dneedle g").style.transform = `rotate(${((1 - cleared / DEMO.length) * 42).toFixed(1)}deg)`;
+}
+function startDemo() {
+  stopDemo();
+  let have = DEMO.map(d => d.start);
+  if (reduced()) { paintDemo(DEMO.map(d => d.need)); return; }
+  paintDemo(have);
+  const tick = () => {
+    if (!$("#demo")) return stopDemo();
+    const open = DEMO.map((d, i) => i).filter(i => have[i] < DEMO[i].need);
+    if (!open.length) { demoT = setTimeout(() => { have = DEMO.map(d => d.start); paintDemo(have); demoT = setTimeout(tick, 900); }, 2800); return; }
+    const i = open[Math.floor(Math.random() * open.length)]; have[i]++; paintDemo(have);
+    demoT = setTimeout(tick, 650 + Math.random() * 350);
+  };
+  demoT = setTimeout(tick, 1100);
+}
+function rLanding() {
+  const btn = (label) => `<button class="gbtn" data-act="signin" ${S.authBusy ? "disabled" : ""}>${GLOGO}<span>${S.authBusy ? "Signing in…" : label}</span></button>`;
+  const err = S.authErr ? `<p class="banner" style="margin-top:16px;max-width:34em">${esc(S.authErr)}</p>` : "";
+  const mark = `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 4.5l3.2 11.5H12.8z" fill="var(--brass)"/><path d="M16 27.5l-3.2-11.5h6.4z" fill="var(--muted)"/><circle cx="16" cy="16" r="1.8" fill="var(--surface)" stroke="currentColor" stroke-width="1"/></svg>`;
+  const rows = DEMO.map((d, i) => `<div class="drow" data-row="${i}"><div><div class="n">${esc(d.v)}</div><div class="c"></div></div><span class="pill open"></span><div class="dots">${Array.from({ length: d.need }, () => "<i></i>").join("")}</div></div>`).join("");
+  return `
+  <nav class="lnav" aria-label="Compass">
+    <a class="brand" href="#top" style="color:inherit;text-decoration:none">${mark}Compass</a>
+    <div class="links"><a href="#how">How it works</a><a href="#why">Why it works</a><a href="#privacy">Privacy</a><a href="#faq">FAQ</a></div>
+    <button class="navcta" data-act="signin">${GLOGO}Sign in</button>
+  </nav>
+
+  <section class="lhero" id="top">
+    <div>
+      <span class="eyebrow">A weekly compass for your life</span>
+      <h1>Know where your life is heading.</h1>
+      <p class="big">Compass turns what matters to you into a few small weekly floors. Clear them and the week counts. Miss them and you see the drift early, while it's still easy to correct.</p>
+      <div class="ctas">${btn("Start with Google")}<a class="textlink" href="#how">See how it works ↓</a></div>
+      ${err}
+      <div class="meta"><span>Free</span><span>Private to you</span><span>iPhone, Android and laptop</span></div>
+    </div>
+    <div class="demo" aria-label="Example week in Compass">
+      <div class="halo" aria-hidden="true"></div>
+      <div class="dcard" id="demo">
+        <div class="dhead"><div><b>Week of Sep 21</b><small id="demoHead"></small></div>
+          <svg class="dneedle" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="21" fill="none" stroke="var(--line)" stroke-width="1.5"/><g><path d="M23 6l4.2 17h-8.4z" fill="var(--brass)"/><path d="M23 40l-4.2-17h8.4z" fill="var(--muted)"/></g><circle cx="23" cy="23" r="2.4" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/></svg></div>
+        ${rows}
+        <div class="dfoot">Example week. The needle settles as floors clear.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lsec" id="how">
+    <span class="eyebrow">How it works</span>
+    <h2>Three steps. Five minutes to set up.</h2>
+    <p class="big">No blank page. Compass suggests a starting plan from what you care about, and you keep what fits.</p>
+    <div class="grid3">
+      <div class="tile"><span class="stepnum">STEP 1</span><h3>Choose what matters</h3><p>Pick from ten values backed by research, like deep relationships, creativity or physical fitness, or name your own.</p>
+        <div class="viz"><div class="chips"><span class="chip sel">Deep relationships</span><span class="chip">Creativity</span><span class="chip sel">Physical fitness</span><span class="chip">Service</span><span class="chip sel">Learning</span></div></div></div>
+      <div class="tile"><span class="stepnum">STEP 2</span><h3>Set small floors</h3><p>Each value gets a few pieces with a minimum. A floor is the least that still counts as a good week, sized to the hours you actually have.</p>
+        <div class="viz"><div class="vline"><span>Workout</span><span>3× a week</span></div><div class="vline"><span>Read</span><span>4 of 7 days</span></div><div class="vline"><span>Call a friend</span><span>2× a week</span></div><div class="vbar"><i></i></div><div class="vline"><span class="hint">9 h of floors</span><span>20 h free</span></div></div></div>
+      <div class="tile"><span class="stepnum">STEP 3</span><h3>Check in on Sunday</h3><p>Tap what happened during the week. On Sunday, answer one question: am I at peace with where this is trending?</p>
+        <div class="viz"><div class="vfelt"><span>1</span><span>2</span><span>3</span><span class="on">4</span><span>5</span></div>
+          <svg viewBox="0 0 200 44" style="width:100%;height:auto" aria-hidden="true"><path d="M4 34 L40 30 L76 36 L112 22 L148 18 L196 10" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="196" cy="10" r="4" fill="var(--brass)"/></svg></div></div>
+    </div>
+  </section>
+
+  <section class="lsec">
+    <span class="eyebrow">A different kind of tracker</span>
+    <h2>Most trackers count streaks. Compass watches the trend.</h2>
+    <div class="vs" style="margin-top:30px">
+      <div class="vscol them"><b>Streak trackers</b><ul><li>One missed day resets your progress to zero.</li><li>Every habit, every day, at full intensity.</li><li>Busy weeks turn into guilt.</li></ul></div>
+      <div class="vscol us"><b>Compass</b><ul><li>Floors you can clear on a normal week. A bad Tuesday is noise.</li><li>Two Cores lead each season. Everything else can rest without guilt.</li><li>A Minimum Viable Week keeps only the essentials during illness, travel or crunch.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="lsec" id="why">
+    <span class="eyebrow">Why it works</span>
+    <h2>Built on research about what makes life feel good.</h2>
+    <p class="big">Every piece of Compass comes from published psychology. Here are the ideas it runs on.</p>
+    <div class="grid3">
+      <div class="tile"><h3>Floors, not ceilings</h3><p>People who aim for good enough report more satisfaction than people who chase the best possible outcome.</p><cite>Schwartz et al., 2002</cite></div>
+      <div class="tile"><h3>Two Cores per season</h3><p>Goals that compete for the same hours lower well-being. You pick two to lead for a year; the rest become satellites.</p><cite>Emmons &amp; King, 1988</cite></div>
+      <div class="tile"><h3>Plans for hard weeks</h3><p>Deciding in advance what you'll do when things go wrong makes follow-through far more likely.</p><cite>Gollwitzer &amp; Sheeran, 2006</cite></div>
+      <div class="tile"><h3>Fun stays unscored</h3><p>Scheduling leisure too precisely makes it feel like work, so the things you do for joy live on a menu, never a checklist.</p><cite>Tonietto &amp; Malkoc, 2016</cite></div>
+      <div class="tile"><h3>Never miss twice</h3><p>One missed day barely dents a habit. Compass watches for the second miss, and suggests a smaller floor when something keeps slipping.</p><cite>Lally et al., 2010</cite></div>
+      <div class="tile"><h3>People first</h3><p>Close relationships are the strongest predictor of a long, healthy life, so staying in touch gets its own tools.</p><cite>Holt-Lunstad et al., 2010</cite></div>
+    </div>
+    <p class="note">Each idea is well studied on its own. How they fit together in Compass is new, so your own weekly check-in is the real test of whether it's working for you.</p>
+  </section>
+
+  <section class="lsec" id="privacy">
+    <span class="eyebrow">Privacy</span>
+    <h2>Your life stays yours.</h2>
+    <div class="grid3" style="margin-top:30px">
+      <div class="tile"><h3>Only you can read it</h3><p>Your data is stored in Google Firebase under your account, behind rules that let only you in. Nobody else can see your journal or your weeks.</p></div>
+      <div class="tile"><h3>No ads, no tracking</h3><p>Compass loads no analytics and shows no ads. It uses your name, email and photo only to sign you in.</p></div>
+      <div class="tile"><h3>Leave whenever you like</h3><p>Export everything as a file at any time, or delete your account and all your data from the account menu.</p></div>
+    </div>
+  </section>
+
+  <section class="lsec" id="install">
+    <span class="eyebrow">Install</span>
+    <h2>Put it on your home screen.</h2>
+    <p class="big">Compass runs in the browser and installs like an app. Sign in with the same Google account everywhere and it stays in sync.</p>
+    <div class="grid3">
+      <div class="tile"><h3>iPhone</h3><p>Open this page in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>.</p></div>
+      <div class="tile"><h3>Android</h3><p>Open it in Chrome, tap the <b>⋮</b> menu, then <b>Install app</b>.</p></div>
+      <div class="tile"><h3>Laptop</h3><p>In Chrome or Edge, click the install icon at the right of the address bar.</p></div>
+    </div>
+  </section>
+
+  <section class="lsec" id="faq">
+    <span class="eyebrow">Questions</span>
+    <h2>Good to know.</h2>
+    <div class="faq" style="margin-top:28px">
+      <details><summary>Is Compass free?</summary><p>Yes. There's no subscription and nothing to buy.</p></details>
+      <details><summary>What do I need to start?</summary><p>A Google account. Setup takes about five minutes and you can change everything later.</p></details>
+      <details><summary>Does it work offline?</summary><p>Yes. Changes save on your device and sync when you're back online.</p></details>
+      <details><summary>What if I have a terrible week?</summary><p>Turn on a Minimum Viable Week. Only the few things you chose as your safety net count, and everything else pauses with no penalty.</p></details>
+      <details><summary>Is this therapy or medical advice?</summary><p>No. Compass is a planning and reflection tool. It can sit alongside therapy, but it doesn't replace care from a professional.</p></details>
+      <details><summary>How do I delete my data?</summary><p>Sign in, open the account menu (your photo, top right) and choose <b>Delete my account</b>. Your data is removed from the database for good.</p></details>
+    </div>
+  </section>
+
+  <section class="finale">
+    <span class="eyebrow">Ready when you are</span>
+    <h2>Set your compass.</h2>
+    <p class="big" style="margin-inline:auto">Five minutes today. A clearer direction every Sunday after.</p>
+    <div class="ctas">${btn("Start with Google")}</div>
+    ${err}
+  </section>
+
+  <footer class="lfoot"><span>Compass · Free and private</span><span>life-compass.web.app</span></footer>`;
+}
 function renderGate() {
   $("#weeknav").hidden = true; $("#tabbar").hidden = true; $("#acctBtn").hidden = true; $("#obbar").innerHTML = ""; $("#heading").textContent = ""; $("#sheetRoot").innerHTML = "";
-  let body = "";
+  let body = "", wasIn = false;
+  try { wasIn = localStorage.getItem("compass-was-signed-in") === "1"; } catch (e) {}
+  const landing = S.authState === "signedOut" || (S.authState === "loading" && !wasIn);
+  document.body.classList.toggle("landing", landing);
+  if (landing) { const had = !!$("#demo"); if (!had || S.gateKey !== (S.authBusy + S.authErr)) { $("#main").innerHTML = rLanding(); startDemo(); } S.gateKey = S.authBusy + S.authErr; updSync(); return; }
+  stopDemo(); S.gateKey = null;
   if (S.authState === "loading") body = `<div class="hero">${bigCompass()}</div>`;
   else if (S.authState === "noconfig") body = `<div class="signin"><div class="hero">${bigCompass(false)}</div><h1>Almost there.</h1><p class="lede">Compass needs your Firebase project's settings. Paste them into <b>firebase-config.js</b>, then deploy again. The README walks through it.</p></div>`;
   else body = `<div class="signin"><div class="hero">${bigCompass()}</div>
@@ -856,6 +1124,7 @@ function renderAvatar() {
 function render() {
   applyTheme();
   if (S.authState !== "in") return renderGate();
+  document.body.classList.remove("landing"); stopDemo(); S.gateKey = null;
   renderAvatar();
   const inOb = !onboarded() || !!S.ob;
   $("#weeknav").hidden = inOb; $("#statusline").hidden = false; $("#tabbar").hidden = inOb;
@@ -1131,7 +1400,9 @@ function renderSheet() {
       <div class="acct"><span class="avatar">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc((u.name || u.email || "?").charAt(0).toUpperCase())}</span><div><b>${esc(u.name || "Signed in")}</b><div class="hint">${esc(u.email)}</div></div></div>
       <p class="hint" style="margin:0">Signed in with Google. Your Compass syncs to every device where you sign in with this account.</p>
       <button class="btn" data-act="export">Export my data</button>
-      <button class="btn danger" data-act="signout">Sign out</button>
+      <button class="btn" data-act="signout">Sign out</button>
+      ${S.confirm === "delacct" ? `<div class="banner" style="margin:0"><b>Delete your account and all your data?</b> Your setup, every week and your journal are removed for good. Export first if you want a copy.<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn danger" data-act="delAcctYes">Delete everything</button><button class="btn quiet" data-act="delAcctNo">Keep my account</button></div></div>` : `<button class="btn quiet danger" data-act="delAcct">Delete my account</button>`}
+      ${S.delMsg ? `<p class="hint" style="margin:0">${esc(S.delMsg)}</p>` : ""}
       <button class="btn quiet" data-act="closeSheet">Close</button></div></div>`;
     return;
   }
@@ -1424,6 +1695,9 @@ document.addEventListener("click", e => {
     }
     case "signin": signIn(); return;
     case "signout": signOutNow(); return;
+    case "delAcct": S.confirm = "delacct"; break;
+    case "delAcctNo": S.confirm = null; break;
+    case "delAcctYes": deleteAccount(); return;
     case "account": S.sheet = { type: "account" }; break;
     case "export": exportData(); return;
     /* app */
