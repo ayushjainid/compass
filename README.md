@@ -27,14 +27,16 @@ compass-web/
 
 ## 2. Turn on Google sign-in
 
-1. Left menu → **Build → Authentication → Get started**.
-2. **Sign-in method** tab → **Google** → **Enable**.
-3. Set **Public-facing name** to `Compass` and pick your support email → **Save**.
-   This name is what people see on Google's "Choose an account" screen.
+1. In the left panel, open **Security → Authentication**. If you see a **Get started** button, click it.
+   (Older consoles call this section **Build → Authentication**.)
+2. Open the **Sign-in method** tab → under **Sign-in providers**, click **Google** (or **Add new provider → Google**) → switch **Enable** on.
+3. In the same panel, set **Public-facing name for project** to `Compass` and choose your **Support email for project** → **Save**.
+   This name is what people see on Google's "Choose an account" screen. If you don't see the name field, set it later under the gear icon → **Project settings → General → Public-facing name**.
 
 ## 3. Create the database
 
-1. Left menu → **Build → Firestore Database → Create database**.
+1. In the left panel, open **Databases & Storage → Firestore** → **Create database**.
+   (Older consoles call this **Build → Firestore Database**.)
 2. Choose a location close to you. It can't be changed later.
 3. Choose **Start in production mode** → **Create**. The rules in this project replace the defaults when you deploy.
 
