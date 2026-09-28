@@ -389,6 +389,20 @@ body.landing .top,body.landing #statusline{display:none}
 .lfoot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding-block:22px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
+/* ---------- load breakdown ---------- */
+.explain{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:10px}
+.explain p{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.5}
+.brk{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.brow{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px}
+.brow + .brow{border-top:1px solid var(--line)}
+.brow .nm{min-width:0}
+.brow .nm small{display:block;color:var(--muted);font:500 11.5px var(--mono)}
+.brow .wk{font:600 13px var(--mono);white-space:nowrap}
+.brow .adj{display:flex;gap:4px}
+.brow .adj button{width:28px;height:28px;border-radius:50%;background:var(--sunk);font-size:15px;line-height:1}
+.brow.tot{background:var(--surface);font-weight:600}
+.linkish{color:var(--accent);font-weight:500;font-size:13.5px;padding:4px 0}
+
 /* ---------- tasks ---------- */
 .fab{position:fixed;right:max(16px,calc(50% - 300px + 16px));bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:12;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(10,20,30,.45);transition:transform .15s}
 .fab:active{transform:scale(.92)}
@@ -920,6 +934,13 @@ function capacity(list) {
     const per = c.cadence === "monthly" ? c.target / 4.3 : c.target;
     return s + (c.hours || 0) * per * (c.alt ? 0.5 : 1);
   }, 0);
+}
+const weeklyHours = c => c.fun ? 0 : (c.hours || 0) * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? 0.5 : 1);
+const hFmt = h => { const r = Math.round(h * 100) / 100; return (r % 1 === 0 ? r.toFixed(0) : String(r)).replace(/^0\./, "0."); };
+function loadFormula(c) {
+  const hv = c.hours || 0, h = hv > 0 && hv < 1 ? Math.round(hv * 60) + " min" : hFmt(hv) + " h";
+  const base = c.cadence === "daily" ? `${h} × ${c.target} days` : c.cadence === "monthly" ? `${h} × ${c.target}/month ÷ 4.3` : `${h} × ${c.target}${c.unit ? "" : "/week"}`;
+  return base + (c.alt ? " ÷ 2 (every other week)" : "");
 }
 const cadenceText = c => c.fun ? "Fun menu · never scored" : c.cadence === "daily" ? `${c.target} of 7 days` : c.cadence === "monthly" ? `${c.target}× a month` : `${c.target}${c.unit || ""}${c.unit ? "" : "×"} a week`;
 
@@ -1743,12 +1764,29 @@ function compRow(c) {
   const tags = [c.mvw && !c.fun ? '<span class="tag mvw">Safety net</span>' : "", c.alt ? `<span class="tag">Week ${c.alt}</span>` : "", c.people ? '<span class="tag">People</span>' : "", c.block ? `<span class="tag">${c.gcal ? "On calendar" : "Has a time"}</span>` : "", c.ai ? '<span class="tag ai">Tailored</span>' : ""].join("");
   return `<button class="comp" data-act="editComp" data-id="${esc(c.id)}"><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}${c.hours && !c.fun ? " · ~" + hrs(c.hours * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? .5 : 1)) + " h/wk" : ""}</small>${tags ? `<span class="tags" style="margin-top:4px">${tags}</span>` : ""}</span><span class="chev">›</span></button>`;
 }
+function meterStatus(cap, avail) {
+  if (cap > avail * 1.05) return `Over by ${hrs(cap - avail)} h. Lower a floor, trim hours, or turn something off.`;
+  if (cap > avail * 0.85) return "Fits, but tight. Leave a little slack for real life.";
+  return `Fits, with ${hrs(avail - cap)} h to spare.`;
+}
 function meter(list, avail, idPrefix = "") {
+  const scored = list.filter(c => !c.fun && c.on !== false);
   const cap = capacity(list), pct = Math.min(100, cap / Math.max(avail, 1) * 100), over = cap > avail * 1.05;
-  return `<div class="card meter ${over ? "over" : ""}"><div class="row"><b>Weekly load</b><span class="hint">${over ? "Over what you have. Trim before you start." : "Fits, with room to breathe."}</span></div>
+  const rows = scored.map(c => ({ c, w: weeklyHours(c) })).sort((a, b) => b.w - a.w);
+  const zero = rows.filter(r => !r.c.hours).length;
+  return `<div class="card meter ${over ? "over" : ""}"><div class="row"><b>Weekly load</b><span class="hint" data-mstat="1">${esc(meterStatus(cap, avail))}</span></div>
     <div class="bar"><div class="fill" style="width:${pct.toFixed(1)}%"></div></div>
-    <div class="nums"><span>${hrs(cap)} h of floors</span><span>${avail} h available</span></div>
-    <input type="range" min="4" max="50" step="1" value="${avail}" id="${idPrefix}cap" data-cap="1" aria-label="Hours a week you can give"></div>`;
+    <div class="nums"><span>${hrs(cap)} h of floors</span><span>${avail} h you can give</span></div>
+    <label class="flabel" for="${idPrefix}cap" style="display:block;margin-top:10px">Hours a week you can give to these floors</label>
+    <input type="range" min="4" max="50" step="1" value="${avail}" id="${idPrefix}cap" data-cap="1">
+    <button class="linkish" data-act="loadToggle" aria-expanded="${!!S.loadOpen}">${S.loadOpen ? "Hide the maths ▴" : "How is this calculated? ▾"}</button>
+    ${S.loadOpen ? `<div class="explain">
+      <p><b>Floors:</b> each component has an estimate of how long it takes each time. Compass multiplies it by how often the floor asks for it: days a week for daily ones, times a week for weekly ones, and times a month ÷ 4.3 for monthly ones. Alternating-week components count half. Fun-menu items are never counted.</p>
+      <p><b>Hours you can give:</b> your own estimate of free time a week after work, sleep, commuting and chores. Most people with a full-time job have 25–40 truly free hours; giving 15–25 of them to floors leaves room for rest and surprises.</p>
+      <p><b>The check:</b> within 85% fits comfortably, up to 105% is tight, and anything more is over. Compass warns instead of blocking, because a plan that doesn't fit turns into a scoreboard you lose.</p>
+      <div class="brk">${rows.map(r => `<div class="brow"><div class="nm">${esc(r.c.name)}<small>${esc(loadFormula(r.c))}</small></div><span class="wk">${hFmt(Math.round(r.w * 10) / 10)} h</span><span class="adj"><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="-0.25" aria-label="Less time for ${esc(r.c.name)}">−</button><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="0.25" aria-label="More time for ${esc(r.c.name)}">+</button></span></div>`).join("")}
+        <div class="brow tot"><div class="nm">Total</div><span class="wk">${hrs(cap)} h</span><span></span></div></div>
+      <p class="hint" style="margin:0">Use − and + to set how long each takes you, in 15-minute steps.${zero ? ` ${zero} item${zero > 1 ? "s" : ""} like “Slept 7+ hours” cost no extra time, so ${zero > 1 ? "they count" : "it counts"} as 0.` : ""}</p></div>` : ""}</div>`;
 }
 function rCompass(id, F, trips, sugg) {
   const p = profile(), vals = valueList(), all = comps();
@@ -2029,7 +2067,7 @@ function renderOnboarding() {
     canNext = d.values.length >= 1; next = d.values.length ? `Continue with ${d.values.length}` : "Pick at least one";
   } else if (key === "comps") {
     ensureCandidates(d);
-    html = `<div class="stickymeter">${meter(obOn(d), d.capacity, "ob")}</div>
+    html = `<div class="${S.loadOpen ? "" : "stickymeter"}">${meter(obOn(d), d.capacity, "ob")}</div>
       <h1>Small pieces, each a floor.</h1>
       <p class="lede">These are your components. Keep what fits; each floor is the minimum that already counts as a good week. You can change everything later.</p>
       ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
@@ -2037,7 +2075,7 @@ function renderOnboarding() {
         const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid);
         const list = d.comps.filter(c => c.value === vid && !c.fun);
         return `<div class="vgroup"><div class="gh"><b>${esc(v.name)}</b><span class="hint">${list.filter(c => c.on).length} on</span></div><div class="card">
-          ${list.map(c => `<button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${esc(cadenceText(c))}${c.note ? " · " + esc(c.note) : ""}</small></span></button>`).join("")}
+          ${list.map(c => `<button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${esc(cadenceText(c))}${c.hours ? " · ~" + hFmt(Math.round(weeklyHours(c) * 10) / 10) + " h/wk" : ""}${c.note ? " · " + esc(c.note) : ""}</small></span></button>`).join("")}
           <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(v.name)}"><button class="btn small" type="submit">Add</button></form></div></div>`;
       }).join("")}
       <div class="vgroup"><div class="gh"><b>Fun menu</b><span class="hint">never scored</span></div>
@@ -2122,6 +2160,12 @@ document.addEventListener("click", e => {
     case "signin": signIn(); return;
     case "tourGo": { const w = $("#tourWrap"); if (w) w.classList.remove("still"); tourShow(+b.dataset.i); return; }
     case "signout": signOutNow(); return;
+    case "loadToggle": S.loadOpen = !S.loadOpen; if (S.ob) { updateOb(); return; } break;
+    case "hrs": {
+      const d = +b.dataset.d, id = b.dataset.id, adj = c => { c.hours = Math.max(0, Math.min(12, Math.round(((c.hours || 0) + d) * 4) / 4)); c.touched = true; };
+      if (S.ob) { const c = S.ob.d.comps.find(x => x.id === id); if (c) adj(c); updateOb(); return; }
+      editProfile(p => { const c = p.components.find(x => x.id === id); if (c) adj(c); }); break;
+    }
     case "capture": S.capMsg = ""; S.sheet = { type: "capture" }; break;
     case "capAdd": {
       const ta = $("#" + b.dataset.src); const n = addCaptured(ta && ta.value);
@@ -2270,7 +2314,7 @@ document.addEventListener("input", e => {
   else if (ds.cap) {
     const v = +t.value;
     if (S.ob) { S.ob.d.capacity = v; } else editProfile(p => { p.capacity = v; });
-    const m = t.closest(".meter"); if (m) { const list = S.ob ? obOn(S.ob.d) : comps(); const cap = capacity(list), over = cap > v * 1.05; m.classList.toggle("over", over); m.querySelector(".fill").style.width = Math.min(100, cap / Math.max(v, 1) * 100).toFixed(1) + "%"; m.querySelector(".nums span:last-child").textContent = v + " h available"; m.querySelector(".row .hint").textContent = over ? "Over what you have. Trim before you start." : "Fits, with room to breathe."; }
+    const m = t.closest(".meter"); if (m) { const list = S.ob ? obOn(S.ob.d) : comps(); const cap = capacity(list), over = cap > v * 1.05; m.classList.toggle("over", over); m.querySelector(".fill").style.width = Math.min(100, cap / Math.max(v, 1) * 100).toFixed(1) + "%"; m.querySelector(".nums span:last-child").textContent = v + " h you can give"; m.querySelector("[data-mstat]").textContent = meterStatus(cap, v); }
   }
 });
 document.addEventListener("change", e => {
