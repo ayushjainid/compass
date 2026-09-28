@@ -389,6 +389,91 @@ body.landing .top,body.landing #statusline{display:none}
 .lfoot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding-block:22px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
+/* ---------- tasks ---------- */
+.fab{position:fixed;right:max(16px,calc(50% - 300px + 16px));bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:12;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(10,20,30,.45);transition:transform .15s}
+.fab:active{transform:scale(.92)}
+.capbox{display:flex;flex-direction:column;gap:8px;padding:12px 14px}
+.capbox textarea{min-height:72px}
+.capbox .row{gap:8px}
+.inboxcta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;background:var(--brass-soft);border-radius:var(--r)}
+.inboxcta b{font:600 18px/1.2 var(--display)}
+.task{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:52px}
+.task + .task{border-top:1px solid var(--line)}
+.task .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.task .tx small{color:var(--muted);font-size:12.5px}
+.tick{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--muted);display:grid;place-items:center}
+.tick:hover{border-color:var(--accent)}
+.tick.on{background:var(--good);border-color:var(--good)}
+.tick.on::after{content:"";width:5px;height:10px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.tag.core{background:var(--brass-soft);color:var(--brass)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+details.fold{margin-top:10px}
+details.fold summary{cursor:pointer;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 0;list-style:none}
+details.fold summary::-webkit-details-marker{display:none}
+details.fold summary::before{content:"▸ ";}
+details.fold[open] summary::before{content:"▾ ";}
+.stepin2{display:flex;gap:8px;margin-top:6px}
+.sortcard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 18px;box-shadow:0 18px 40px -24px rgba(10,20,30,.4);animation:rise .3s cubic-bezier(.2,.8,.2,1)}
+.sortcard .q{font:600 22px/1.25 var(--display);letter-spacing:-.01em;word-break:break-word}
+.sortgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sbtn{position:relative;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-height:58px}
+.sbtn b{font-weight:600;font-size:14.5px}
+.sbtn small{color:var(--muted);font-size:12px;line-height:1.3}
+.sbtn kbd{position:absolute;top:8px;right:9px;font:500 10.5px var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.sbtn.sug{border-color:var(--brass);box-shadow:0 0 0 1.5px var(--brass)}
+.sbtn.sug::before{content:"Suggested";position:absolute;top:-9px;left:10px;background:var(--brass);color:var(--on-accent);font-size:10px;font-weight:600;letter-spacing:.04em;padding:1px 6px;border-radius:5px}
+.sbtn:hover{border-color:var(--accent)}
+.sbtn.full{grid-column:1/-1}
+@media (hover:none){.sbtn kbd{display:none}}
+.meterline{display:flex;gap:6px;align-items:center}
+.meterline i{width:22px;height:6px;border-radius:3px;background:var(--sunk)}
+.meterline i.on{background:var(--accent)}
+
+/* ---------- landing: tour ---------- */
+.tour{display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center;margin-top:30px}
+@media (max-width:880px){.tour{grid-template-columns:1fr;gap:24px}.tour .phone{order:-1;margin-inline:auto}}
+.tsteps{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.tsteps button{width:100%;text-align:left;border-radius:14px;padding:14px 16px;display:grid;gap:4px;border:1px solid transparent;transition:background .2s,border-color .2s}
+.tsteps button b{font:600 18px/1.2 var(--display)}
+.tsteps button span{color:var(--muted);font-size:14px}
+.tsteps button[aria-current="true"]{background:var(--surface);border-color:var(--line)}
+.tsteps button[aria-current="true"] span{color:var(--ink2)}
+.tbar{display:block;height:3px;border-radius:2px;background:var(--sunk);overflow:hidden;margin-top:6px}
+.tbar i{display:block;height:100%;width:0;background:var(--accent)}
+.tsteps button[aria-current="true"] .tbar i{animation:tprog var(--tdur,6s) linear forwards}
+.tour.still .tsteps button[aria-current="true"] .tbar i{animation:none;width:100%}
+@keyframes tprog{to{width:100%}}
+@media (max-width:880px){.tsteps{grid-template-columns:repeat(3,1fr)}.tsteps button{padding:10px}.tsteps button b{font-size:14.5px}.tsteps button span{display:none}}
+.phone{width:330px;max-width:100%;aspect-ratio:9/17.5;border-radius:40px;background:#0E1311;padding:10px;box-shadow:0 40px 80px -40px rgba(10,20,30,.55),inset 0 0 0 1.5px #2a322f}
+.pscreen{height:100%;border-radius:31px;background:var(--bg);overflow:hidden;padding:26px 14px 14px;position:relative;font-size:13px;display:flex;flex-direction:column;gap:9px}
+.pscreen .pt{font:600 20px/1.15 var(--display)}
+.pscreen .ps{color:var(--muted);font-size:12px}
+.pscreen .card{border-radius:12px}
+.pscreen .mini{display:flex;align-items:center;gap:9px;padding:8px 10px;font-size:13px}
+.pscreen .mini + .mini{border-top:1px solid var(--line)}
+.pscreen .mbox{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--muted);flex:none;display:grid;place-items:center;transition:all .25s}
+.pscreen .mbox.on{background:var(--accent);border-color:var(--accent)}
+.pscreen .mbox.on::after{content:"";width:4px;height:8px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.pscreen .vgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pscreen .vc{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px;font-size:12px;font-weight:600;transition:all .25s}
+.pscreen .vc.on{background:var(--accent-soft);border-color:var(--accent);transform:scale(1.03)}
+.pscreen .tin{opacity:0;animation:rise .45s cubic-bezier(.2,.8,.2,1) forwards}
+.pscreen .typing{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 10px;min-height:38px;font-size:13px}
+.pscreen .typing::after{content:"";display:inline-block;width:1.5px;height:14px;background:var(--accent);vertical-align:-2px;margin-left:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.pscreen .bkts{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:auto}
+.pscreen .bk{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 4px;text-align:center;font-size:10.5px;color:var(--muted);transition:all .25s}
+.pscreen .bk b{display:block;font:600 18px var(--display);color:var(--ink)}
+.pscreen .bk.hit{border-color:var(--accent);background:var(--accent-soft)}
+.pscreen .scard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;font:600 17px/1.25 var(--display);transition:transform .35s ease,opacity .35s ease}
+.pscreen .scard.out{transform:translateX(120%) rotate(8deg);opacity:0}
+.pscreen .sopts{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.pscreen .so{border:1px solid var(--line);border-radius:9px;padding:7px 8px;font-size:11.5px;font-weight:600;background:var(--surface);transition:all .2s}
+.pscreen .so.pick{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.pscreen .pill{font-size:10.5px}
+.pscreen .spk path{stroke-dasharray:260;stroke-dashoffset:260;transition:stroke-dashoffset 1.6s ease}
+.pscreen .spk.draw path{stroke-dashoffset:0}
+
 /* sign-in & account */
 .signin{display:flex;flex-direction:column;align-items:center;text-align:center;padding-block:10px 40px}
 .signin .lede{margin-inline:auto}
@@ -429,6 +514,7 @@ body.landing .top,body.landing #statusline{display:none}
   <main id="main"></main>
 </div>
 <div id="sheetRoot"></div>
+<button class="fab" id="fab" data-act="capture" aria-label="Capture a thought" hidden>+</button>
 <div id="obbar"></div>
 <nav class="tabbar" aria-label="Sections" id="tabbar"><div class="in" role="tablist" id="tabs"></div></nav>
 
@@ -586,6 +672,7 @@ function themePicker() {
 
 /* ============ state ============ */
 const S = {
+  sortSkip: new Set(), sortCount: 0, sortTotal: 0, sortTally: {}, sortProj: null, stepFor: null, capMsg: "", migrated: false, noFocus: false,
   authState: "loading", user: null, authBusy: false, authErr: "", importMsg: "",
   tab: "today", viewMon: monday(new Date()), selDay: todayKey(),
   docs: {}, hist: {}, mode: "connecting", last: {}, confirm: null, pendingRender: false,
@@ -663,7 +750,7 @@ async function loadHistory() {
   } catch (e) {}
 }
 function loadLocalAll() {
-  ["settings", "people", "profile"].forEach(id => { const v = LS.get(id); if (v) S.docs[id] = v; });
+  ["settings", "people", "profile", "tasks"].forEach(id => { const v = LS.get(id); if (v) S.docs[id] = v; });
   const pre = LS.key("w-");
   try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(pre)) { const id = k.slice(pre.length - 2); const v = LS.get(id); if (v) S.hist[id] = v; } } } catch (e) {}
   const w = LS.get(curWid()); if (w) S.docs[curWid()] = w;
@@ -684,7 +771,7 @@ async function flushAll() {
 }
 function teardown() {
   Object.keys(ST.subs).forEach(unsubscribe);
-  S.docs = {}; S.hist = {}; S.ob = null; S.sheet = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
+  S.docs = {}; S.hist = {}; S.ob = null; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
   ST.uid = null; S.mode = "connecting"; profileReady = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
 }
 function authMessage(e) {
@@ -744,7 +831,7 @@ async function importData(file) {
   try {
     const j = JSON.parse(await file.text());
     if (!j || j.app !== "compass" || typeof j.docs !== "object") throw new Error("not a Compass export");
-    const ids = Object.keys(j.docs).filter(k => /^(profile|settings|people|w-\d{4}-\d{2}-\d{2})$/.test(k));
+    const ids = Object.keys(j.docs).filter(k => /^(profile|settings|people|tasks|w-\d{4}-\d{2}-\d{2})$/.test(k));
     ids.forEach(id => { S.docs[id] = clone(j.docs[id]); if (id.startsWith("w-")) S.hist[id] = clone(j.docs[id]); touch(id); });
     S.ob = null; S.importMsg = `Imported ${ids.filter(i => i.startsWith("w-")).length} weeks and your setup.`;
   } catch (e) { S.importMsg = "That file isn't a Compass export. Choose the .json file Compass saved."; }
@@ -772,7 +859,7 @@ async function init() {
     loadLocalAll(); render();
     try { const p = await ref("profile").get(); if (p.exists) { S.docs.profile = clone(p.data()); LS.set("profile", S.docs.profile); } } catch (e) {}
     profileReady = true;
-    ["profile", "settings", "people", curWid()].forEach(subscribe);
+    ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     loadHistory(); render();
   });
 }
@@ -872,6 +959,13 @@ function suggestions() {
     else if (h.length >= 6 && h.every(Boolean))
       out.push({ icon: "star", title: `${c.name} looks automatic now.`, body: "Six clean weeks. Leave it running on autopilot and put fresh energy into a Core.", src: "Lally et al. 2010, habit automaticity" });
   });
+  const inN = inboxItems().length;
+  if (inN >= 10) out.push({ icon: "star", title: `${inN} unsorted thoughts in your inbox.`, body: "Sorting takes about a minute per ten. Once each has a home and a time, it stops circling.", src: "Masicampo & Baumeister 2011", act: { label: "Sort now", do: "sort" } });
+  const noNext = projectsList().find(p => !p.next);
+  if (noNext) out.push({ icon: "down", title: `“${noNext.t}” has no next step.`, body: "Big goals stall without a concrete first action. Write the very next physical step, even a tiny one.", src: "Allen 2001, Getting Things Done", act: { label: "Add a next step", do: "gotoTasks" } });
+  const slipped = titems().filter(i => i.s === "errand" && (i.moves || 0) >= 2).sort((a, b) => b.moves - a.moves)[0];
+  if (slipped) out.push({ icon: "scale", title: `“${slipped.t}” has slipped ${slipped.moves} weeks.`, body: "Shrink it to a 10-minute version, give it a fixed time, or move it to Someday. Carrying it costs more than deciding.", src: "Gollwitzer & Sheeran 2006", act: { label: "Open Tasks", do: "gotoTasks" } });
+  if (weekErrands().length > ERRAND_CAP) out.push({ icon: "scale", title: `${weekErrands().length} errands this week.`, body: `Around ${ERRAND_CAP} is what fits beside your floors. Move the extras to Next up; they'll still be there.`, src: "Schwartz et al. 2002, satisficing", act: { label: "Open Tasks", do: "gotoTasks" } });
   if (!all.some(c => c.fun)) out.push({ icon: "heart", title: "You have no fun menu.", body: "List a few things you do purely for joy. Compass never scores them; scheduling fun precisely makes it feel like work.", src: "Tonietto & Malkoc 2016", act: { label: "Add fun things", do: "gotoCompass" } });
   if (!scored.some(c => c.mvw)) out.push({ icon: "shield", title: "Nothing survives a hard week.", body: "Pick two or three things that stay on during illness, travel or crunch. Everything else pauses without guilt.", src: "Gollwitzer & Sheeran 2006", act: { label: "Choose them", do: "gotoCompass" } });
   if (!all.some(c => c.value === "time") && !(p.values || []).includes("time")) out.push({ icon: "shield", title: "No time is protected from the plan.", body: "One empty block a week keeps the system from filling every hour.", src: "Deci & Ryan, autonomy", act: { label: "Add an empty block", do: "addLib", id: "recovery" } });
@@ -889,6 +983,185 @@ function tripwires() {
   const sleep = compById("sleep"), a = wk(1);
   if (sleep && a.w && Object.keys(a.w.days || {}).length >= 4 && compHave(sleep, a.w, a.id) < 4) out.push("Fewer than 4 good nights of sleep last week. Protect bedtime before adding anything.");
   return out;
+}
+
+/* ============ tasks: capture, sort, place ============ */
+const ERRAND_CAP = 3;
+const tasksDoc = () => { const t = S.docs.tasks || (S.docs.tasks = {}); t.items = t.items || []; return t; };
+const titems = () => tasksDoc().items;
+const thisWk = () => wid(monday(new Date()));
+const nextWkId = () => wid(addDays(monday(new Date()), 7));
+const inboxItems = () => titems().filter(i => i.s === "inbox");
+const weekErrands = (wk = thisWk()) => titems().filter(i => i.s === "errand" && i.wk === wk);
+const laterErrands = () => titems().filter(i => i.s === "errand" && (!i.wk || i.wk < thisWk()));
+const projectsList = () => titems().filter(i => i.s === "project");
+const somedays = () => titems().filter(i => i.s === "someday");
+const doneErrandsThisWeek = () => titems().filter(i => i.s === "done" && i.was === "errand" && i.wk === thisWk());
+function editTasks(fn) {
+  fn(tasksDoc());
+  const t = tasksDoc(), closed = t.items.filter(i => i.s === "done" || i.s === "dropped" || i.s === "component");
+  if (closed.length > 300) { const cut = new Set(closed.sort((a, b) => ((a.doneAt || "") < (b.doneAt || "") ? -1 : 1)).slice(0, closed.length - 300).map(i => i.id)); t.items = t.items.filter(i => !cut.has(i.id)); }
+  touch("tasks");
+}
+const taskById = id => titems().find(i => i.id === id);
+function setTask(id, patch) { editTasks(t => { const i = t.items.find(x => x.id === id); if (i) Object.assign(i, patch); }); }
+const cleanLine = l => l.replace(/^\s*(?:[-*•·–—>]|\d+[.)]|\[[ xX]?\]|☐|☑)\s*/, "").trim();
+function addCaptured(text) {
+  const lines = String(text || "").split(/\n+/).map(cleanLine).filter(Boolean).map(t => t.slice(0, 200));
+  if (!lines.length) return 0;
+  editTasks(t => { lines.forEach(l => t.items.push({ id: uidGen(), t: l, s: "inbox", at: todayKey() })); });
+  return lines.length;
+}
+const KIND_RX = {
+  recurring: /\b(every|daily|weekly|monthly|each (day|week|month)|regularly|routine|habit)\b/i,
+  project: /\b(learn|study|start|build|plan|prepare|research|organi[sz]e|set ?up|figure out|apply|find time)\b/i,
+  errand: /\b(call|email|text|message|buy|order|book|pay|return|renew|change|replace|fix|cancel|schedule|reply|send|pick up|drop off|submit|file|print|sign|install)\b/i,
+};
+function guessKind(t) {
+  if (KIND_RX.recurring.test(t)) return "recurring";
+  if (KIND_RX.errand.test(t) && !(KIND_RX.project.test(t) && t.length > 40)) return "errand";
+  if (KIND_RX.project.test(t)) return "project";
+  return null;
+}
+const VAL_RX = {
+  rel: /\b(mom|mum|dad|parents?|family|friends?|brother|sister|partner|dating|wedding|birthday|grandma|grandpa)\b/i,
+  body: /\b(gym|run|workout|doctor|dentist|sleep|skin|meal|cook|food|diet|yoga|health|physio)\b/i,
+  money: /\b(pay|bill|invest|tax|bank|split|expenses?|insurance|budget|loan|refund|savings?|rent)\b/i,
+  solve: /\b(job|interview|resume|career|promotion|code|coding)\b/i,
+  learn: /\b(learn|course|class|language|study|exam)\b/i,
+  create: /\b(guitar|piano|paint|draw|write|music|photo|design|craft|sing)\b/i,
+  world: /\b(trip|travel|flight|visa|passport|vacation|hike|holiday)\b/i,
+  serve: /\b(volunteer|donate|ngo|charity|mentor)\b/i,
+  mind: /\b(therapy|therapist|meditat|journal)\b/i,
+};
+function guessValue(t) { const vs = (profile() || {}).values || []; for (const v of vs) if (VAL_RX[v] && VAL_RX[v].test(t)) return v; return null; }
+function migrateInbox() {
+  const st = S.docs.settings;
+  if (st && Array.isArray(st.inbox) && st.inbox.length) {
+    const old = st.inbox.slice();
+    editTasks(t => old.forEach(x => { if (x && x.t && !t.items.some(i => i.id === x.id)) t.items.push({ id: x.id || uidGen(), t: String(x.t).slice(0, 200), s: "inbox", at: todayKey() }); }));
+    editSettings(s2 => { s2.inbox = []; });
+  }
+}
+function startSort() { S.sortSkip = new Set(); S.sortCount = 0; S.sortTotal = inboxItems().length; S.sortProj = null; S.sortTally = {}; S.sheet = { type: "sort" }; }
+function sortPick(kind) {
+  const it = inboxItems().find(i => !S.sortSkip.has(i.id)); if (!it) return;
+  const tally = k => { S.sortTally[k] = (S.sortTally[k] || 0) + 1; S.sortCount++; };
+  if (kind === "done") { setTask(it.id, { s: "done", was: "quick", doneAt: todayKey() }); tally("done"); }
+  else if (kind === "week") { if (weekErrands().length >= ERRAND_CAP) toast(`That's ${weekErrands().length + 1} this week. Three is the sweet spot; consider moving one to later.`); setTask(it.id, { s: "errand", wk: thisWk(), v: guessValue(it.t) || undefined }); tally("week"); }
+  else if (kind === "later") { setTask(it.id, { s: "errand", wk: null, v: guessValue(it.t) || undefined }); tally("later"); }
+  else if (kind === "someday") { setTask(it.id, { s: "someday" }); tally("someday"); }
+  else if (kind === "drop") { setTask(it.id, { s: "dropped", doneAt: todayKey() }); tally("drop"); }
+  else if (kind === "skip") { S.sortSkip.add(it.id); }
+  else if (kind === "project") {
+    const cores = ((profile() || {}).cores || []).map(c => c.value);
+    S.sortProj = { id: it.id, v: guessValue(it.t) || cores[0] || (valueList()[0] || {}).id, next: "" };
+  }
+  else if (kind === "recurring") {
+    const v = guessValue(it.t) || ((profile() || {}).cores || [])[0]?.value || (valueList()[0] || {}).id;
+    S.sheet = { type: "comp", isNew: true, fromTask: it.id, draft: { id: "c-" + uidGen(), value: v, name: it.t.slice(0, 60), cadence: "weekly", target: 1, hours: 0.5 } };
+    return;
+  }
+  if (kind !== "project") S.sortProj = null;
+}
+function saveSortProject() {
+  const sp = S.sortProj; if (!sp) return;
+  const nx = (($("#sp-next") || {}).value || "").trim();
+  setTask(sp.id, { s: "project", v: sp.v, next: nx || "" });
+  S.sortTally.project = (S.sortTally.project || 0) + 1; S.sortCount++; S.sortProj = null;
+}
+function capBox(id, placeholder) {
+  return `<div class="capbox"><textarea id="${id}" rows="3" placeholder="${esc(placeholder || "Dump everything on your mind. One thing per line; paste a whole list if you like.")}" aria-label="Capture thoughts"></textarea>
+    <div class="row"><span class="hint">Ctrl/⌘ + Enter to add</span><button class="btn primary small" data-act="capAdd" data-src="${id}">Add to inbox</button></div></div>`;
+}
+function inboxCta() {
+  const n = inboxItems().length; if (!n) return "";
+  return `<div class="inboxcta"><div><b>${n} unsorted</b><div class="hint">About ${Math.max(1, Math.round(n / 10))} min. Each one gets a home, so it stops circling.</div></div><button class="btn primary" data-act="sortStart">Sort now</button></div>`;
+}
+function taskRow(i, opts = {}) {
+  const tags = [i.v ? `<span class="tag ${isCore(i.v) ? "core" : ""}">${esc(valueName(i.v))}</span>` : "", i.moves >= 2 ? `<span class="tag warn">Slipped ${i.moves}×</span>` : i.wk && i.wk < thisWk() && i.s === "errand" ? `<span class="tag">From last week</span>` : ""].join("");
+  return `<div class="task"><button class="tick ${i.s === "done" ? "on" : ""}" data-act="tDone" data-id="${i.id}" aria-label="Mark “${esc(i.t)}” done"></button>
+    <div class="tx"><span>${esc(i.t)}</span>${tags ? `<span class="tags" style="margin-top:3px">${tags}</span>` : ""}</div>${opts.actions || ""}</div>`;
+}
+function rTasks(id) {
+  const wk = weekErrands(), doneWk = doneErrandsThisWeek(), later = laterErrands(), projs = projectsList(), some = somedays();
+  const done = titems().filter(i => i.s === "done").sort((a, b) => ((a.doneAt || "") < (b.doneAt || "") ? 1 : -1));
+  const mvw = isMvw(anyWeek(thisWk()), thisWk());
+  const cores = ((profile() || {}).cores || []).map(c => c.value);
+  const pgroups = {}; projs.forEach(p => { (pgroups[p.v || "_"] = pgroups[p.v || "_"] || []).push(p); });
+  const gorder = Object.keys(pgroups).sort((a, b) => (cores.includes(b) - cores.includes(a)));
+  const projRow = p => {
+    const editing = S.stepFor === p.id || !p.next;
+    return `<div class="task" style="align-items:flex-start"><div class="tx"><span><b>${esc(p.t)}</b></span>
+      ${editing ? `<div class="stepin2"><input type="text" id="step-${p.id}" placeholder="${p.next ? "What's the very next step?" : "Write the very next physical step"}" maxlength="140" aria-label="Next step for ${esc(p.t)}"><button class="btn small primary" data-act="tStepSave" data-id="${p.id}">Save</button></div>
+        <div class="stepin2"><button class="btn quiet small" data-act="tProjDone" data-id="${p.id}">Project finished</button><button class="btn quiet small" data-act="tSomeday" data-id="${p.id}">Someday</button></div>`
+      : `<div class="stepin2" style="align-items:center"><button class="tick" data-act="tStep" data-id="${p.id}" aria-label="Next step done"></button><small style="font-size:13.5px;color:var(--ink2)">Next: ${esc(p.next)}</small></div>`}</div></div>`;
+  };
+  return `
+  <h2>Clear your head</h2>
+  <p class="lede">Everything on your mind lives here, not in your head. Capture it fast, sort it once, and do three errands a week.</p>
+  <div class="card">${capBox("capTasks")}</div>
+  ${inboxCta() ? `<div style="margin-top:10px">${inboxCta()}</div>` : ""}
+  <h3>This week · ${doneWk.length} of ${wk.length + doneWk.length} done</h3>
+  <div class="meterline" aria-label="${wk.length + doneWk.length} of ${ERRAND_CAP} errand slots used">${Array.from({ length: Math.max(ERRAND_CAP, wk.length + doneWk.length) }, (_, k) => `<i class="${k < wk.length + doneWk.length ? "on" : ""}"></i>`).join("")}<span class="hint" style="margin-left:6px">${ERRAND_CAP} a week is the sweet spot</span></div>
+  ${mvw && wk.length ? `<p class="hint">Minimum Viable Week: errands are optional this week. Anything left moves to Next up on Monday.</p>` : ""}
+  ${wk.length ? `<div class="card" style="margin-top:8px">${wk.map(i => taskRow(i, { actions: `<button class="btn quiet small" data-act="tLater" data-id="${i.id}">Later</button>` })).join("")}</div>` : `<p class="hint">Nothing picked. Choose up to three from Next up.</p>`}
+  <h3>Projects · one next step each</h3>
+  ${projs.length ? gorder.map(g => `<div class="vgroup" style="margin-top:8px"><div class="gh"><b style="font-size:16px">${esc(g === "_" ? "Other" : valueName(g))}${cores.includes(g) ? '<span class="core">Core</span>' : ""}</b></div><div class="card">${pgroups[g].map(projRow).join("")}</div></div>`).join("") : `<p class="hint">Big things become projects with a single next step. Sort something as a project to start.</p>`}
+  <h3>Next up · ${later.length}</h3>
+  ${later.length ? `<div class="card">${later.sort((a, b) => (b.moves || 0) - (a.moves || 0)).map(i => taskRow(i, { actions: `<button class="btn small" data-act="tWeek" data-id="${i.id}">This week</button><button class="btn quiet small" data-act="tSomeday" data-id="${i.id}" aria-label="Move to someday">⋯</button>` })).join("")}</div>` : `<p class="hint">Empty. Errands you sort as “later” wait here calmly.</p>`}
+  <details class="fold"><summary>Someday · ${some.length}</summary>
+    ${some.length ? `<div class="card">${some.map(i => `<div class="task"><div class="tx"><span>${esc(i.t)}</span></div><button class="btn quiet small" data-act="tBack" data-id="${i.id}">Bring back</button><button class="btn quiet small danger" data-act="tDrop" data-id="${i.id}">Let go</button></div>`).join("")}</div>` : `<p class="hint">Ideas for another season. Parked without guilt.</p>`}</details>
+  <details class="fold"><summary>Done · ${done.length}</summary>
+    ${done.length ? `<div class="card">${done.slice(0, 30).map(i => `<div class="task"><button class="tick on" data-act="tUndo" data-id="${i.id}" aria-label="Undo"></button><div class="tx"><span style="color:var(--muted);text-decoration:line-through">${esc(i.t)}</span></div></div>`).join("")}</div>` : `<p class="hint">Finished things show up here.</p>`}</details>`;
+}
+function rSortSheet() {
+  const list = inboxItems().filter(i => !S.sortSkip.has(i.id));
+  const T = S.sortTally || {};
+  if (!list.length) {
+    const parts = [["week", "this week"], ["later", "later"], ["project", "projects"], ["recurring", "new components"], ["someday", "someday"], ["done", "done on the spot"], ["drop", "let go"]].filter(([k]) => T[k]).map(([k, l]) => `${T[k]} ${l}`);
+    return `<div class="in"><div class="grab"></div><div class="hero" style="padding:0">${bigCompass()}</div>
+      <h2 style="margin:0;text-align:center">${S.sortCount ? "Inbox sorted." : "Nothing left to sort."}</h2>
+      ${parts.length ? `<p class="lede" style="text-align:center;margin-inline:auto">${esc(parts.join(" · "))}</p>` : ""}
+      ${S.sortSkip && S.sortSkip.size ? `<p class="hint" style="text-align:center">${S.sortSkip.size} skipped for now. They stay in your inbox.</p>` : ""}
+      <button class="btn primary" data-act="closeSheet">Done</button></div>`;
+  }
+  const it = list[0], g = guessKind(it.t), pos = (S.sortCount || 0) + 1, total = Math.max(S.sortTotal || 0, pos + list.length - 1);
+  const wkN = weekErrands().length;
+  const btn = (k, key, title, sub, extra = "") => `<button class="sbtn ${extra}${g === k || (g === "errand" && k === "week" && wkN < ERRAND_CAP) || (g === "errand" && k === "later" && wkN >= ERRAND_CAP) ? " sug" : ""}" data-act="sortPick" data-k="${k}"><kbd>${key}</kbd><b>${title}</b><small>${sub}</small></button>`;
+  let body;
+  if (S.sortProj && S.sortProj.id === it.id) {
+    const cores = ((profile() || {}).cores || []).map(c => c.value);
+    const vals = valueList().slice().sort((a, b) => cores.includes(b.id) - cores.includes(a.id));
+    body = `<div class="flabel">Which value does it serve?</div>
+      <div class="chips">${vals.map(v => `<button class="chip ${S.sortProj.v === v.id ? "sel" : ""}" data-act="sortProjV" data-v="${esc(v.id)}">${esc(v.name)}${cores.includes(v.id) ? " · Core" : ""}</button>`).join("")}</div>
+      <label class="flabel" for="sp-next">The very next physical step</label>
+      <input type="text" id="sp-next" maxlength="140" placeholder="e.g. Email Sam to ask for the course link">
+      <div class="row"><button class="btn quiet" data-act="sortProjBack">Back</button><button class="btn primary" data-act="sortProjSave">Save project</button></div>
+      <p class="hint" style="margin:0">Big goals stall without a concrete first action. One next step is enough.</p>`;
+  } else {
+    body = `<div class="sortgrid">
+      ${btn("done", "1", "Done already", "Under 2 minutes? Do it now.")}
+      ${btn("week", "2", "Errand · this week", wkN >= ERRAND_CAP ? `${wkN} of ${ERRAND_CAP} slots used` : `${wkN} of ${ERRAND_CAP} slots used`)}
+      ${btn("later", "3", "Errand · later", "Waits in Next up")}
+      ${btn("recurring", "4", "Recurring", "Becomes a component with a floor")}
+      ${btn("project", "5", "Project", "Needs several steps; pick one next step")}
+      ${btn("someday", "6", "Someday", "Not this season. Parked.")}
+      ${btn("drop", "7", "Let it go", "It doesn't matter anymore", "")}
+      <button class="sbtn" data-act="sortPick" data-k="skip"><kbd>S</kbd><b>Skip for now</b><small>Stays in the inbox</small></button></div>`;
+  }
+  return `<div class="in"><div class="grab"></div>
+    <div class="row"><span class="flabel">Sorting ${pos} of ${total}</span><button class="btn quiet small" data-act="closeSheet">Stop</button></div>
+    <div class="vbar" style="height:5px;border-radius:3px;background:var(--sunk)"><i style="display:block;height:100%;width:${Math.round((pos - 1) / total * 100)}%;background:var(--accent);border-radius:3px;transition:width .3s"></i></div>
+    <div class="sortcard" id="sortCard"><div class="q">${esc(it.t)}</div>${it.at ? `<div class="hint" style="margin-top:6px">Captured ${it.at === todayKey() ? "today" : daysBetween(it.at, todayKey()) + " days ago"}</div>` : ""}</div>
+    ${body}</div>`;
+}
+function rCaptureSheet() {
+  return `<div class="in"><div class="grab"></div><h2 style="margin:0">What's on your mind?</h2>
+    <p class="hint" style="margin:0">Write it down and let it go. You'll sort it on Sunday, or now if you like.</p>
+    <div class="card">${capBox("capSheet")}</div>
+    ${S.capMsg ? `<p class="hint" style="margin:0">${esc(S.capMsg)}</p>` : ""}
+    <div class="row">${inboxItems().length ? `<button class="btn" data-act="sortStart">Sort ${inboxItems().length} now</button>` : "<span></span>"}<button class="btn quiet" data-act="closeSheet">Close</button></div></div>`;
 }
 
 /* ============ edits ============ */
@@ -941,6 +1214,7 @@ document.addEventListener("focusout", () => setTimeout(() => { if (S.pendingRend
 const TABS = [
   { t: "today", name: "Today", svg: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
   { t: "week", name: "Week", svg: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>' },
+  { t: "tasks", name: "Tasks", svg: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>' },
   { t: "people", name: "People", svg: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>' },
   { t: "review", name: "Review", svg: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>' },
   { t: "compass", name: "Compass", svg: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>' },
@@ -951,9 +1225,103 @@ const DEMO = [
   { v: "Physical fitness", c: "Workout", unit: "this week", need: 3, start: 1 },
   { v: "Problem solving", c: "Deep-work block", unit: "this week", need: 2, start: 0 },
   { v: "Mental fitness", c: "Three-line journal", unit: "days", need: 5, start: 3 },
+  { v: "Clear your head", c: "Errands", unit: "this week", need: 3, start: 1 },
 ];
 let demoT = null;
-function stopDemo() { if (demoT) { clearTimeout(demoT); demoT = null; } }
+function stopDemo() { if (demoT) { clearTimeout(demoT); demoT = null; } stopTour(); }
+/* ---- landing: auto-playing app tour (generic example content) ---- */
+const TOUR_MS = 6500;
+const TOUR = [
+  { t: "Choose what matters", d: "Pick your values. Compass suggests small floors for each." },
+  { t: "Tap what happened", d: "Floors, not ceilings. A normal week is enough to clear them." },
+  { t: "Empty your head", d: "Dump every loose end into one inbox, in seconds." },
+  { t: "Sort each thought once", d: "Errand, habit, project or someday. Compass suggests which." },
+  { t: "Watch the week settle", d: "Values clear one by one and the needle settles on north." },
+  { t: "Sunday: one question", d: "Am I at peace with where this is trending? Then one adjustment." },
+];
+const tour = { i: 0, next: null, timers: [], started: false, io: null };
+function stopTour() { clearTimeout(tour.next); tour.timers.forEach(clearTimeout); tour.timers = []; if (tour.io) { tour.io.disconnect(); tour.io = null; } tour.started = false; }
+function tAt(ms, fn) { if (reduced()) fn(); else tour.timers.push(setTimeout(fn, ms)); }
+function tourScene(i) {
+  const scr = $("#tourScreen"); if (!scr) return;
+  const q = sel => scr.querySelector(sel), qa = sel => [...scr.querySelectorAll(sel)];
+  const needle = (deg) => `<svg viewBox="0 0 46 46" style="width:38px;height:38px"><circle cx="23" cy="23" r="21" fill="none" stroke="var(--line)" stroke-width="1.5"/><g id="tneedle" style="transform-box:view-box;transform-origin:23px 23px;transition:transform .8s cubic-bezier(.3,1.4,.5,1);transform:rotate(${deg}deg)"><path d="M23 6l4.2 17h-8.4z" fill="var(--brass)"/><path d="M23 40l-4.2-17h8.4z" fill="var(--muted)"/></g><circle cx="23" cy="23" r="2.4" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/></svg>`;
+  if (i === 0) {
+    const vals = ["Deep relationships", "Creativity", "Physical fitness", "Service", "Learning", "Time you own"];
+    scr.innerHTML = `<div class="ps">Setup · 2 of 6</div><div class="pt">What matters to you?</div>
+      <div class="vgrid">${vals.map(v => `<div class="vc">${v}</div>`).join("")}</div>
+      <div class="ps" style="margin-top:6px">Suggested floors</div><div class="card" id="tfl"></div>`;
+    const picks = [[0, "Call someone close", "5 of 7 days"], [2, "Workout", "3× a week"], [4, "Read", "20 min, 4 days"]];
+    picks.forEach(([k, n, f], j) => tAt(700 + j * 900, () => { qa(".vc")[k].classList.add("on"); q("#tfl").insertAdjacentHTML("beforeend", `<div class="mini tin"><span class="mbox on"></span><span style="flex:1">${n}</span><span class="ps">${f}</span></div>`); }));
+  } else if (i === 1) {
+    const items = ["Meditate", "Walk outside", "Call someone close", "Read 20 min"];
+    scr.innerHTML = `<div class="ps">Tuesday</div><div class="pt">Good morning.</div>
+      <div class="card">${items.map(n => `<div class="mini"><span class="mbox"></span><span>${n}</span></div>`).join("")}</div>
+      <div class="ps">Log for the week</div>
+      <div class="chips"><span class="chip" id="tgym"><b>+</b>Workout<span class="n">2/3</span></span><span class="chip"><b>+</b>Deep work<span class="n">1/2</span></span></div>
+      <div class="ps">Journal</div><div class="typing" id="tj"></div>`;
+    items.forEach((_, j) => tAt(600 + j * 650, () => qa(".mbox")[j].classList.add("on")));
+    tAt(3400, () => { const c = q("#tgym"); c.classList.add("done"); c.querySelector(".n").textContent = "3/3 ✓"; burst(c, "var(--good)", 10); });
+    const line = "Win: finished the proposal draft";
+    tAt(3900, () => { let k = 0; const tick = () => { if (!q("#tj")) return; q("#tj").textContent = line.slice(0, ++k); if (k < line.length) tour.timers.push(setTimeout(tick, 35)); }; if (reduced()) q("#tj").textContent = line; else tick(); });
+  } else if (i === 2) {
+    const lines = ["Renew passport", "Book the dentist", "Plan Mom's birthday", "Learn Spanish", "Water plants every Sunday", "Fix the leaky tap", "Build a kayak someday"];
+    scr.innerHTML = `<div class="ps">Tasks</div><div class="pt">What's on your mind?</div>
+      <div class="typing" id="tcap"></div><div class="card" id="tin"></div><div class="ps" id="tcount" style="margin-top:auto">0 in your inbox</div>`;
+    lines.forEach((l, j) => tAt(400 + j * 720, () => {
+      q("#tcap").textContent = l;
+      tour.timers.push(setTimeout(() => { if (!q("#tin")) return; q("#tin").insertAdjacentHTML("afterbegin", `<div class="mini tin"><span style="width:6px;height:6px;border-radius:50%;background:var(--brass);flex:none"></span>${l}</div>`); q("#tcap").textContent = ""; q("#tcount").textContent = `${j + 1} in your inbox · Sort now`; }, reduced() ? 0 : 420));
+    }));
+  } else if (i === 3) {
+    const seq = [["Renew passport", "This week", 0], ["Learn Spanish", "Project", 1], ["Water plants every Sunday", "Recurring", 2], ["Book the dentist", "This week", 0], ["Build a kayak someday", "Someday", 3]];
+    scr.innerHTML = `<div class="ps">Sorting</div><div class="pt">One thought at a time</div>
+      <div class="scard" id="tsc">${seq[0][0]}</div>
+      <div class="sopts">${["This week", "Later", "Recurring", "Project", "Someday", "Let go"].map(o => `<div class="so" data-o="${o}">${o}</div>`).join("")}</div>
+      <div class="ps" id="tnext" style="min-height:16px"></div>
+      <div class="bkts">${["This week", "Project", "Recurring", "Someday"].map(b => `<div class="bk"><b>0</b>${b}</div>`).join("")}</div>`;
+    const counts = [0, 0, 0, 0];
+    seq.forEach(([txt, opt, bk], j) => {
+      const base = 500 + j * 1050;
+      tAt(base, () => { q("#tsc").textContent = txt; q("#tsc").classList.remove("out"); qa(".so").forEach(o => o.classList.toggle("pick", o.dataset.o === opt)); });
+      tAt(base + 520, () => { q("#tsc").classList.add("out"); counts[bk]++; const b = qa(".bk")[bk]; b.querySelector("b").textContent = counts[bk]; b.classList.add("hit"); tour.timers.push(setTimeout(() => b.classList.remove("hit"), 400)); if (opt === "Project") q("#tnext").textContent = "Next step: pick a course and do lesson 1"; });
+    });
+    tAt(500 + seq.length * 1050, () => { q("#tsc").classList.remove("out"); q("#tsc").textContent = "Inbox sorted."; qa(".so").forEach(o => o.classList.remove("pick")); });
+  } else if (i === 4) {
+    const rows = [["Deep relationships", 5, 6], ["Physical fitness", 2, 3], ["Learning", 3, 4], ["Clear your head", 2, 3]];
+    scr.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><div class="ps">Week of Sep 21</div><div class="pt">Floors this week</div></div>${needle(34)}</div>
+      <div class="card">${rows.map(([n, h, t]) => `<div class="mini" style="justify-content:space-between"><span>${n}</span><span class="pill open" data-h="${h}" data-t="${t}">${h} of ${t}</span></div>`).join("")}</div>
+      <div class="ps" id="twk">0 of 4 values cleared</div>`;
+    qa(".pill").forEach((pl, j) => tAt(700 + j * 900, () => { pl.className = "pill clear stamp"; pl.textContent = "Cleared"; q("#twk").textContent = `${j + 1} of 4 values cleared`; q("#tneedle").style.transform = `rotate(${(34 * (1 - (j + 1) / 4)).toFixed(0)}deg)`; }));
+    tAt(700 + 4 * 900, () => { q("#twk").textContent = "Every floor cleared. On course."; });
+  } else if (i === 5) {
+    scr.innerHTML = `<div class="ps">Sunday review</div><div class="pt">At peace with where this is trending?</div>
+      <div class="vfelt">${[1, 2, 3, 4, 5].map(n => `<span data-n="${n}">${n}</span>`).join("")}</div>
+      <svg class="spk" viewBox="0 0 220 60" style="width:100%;height:auto"><path d="M6 48 L46 42 L86 46 L126 30 L166 26 L214 12" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="card" id="tsug" style="opacity:0;transition:opacity .4s"><div class="mini" style="align-items:flex-start;flex-direction:column;gap:3px"><b>Workout was missed 3 of the last 4 weeks.</b><span class="ps">Lower it from 3 to 2. A floor you clear beats a ceiling you miss.</span><span class="so pick" style="align-self:flex-start;margin-top:4px">Lower to 2</span></div></div>`;
+    tAt(700, () => { const x = q('[data-n="4"]'); x.classList.add("on"); burst(x, "var(--accent)", 8); });
+    tAt(1300, () => q(".spk").classList.add("draw"));
+    tAt(3000, () => { q("#tsug").style.opacity = "1"; });
+  }
+}
+function tourShow(i) {
+  const wrap = $("#tourWrap"); if (!wrap) return;
+  clearTimeout(tour.next); tour.timers.forEach(clearTimeout); tour.timers = [];
+  tour.i = i;
+  wrap.querySelectorAll(".tsteps button").forEach((b, k) => { b.setAttribute("aria-current", k === i ? "true" : "false"); const bar = b.querySelector(".tbar i"); if (bar) { bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = ""; } });
+  tourScene(i);
+  if (!reduced()) tour.next = setTimeout(() => tourShow((i + 1) % TOUR.length), TOUR_MS);
+}
+function startTour() {
+  const wrap = $("#tourWrap"); if (!wrap || tour.started) return;
+  tour.started = true;
+  wrap.style.setProperty("--tdur", TOUR_MS / 1000 + "s");
+  if (reduced()) wrap.classList.add("still");
+  if ("IntersectionObserver" in window && !reduced()) {
+    tourScene(0); wrap.querySelector(".tsteps button").setAttribute("aria-current", "true"); wrap.classList.add("still");
+    tour.io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { tour.io.disconnect(); tour.io = null; wrap.classList.remove("still"); tourShow(0); } }, { threshold: .35 });
+    tour.io.observe(wrap);
+  } else tourShow(0);
+}
 function paintDemo(have) {
   const root = $("#demo"); if (!root) return;
   let cleared = 0;
@@ -966,7 +1334,7 @@ function paintDemo(have) {
     pill.className = "pill " + (done ? "clear" : "open") + (done && !wasDone ? " stamp" : "");
     pill.textContent = done ? "Cleared" : `${have[i]} of ${d.need}`;
   });
-  root.querySelector("#demoHead").textContent = cleared === DEMO.length ? "Every floor cleared. On course." : `${cleared} of ${DEMO.length} values cleared`;
+  root.querySelector("#demoHead").textContent = cleared === DEMO.length ? "Every floor cleared. On course." : `${cleared} of ${DEMO.length} cleared this week`;
   root.querySelector(".dneedle g").style.transform = `rotate(${((1 - cleared / DEMO.length) * 42).toFixed(1)}deg)`;
 }
 function startDemo() {
@@ -991,7 +1359,7 @@ function rLanding() {
   return `
   <nav class="lnav" aria-label="Compass">
     <a class="brand" href="#top" style="color:inherit;text-decoration:none">${mark}Compass</a>
-    <div class="links"><a href="#how">How it works</a><a href="#why">Why it works</a><a href="#privacy">Privacy</a><a href="#faq">FAQ</a></div>
+    <div class="links"><a href="#tour">Tour</a><a href="#how">How it works</a><a href="#tasks">Clear your head</a><a href="#why">Why it works</a><a href="#faq">FAQ</a></div>
     <button class="navcta" data-act="signin">${GLOGO}Sign in</button>
   </nav>
 
@@ -1000,7 +1368,7 @@ function rLanding() {
       <span class="eyebrow">A weekly compass for your life</span>
       <h1>Know where your life is heading.</h1>
       <p class="big">Compass turns what matters to you into a few small weekly floors. Clear them and the week counts. Miss them and you see the drift early, while it's still easy to correct.</p>
-      <div class="ctas">${btn("Start with Google")}<a class="textlink" href="#how">See how it works ↓</a></div>
+      <div class="ctas">${btn("Start with Google")}<a class="textlink" href="#tour">Watch the 30-second tour ↓</a></div>
       ${err}
       <div class="meta"><span>Free</span><span>Private to you</span><span>iPhone, Android and laptop</span></div>
     </div>
@@ -1012,6 +1380,16 @@ function rLanding() {
         ${rows}
         <div class="dfoot">Example week. The needle settles as floors clear.</div>
       </div>
+    </div>
+  </section>
+
+  <section class="lsec" id="tour">
+    <span class="eyebrow">The 30-second tour</span>
+    <h2>A week with Compass.</h2>
+    <p class="big">From setup to Sunday, this is the whole loop. Tap any step to jump to it.</p>
+    <div class="tour" id="tourWrap">
+      <ol class="tsteps">${TOUR.map((s, k) => `<li><button data-act="tourGo" data-i="${k}" aria-current="false"><b>${esc(s.t)}</b><span>${esc(s.d)}</span><i class="tbar"><i></i></i></button></li>`).join("")}</ol>
+      <div class="phone" aria-hidden="true"><div class="pscreen" id="tourScreen"></div></div>
     </div>
   </section>
 
@@ -1028,6 +1406,21 @@ function rLanding() {
         <div class="viz"><div class="vfelt"><span>1</span><span>2</span><span>3</span><span class="on">4</span><span>5</span></div>
           <svg viewBox="0 0 200 44" style="width:100%;height:auto" aria-hidden="true"><path d="M4 34 L40 30 L76 36 L112 22 L148 18 L196 10" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="196" cy="10" r="4" fill="var(--brass)"/></svg></div></div>
     </div>
+  </section>
+
+  <section class="lsec" id="tasks">
+    <span class="eyebrow">Clear your head</span>
+    <h2>Hundreds of loose ends. One calm list.</h2>
+    <p class="big">Errands, ideas and someday-maybes go into one inbox. Compass helps you sort each one in seconds, so it stops circling in your head and lands where it belongs.</p>
+    <div class="grid3">
+      <div class="tile"><span class="stepnum">CAPTURE</span><h3>Get it out of your head</h3><p>Tap + from any screen, or paste a whole brain dump. One line per thought, sorted later.</p>
+        <div class="viz"><div class="vline"><span>Renew passport</span><span>new</span></div><div class="vline"><span>Plan a friend's farewell</span><span>new</span></div><div class="vline"><span>Learn to swim</span><span>new</span></div><div class="vline"><span class="hint">12 in your inbox</span><span>Sort now</span></div></div></div>
+      <div class="tile"><span class="stepnum">SORT</span><h3>Decide once per thought</h3><p>Done in two minutes, an errand, a habit, a project with one next step, or someday. Compass suggests which.</p>
+        <div class="viz"><div class="chips"><span class="chip sel">Errand · this week</span><span class="chip">Recurring</span><span class="chip">Project</span><span class="chip">Someday</span></div></div></div>
+      <div class="tile"><span class="stepnum">PLACE</span><h3>Three errands a week</h3><p>Pick up to three each Sunday. Habits become floors, projects sit under your Cores, and the rest waits calmly.</p>
+        <div class="viz"><div class="mini" style="display:flex;gap:8px;align-items:center"><span class="tick on"></span>Renew passport</div><div class="mini" style="display:flex;gap:8px;align-items:center"><span class="tick on"></span>Book the dentist</div><div class="mini" style="display:flex;gap:8px;align-items:center"><span class="tick"></span>Return the jacket</div></div></div>
+    </div>
+    <p class="note">Writing down a specific plan for an unfinished task is what stops it from nagging you (Masicampo &amp; Baumeister, 2011). The sorting builds on Getting Things Done (Allen, 2001), shaped by the same floors-not-ceilings idea as the rest of Compass.</p>
   </section>
 
   <section class="lsec">
@@ -1082,6 +1475,7 @@ function rLanding() {
     <div class="faq" style="margin-top:28px">
       <details><summary>Is Compass free?</summary><p>Yes. There's no subscription and nothing to buy.</p></details>
       <details><summary>What do I need to start?</summary><p>A Google account. Setup takes about five minutes and you can change everything later.</p></details>
+      <details><summary>Can Compass hold my to-do list?</summary><p>Yes. Capture anything into the inbox, sort it once, and Compass turns errands into a short weekly list, habits into floors and big goals into projects with one next step each.</p></details>
       <details><summary>Does it work offline?</summary><p>Yes. Changes save on your device and sync when you're back online.</p></details>
       <details><summary>What if I have a terrible week?</summary><p>Turn on a Minimum Viable Week. Only the few things you chose as your safety net count, and everything else pauses with no penalty.</p></details>
       <details><summary>Is this therapy or medical advice?</summary><p>No. Compass is a planning and reflection tool. It can sit alongside therapy, but it doesn't replace care from a professional.</p></details>
@@ -1105,7 +1499,7 @@ function renderGate() {
   try { wasIn = localStorage.getItem("compass-was-signed-in") === "1"; } catch (e) {}
   const landing = S.authState === "signedOut" || (S.authState === "loading" && !wasIn);
   document.body.classList.toggle("landing", landing);
-  if (landing) { const had = !!$("#demo"); if (!had || S.gateKey !== (S.authBusy + S.authErr)) { $("#main").innerHTML = rLanding(); startDemo(); } S.gateKey = S.authBusy + S.authErr; updSync(); return; }
+  if (landing) { const had = !!$("#demo"); if (!had || S.gateKey !== (S.authBusy + S.authErr)) { stopTour(); $("#main").innerHTML = rLanding(); startDemo(); startTour(); } S.gateKey = S.authBusy + S.authErr; updSync(); return; }
   stopDemo(); S.gateKey = null;
   if (S.authState === "loading") body = `<div class="hero">${bigCompass()}</div>`;
   else if (S.authState === "noconfig") body = `<div class="signin"><div class="hero">${bigCompass(false)}</div><h1>Almost there.</h1><p class="lede">Compass needs your Firebase project's settings. Paste them into <b>firebase-config.js</b>, then deploy again. The README walks through it.</p></div>`;
@@ -1126,6 +1520,7 @@ function renderAvatar() {
 }
 function render() {
   applyTheme();
+  $("#fab").hidden = true;
   if (S.authState !== "in") return renderGate();
   document.body.classList.remove("landing"); stopDemo(); S.gateKey = null;
   renderAvatar();
@@ -1134,7 +1529,7 @@ function render() {
   if (inOb) {
     if (!profileReady) { $("#main").innerHTML = `<div class="hero">${bigCompass()}</div>`; $("#obbar").innerHTML = ""; updSync(); return; }
     if (!S.ob) { startOnboarding(false); S.ob.auto = true; }
-    renderOnboarding(); updSync(); return;
+    renderOnboarding(); renderSheet(); updSync(); return;
   }
   $("#obbar").innerHTML = "";
   const hasPeople = comps().some(c => c.people);
@@ -1150,11 +1545,27 @@ function render() {
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
   $("#tabs").innerHTML = TABS.filter(t => t.t !== "people" || hasPeople).map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
-  $("#main").innerHTML = ({ today: rToday, week: rWeek, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
+  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); }
+  $("#tabs").innerHTML = $("#tabs").innerHTML.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
+  $("#main").innerHTML = ({ today: rToday, week: rWeek, tasks: rTasks, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
+  $("#fab").hidden = false;
   renderSheet(); updSync();
 }
 
 /* ============ TODAY ============ */
+function todayTasks(id) {
+  if (id !== thisWk()) return "";
+  const wk = weekErrands(), doneWk = doneErrandsThisWeek(), n = inboxItems().length;
+  const steps = projectsList().filter(p => p.next && isCore(p.v));
+  if (!wk.length && !doneWk.length && !n && !steps.length) return "";
+  const mvw = isMvw(anyWeek(id), id);
+  return `<h3>Errands & next steps · ${doneWk.length}/${wk.length + doneWk.length}</h3>
+    ${mvw ? `<p class="hint" style="margin:0 0 6px">Optional during a Minimum Viable Week.</p>` : ""}
+    <div class="card">${wk.map(i => taskRow(i)).join("")}
+      ${steps.map(p => `<div class="task"><button class="tick" data-act="tStep" data-id="${p.id}" aria-label="Next step done"></button><div class="tx"><span>${esc(p.next)}</span><span class="tags" style="margin-top:3px"><span class="tag core">${esc(p.t)}</span></span></div></div>`).join("")}
+      ${n ? `<button class="comp" data-act="sortStart"><span class="lbl"><span>${n} thought${n > 1 ? "s" : ""} in your inbox</span><small>Sort them so they stop circling</small></span><span class="chev">›</span></button>` : ""}
+      ${!wk.length && !steps.length && !n && doneWk.length ? `<p class="hint pad" style="margin:0">All of this week's errands are done.</p>` : ""}</div>`;
+}
 function rToday(id) {
   const w = anyWeek(id) || { days: {}, c: {} }, mon = S.viewMon, tk = todayKey();
   const keys = [...Array(7)].map((_, i) => dkey(addDays(mon, i)));
@@ -1185,6 +1596,7 @@ function rToday(id) {
   <h2>${esc(title)}</h2>
   <p class="lede">Tap what happened. One miss is noise; two in a row is the pattern to catch.</p>
   ${checks ? `<h3>Daily</h3><div class="card">${checks}</div>` : ""}
+  ${todayTasks(id)}
   ${weekly.length ? `<h3>Log for the week</h3><div class="chips">${weekly.map(chip).join("")}</div>` : ""}
   ${monthly.length ? `<h3>This month</h3><div class="chips">${monthly.map(chip).join("")}</div>` : ""}
   ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => `<button class="chip fun" data-act="fun" data-k="${esc(c.id)}"><b>♥</b>${esc(c.name)}${(w.c || {})[c.id] ? `<span class="n">${w.c[c.id]}</span>` : ""}</button>`).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it.</p>` : ""}
@@ -1227,6 +1639,11 @@ function rWeek(id, F, trips, sugg) {
   <div class="card pad"><div class="row"><div><b>Minimum Viable Week</b><div class="hint">For illness, travel, crunch or a hard stretch. Only your safety-net components count.</div></div>
     <button class="switch" role="switch" aria-checked="${mvw}" data-act="mvw" aria-label="Minimum Viable Week"></button></div></div>
   ${alts.length ? `<div class="card pad"><div class="row"><div><b>Week ${kind}</b><div class="hint">Alternating: ${alts.map(c => esc(c.name) + " (" + c.alt + ")").join(", ")}.</div></div><button class="btn" data-act="swapKind">Swap</button></div></div>` : ""}
+  ${id === thisWk() && (titems().length) ? `<h3>Open loops</h3><div class="card pad"><ul class="floors" style="margin:0">
+    <li class="${weekErrands().length === 0 && doneErrandsThisWeek().length ? "ok" : ""}"><span>Errands this week</span><span class="f">${doneErrandsThisWeek().length}/${weekErrands().length + doneErrandsThisWeek().length}</span></li>
+    <li class="${inboxItems().length ? "" : "ok"}"><span>Unsorted in inbox</span><span class="f">${inboxItems().length}</span></li>
+    <li class="${projectsList().some(p => !p.next) ? "" : "ok"}"><span>Projects without a next step</span><span class="f">${projectsList().filter(p => !p.next).length}</span></li></ul>
+    <div style="margin-top:10px"><button class="btn small" data-act="tab" data-t="tasks">Open Tasks</button></div></div>` : ""}
   ${ctrs ? `<h3>Counts</h3><div class="card">${ctrs}</div>` : ""}`;
 }
 
@@ -1302,12 +1719,13 @@ function rReview(id, F, trips, sugg) {
   <textarea id="r-fun" data-r="fun" rows="2" placeholder="Protect it next week">${esc(r.fun)}</textarea>
   <h3>4 · Next week</h3>
   <div class="card pad"><div class="row"><div><b>Pre-declare a Minimum Viable Week</b><div class="hint">Travel, a deadline or a family event coming up.</div></div><button class="switch" role="switch" aria-checked="${pre}" data-act="preMvw" aria-label="Minimum Viable Week next week"></button></div></div>
-  <h3>5 · Capture inbox</h3>
-  <p class="hint" style="margin:0 0 8px">Open loops go here during the week. On Sunday, place up to three into next week and clear them.</p>
-  <div class="card">
-    ${inbox.map(it => `<div class="person"><div class="who"><span>${esc(it.t)}</span></div><button class="btn quiet small" data-act="inboxDel" data-id="${it.id}">Done</button></div>`).join("")}
-    <form class="addrow" id="inForm" style="grid-template-columns:1fr auto"><input type="text" id="inText" placeholder="Something on your mind" aria-label="New inbox item" maxlength="140"><button class="btn" type="submit">Add</button></form>
-  </div>
+  <h3>5 · Clear your head</h3>
+  <p class="hint" style="margin:0 0 8px">Empty everything that's circling, sort it, then choose up to ${ERRAND_CAP} errands for next week. Writing down when you'll handle something is what quiets it.</p>
+  <div class="card">${capBox("capReview", "Anything else on your mind? One per line.")}</div>
+  ${inboxCta() ? `<div style="margin-top:10px">${inboxCta()}</div>` : ""}
+  ${(() => { const nx = nextWkId(), picked = weekErrands(nx), cands = laterErrands().concat(weekErrands()).filter(i => i.wk !== nx);
+    if (!picked.length && !cands.length) return "";
+    return `<p class="hint" style="margin:12px 0 6px">Next week's errands · ${picked.length} of ${ERRAND_CAP}</p><div class="chips">${picked.map(i => `<button class="chip sel" data-act="tNext" data-id="${i.id}">✓ ${esc(i.t)}</button>`).join("")}${cands.slice(0, 20).map(i => `<button class="chip" data-act="tNext" data-id="${i.id}">${esc(i.t)}</button>`).join("")}</div>`; })()}
   <div style="margin-top:16px"><button class="btn primary" data-act="reviewDone" id="reviewDoneBtn">${r.done ? "Reviewed ✓" : "Mark review done"}</button></div>
   ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
   ${coachCard()}
@@ -1396,6 +1814,11 @@ function renderSheet() {
       <button class="btn" data-act="customComp">Write my own</button>
       <button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
     S.sheet.lib = lib; return;
+  }
+  if (sh.type === "sort" || sh.type === "capture") {
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${sh.type === "sort" ? "Sort your inbox" : "Capture"}">${sh.type === "sort" ? rSortSheet() : rCaptureSheet()}</div>`;
+    const f = sh.type === "capture" ? $("#capSheet") : $("#sp-next"); if (f && !S.noFocus) f.focus(); S.noFocus = false;
+    return;
   }
   if (sh.type === "account") {
     const u = S.user || {};
@@ -1697,11 +2120,47 @@ document.addEventListener("click", e => {
       return;
     }
     case "signin": signIn(); return;
+    case "tourGo": { const w = $("#tourWrap"); if (w) w.classList.remove("still"); tourShow(+b.dataset.i); return; }
     case "signout": signOutNow(); return;
+    case "capture": S.capMsg = ""; S.sheet = { type: "capture" }; break;
+    case "capAdd": {
+      const ta = $("#" + b.dataset.src); const n = addCaptured(ta && ta.value);
+      if (!n) { toast("Write something first."); return; }
+      S.capMsg = `Added ${n} to your inbox.`; toast(`Added ${n} to your inbox`);
+      if (S.sheet && S.sheet.type === "capture") { renderSheet(); render(); return; }
+      break;
+    }
+    case "sortStart": startSort(); break;
+    case "sortPick": {
+      const k = b.dataset.k, card = $("#sortCard");
+      if (k === "done") burst(b, "var(--good)", 10); else if (k !== "skip" && k !== "project" && k !== "recurring") burst(b, "var(--accent)", 6);
+      sortPick(k);
+      if (card && !reduced() && !["project", "recurring"].includes(k)) { card.style.transition = "transform .22s ease, opacity .22s ease"; card.style.transform = k === "drop" ? "translateX(-110%) rotate(-6deg)" : "translateX(110%) rotate(6deg)"; card.style.opacity = "0"; setTimeout(() => { S.noFocus = true; render(); }, 200); return; }
+      break;
+    }
+    case "sortProjV": if (S.sortProj) { const nx = ($("#sp-next") || {}).value; S.sortProj.v = b.dataset.v; renderSheet(); const f = $("#sp-next"); if (f && nx) f.value = nx; return; } break;
+    case "sortProjBack": S.sortProj = null; break;
+    case "sortProjSave": saveSortProject(); burst(b, "var(--brass)", 8); break;
+    case "tDone": {
+      const it = taskById(b.dataset.id); if (!it) return;
+      if (it.s === "done") setTask(it.id, { s: it.was || "errand", doneAt: null });
+      else { setTask(it.id, { s: "done", was: it.s, wk: it.wk || thisWk(), doneAt: todayKey() }); burst(b, "var(--good)", 10); }
+      setTimeout(render, 180); return;
+    }
+    case "tUndo": { const it = taskById(b.dataset.id); if (it) setTask(it.id, { s: it.was && it.was !== "quick" ? it.was : "errand", doneAt: null, wk: it.was === "errand" ? it.wk : null }); break; }
+    case "tLater": setTask(b.dataset.id, { wk: null }); break;
+    case "tWeek": { const it = taskById(b.dataset.id); if (!it) return; if (weekErrands().length >= ERRAND_CAP) toast(`That makes ${weekErrands().length + 1}. Three is the sweet spot.`); setTask(it.id, { wk: thisWk(), moves: it.wk && it.wk < thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); break; }
+    case "tNext": { const it = taskById(b.dataset.id), nx = nextWkId(); if (!it) return; if (it.wk === nx) setTask(it.id, { wk: null }); else { if (weekErrands(nx).length >= ERRAND_CAP) toast(`That makes ${weekErrands(nx).length + 1} for next week. Three is the sweet spot.`); setTask(it.id, { wk: nx, moves: it.wk && it.wk <= thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); } break; }
+    case "tSomeday": setTask(b.dataset.id, { s: "someday" }); toast("Moved to Someday"); break;
+    case "tBack": setTask(b.dataset.id, { s: "inbox" }); break;
+    case "tDrop": setTask(b.dataset.id, { s: "dropped", doneAt: tk }); toast("Let go"); break;
+    case "tStep": { const it = taskById(b.dataset.id); if (!it) return; burst(b, "var(--good)", 8); editTasks(t => { const x = t.items.find(y => y.id === it.id); x.log = (x.log || []).concat({ step: x.next, at: tk }).slice(-30); x.next = ""; }); S.stepFor = it.id; if (S.tab !== "tasks") { S.tab = "tasks"; } toast("Step done. What's next?"); setTimeout(() => { render(); const f = $("#step-" + it.id); if (f) f.focus(); }, 160); return; }
+    case "tStepSave": { const f = $("#step-" + b.dataset.id), v = (f && f.value || "").trim(); if (!v) { toast("Write the next step first."); return; } setTask(b.dataset.id, { next: v }); S.stepFor = null; break; }
+    case "tProjDone": { burst(b, "var(--brass)", 12); setTask(b.dataset.id, { s: "done", was: "project", doneAt: tk }); S.stepFor = null; toast("Project finished"); break; }
     case "delAcct": S.confirm = "delacct"; break;
     case "delAcctNo": S.confirm = null; break;
     case "delAcctYes": deleteAccount(); return;
-    case "account": S.sheet = { type: "account" }; break;
+    case "account": S.sheet = { type: "account" }; if (S.ob) { renderSheet(); return; } break;
     case "export": exportData(); return;
     /* app */
     case "tab": S.tab = b.dataset.t; S.confirm = null; if (S.tab === "review") loadHistory(); window.scrollTo(0, 0); break;
@@ -1746,6 +2205,8 @@ document.addEventListener("click", e => {
       if (a.do === "gotoCompass") { S.tab = "compass"; window.scrollTo(0, 0); }
       else if (a.do === "addLib") { const lib = COMP_LIB.find(c => c.id === a.id); if (lib) { editProfile(p => { if (!p.values.includes(lib.value)) p.values.push(lib.value); p.components.push(clone(lib)); }); toast(`Added “${lib.name}”`); } }
       else if (a.do === "addComp") { S.sheet = { type: "pick", value: a.value }; }
+      else if (a.do === "sort") { startSort(); }
+      else if (a.do === "gotoTasks") { S.tab = "tasks"; window.scrollTo(0, 0); }
       else if (a.do === "lower") { editProfile(p => { const c = p.components.find(x => x.id === a.id); if (c && c.target > 1) c.target--; }); toast("Floor lowered. Clear it, then raise it later."); }
       break;
     }
@@ -1756,7 +2217,7 @@ document.addEventListener("click", e => {
     case "addValueId": editProfile(p => { if (!p.values.includes(b.dataset.v)) p.values.push(b.dataset.v); }); S.sheet = { type: "pick", value: b.dataset.v }; break;
     case "pickLib": { const x = S.sheet.lib[+b.dataset.i]; if (!x) return; const c = x.fun ? { id: "fun-" + uidGen(), fun: true, name: x.name, cadence: "weekly", target: 0, hours: 0 } : clone(x); openComp(c, true); break; }
     case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
-    case "closeSheet": S.sheet = null; S.confirm = null; break;
+    case "closeSheet": { const back = S.sheet && S.sheet.fromTask && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
     case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
     case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; } break; }
     case "cTarget": { const c = S.sheet.draft, max = c.cadence === "monthly" ? 4 : c.cadence === "daily" ? 7 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, (c.target || 0) + (+b.dataset.d) * st)); break; }
@@ -1767,6 +2228,7 @@ document.addEventListener("click", e => {
       const sh = S.sheet, c = sh.draft; if (!(c.name || "").trim()) { toast("Give it a name first."); return; }
       c.name = c.name.trim();
       editProfile(p => { const i = p.components.findIndex(x => x.id === c.id); if (i >= 0) p.components[i] = c; else p.components.push(c); if (c.value && !p.values.includes(c.value)) p.values.push(c.value); });
+      if (sh.fromTask) { setTask(sh.fromTask, { s: "component", comp: c.id, doneAt: todayKey() }); S.sortTally = S.sortTally || {}; S.sortTally.recurring = (S.sortTally.recurring || 0) + 1; S.sortCount = (S.sortCount || 0) + 1; S.sheet = { type: "sort" }; toast(`“${c.name}” is now a component`); break; }
       S.sheet = null; toast(sh.isNew ? `Added “${c.name}”` : "Saved"); break;
     }
     case "delComp": S.confirm = "del:" + S.sheet.draft.id; break;
@@ -1817,7 +2279,17 @@ document.addEventListener("change", e => {
   if (ds.c === "value" && S.sheet && S.sheet.draft) S.sheet.draft.value = t.value;
   else if (ds.j || ds.cap) scheduleRender();
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && S.sheet) { S.sheet = null; render(); } });
+document.addEventListener("keydown", e => {
+  const t = e.target, typing = t && /^(TEXTAREA|INPUT|SELECT)$/.test(t.tagName);
+  if (typing && t.tagName === "TEXTAREA" && t.closest(".capbox") && e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); const btn = t.closest(".capbox").querySelector('[data-act="capAdd"]'); if (btn) btn.click(); return; }
+  if (typing && t.id === "sp-next" && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="sortProjSave"]'); if (btn) btn.click(); return; }
+  if (typing && t.id && t.id.startsWith("step-") && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector(`[data-act="tStepSave"][data-id="${t.id.slice(5)}"]`); if (btn) btn.click(); return; }
+  if (e.key === "Escape" && S.sheet) { S.sheet = null; if (S.ob) renderSheet(); else render(); return; }
+  if (!typing && S.sheet && S.sheet.type === "sort" && !S.sortProj) {
+    const map = { "1": "done", "2": "week", "3": "later", "4": "recurring", "5": "project", "6": "someday", "7": "drop", s: "skip", S: "skip" };
+    const k = map[e.key]; if (k) { const btn = document.querySelector(`[data-act="sortPick"][data-k="${k}"]`); if (btn) { e.preventDefault(); btn.click(); } }
+  }
+});
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") { if (S.selDay !== todayKey() && dkey(S.viewMon) === dkey(monday(new Date()))) S.selDay = todayKey(); scheduleRender(); }
 });
