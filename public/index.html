@@ -1211,6 +1211,8 @@ function migrateInbox() {
     editSettings(s2 => { s2.inbox = []; });
   }
 }
+function restoreTask(snap) { editTasks(t => { const i = t.items.findIndex(x => x.id === snap.id); if (i >= 0) t.items[i] = snap; else t.items.push(snap); }); }
+function undoTaskFn(id, after) { const snap = clone(taskById(id)); return () => { if (snap) restoreTask(snap); if (after) after(); render(); }; }
 function startSort() { S.sortSkip = new Set(); S.sortCount = 0; S.sortTotal = inboxItems().length; S.sortProj = null; S.sortTally = {}; S.sheet = { type: "sort" }; }
 function sortPick(kind) {
   const it = inboxItems().find(i => !S.sortSkip.has(i.id)); if (!it) return;
@@ -2400,15 +2402,22 @@ document.addEventListener("click", e => {
     }
     case "capture": S.capMsg = ""; S.sheet = { type: "capture" }; break;
     case "capAdd": {
-      const ta = $("#" + b.dataset.src); const n = addCaptured(ta && ta.value);
+      const ta = $("#" + b.dataset.src), beforeIds = new Set(titems().map(i => i.id)); const n = addCaptured(ta && ta.value);
       if (!n) { toast("Write something first."); return; }
-      S.capMsg = `Added ${n} to your inbox.`; toast(`Added ${n} to your inbox`);
+      const added = titems().filter(i => !beforeIds.has(i.id)).map(i => i.id), text = ta.value;
+      S.capMsg = `Added ${n} to your inbox.`;
+      toast(`Added ${n} to your inbox`, () => { editTasks(t => { t.items = t.items.filter(i => !added.includes(i.id)); }); S.capMsg = ""; render(); const f = $("#" + b.dataset.src); if (f) f.value = text; });
       if (S.sheet && S.sheet.type === "capture") { renderSheet(); render(); return; }
       break;
     }
     case "sortStart": startSort(); break;
     case "sortPick": {
-      const k = b.dataset.k, card = $("#sortCard");
+      const k = b.dataset.k, card = $("#sortCard"), cur = inboxItems().find(i => !S.sortSkip.has(i.id));
+      if (cur && !["project", "recurring"].includes(k)) {
+        const snap = clone(cur);
+        const label = { done: "Marked done", week: "Added to this week", later: "Moved to Next up", someday: "Moved to Someday", drop: "Let go", skip: "Skipped" }[k] || "Sorted";
+        setTimeout(() => toast(`${label}: “${snap.t.slice(0, 40)}”`, () => { restoreTask(snap); S.sortSkip.delete(snap.id); if (k !== "skip") { S.sortCount = Math.max(0, (S.sortCount || 1) - 1); if (S.sortTally[k]) S.sortTally[k]--; } if (!S.sheet || S.sheet.type !== "sort") S.sheet = { type: "sort" }; render(); }), 220);
+      }
       if (k === "done") burst(b, "var(--good)", 10); else if (k !== "skip" && k !== "project" && k !== "recurring") burst(b, "var(--accent)", 6);
       sortPick(k);
       if (card && !reduced() && !["project", "recurring"].includes(k)) { card.style.transition = "transform .22s ease, opacity .22s ease"; card.style.transform = k === "drop" ? "translateX(-110%) rotate(-6deg)" : "translateX(110%) rotate(6deg)"; card.style.opacity = "0"; setTimeout(() => { S.noFocus = true; render(); }, 200); return; }
@@ -2416,23 +2425,28 @@ document.addEventListener("click", e => {
     }
     case "sortProjV": if (S.sortProj) { const nx = ($("#sp-next") || {}).value; S.sortProj.v = b.dataset.v; renderSheet(); const f = $("#sp-next"); if (f && nx) f.value = nx; return; } break;
     case "sortProjBack": S.sortProj = null; break;
-    case "sortProjSave": saveSortProject(); burst(b, "var(--brass)", 8); break;
+    case "sortProjSave": {
+      const id = S.sortProj && S.sortProj.id, snap = id && clone(taskById(id));
+      saveSortProject(); burst(b, "var(--brass)", 8);
+      if (snap) toast(`Saved as a project: “${snap.t.slice(0, 40)}”`, () => { restoreTask(snap); S.sortCount = Math.max(0, (S.sortCount || 1) - 1); if (S.sortTally.project) S.sortTally.project--; if (!S.sheet || S.sheet.type !== "sort") S.sheet = { type: "sort" }; render(); });
+      break;
+    }
     case "tDone": {
-      const it = taskById(b.dataset.id); if (!it) return;
+      const it = taskById(b.dataset.id); if (!it) return; const undo = undoTaskFn(it.id);
       if (it.s === "done") setTask(it.id, { s: it.was || "errand", doneAt: null });
-      else { setTask(it.id, { s: "done", was: it.s, wk: it.wk || thisWk(), doneAt: todayKey() }); burst(b, "var(--good)", 10); }
+      else { setTask(it.id, { s: "done", was: it.s, wk: it.wk || thisWk(), doneAt: todayKey() }); burst(b, "var(--good)", 10); toast(`Done: “${it.t.slice(0, 40)}”`, undo); }
       setTimeout(render, 180); return;
     }
     case "tUndo": { const it = taskById(b.dataset.id); if (it) setTask(it.id, { s: it.was && it.was !== "quick" ? it.was : "errand", doneAt: null, wk: it.was === "errand" ? it.wk : null }); break; }
-    case "tLater": setTask(b.dataset.id, { wk: null }); break;
-    case "tWeek": { const it = taskById(b.dataset.id); if (!it) return; if (weekErrands().length >= ERRAND_CAP) toast(`That makes ${weekErrands().length + 1}. Three is the sweet spot.`); setTask(it.id, { wk: thisWk(), moves: it.wk && it.wk < thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); break; }
-    case "tNext": { const it = taskById(b.dataset.id), nx = nextWkId(); if (!it) return; if (it.wk === nx) setTask(it.id, { wk: null }); else { if (weekErrands(nx).length >= ERRAND_CAP) toast(`That makes ${weekErrands(nx).length + 1} for next week. Three is the sweet spot.`); setTask(it.id, { wk: nx, moves: it.wk && it.wk <= thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); } break; }
-    case "tSomeday": setTask(b.dataset.id, { s: "someday" }); toast("Moved to Someday"); break;
-    case "tBack": setTask(b.dataset.id, { s: "inbox" }); break;
-    case "tDrop": setTask(b.dataset.id, { s: "dropped", doneAt: tk }); toast("Let go"); break;
-    case "tStep": { const it = taskById(b.dataset.id); if (!it) return; burst(b, "var(--good)", 8); editTasks(t => { const x = t.items.find(y => y.id === it.id); x.log = (x.log || []).concat({ step: x.next, at: tk }).slice(-30); x.next = ""; }); S.stepFor = it.id; if (S.tab !== "tasks") { S.tab = "tasks"; } toast("Step done. What's next?"); setTimeout(() => { render(); const f = $("#step-" + it.id); if (f) f.focus(); }, 160); return; }
+    case "tLater": { const u = undoTaskFn(b.dataset.id); setTask(b.dataset.id, { wk: null }); toast("Moved to Next up", u); break; }
+    case "tWeek": { const it = taskById(b.dataset.id); if (!it) return; const u = undoTaskFn(it.id); toast(weekErrands().length >= ERRAND_CAP ? `That makes ${weekErrands().length + 1}. Three is the sweet spot.` : "Added to this week", u); setTask(it.id, { wk: thisWk(), moves: it.wk && it.wk < thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); break; }
+    case "tNext": { const it = taskById(b.dataset.id), nx = nextWkId(); if (!it) return; const u = undoTaskFn(it.id); if (it.wk === nx) setTask(it.id, { wk: null }); else { toast(weekErrands(nx).length >= ERRAND_CAP ? `That makes ${weekErrands(nx).length + 1} for next week. Three is the sweet spot.` : "Picked for next week", u); setTask(it.id, { wk: nx, moves: it.wk && it.wk <= thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); } break; }
+    case "tSomeday": { const u = undoTaskFn(b.dataset.id); setTask(b.dataset.id, { s: "someday" }); toast("Moved to Someday", u); break; }
+    case "tBack": { const u = undoTaskFn(b.dataset.id); setTask(b.dataset.id, { s: "inbox" }); toast("Back in your inbox", u); break; }
+    case "tDrop": { const u = undoTaskFn(b.dataset.id); setTask(b.dataset.id, { s: "dropped", doneAt: tk }); toast("Let go", u); break; }
+    case "tStep": { const it = taskById(b.dataset.id); if (!it) return; const u = undoTaskFn(it.id, () => { S.stepFor = null; }); burst(b, "var(--good)", 8); editTasks(t => { const x = t.items.find(y => y.id === it.id); x.log = (x.log || []).concat({ step: x.next, at: tk }).slice(-30); x.next = ""; }); S.stepFor = it.id; if (S.tab !== "tasks") { S.tab = "tasks"; } toast("Step done. What's next?", u); setTimeout(() => { render(); const f = $("#step-" + it.id); if (f) f.focus(); }, 160); return; }
     case "tStepSave": { const f = $("#step-" + b.dataset.id), v = (f && f.value || "").trim(); if (!v) { toast("Write the next step first."); return; } setTask(b.dataset.id, { next: v }); S.stepFor = null; break; }
-    case "tProjDone": { burst(b, "var(--brass)", 12); setTask(b.dataset.id, { s: "done", was: "project", doneAt: tk }); S.stepFor = null; toast("Project finished"); break; }
+    case "tProjDone": { const u = undoTaskFn(b.dataset.id); burst(b, "var(--brass)", 12); setTask(b.dataset.id, { s: "done", was: "project", doneAt: tk }); S.stepFor = null; toast("Project finished", u); break; }
     case "delAcct": S.confirm = "delacct"; break;
     case "delAcctNo": S.confirm = null; break;
     case "delAcctYes": deleteAccount(); return;
@@ -2476,10 +2490,13 @@ document.addEventListener("click", e => {
     case "preMvw": editSettings(s => { s.preMvw = s.preMvw || {}; const n = wid(addDays(S.viewMon, 7)); if (s.preMvw[n]) delete s.preMvw[n]; else s.preMvw[n] = true; }); break;
     case "inboxDel": editSettings(s => { s.inbox = (s.inbox || []).filter(x => x.id !== b.dataset.id); }); break;
     case "pCalled": {
+      const who = people().list.find(y => y.id === b.dataset.id); if (!who) return; const prevLast = who.last || null;
       editPeople(p => { const x = p.list.find(y => y.id === b.dataset.id); if (x) x.last = tk; });
-      const pc = comps().find(c => c.people);
-      if (pc && curWid() === wid(monday(new Date()))) bump(pc, 1);
-      render(); burst(document.querySelector(`[data-act="pCalled"]`), "var(--good)"); return;
+      const pc = comps().find(c => c.people), counted = !!(pc && curWid() === wid(monday(new Date())));
+      if (counted) bump(pc, 1);
+      render(); burst(document.querySelector(`[data-act="pCalled"]`), "var(--good)");
+      toast(`Called ${who.name}`, () => { editPeople(p => { const x = p.list.find(y => y.id === who.id); if (x) x.last = prevLast; }); if (counted) { const keep = S.viewMon; S.viewMon = monday(new Date()); bump(pc, -1); S.viewMon = keep; } render(); });
+      return;
     }
     case "pDel": S.confirm = b.dataset.id; break;
     case "pDelNo": S.confirm = null; break;
@@ -2515,7 +2532,12 @@ document.addEventListener("click", e => {
       const sh = S.sheet, c = sh.draft; if (!(c.name || "").trim()) { toast("Give it a name first."); return; }
       c.name = c.name.trim();
       editProfile(p => { const i = p.components.findIndex(x => x.id === c.id); if (i >= 0) p.components[i] = c; else p.components.push(c); if (c.value && !p.values.includes(c.value)) p.values.push(c.value); });
-      if (sh.fromTask) { setTask(sh.fromTask, { s: "component", comp: c.id, doneAt: todayKey() }); S.sortTally = S.sortTally || {}; S.sortTally.recurring = (S.sortTally.recurring || 0) + 1; S.sortCount = (S.sortCount || 0) + 1; S.sheet = { type: "sort" }; toast(`“${c.name}” is now a component`); break; }
+      if (sh.fromTask) {
+        const snap = clone(taskById(sh.fromTask)), cid = c.id;
+        setTask(sh.fromTask, { s: "component", comp: c.id, doneAt: todayKey() }); S.sortTally = S.sortTally || {}; S.sortTally.recurring = (S.sortTally.recurring || 0) + 1; S.sortCount = (S.sortCount || 0) + 1; S.sheet = { type: "sort" };
+        toast(`“${c.name}” is now a component`, () => { editProfile(p => { p.components = p.components.filter(x => x.id !== cid); }); if (snap) restoreTask(snap); S.sortCount = Math.max(0, S.sortCount - 1); if (S.sortTally.recurring) S.sortTally.recurring--; S.sheet = { type: "sort" }; render(); });
+        break;
+      }
       S.sheet = null; toast(sh.isNew ? `Added “${c.name}”` : "Saved"); break;
     }
     case "delComp": S.confirm = "del:" + S.sheet.draft.id; break;
