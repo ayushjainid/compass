@@ -507,6 +507,22 @@ body.landing .top,body.landing #statusline{display:none}
   .padd{padding:7px 8px;text-align:left}
 }
 .mdate{width:auto;max-width:150px;font-size:13px;padding:6px 8px}
+/* ---------- import ---------- */
+.drop{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:1.5px dashed var(--line);border-radius:16px;padding:26px 16px;margin-top:14px;background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.drop .dicon svg{width:28px;height:28px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.imperr{color:var(--warn);font-size:14px;margin:10px 0 0}
+.insights{padding:6px 14px}
+.ins{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.45}
+.ins:last-child{border-bottom:0}
+.ins .glyph{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center}
+.ins .glyph svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tag.imp{background:var(--sunk);color:var(--ink2);text-transform:none;letter-spacing:0;font-weight:500}
+.impcard{display:flex;gap:14px;align-items:center}
+.impcard .glyph{flex:none;width:40px;height:40px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center}
+.impcard .glyph svg{width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fromapps{font-size:12.5px;color:var(--accent);font-weight:500}
 /* ---------- tasks ---------- */
 .fab{position:fixed;right:max(16px,calc(50% - 300px + 16px));bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:12;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(10,20,30,.45);transition:transform .15s}
 .fab:active{transform:scale(.92)}
@@ -1163,6 +1179,12 @@ const ICON = {
   star: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.5 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg>',
   shield: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></svg>',
   heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.5-7 10-7 10z"/></svg>',
+  upload: '<svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>',
+  compass: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>',
+  floor: '<svg viewBox="0 0 24 24"><path d="M4 18h16M4 14h10M4 10h6"/></svg>',
+  cal: '<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  inbox: '<svg viewBox="0 0 24 24"><path d="M4 13l2-8h12l2 8v6H4zM4 13h5l1 2h4l1-2h5"/></svg>',
 };
 function suggestions() {
   const p = profile(); if (!p) return [];
@@ -1758,6 +1780,7 @@ function rLanding() {
       <details><summary>Is Compass free?</summary><p>Yes. There's no subscription and nothing to buy.</p></details>
       <details><summary>What do I need to start?</summary><p>A Google account. Setup takes about five minutes and you can change everything later.</p></details>
       <details><summary>Can Compass hold my to-do list?</summary><p>Yes. Capture anything into the inbox, sort it once, and Compass turns errands into a short weekly list, habits into floors and big goals into projects with one next step each.</p></details>
+      <details><summary>Can I bring my Todoist, TickTick or Sunsama data?</summary><p>Yes. During setup, add an export from Todoist, TickTick, Sunsama, Google or Apple Calendar, or paste a list. Compass finds your routines, how often you really do them and where your week goes, then fills in most of setup. Files are read on your device and never uploaded.</p></details>
       <details><summary>Does it work offline?</summary><p>Yes. Changes save on your device and sync when you're back online.</p></details>
       <details><summary>What if I have a terrible week?</summary><p>Turn on a Minimum Viable Week. Only the few things you chose as your safety net count, and everything else pauses with no penalty.</p></details>
       <details><summary>Is this therapy or medical advice?</summary><p>No. Compass is a planning and reflection tool. It can sit alongside therapy, but it doesn't replace care from a professional.</p></details>
@@ -2445,6 +2468,110 @@ async function runTailor() {
   renderOnboarding();
 }
 
+/* ============ IMPORT: a head start from Todoist, TickTick, Sunsama and calendars ============ */
+let IMPMOD = null;
+const impMod = async () => IMPMOD || (IMPMOD = await import("/import.js"));
+const IMP_HOW = [
+  ["Todoist", "Settings → Backups → download the latest backup (.zip). On the free plan: open a project → ⋯ → Export as CSV, once per project. Todoist leaves out finished tasks, so repeating ones matter most."],
+  ["TickTick", "On the web: Settings → Account → Backup → Generate backup (.csv). It includes finished tasks, so Compass can see how often you really do things."],
+  ["Sunsama", "Settings → Account → Export my data. Choose the CSV or JSON file it gives you."],
+  ["Google Calendar", "On a computer: Settings → Import & export → Export. Choose the .zip it downloads. Past events show where your week goes."],
+  ["Apple Calendar or Reminders", "Calendar on a Mac: File → Export → Export (.ics). Reminders, Things or Notes: select your items, copy, and paste them below."],
+];
+function impOpen() { S.imp = { view: "pick", files: [], items: [], pasted: 0, res: null, sel: null, busy: false, err: "" }; renderOnboarding(); window.scrollTo(0, 0); }
+async function impAddFiles(list) {
+  const im = S.imp; if (!im || !list || !list.length) return;
+  im.busy = true; im.err = ""; renderOnboarding();
+  const M = await impMod().catch(() => null);
+  if (!M) { im.busy = false; im.err = "Couldn't load the importer. Check your connection and try again."; renderOnboarding(); return; }
+  for (const f of list) {
+    if (f.size > 40 * 1024 * 1024) { im.err = `${f.name} is too large (over 40 MB).`; continue; }
+    try {
+      const got = await M.readFiles([f]);
+      const by = {}; got.forEach(i => by[i.src] = (by[i.src] || 0) + 1);
+      const src = Object.entries(by).sort((a, b) => b[1] - a[1])[0];
+      im.files = im.files.filter(x => x.name !== f.name).concat({ name: f.name, n: got.length, src: src ? M.SOURCE_NAMES[src[0]] || src[0] : "" });
+      im.items = im.items.filter(i => i._f !== f.name).concat(got.map(i => Object.assign(i, { _f: f.name })));
+      if (!got.length) im.err = `Nothing readable in ${f.name}. Try another export, or paste a list.`;
+    } catch (e) { im.err = e && e.message === "unzip-unsupported" ? "This browser can't open .zip files. Unzip it first and choose the files inside." : `Couldn't read ${f.name}.`; }
+  }
+  im.busy = false; renderOnboarding();
+}
+async function impPaste() {
+  const im = S.imp, ta = $("#imp-paste"); if (!im || !ta || !ta.value.trim()) return;
+  const M = await impMod(); const got = M.readPasted(ta.value);
+  const name = "Pasted list" + (im.pasted ? " " + (im.pasted + 1) : ""); im.pasted++;
+  im.files.push({ name, n: got.length, src: "Pasted list" }); im.items = im.items.concat(got.map(i => Object.assign(i, { _f: name })));
+  renderOnboarding();
+}
+async function impRun() {
+  const im = S.imp; if (!im || !im.items.length) return;
+  im.busy = true; renderOnboarding();
+  const M = await impMod();
+  const res = M.analyze(im.items.map(i => Object.assign({}, i)), { VALUE_LIB, COMP_LIB });
+  im.res = res;
+  im.sel = { values: Object.fromEntries(res.values.map(v => [v.id, v.on])), comps: Object.fromEntries(res.comps.map(c => [c.id, true])), unplaced: {}, cores: res.cores.length > 0, week: !!res.week, people: Object.fromEntries(res.people.map(p => [p.name, true])), inbox: res.tasks.inbox.length > 0, someday: res.tasks.someday.length > 0, fun: Object.fromEntries(res.fun.map(f => [f, true])) };
+  im.busy = false; im.view = "review"; renderOnboarding(); window.scrollTo(0, 0);
+}
+function impUse() {
+  const im = S.imp, r = im.res, sel = im.sel, d = S.ob.d;
+  const vals = r.values.filter(v => sel.values[v.id]).map(v => v.id);
+  d.values = [...new Set(d.values.concat(vals))];
+  const comps = r.comps.filter(c => sel.comps[c.id] && d.values.includes(c.value)).map(c => Object.assign(clone(c), { on: true, touched: true }));
+  r.unplaced.forEach((u, i) => { const v = sel.unplaced[i]; if (!v) return; if (!d.values.includes(v)) d.values.push(v); const x = { id: "imp-u" + i + "-" + uidGen(), value: v, name: u.name, cadence: u.cadence, target: u.target, hours: u.hours, note: u.why, imp: u.imp, on: true, touched: true }; if (u.cadence === "weekly" && (u.days.length || u.time)) x.block = { days: u.days, time: u.time || "", dur: Math.max(5, Math.round(u.hours * 60)) }; comps.push(x); });
+  comps.forEach(c => { const i = d.comps.findIndex(x => x.id === c.id); if (i >= 0) d.comps[i] = c; else d.comps.push(c); });
+  if (sel.cores) d.cores = r.cores.filter(c => d.values.includes(c.value)).slice(0, 2).map(c => ({ value: c.value, text: "" }));
+  if (sel.week && r.week) { d.week = Object.assign({}, WEEK_DEFAULT, d.week || {}); ["work", "care", "other"].forEach(k => { if (r.week[k] != null) d.week[k] = r.week[k]; }); d.capacity = weekCalc(d.week).floors; }
+  const ppl = r.people.filter(p => sel.people[p.name]).map(p => ({ name: p.name, tier: p.tier }));
+  d.impPeople = ppl;
+  if (ppl.length >= 2 && d.values.includes("rel") && !d.comps.some(c => c.people && c.on)) {
+    const q = d.comps.find(c => c.id === "queue");
+    const note = `Compass picks who is due from the ${ppl.length} people you brought in`;
+    if (q) Object.assign(q, { on: true, note }); else d.comps.push(Object.assign({}, COMP_LIB.find(c => c.id === "queue"), { on: true, note }));
+  }
+  d.impTasks = { inbox: sel.inbox ? r.tasks.inbox : [], someday: sel.someday ? r.tasks.someday : [] };
+  r.fun.filter(f => sel.fun[f]).forEach(n => { if (!d.comps.some(c => c.fun && c.name === n)) d.comps.push({ id: "fun-" + uidGen(), fun: true, name: n, cadence: "weekly", target: 0, hours: 0, on: true }); });
+  const from = [...new Set(im.files.map(f => f.src).filter(Boolean))];
+  d.imp = { from, n: r.stats.total, comps: comps.length, at: Date.now(), goalHint: r.goalHint, insights: r.insights.map(i => i.t).slice(0, 3),
+    ev: Object.fromEntries(r.values.map(v => [v.id, v.reasons.slice(0, 2).join(" · ")])), coreHints: Object.fromEntries(r.cores.map(c => [c.value, c.hint])), weekWhy: sel.week && r.week ? r.week.why : [] };
+  S.imp = null; S.ob.step = 1; renderOnboarding(); window.scrollTo(0, 0);
+  toast(`Setup pre-filled from ${from.join(", ") || "your import"}`);
+}
+function impSrcLine(c) { const b = c.block, days = b && b.days && b.days.length ? b.days.map(x => WD[x]).join(", ") : ""; return [freqWords(c), days + (b && b.time ? " " + t12(b.time) : ""), c.hours ? fmtDur(c.hours) + " each" : ""].filter(Boolean).join(" · "); }
+function impView() {
+  const im = S.imp;
+  if (im.view === "pick") {
+    return { html: `<h1>Bring in what you already track.</h1>
+      <p class="lede">Compass looks for your routines, how often you really do them, where your week goes and who you keep in touch with, then fills in setup for you. Files are read on this device and never uploaded.</p>
+      <label class="drop" id="impDrop"><input type="file" id="impFiles" multiple accept=".csv,.zip,.ics,.json,.txt,.md,text/csv,text/calendar,application/json,application/zip">
+        <span class="dicon">${ICON.upload}</span><b>Choose files or drop them here</b><span class="hint">CSV, ZIP, ICS or JSON · add as many as you like</span></label>
+      ${im.busy ? `<p class="hint" style="text-align:center">Reading <span class="thinking"><i></i><i></i><i></i></span></p>` : ""}
+      ${im.err ? `<p class="imperr">${esc(im.err)}</p>` : ""}
+      ${im.files.length ? `<div class="card" style="margin-top:12px">${im.files.map(f => `<div class="task"><span class="vdot" style="background:var(--good)"></span><div class="tx"><span>${esc(f.name)}</span><small>${f.src ? esc(f.src) + " · " : ""}${f.n} item${f.n === 1 ? "" : "s"}</small></div><button class="xbtn" data-act="impDrop" data-v="${esc(f.name)}" aria-label="Remove ${esc(f.name)}" title="Remove">✕</button></div>`).join("")}</div>` : ""}
+      <details class="fold"><summary>Or paste a list</summary><div class="card pad"><textarea id="imp-paste" rows="4" placeholder="One per line. Add how often if you like, e.g.&#10;Gym every mon, wed, fri at 7am&#10;Call Dad every sunday"></textarea><div style="margin-top:8px"><button class="btn small" data-act="impPaste">Add list</button></div></div></details>
+      <details class="fold"><summary>How to export from your app</summary><div class="card">${IMP_HOW.map(([n, t]) => `<div class="field"><span class="flabel">${esc(n)}</span><span>${esc(t)}</span></div>`).join("")}</div></details>`,
+      back: "impClose", next: im.items.length ? `Find my patterns in ${im.items.length} items` : "Add a file first", nextAct: "impRun", canNext: im.items.length > 0 && !im.busy };
+  }
+  const r = im.res, sel = im.sel, from = [...new Set(im.files.map(f => f.src).filter(Boolean))];
+  const chk = (key, on, label, sub, extra = "") => `<button class="check" data-act="impTog" data-k="${esc(key)}" aria-pressed="${!!on}"><span class="box"></span><span class="lbl"><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</span>${extra}</button>`;
+  const vOpts = cur => `<option value="">Skip</option>` + VALUE_LIB.map(v => `<option value="${v.id}" ${cur === v.id ? "selected" : ""}>${esc(v.name)}</option>`).join("");
+  const coreNames = r.cores.map(c => valName(c.value));
+  const sec = (title, sub, body) => body ? `<h3>${title}</h3>${sub ? `<p class="hint" style="margin:-4px 0 8px">${sub}</p>` : ""}${body}` : "";
+  const html = `<h1>Here's what your apps say.</h1>
+    <p class="lede">${r.stats.total} items from ${esc(from.join(", ") || "your files")}. Keep what fits. Everything stays editable on the next screens.</p>
+    ${r.insights.length ? `<div class="card insights">${r.insights.map(i => `<div class="ins"><span class="glyph">${ICON[{ energy: "compass", floors: "floor", days: "cal", time: "clock", tasks: "inbox", gap: "star" }[i.k]] || ICON.star}</span><span>${esc(i.t)}</span></div>`).join("")}</div>` : ""}
+    ${sec("Values it points to", "Picked by where your time and attention already go.", r.values.length ? `<div class="card">${r.values.map(v => chk("values:" + v.id, sel.values[v.id], esc(v.name), esc(v.reasons.join(" · ")))).join("")}</div>` : "")}
+    ${r.cores.length ? `<div class="card" style="margin-top:8px">${chk("cores", sel.cores, `Make ${esc(coreNames.join(" and "))} my Core${coreNames.length > 1 ? "s" : ""}`, "They get most of your energy lately. You can swap them in a moment.")}</div>` : ""}
+    ${sec("Routines that become floors", "Floors start at what you actually do, a bit below what your apps asked for.", r.comps.length ? `<div class="card">${r.comps.map(c => chk("comps:" + c.id, sel.comps[c.id] && sel.values[c.value], `${esc(c.name)} <span class="tag imp">${esc(valName(c.value))}</span>`, esc(impSrcLine(c)) + `<br>${esc(c.note)} · ${esc(c.imp)}`)).join("")}</div>` : "")}
+    ${r.unplaced.length ? `<div class="card" style="margin-top:8px">${r.unplaced.map((u, i) => `<div class="task"><div class="tx"><span>${esc(u.name)}</span><small>${esc(u.why)} · which value is it for?</small></div><select class="mdate" data-impu="${i}" aria-label="Value for ${esc(u.name)}">${vOpts(sel.unplaced[i])}</select></div>`).join("")}</div>` : ""}
+    ${r.week ? sec("Your week", "", `<div class="card">${chk("week", sel.week, "Use my calendar for “Where does your week go?”", r.week.why.map(esc).join("<br>"))}</div>`) : ""}
+    ${sec("People you keep in touch with", r.people.length ? "Added to People, so Compass can nudge you when someone is due." : "", r.people.length ? `<div class="chips">${r.people.map(p => `<button class="chip ${sel.people[p.name] ? "sel" : ""}" data-act="impTog" data-k="people:${esc(p.name)}">${esc(p.name)}<span class="n">${esc(TIERS[p.tier].name)}</span></button>`).join("")}</div>` : "")}
+    ${r.tasks.inbox.length || r.tasks.someday.length ? sec("Open tasks", "", `<div class="card">${r.tasks.inbox.length ? chk("inbox", sel.inbox, `Put ${r.tasks.inbox.length} open task${r.tasks.inbox.length > 1 ? "s" : ""} in my inbox`, esc(r.tasks.inbox.slice(0, 3).map(t => t.t).join(", ")) + (r.tasks.inbox.length > 3 ? "…" : "") + "<br>Sort them in a minute with Clear your head.") : ""}${r.tasks.someday.length ? chk("someday", sel.someday, `Park ${r.tasks.someday.length} older one${r.tasks.someday.length > 1 ? "s" : ""} in Someday`, "Untouched for three months or more. Out of sight, not deleted.") : ""}</div>${r.tasks.more ? `<p class="hint">${r.tasks.more} more stay in your old app.</p>` : ""}`) : ""}
+    ${r.fun.length ? sec("Fun menu", "Things you do for joy. Never scored.", `<div class="chips">${r.fun.map(f => `<button class="chip ${sel.fun[f] ? "sel" : ""}" data-act="impTog" data-k="fun:${esc(f)}">${esc(f)}</button>`).join("")}</div>`) : ""}
+    ${!r.values.length && !r.comps.length ? `<div class="card pad"><b>Not much to go on yet</b><div class="hint">Compass couldn't find routines in these files. Add another export, or carry on and set things up by hand.</div></div>` : ""}`;
+  const nOn = Object.values(sel.values).filter(Boolean).length;
+  return { html, back: "impBack", next: nOn ? "Use this and continue" : "Continue without it", nextAct: nOn ? "impUse" : "impClose", canNext: true };
+}
 /* ============ ONBOARDING ============ */
 const OB_STEPS = ["welcome", "goal", "values", "season", "week", "comps", "safety", "plan"];
 function saveDraft() {
@@ -2473,7 +2600,7 @@ function ensureCandidates(d) {
     COMP_LIB.filter(c => c.value === v && !d.seen.includes(c.id)).forEach(c => {
       d.seen.push(c.id);
       if (d.comps.some(x => x.id === c.id)) return;
-      d.comps.push(Object.assign({}, c, { on: d.template ? n === 0 : n < 2 }));
+      d.comps.push(Object.assign({}, c, { on: d.template ? n === 0 : n < 2 && !d.comps.some(x => x.imp && x.value === v) }));
       n++;
     });
   });
@@ -2484,7 +2611,7 @@ function byTime(list) {
   return list.slice().sort((a, b) => ((b.on !== false) - (a.on !== false)) || (weeklyHours(b) - weeklyHours(a)));
 }
 function obRow(c) {
-  const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span>${c.note ? `<small>${esc(c.note)}</small>` : c.on ? "" : `<small>${esc(cadenceText(c))}</small>`}</span></button><button class="xbtn" data-act="obDel" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.name)}" title="Remove">✕</button></div>`;
+  const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}${c.imp ? ` <span class="tag imp">${esc(c.imp)}</span>` : ""}</span>${c.note ? `<small>${esc(c.note)}</small>` : c.on ? "" : `<small>${esc(cadenceText(c))}</small>`}</span></button><button class="xbtn" data-act="obDel" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.name)}" title="Remove">✕</button></div>`;
   if (!c.on) return `<div class="obrow" data-rid="${esc(c.id)}">${top}</div>`;
   if (S.obEdit !== c.id) return `<div class="obrow" data-rid="${esc(c.id)}">${top}<button class="sumpill" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}"><span>${esc(freqWords(c))}${c.unit ? "" : ` · ${c.hours ? fmtDur(c.hours) : "no time"} each`}</span><b>= ${fmtDur(weeklyHours(c))}/wk</b><span class="pen">✎</span></button></div>`;
   return `<div class="obrow" data-rid="${esc(c.id)}">${top}<div class="obedit">
@@ -2503,19 +2630,24 @@ function renderOnboarding() {
   applyTheme();
   const { step, d } = S.ob, key = OB_STEPS[step];
   const prog = `<div class="progress" aria-label="Step ${step + 1} of ${OB_STEPS.length}">${OB_STEPS.map((_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
-  let html = "", next = "Continue", canNext = true, back = step > 0;
-  if (key === "welcome") {
+  let html = "", next = "Continue", canNext = true, back = step > 0, backAct = "obBack", nextAct = "obNext";
+  if (key === "welcome" && S.imp) {
+    const v = impView(); html = v.html; next = v.next; canNext = v.canNext; back = true; backAct = v.back; nextAct = v.nextAct;
+  } else if (key === "welcome") {
     html = `<div class="hero">${bigCompass()}</div>
       <h1>Know where your life is heading.</h1>
       <p class="lede">Compass turns what matters to you into a few small floors, checks them once a week, and tells you when you're drifting. Relaxed because you know the direction, not because you're doing nothing.</p>
-      <div class="card pad" style="margin-top:14px"><b>Pick your colours</b><div style="margin-top:10px">${themePicker()}</div></div>
+      ${d.imp ? `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Imported from ${esc(d.imp.from.join(", "))}</b><div class="hint">Setup is pre-filled with ${d.imp.comps} routine${d.imp.comps === 1 ? "" : "s"} and your values. Tap Continue to review.</div></div><button class="btn small quiet" data-act="impOpen">Redo</button></div></div>`
+        : `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Already use Todoist, TickTick, Sunsama or a calendar?</b><div class="hint">Bring it in and Compass fills in most of setup from what you already do. Read on this device, never uploaded.</div></div></div><div style="margin-top:10px"><button class="btn" data-act="impOpen">Import from my apps</button></div></div>`}
+      <div class="card pad" style="margin-top:10px"><b>Pick your colours</b><div style="margin-top:10px">${themePicker()}</div></div>
       <div class="card pad" style="margin-top:10px"><b>What setup covers</b><div class="hint" style="margin-top:4px">Your goal · the values that matter · small components for each · up to two Cores for this season · a safety net for hard weeks. About five minutes.</div></div>
       ${hasOldLogs() || (profile() && !profile().onboarded) ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>You have earlier logs</b><div class="hint">Start from the original Compass setup to keep them counting.</div></div><button class="btn" data-act="obTemplate">Use it</button></div></div>` : `<p style="margin-top:12px"><button class="btn quiet" data-act="obTemplate">Or start from the full Compass template</button></p>`}`;
-    next = "Set my compass";
+    next = d.imp ? "Continue" : "Set my compass";
   } else if (key === "goal") {
     html = `<h1>Picture a good year from now.</h1>
       <p class="lede">How do you want it to feel, and what are you moving toward? A direction, not a destination.</p>
       <textarea id="ob-goal" data-ob="goal" rows="5" placeholder="e.g. I want to feel calm and proud: learning and growing in tech, doing good for my community, and staying close to family and friends.">${esc(d.goal)}</textarea>
+      ${d.imp && d.imp.insights.length ? `<div class="card insights" style="margin-top:10px">${d.imp.insights.slice(0, 2).map(t => `<div class="ins"><span class="glyph">${ICON.compass}</span><span>${esc(t)}</span></div>`).join("")}${d.imp.goalHint && !d.goal.trim() ? `<div style="padding:4px 0 12px"><button class="btn small" data-act="impGoal">Start from this</button><div class="hint" style="margin-top:6px">“${esc(d.imp.goalHint)}” Then make it yours.</div></div>` : ""}</div>` : ""}
       <h3>It should feel</h3>
       <div class="feel">${FEELINGS.map(f => `<button class="chip ${d.feel.includes(f) ? "sel" : ""}" data-act="obFeel" data-v="${f}">${f}</button>`).join("")}</div>
       <p class="src" style="margin-top:14px">Values as directions: Acceptance and Commitment Therapy (Hayes)</p>`;
@@ -2523,13 +2655,14 @@ function renderOnboarding() {
   } else if (key === "values") {
     html = `<h1>What matters to you?</h1>
       <p class="lede">Pick 3 to 7. Each one is backed by research on what makes life feel good and meaningful.</p>
-      <div class="vcards">${VALUE_LIB.concat(d.custom).map(v => `<button class="vcard" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${d.values.includes(v.id)}"><span class="tick"></span><b>${esc(v.name)}</b>${v.why ? `<small>${esc(v.why)}</small><span class="src">${esc(v.src)}</span>` : `<small>Your own value</small>`}</button>`).join("")}</div>
+      <div class="vcards">${VALUE_LIB.concat(d.custom).map(v => `<button class="vcard" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${d.values.includes(v.id)}"><span class="tick"></span><b>${esc(v.name)}</b>${d.imp && d.imp.ev[v.id] ? `<span class="fromapps">In your apps: ${esc(d.imp.ev[v.id])}</span>` : ""}${v.why ? `<small>${esc(v.why)}</small><span class="src">${esc(v.src)}</span>` : `<small>Your own value</small>`}</button>`).join("")}</div>
       <form class="addrow" id="obCustomValue" style="grid-template-columns:1fr auto;padding:12px 0 0"><input type="text" id="obCv" placeholder="Add your own, e.g. Faith, Family, Craft" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>`;
     canNext = d.values.length >= 1; next = d.values.length ? `Continue with ${d.values.length}` : "Pick at least one";
   } else if (key === "week") {
     d.week = d.week || Object.assign({}, WEEK_DEFAULT);
     html = `<h1>Where does your week go?</h1>
       <p class="lede">Before choosing floors, see how much time you really have. Six quick taps; rough answers are fine, and you can change them later in the Compass tab.</p>
+      ${d.imp && d.imp.weekWhy && d.imp.weekWhy.length ? `<div class="card insights" style="margin-bottom:12px">${d.imp.weekWhy.map(t => `<div class="ins"><span class="glyph">${ICON.cal}</span><span>${esc(t)}. Filled in from your calendar; adjust if it only shows part of your week.</span></div>`).join("")}</div>` : ""}
       ${weekForm(d.week)}`;
     next = `Continue with ${weekCalc(d.week).floors} h a week`;
   } else if (key === "comps") {
@@ -2552,8 +2685,9 @@ function renderOnboarding() {
   } else if (key === "season") {
     html = `<h1>Pick up to two Cores.</h1>
       <p class="lede">For the next 12 to 18 months, two values get most of your energy. The rest become satellites, still tracked, explored without guilt. Chasing everything at once is how goals start fighting each other. Cores get a double share of time in the suggested split.</p>
+      ${d.imp && Object.keys(d.imp.coreHints || {}).length ? `<p class="hint" style="margin:0 0 10px">${d.cores.length ? "Pre-selected from where your time has gone lately." : "Your apps point to " + Object.keys(d.imp.coreHints).map(valName).join(" and ") + "."} If this season should look different, swap them.</p>` : ""}
       <div class="vcards">${d.values.map(vid => { const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid); const on = d.cores.some(c => c.value === vid); return `<button class="vcard corecard" data-act="obCore" data-v="${esc(vid)}" aria-pressed="${on}"><span class="tick"></span><b>${esc(v.name)}</b><small>${on ? "Core" : "Satellite"}</small></button>`; }).join("")}</div>
-      ${d.cores.length ? `<div class="card" style="margin-top:12px">${d.cores.map((c, i) => `<div class="field"><label for="ob-core-${i}">What does ${esc((VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name)} mean this season?</label><input type="text" id="ob-core-${i}" data-obcore="${i}" value="${esc(c.text)}" placeholder="e.g. Land a more challenging role by summer"></div>`).join("")}</div>` : ""}
+      ${d.cores.length ? `<div class="card" style="margin-top:12px">${d.cores.map((c, i) => `<div class="field"><label for="ob-core-${i}">What does ${esc((VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name)} mean this season?</label><input type="text" id="ob-core-${i}" data-obcore="${i}" value="${esc(c.text)}" placeholder="${esc((d.imp && d.imp.coreHints && d.imp.coreHints[c.value]) || "e.g. Land a more challenging role by summer")}"></div>`).join("")}</div>` : ""}
       <p class="src" style="margin-top:14px">Emmons & King 1988; Riediger & Freund 2004</p>`;
   } else if (key === "safety") {
     const csf = d.cores.map(c => c.value), on = obOn(d).filter(c => !c.fun).sort((a, b) => (csf.includes(b.value) - csf.includes(a.value)));
@@ -2568,7 +2702,7 @@ function renderOnboarding() {
     const on = obOn(d).filter(c => !c.fun), fun = obOn(d).filter(c => c.fun), cap = capacity(on);
     const coreNames = d.cores.map(c => (VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name);
     const steps = [
-      ["Floors, not ceilings", `${on.length} small floors, about ${hrs(cap)} hours a week${cap > d.capacity * 1.05 ? `, more than your ${d.capacity}-hour budget. Consider trimming.` : `, inside your ${d.capacity}-hour budget`}${d.week ? `, out of about ${hrs(weekCalc(d.week).free)} free hours` : ""}. Clearing a floor counts as a good week.`, "Schwartz et al. 2002"],
+      ["Floors, not ceilings", `${on.length} small floors${d.imp ? ` (${on.filter(c => c.imp).length} from what you already do)` : ""}, about ${hrs(cap)} hours a week${cap > d.capacity * 1.05 ? `, more than your ${d.capacity}-hour budget. Consider trimming.` : `, inside your ${d.capacity}-hour budget`}${d.week ? `, out of about ${hrs(weekCalc(d.week).free)} free hours` : ""}. Clearing a floor counts as a good week.`, "Schwartz et al. 2002"],
       ["A season with a direction", coreNames.length ? `${coreNames.join(" and ")} ${coreNames.length === 1 ? "gets" : "get"} most of your energy until next year. Everything else is a satellite.` : "No Cores yet. Everything is weighted equally, which is fine to start; pick Cores at your first monthly check.", "Emmons & King 1988"],
       ["A safety net", `${on.filter(c => c.mvw).length} things survive a hard week, and ${d.ifthen.filter(Boolean).length} if-then rules decide ahead of time.`, "Gollwitzer & Sheeran 2006"],
       ["Joy stays loose", fun.length ? `${fun.length} fun things on a menu, never scored.` : "Add a fun menu later. Scheduling joy precisely makes it feel like work.", "Tonietto & Malkoc 2016"],
@@ -2581,7 +2715,7 @@ function renderOnboarding() {
     next = "Start using Compass";
   }
   $("#main").innerHTML = `<div class="ob">${prog}<div class="stepin" id="obStep">${html}</div></div>`;
-  $("#obbar").innerHTML = `<div class="obbar"><div class="in">${back ? `<button class="btn quiet" data-act="obBack">Back</button>` : (onboarded() ? `<button class="btn quiet" data-act="obCancel">Cancel</button>` : "<span></span>")}<button class="btn primary" data-act="obNext" ${canNext ? "" : "disabled"}>${esc(next)}</button></div></div>`;
+  $("#obbar").innerHTML = `<div class="obbar"><div class="in">${back ? `<button class="btn quiet" data-act="${backAct}">Back</button>` : (onboarded() ? `<button class="btn quiet" data-act="obCancel">Cancel</button>` : "<span></span>")}<button class="btn primary" data-act="${nextAct}" ${canNext ? "" : "disabled"}>${esc(next)}</button></div></div>`;
   $("#tabbar").hidden = true; $("#weeknav").hidden = true; $("#heading").textContent = "";
   setNeedle(1);
   saveDraft();
@@ -2595,8 +2729,11 @@ function finishOnboarding() {
     updatedAt: new Date().toISOString(),
   });
   touch("profile"); clearTimeout(T.profile); T.profile = null; flush("profile");
-  S.ob = null; S.tab = "today"; render();
-  toast("Your compass is set");
+  if (d.impPeople && d.impPeople.length) editPeople(p => { d.impPeople.forEach(x => { if (!p.list.some(y => y.name.toLowerCase() === x.name.toLowerCase())) p.list.push({ id: uidGen(), name: x.name, tier: x.tier, last: null }); }); });
+  const it = d.impTasks || {}, nT = (it.inbox || []).length + (it.someday || []).length;
+  if (nT) editTasks(t => { const have = new Set(t.items.map(i => (i.t || "").toLowerCase())); [["inbox", it.inbox || []], ["someday", it.someday || []]].forEach(([s, list]) => list.forEach(x => { if (!have.has(x.t.toLowerCase())) { have.add(x.t.toLowerCase()); t.items.push(Object.assign({ id: uidGen(), t: x.t.slice(0, 200), s, at: todayKey() }, x.v ? { v: x.v } : {})); } })); });
+  S.ob = null; S.tab = nT && (it.inbox || []).length ? "tasks" : "today"; render();
+  toast(nT && (it.inbox || []).length ? `Your compass is set. ${it.inbox.length} imported tasks are waiting to be sorted.` : "Your compass is set");
   const btn = $("#hneedle"); if (btn) burst(btn.closest("svg"), "var(--brass)", 14);
 }
 
@@ -2608,6 +2745,19 @@ document.addEventListener("click", e => {
   switch (act) {
     /* onboarding */
     case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
+    case "impOpen": return impOpen();
+    case "impClose": S.imp = null; renderOnboarding(); window.scrollTo(0, 0); return;
+    case "impBack": S.imp.view = "pick"; renderOnboarding(); window.scrollTo(0, 0); return;
+    case "impRun": return impRun();
+    case "impUse": return impUse();
+    case "impPaste": return impPaste();
+    case "impDrop": { const n = b.dataset.v; S.imp.files = S.imp.files.filter(f => f.name !== n); S.imp.items = S.imp.items.filter(i => i._f !== n); S.imp.err = ""; return renderOnboarding(); }
+    case "impTog": { const [grp, ...rest] = b.dataset.k.split(":"), key = rest.join(":"), sel = S.imp.sel; if (key) sel[grp][key] = !sel[grp][key]; else sel[grp] = !sel[grp];
+      if (grp === "values" && !sel.values[key]) S.imp.res.comps.filter(c => c.value === key).forEach(c => sel.comps[c.id] = false);
+      if (grp === "values" && sel.values[key]) S.imp.res.comps.filter(c => c.value === key).forEach(c => sel.comps[c.id] = true);
+      if (grp === "comps" && sel.comps[key]) { const c = S.imp.res.comps.find(x => x.id === key); if (c) sel.values[c.value] = true; }
+      return updateOb(); }
+    case "impGoal": { if (!ob || !ob.imp) return; ob.goal = ob.imp.goalHint; updateOb(); const g = $("#ob-goal"); if (g) { g.focus(); g.setSelectionRange(g.value.length, g.value.length); } return; }
     case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); window.scrollTo(0, 0); return renderOnboarding();
     case "obCancel": S.ob = null; clearDraft(); return render();
     case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
@@ -2849,6 +2999,9 @@ function updateOb() {
     el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 380, easing: "cubic-bezier(.2,.8,.2,1)" });
   });
 }
+["dragenter", "dragover"].forEach(ev => document.addEventListener(ev, e => { const z = e.target.closest && e.target.closest("#impDrop"); if (!z) return; e.preventDefault(); z.classList.add("over"); }));
+document.addEventListener("dragleave", e => { const z = e.target.closest && e.target.closest("#impDrop"); if (z && !z.contains(e.relatedTarget)) z.classList.remove("over"); });
+document.addEventListener("drop", e => { const z = e.target.closest && e.target.closest("#impDrop"); if (!z) return; e.preventDefault(); z.classList.remove("over"); if (e.dataTransfer && e.dataTransfer.files.length) impAddFiles([...e.dataTransfer.files]); });
 document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
   if (f.id === "pForm") { const name = $("#pName").value.trim(); if (!name) return; editPeople(p => { p.list.push({ id: uidGen(), name, tier: $("#pTier").value, last: null }); }); render(); const n = $("#pName"); if (n) n.focus(); }
@@ -2894,6 +3047,8 @@ document.addEventListener("change", e => {
     updateOb(); return;
   }
   if (ds.cap) { if (S.ob) updateOb(); else render(); return; }
+  if (t.id === "impFiles" && t.files && t.files.length) { impAddFiles([...t.files]); t.value = ""; return; }
+  if (ds.impu !== undefined && S.imp && S.imp.sel) { S.imp.sel.unplaced[+ds.impu] = t.value; return; }
   if (t.id === "importFile" && t.files && t.files[0]) { importData(t.files[0]); t.value = ""; return; }
   if (ds.c === "value" && S.sheet && S.sheet.draft) S.sheet.draft.value = t.value;
   else if (ds.j || ds.cap) scheduleRender();
