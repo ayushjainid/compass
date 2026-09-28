@@ -926,6 +926,7 @@ async function init() {
     S.authState = "in"; S.authBusy = false; S.mode = "db"; hideBanner(); window.scrollTo(0, 0);
     try { localStorage.setItem("compass-was-signed-in", "1"); } catch (e) {}
     loadLocalAll(); render();
+    try { const dr = await ref("obdraft").get(); if (dr.exists) S.docs.obdraft = clone(dr.data()); } catch (e) {}
     try { const p = await ref("profile").get(); if (p.exists) { S.docs.profile = clone(p.data()); LS.set("profile", S.docs.profile); } } catch (e) {}
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
@@ -933,6 +934,8 @@ async function init() {
   });
 }
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
+addEventListener("pagehide", () => { flushAll(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushAll(); });
 
 /* ============ model ============ */
 const comps = () => (profile() && profile().components) || [];
@@ -2181,8 +2184,15 @@ async function runTailor() {
 
 /* ============ ONBOARDING ============ */
 const OB_STEPS = ["welcome", "goal", "values", "season", "week", "comps", "safety", "plan"];
+function saveDraft() {
+  if (!S.ob || S.ob.step < 1 || S.authState !== "in") return;
+  S.docs.obdraft = { step: S.ob.step, d: clone(S.ob.d), at: Date.now() };
+  touch("obdraft");
+}
+function clearDraft() { S.docs.obdraft = { cleared: true, at: Date.now() }; touch("obdraft"); }
 function resumeDraft() {
-  const dr = LS.get("obdraft");
+  const dr = S.docs.obdraft || LS.get("obdraft");
+  if (dr && dr.cleared) return null;
   if (!dr || !dr.d || !Array.isArray(dr.d.comps) || Date.now() - (dr.at || 0) > 30 * 864e5) return null;
   return { step: Math.min(dr.step || 1, OB_STEPS.length - 1), d: dr.d, resumed: true };
 }
@@ -2311,10 +2321,10 @@ function renderOnboarding() {
   $("#obbar").innerHTML = `<div class="obbar"><div class="in">${back ? `<button class="btn quiet" data-act="obBack">Back</button>` : (onboarded() ? `<button class="btn quiet" data-act="obCancel">Cancel</button>` : "<span></span>")}<button class="btn primary" data-act="obNext" ${canNext ? "" : "disabled"}>${esc(next)}</button></div></div>`;
   $("#tabbar").hidden = true; $("#weeknav").hidden = true; $("#heading").textContent = "";
   setNeedle(1);
-  if (S.ob.step > 0) LS.set("obdraft", { step: S.ob.step, d: S.ob.d, at: Date.now() });
+  saveDraft();
 }
 function finishOnboarding() {
-  const d = S.ob.d; LS.set("obdraft", null);
+  const d = S.ob.d; clearDraft();
   const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; return x; });
   S.docs.profile = Object.assign({}, profile() || {}, {
     v: 2, onboarded: true, goal: d.goal.trim(), feel: d.feel, values: d.values, customValues: d.custom,
@@ -2336,7 +2346,7 @@ document.addEventListener("click", e => {
     /* onboarding */
     case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
     case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); window.scrollTo(0, 0); return renderOnboarding();
-    case "obCancel": S.ob = null; LS.set("obdraft", null); return render();
+    case "obCancel": S.ob = null; clearDraft(); return render();
     case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
     case "obFeel": { const v = b.dataset.v; ob.feel = ob.feel.includes(v) ? ob.feel.filter(x => x !== v) : ob.feel.concat(v); const was = ob.feel.includes(v); updateOb(); if (was) burst(document.querySelector(`[data-act="obFeel"][data-v="${CSS.escape(v)}"]`), "var(--accent)", 6); return; }
     case "obValue": { const v = b.dataset.v; if (ob.values.includes(v)) { ob.values = ob.values.filter(x => x !== v); ob.cores = ob.cores.filter(c => c.value !== v); } else { if (ob.values.length >= 9) return toast("Nine is plenty. Fewer values, clearer direction."); ob.values.push(v); } updateOb(); if (ob.values.includes(v)) burst(document.querySelector(`[data-act="obValue"][data-v="${CSS.escape(v)}"] .tick`), "var(--accent)"); return; }
@@ -2525,10 +2535,10 @@ document.addEventListener("input", e => {
   else if (ds.p === "goal") editProfile(p => { p.goal = t.value; });
   else if (ds.p === "ifthen") editProfile(p => { p.ifthen = t.value.split("\n"); });
   else if (ds.core !== undefined) editProfile(p => { if (p.cores[+ds.core]) p.cores[+ds.core].text = t.value; });
-  else if (ds.ob === "goal") { S.ob.d.goal = t.value; const nb = document.querySelector('[data-act="obNext"]'); if (nb) nb.disabled = !(t.value.trim().length > 3 || S.ob.d.feel.length); }
-  else if (ds.ob === "ifthen") S.ob.d.ifthen = t.value.split("\n");
-  else if (ds.obe && S.ob) { const c = S.ob.d.comps.find(x => x.id === S.obEdit); if (c) c[ds.obe] = t.value; }
-  else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value; }
+  else if (ds.ob === "goal") { S.ob.d.goal = t.value; saveDraft(); const nb = document.querySelector('[data-act="obNext"]'); if (nb) nb.disabled = !(t.value.trim().length > 3 || S.ob.d.feel.length); }
+  else if (ds.ob === "ifthen") { S.ob.d.ifthen = t.value.split("\n"); saveDraft(); }
+  else if (ds.obe && S.ob) { const c = S.ob.d.comps.find(x => x.id === S.obEdit); if (c) c[ds.obe] = t.value;  saveDraft(); }
+  else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value;  saveDraft(); }
   else if (ds.c && S.sheet && S.sheet.draft) { S.sheet.draft[ds.c] = ds.c === "hours" ? Math.max(0, Number(t.value) || 0) : t.value; }
   else if (ds.cb && S.sheet && S.sheet.draft && S.sheet.draft.block) { S.sheet.draft.block[ds.cb] = ds.cb === "dur" ? Math.max(5, Number(t.value) || 30) : t.value; S.sheet.draft.gcal = false; }
   else if (ds.cap) {
