@@ -414,6 +414,8 @@ body.landing .top,body.landing #statusline{display:none}
 .tune .eq{font:600 12.5px var(--mono);color:var(--ink2)}
 
 /* ---------- allocation ---------- */
+.tier{margin:26px 0 -4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--brass)}
+.tier span{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted);margin-left:6px}
 .sbar{position:relative;display:flex;gap:2px;height:12px;border-radius:999px;background:var(--sunk);margin:10px 0 8px;overflow:visible}
 .sbar i{display:block;height:100%;transition:width .45s cubic-bezier(.2,.8,.2,1)}
 .sbar i:first-child{border-radius:999px 0 0 999px}
@@ -937,7 +939,16 @@ const comps = () => (profile() && profile().components) || [];
 const compById = id => comps().find(c => c.id === id);
 function valueList() {
   const p = profile() || {}; const custom = p.customValues || [];
-  return (p.values || []).map(id => VALUE_LIB.find(v => v.id === id) || custom.find(v => v.id === id)).filter(Boolean);
+  const cores = (p.cores || []).map(c => c.value), ids = p.values || [];
+  const ordered = cores.filter(c => ids.includes(c)).concat(ids.filter(i => !cores.includes(i)));
+  return ordered.map(id => VALUE_LIB.find(v => v.id === id) || custom.find(v => v.id === id)).filter(Boolean);
+}
+function coresFirst(ids, cores) { return cores.filter(c => ids.includes(c)).concat(ids.filter(i => !cores.includes(i))); }
+function tierLabel(ids, i, cores) {
+  if (!cores.length) return "";
+  if (i === 0 && cores.includes(ids[0])) return `<div class="tier">Cores <span>most of your energy this season</span></div>`;
+  if (!cores.includes(ids[i]) && (i === 0 || cores.includes(ids[i - 1]))) return `<div class="tier">Satellites <span>tracked, explored without guilt</span></div>`;
+  return "";
 }
 const valueName = id => { const v = VALUE_LIB.find(x => x.id === id) || ((profile() || {}).customValues || []).find(x => x.id === id); return v ? v.name : "Other"; };
 const isCore = v => ((profile() || {}).cores || []).some(c => c.value === v);
@@ -996,7 +1007,7 @@ const valOrder = () => (S.ob ? S.ob.d.values : ((profile() || {}).values || []))
 const coreIds = () => (S.ob ? S.ob.d.cores : ((profile() || {}).cores || [])).map(c => c.value);
 const valColor = vid => { const i = valOrder().indexOf(vid); return SERIES(i < 0 ? 0 : i); };
 const valName = vid => (VALUE_LIB.find(v => v.id === vid) || ((S.ob && S.ob.d.custom) || []).find(v => v.id === vid) || ((profile() || {}).customValues || []).find(v => v.id === vid) || { name: "Other" }).name;
-function allocation(list) { const m = {}; list.filter(c => !c.fun && c.on !== false).forEach(c => { m[c.value] = (m[c.value] || 0) + weeklyHours(c); }); return valOrder().map(v => ({ v, h: m[v] || 0 })); }
+function allocation(list) { const m = {}; list.filter(c => !c.fun && c.on !== false).forEach(c => { m[c.value] = (m[c.value] || 0) + weeklyHours(c); }); return coresFirst(valOrder(), coreIds()).map(v => ({ v, h: m[v] || 0 })); }
 function suggestedSplit(budget) {
   const order = valOrder(), cores = coreIds(), w = v => (cores.includes(v) ? 2 : 1), tot = order.reduce((a, v) => a + w(v), 0) || 1, o = {};
   order.forEach(v => { o[v] = Math.max(0.5, Math.round(budget * w(v) / tot * 2) / 2); });
@@ -1950,9 +1961,9 @@ function rCompass(id, F, trips, sugg) {
   ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
   <h3>Values and components</h3>
   <p class="hint" style="margin:0 0 4px">Components are the small, trackable pieces. Each one flows into Today, the weekly floors, the review, the safety net and your calendar. Tap one to change it.</p>
-  ${vals.map(v => {
+  ${vals.map((v, gi) => {
     const list = all.filter(c => c.value === v.id && !c.fun);
-    return `<div class="vgroup">${groupHead(v.id, list, p.capacity || 20, { extra: ` <button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button>` })}
+    return `${tierLabel(vals.map(x => x.id), gi, coreIds())}<div class="vgroup">${groupHead(v.id, list, p.capacity || 20, { extra: ` <button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button>` })}
       ${list.length ? `<div class="card">${list.map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Nothing yet. Add one small floor.</p>`}</div>`;
   }).join("")}
   <div class="vgroup"><div class="gh"><b>Fun menu</b><button class="btn quiet small" data-act="addComp" data-value="__fun">+ Add</button></div>
@@ -2244,13 +2255,13 @@ function renderOnboarding() {
       <h1>Small pieces, each a floor.</h1>
       <p class="lede">These are your components. Keep what fits, and set how often and how long each takes <i>you</i>; the times are starting guesses. A floor is the minimum that already counts as a good week.</p>
       ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
-      ${d.values.map(vid => {
+      ${(() => { const cs = d.cores.map(c => c.value), ids = coresFirst(d.values, cs); return ids.map((vid, gi) => {
         const list = d.comps.filter(c => c.value === vid && !c.fun);
-        return `<div class="vgroup">${groupHead(vid, list, d.capacity)}<div class="card">
+        return `${tierLabel(ids, gi, cs)}<div class="vgroup">${groupHead(vid, list, d.capacity)}<div class="card">
           ${S.obRemoved && S.obRemoved.c.value === vid ? `<div class="undo"><span>Removed “${esc(S.obRemoved.c.name)}”.</span><button class="btn small" data-act="obUndo">Undo</button></div>` : ""}
           ${list.map(obRow).join("")}
           <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(valName(vid))}"><button class="btn small" type="submit">Add</button></form></div></div>`;
-      }).join("")}
+      }).join(""); })()}
       <div class="vgroup"><div class="gh"><b>Fun menu</b><span class="hint">never scored</span></div>
         <div class="chips">${FUN_LIB.concat(d.comps.filter(c => c.fun && !FUN_LIB.includes(c.name)).map(c => c.name)).map(n => { const on = d.comps.some(c => c.fun && c.name === n && c.on); return `<button class="chip ${on ? "sel" : ""}" data-act="obFun" data-v="${esc(n)}">${esc(n)}</button>`; }).join("")}</div>
         <form class="addrow" id="obFunAdd" style="grid-template-columns:1fr auto;padding:10px 0 0"><input type="text" id="obFunText" placeholder="Something you do just for joy" maxlength="50" aria-label="Add a fun thing"><button class="btn small" type="submit">Add</button></form></div>`;
@@ -2262,7 +2273,7 @@ function renderOnboarding() {
       ${d.cores.length ? `<div class="card" style="margin-top:12px">${d.cores.map((c, i) => `<div class="field"><label for="ob-core-${i}">What does ${esc((VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name)} mean this season?</label><input type="text" id="ob-core-${i}" data-obcore="${i}" value="${esc(c.text)}" placeholder="e.g. Land a more challenging role by summer"></div>`).join("")}</div>` : ""}
       <p class="src" style="margin-top:14px">Emmons & King 1988; Riediger & Freund 2004</p>`;
   } else if (key === "safety") {
-    const on = obOn(d).filter(c => !c.fun);
+    const csf = d.cores.map(c => c.value), on = obOn(d).filter(c => !c.fun).sort((a, b) => (csf.includes(b.value) - csf.includes(a.value)));
     html = `<h1>Build a safety net.</h1>
       <p class="lede">When you're sick, travelling or swamped, flip on a Minimum Viable Week. Only these stay on; everything else pauses with no guilt.</p>
       <div class="card">${on.map(c => `<button class="check" data-act="obMvw" data-id="${esc(c.id)}" aria-pressed="${!!c.mvw}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}</small></span></button>`).join("")}</div>
