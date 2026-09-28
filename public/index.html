@@ -305,7 +305,10 @@ body{transition:background-color .35s ease,color .35s ease}
 @keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
 .toast.withundo{display:flex;align-items:center;gap:14px;padding:6px 6px 6px 16px}
 .toast.withundo button{background:transparent;color:var(--bg);font-weight:600;padding:6px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--bg) 35%,transparent)}
-.toast{position:fixed;left:50%;bottom:calc(146px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13.5px;z-index:40;animation:rise .3s;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(146px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13.5px;z-index:40;animation:toastIn .28s cubic-bezier(.2,.8,.2,1) both;max-width:calc(100% - 32px);text-align:center}
+.toast.out{animation:toastOut .22s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastOut{to{opacity:0;transform:translate(-50%,6px)}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 /* ---------- landing ---------- */
 html{scroll-behavior:smooth}
@@ -460,7 +463,8 @@ body.landing .top,body.landing #statusline{display:none}
 .brow.tot{background:var(--surface);font-weight:600}
 .linkish{color:var(--accent);font-weight:500;font-size:13.5px;padding:4px 0}
 
-.updbar{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.4);border-radius:999px;padding:6px 6px 6px 16px;font-size:13.5px;max-width:calc(100% - 32px);animation:rise .3s}
+.updbar{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.4);border-radius:999px;padding:6px 6px 6px 16px;font-size:13.5px;max-width:calc(100% - 32px);animation:updIn .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes updIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 .cpair{display:inline-flex;align-items:stretch;border:1px solid var(--line);background:var(--surface);border-radius:999px;overflow:hidden}
 .cpair .chip{border:0;background:transparent;border-radius:0}
 .cpair.done{background:var(--good-soft);border-color:transparent}
@@ -1434,7 +1438,7 @@ function burst(el, color, n = 8) {
 function toast(t) {
   S.toast = t; const old = $(".toast"); if (old) old.remove(); clearTimeout(S.toastT);
   const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.textContent = t;
-  document.body.appendChild(el); S.toastT = setTimeout(() => el.remove(), 2400);
+  document.body.appendChild(el); S.toastT = setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 240); }, 2400);
 }
 function setNeedle(frac) {
   const n = $("#hneedle"); if (!n) return;
