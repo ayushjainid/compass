@@ -400,6 +400,12 @@ body.landing .top,body.landing #statusline{display:none}
 .wlegend li b{font:600 12.5px var(--mono)}
 .obrow + .obrow{border-top:1px solid var(--line)}
 .obrow .check{border:0}
+.obtop{display:flex;align-items:center}
+.obtop .check{flex:1;min-width:0}
+.xbtn{flex:none;width:34px;height:34px;margin-right:8px;border-radius:50%;color:var(--muted);font-size:14px}
+.xbtn:hover{background:var(--sunk);color:var(--warn)}
+.obedit{display:grid;gap:8px;padding:0 14px 14px 50px}
+.undo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:var(--sunk);font-size:13.5px;color:var(--ink2)}
 .tune{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:0 14px 12px 50px;font-size:13px}
 .stp{display:inline-flex;align-items:center;gap:4px;background:var(--sunk);border-radius:999px;padding:2px}
 .stp button{width:26px;height:26px;border-radius:50%;font-size:15px;line-height:1;background:var(--surface)}
@@ -2155,10 +2161,16 @@ function renderOnboarding() {
         const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid);
         const list = d.comps.filter(c => c.value === vid && !c.fun);
         return `<div class="vgroup"><div class="gh"><b>${esc(v.name)}</b><span class="hint">${list.filter(c => c.on).length} on</span></div><div class="card">
-          ${list.map(c => `<div class="obrow"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${c.on ? (c.note ? esc(c.note) : "Adjust how often and how long below") : esc(cadenceText(c)) + (c.note ? " · " + esc(c.note) : "")}</small></span></button>
-            ${c.on ? `<div class="tune"><span class="stp"><button data-act="obTgt" data-id="${esc(c.id)}" data-d="-1" aria-label="Less often">−</button><span>${c.cadence === "daily" ? c.target + " days/wk" : c.cadence === "monthly" ? c.target + "×/month" : c.target + (c.unit || "×") + "/wk"}</span><button data-act="obTgt" data-id="${esc(c.id)}" data-d="1" aria-label="More often">+</button></span>
+          ${S.obRemoved && S.obRemoved.c.value === vid ? `<div class="undo"><span>Removed “${esc(S.obRemoved.c.name)}”.</span><button class="btn small" data-act="obUndo">Undo</button></div>` : ""}
+          ${list.map(c => `<div class="obrow"><div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${c.on ? (c.note ? esc(c.note) : "Adjust how often and how long below") : esc(cadenceText(c)) + (c.note ? " · " + esc(c.note) : "")}</small></span></button><button class="xbtn" data-act="obDel" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.name)}" title="Remove">✕</button></div>
+            ${S.obEdit === c.id ? `<div class="obedit">
+              <label class="flabel" for="obe-name">Name</label><input type="text" id="obe-name" data-obe="name" value="${esc(c.name)}" maxlength="60">
+              <label class="flabel" for="obe-note">Note</label><input type="text" id="obe-note" data-obe="note" value="${esc(c.note)}" maxlength="90" placeholder="Optional, e.g. 20 minutes counts">
+              <span class="flabel">How often</span><div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="obCad" data-id="${esc(c.id)}" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>
+              <div><button class="btn small primary" data-act="obEditDone">Done</button></div></div>`
+            : c.on ? `<div class="tune"><span class="stp"><button data-act="obTgt" data-id="${esc(c.id)}" data-d="-1" aria-label="Less often">−</button><span>${c.cadence === "daily" ? c.target + " days/wk" : c.cadence === "monthly" ? c.target + "×/month" : c.target + (c.unit || "×") + "/wk"}</span><button data-act="obTgt" data-id="${esc(c.id)}" data-d="1" aria-label="More often">+</button></span>
               ${c.unit ? "" : `<span class="stp"><button data-act="hrs" data-id="${esc(c.id)}" data-d="-1" aria-label="Shorter">−</button><span>${c.hours ? fmtDur(c.hours) : "no time"}</span><button data-act="hrs" data-id="${esc(c.id)}" data-d="1" aria-label="Longer">+</button></span>`}
-              <span class="eq">= ${fmtDur(weeklyHours(c))}/wk</span></div>` : ""}</div>`).join("")}
+              <span class="eq">= ${fmtDur(weeklyHours(c))}/wk</span><button class="linkish" data-act="obEdit" data-id="${esc(c.id)}">Edit</button></div>` : ""}</div>`).join("")}
           <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(v.name)}"><button class="btn small" type="submit">Add</button></form></div></div>`;
       }).join("")}
       <div class="vgroup"><div class="gh"><b>Fun menu</b><span class="hint">never scored</span></div>
@@ -2222,13 +2234,13 @@ document.addEventListener("click", e => {
   const ob = S.ob && S.ob.d;
   switch (act) {
     /* onboarding */
-    case "obNext": if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
+    case "obNext": S.obEdit = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
     case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); window.scrollTo(0, 0); return renderOnboarding();
     case "obCancel": S.ob = null; return render();
     case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
     case "obFeel": { const v = b.dataset.v; ob.feel = ob.feel.includes(v) ? ob.feel.filter(x => x !== v) : ob.feel.concat(v); const was = ob.feel.includes(v); updateOb(); if (was) burst(document.querySelector(`[data-act="obFeel"][data-v="${CSS.escape(v)}"]`), "var(--accent)", 6); return; }
     case "obValue": { const v = b.dataset.v; if (ob.values.includes(v)) { ob.values = ob.values.filter(x => x !== v); ob.cores = ob.cores.filter(c => c.value !== v); } else { if (ob.values.length >= 9) return toast("Nine is plenty. Fewer values, clearer direction."); ob.values.push(v); } updateOb(); if (ob.values.includes(v)) burst(document.querySelector(`[data-act="obValue"][data-v="${CSS.escape(v)}"] .tick`), "var(--accent)"); return; }
-    case "obComp": { const c = ob.comps.find(x => x.id === b.dataset.id); if (c) { c.on = !c.on; c.touched = true; } updateOb(); if (c && c.on) burst(document.querySelector(`[data-act="obComp"][data-id="${CSS.escape(c.id)}"] .box`)); return; }
+    case "obComp": { S.obRemoved = null; const c = ob.comps.find(x => x.id === b.dataset.id); if (c) { c.on = !c.on; c.touched = true; } updateOb(); if (c && c.on) burst(document.querySelector(`[data-act="obComp"][data-id="${CSS.escape(c.id)}"] .box`)); return; }
     case "obFun": { const n = b.dataset.v; const c = ob.comps.find(x => x.fun && x.name === n); if (c) c.on = !c.on; else ob.comps.push({ id: "fun-" + uidGen(), fun: true, name: n, cadence: "weekly", target: 0, hours: 0, on: true }); return updateOb(); }
     case "obCore": { const v = b.dataset.v; if (ob.cores.some(c => c.value === v)) ob.cores = ob.cores.filter(c => c.value !== v); else { if (ob.cores.length >= 2) return toast("Two Cores at most. Make one a satellite first."); ob.cores.push({ value: v, text: "" }); } updateOb(); if (ob.cores.some(c => c.value === v)) burst(document.querySelector(`[data-act="obCore"][data-v="${CSS.escape(v)}"] .tick`), "var(--brass)"); return; }
     case "obMvw": { const c = ob.comps.find(x => x.id === b.dataset.id); if (c) c.mvw = !c.mvw; return updateOb(); }
@@ -2254,6 +2266,11 @@ document.addEventListener("click", e => {
     }
     case "weekEdit": S.sheet = { type: "week", draft: Object.assign({}, WEEK_DEFAULT, (profile() || {}).week || {}) }; break;
     case "weekSave": { const w = S.sheet.draft, f = weekCalc(w).floors; editProfile(p => { p.week = w; p.capacity = f; }); S.sheet = null; toast(`Budget set to ${f} h a week`); break; }
+    case "obEdit": S.obEdit = b.dataset.id; S.obRemoved = null; updateOb(); { const f = $("#obe-name"); if (f) f.focus(); } return;
+    case "obEditDone": { const c = S.ob && S.ob.d.comps.find(x => x.id === S.obEdit); if (c && !(c.name || "").trim()) { toast("Give it a name first."); return; } if (c) c.name = c.name.trim(); S.obEdit = null; updateOb(); return; }
+    case "obCad": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; delete c.unit; delete c.step; } c.touched = true; updateOb(); return; }
+    case "obDel": { const d = S.ob && S.ob.d; if (!d) return; const i = d.comps.findIndex(x => x.id === b.dataset.id); if (i < 0) return; const c = d.comps[i]; d.comps.splice(i, 1); if (!d.seen.includes(c.id)) d.seen.push(c.id); S.obRemoved = { c, i }; if (S.obEdit === c.id) S.obEdit = null; updateOb(); return; }
+    case "obUndo": { const d = S.ob && S.ob.d, r = S.obRemoved; if (!d || !r) return; d.comps.splice(Math.min(r.i, d.comps.length), 0, r.c); S.obRemoved = null; updateOb(); return; }
     case "obTgt": {
       const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return;
       const max = c.cadence === "daily" ? 7 : c.cadence === "monthly" ? 4 : (c.unit ? 40 : 14), st = c.step || 1;
@@ -2407,6 +2424,7 @@ document.addEventListener("input", e => {
   else if (ds.core !== undefined) editProfile(p => { if (p.cores[+ds.core]) p.cores[+ds.core].text = t.value; });
   else if (ds.ob === "goal") { S.ob.d.goal = t.value; const nb = document.querySelector('[data-act="obNext"]'); if (nb) nb.disabled = !(t.value.trim().length > 3 || S.ob.d.feel.length); }
   else if (ds.ob === "ifthen") S.ob.d.ifthen = t.value.split("\n");
+  else if (ds.obe && S.ob) { const c = S.ob.d.comps.find(x => x.id === S.obEdit); if (c) c[ds.obe] = t.value; }
   else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value; }
   else if (ds.c && S.sheet && S.sheet.draft) { S.sheet.draft[ds.c] = ds.c === "hours" ? Math.max(0, Number(t.value) || 0) : t.value; }
   else if (ds.cb && S.sheet && S.sheet.draft && S.sheet.draft.block) { S.sheet.draft.block[ds.cb] = ds.cb === "dur" ? Math.max(5, Number(t.value) || 30) : t.value; S.sheet.draft.gcal = false; }
@@ -2425,6 +2443,7 @@ document.addEventListener("change", e => {
 document.addEventListener("keydown", e => {
   const t = e.target, typing = t && /^(TEXTAREA|INPUT|SELECT)$/.test(t.tagName);
   if (typing && t.tagName === "TEXTAREA" && t.closest(".capbox") && e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); const btn = t.closest(".capbox").querySelector('[data-act="capAdd"]'); if (btn) btn.click(); return; }
+  if (typing && (t.id === "obe-name" || t.id === "obe-note") && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="obEditDone"]'); if (btn) btn.click(); return; }
   if (typing && t.id === "sp-next" && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="sortProjSave"]'); if (btn) btn.click(); return; }
   if (typing && t.id && t.id.startsWith("step-") && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector(`[data-act="tStepSave"][data-id="${t.id.slice(5)}"]`); if (btn) btn.click(); return; }
   if (e.key === "Escape" && S.sheet) { S.sheet = null; if (S.ob) renderSheet(); else render(); return; }
