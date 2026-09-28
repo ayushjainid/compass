@@ -460,6 +460,7 @@ body.landing .top,body.landing #statusline{display:none}
 .brow.tot{background:var(--surface);font-weight:600}
 .linkish{color:var(--accent);font-weight:500;font-size:13.5px;padding:4px 0}
 
+.updbar{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.4);border-radius:999px;padding:6px 6px 6px 16px;font-size:13.5px;max-width:calc(100% - 32px);animation:rise .3s}
 /* ---------- tasks ---------- */
 .fab{position:fixed;right:max(16px,calc(50% - 300px + 16px));bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:12;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(10,20,30,.45);transition:transform .15s}
 .fab:active{transform:scale(.92)}
@@ -743,6 +744,7 @@ function themePicker() {
 
 /* ============ state ============ */
 const S = {
+  loaded: {}, loadErr: false,
   sortSkip: new Set(), sortCount: 0, sortTotal: 0, sortTally: {}, sortProj: null, stepFor: null, capMsg: "", migrated: false, noFocus: false,
   authState: "loading", user: null, authBusy: false, authErr: "", importMsg: "",
   tab: "today", viewMon: monday(new Date()), selDay: todayKey(),
@@ -778,6 +780,18 @@ function ref(id) {
     onSnapshot: (next, err) => FB.onSnapshot(r, s => next(wrap(s)), e => err && err({ code: fsCode(e) })),
   };
 }
+function isObj(v) { return v && typeof v === "object" && !Array.isArray(v); }
+function deepMerge(base, over) {
+  if (Array.isArray(base) && Array.isArray(over)) {
+    const keyed = a => a.length && a.every(x => isObj(x) && x.id);
+    if (!keyed(base) || !keyed(over)) return clone(over);
+    const out = base.map(x => { const o = over.find(y => y.id === x.id); return o ? deepMerge(x, o) : clone(x); });
+    over.forEach(o => { if (!base.some(x => x.id === o.id)) out.push(clone(o)); });
+    return out;
+  }
+  if (isObj(base) && isObj(over)) { const out = clone(base); Object.keys(over).forEach(k => { out[k] = k in base ? deepMerge(base[k], over[k]) : clone(over[k]); }); return out; }
+  return over === undefined ? clone(base) : clone(over);
+}
 function touch(id) {
   S.last[id] = Date.now(); LS.set(id, S.docs[id]);
   if (S.mode !== "db") return;
@@ -787,7 +801,14 @@ async function flush(id) {
   if (S.mode !== "db" || !S.docs[id]) return;
   if (IN[id]) { DIRTY[id] = true; return; }
   IN[id] = true; updSync();
-  try { await ref(id).set(clone(S.docs[id])); }
+  try {
+    if (!S.loaded[id]) {
+      const snap = await ref(id).get();
+      S.loaded[id] = true;
+      if (snap.exists) { S.docs[id] = deepMerge(snap.data(), S.docs[id]); if (id.startsWith("w-")) S.hist[id] = clone(S.docs[id]); LS.set(id, S.docs[id]); scheduleRender(); }
+    }
+    await ref(id).set(clone(S.docs[id]));
+  }
   catch (e) {
     const code = fsCode(e);
     if (code === "unavailable" || code === "resource_exhausted" || code === "deadline_exceeded" || code === "aborted") setTimeout(() => touch(id), 2000 + Math.random() * 1500);
@@ -799,6 +820,10 @@ async function flush(id) {
   updSync();
 }
 function applyRemote(id, data) {
+  if (!S.loaded[id]) {
+    S.loaded[id] = true;
+    if (data && S.docs[id] && S.last[id]) { S.docs[id] = deepMerge(data, S.docs[id]); LS.set(id, S.docs[id]); touch(id); scheduleRender(); return; }
+  }
   if (T[id] || IN[id] || Date.now() - (S.last[id] || 0) < 2500) return;
   if (data) { S.docs[id] = clone(data); LS.set(id, S.docs[id]); if (id === "profile" && data.onboarded && S.ob && S.ob.auto && S.ob.step === 0) S.ob = null; scheduleRender(); }
   else if (S.docs[id] && Object.keys(S.docs[id]).length) touch(id);
@@ -836,14 +861,19 @@ function updSync() {
 }
 let profileReady = false;
 async function flushAll() {
-  const pending = Object.keys(T).filter(k => T[k]);
-  pending.forEach(k => { clearTimeout(T[k]); T[k] = null; });
-  await Promise.all(pending.map(k => flush(k).catch(() => {})));
+  for (let i = 0; i < 80; i++) {
+    const pending = Object.keys(T).filter(k => T[k]);
+    pending.forEach(k => { clearTimeout(T[k]); T[k] = null; });
+    await Promise.all(pending.map(k => flush(k).catch(() => {})));
+    if (![T, IN, DIRTY].some(m => Object.values(m).some(Boolean))) return true;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  return false;
 }
 function teardown() {
   Object.keys(ST.subs).forEach(unsubscribe);
   S.docs = {}; S.hist = {}; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
-  ST.uid = null; S.mode = "connecting"; profileReady = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
+  ST.uid = null; S.mode = "connecting"; profileReady = false; S.loaded = {}; S.loadErr = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
 }
 function authMessage(e) {
   const c = e && e.code;
@@ -885,7 +915,8 @@ async function deleteAccount() {
   }
 }
 async function signOutNow() {
-  await flushAll();
+  if ([T, IN, DIRTY].some(m => Object.values(m).some(Boolean))) toast("Saving your changes…");
+  if (!(await flushAll()) && navigator.onLine === false) { toast("You're offline. Your latest changes will sync next time you sign in on this device."); }
   try { const pre = "compass:" + ST.uid + ":"; Object.keys(localStorage).filter(k => k.startsWith(pre)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   teardown(); S.authState = "loading"; render();
   try { await FB.signOut(ST.auth); } catch (e) {}
@@ -908,6 +939,18 @@ async function importData(file) {
   } catch (e) { S.importMsg = "That file isn't a Compass export. Choose the .json file Compass saved."; }
   render();
 }
+async function loadCore(uid) {
+  const ids = ["profile", "settings", "people", "tasks", "obdraft", curWid()];
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const snaps = await Promise.all(ids.map(id => ref(id).get()));
+      if (ST.uid !== uid) return false;
+      snaps.forEach((sn, k) => { const id = ids[k]; S.loaded[id] = true; if (sn.exists) { S.docs[id] = S.docs[id] && S.last[id] ? deepMerge(sn.data(), S.docs[id]) : clone(sn.data()); LS.set(id, S.docs[id]); } });
+      S.loadErr = false; return true;
+    } catch (e) { await new Promise(r => setTimeout(r, 800 * (attempt + 1))); if (ST.uid !== uid) return false; }
+  }
+  S.loadErr = true; render(); return false;
+}
 async function init() {
   render();
   const cfg = Object.assign({}, window.COMPASS_FIREBASE_CONFIG || {});
@@ -928,8 +971,7 @@ async function init() {
     S.authState = "in"; S.authBusy = false; S.mode = "db"; hideBanner(); window.scrollTo(0, 0);
     try { localStorage.setItem("compass-was-signed-in", "1"); } catch (e) {}
     loadLocalAll(); render();
-    try { const dr = await ref("obdraft").get(); if (dr.exists) S.docs.obdraft = clone(dr.data()); } catch (e) {}
-    try { const p = await ref("profile").get(); if (p.exists) { S.docs.profile = clone(p.data()); LS.set("profile", S.docs.profile); } } catch (e) {}
+    if (!(await loadCore(u.uid))) return;
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     loadHistory(); render();
@@ -937,6 +979,21 @@ async function init() {
 }
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
 addEventListener("pagehide", () => { flushAll(); });
+async function checkForUpdate() {
+  try {
+    const res = await fetch("/index.html", { cache: "no-store" }); if (!res.ok) return;
+    const html = await res.text(), m = html.match(/<script type="module">([\s\S]*?)<\/script>/);
+    const mine = (document.querySelector('script[type="module"]') || {}).textContent || "";
+    if (m && m[1].trim() && m[1].trim() !== mine.trim() && !$("#updbar")) {
+      const bar = document.createElement("div"); bar.id = "updbar"; bar.className = "updbar";
+      bar.innerHTML = `<span>A newer version of Compass is ready.</span><button class="btn small primary" data-act="reloadApp">Reload</button>`;
+      document.body.appendChild(bar);
+    }
+  } catch (e) {}
+}
+setTimeout(checkForUpdate, 3000); setInterval(checkForUpdate, 30 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForUpdate(); });
+if (/[?&]v=\d+/.test(location.search)) history.replaceState(null, "", location.pathname + location.hash);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushAll(); });
 
 /* ============ model ============ */
@@ -1704,7 +1761,7 @@ function render() {
   const inOb = !onboarded() || !!S.ob;
   $("#weeknav").hidden = inOb; $("#statusline").hidden = false; $("#tabbar").hidden = inOb;
   if (inOb) {
-    if (!profileReady) { $("#main").innerHTML = `<div class="hero">${bigCompass()}</div>`; $("#obbar").innerHTML = ""; updSync(); return; }
+    if (!profileReady) { $("#main").innerHTML = S.loadErr ? `<div class="signin"><div class="hero">${bigCompass(false)}</div><h1>Couldn't load your compass.</h1><p class="lede">Your data is safe in your account. Check your connection and try again.</p><button class="btn primary" data-act="retryLoad">Try again</button></div>` : `<div class="hero">${bigCompass()}</div><p class="hint" style="text-align:center">Loading your compass…</p>`; $("#obbar").innerHTML = ""; updSync(); return; }
     if (!S.ob) { const dr = resumeDraft(); if (dr) S.ob = dr; else { startOnboarding(false); S.ob.auto = true; } }
     renderOnboarding(); renderSheet(); updSync(); return;
   }
@@ -2343,7 +2400,7 @@ function finishOnboarding() {
     components, capacity: d.capacity, week: d.week || null, cores: d.cores.filter(c => d.values.includes(c.value)), ifthen: d.ifthen.map(s => s.trim()).filter(Boolean),
     updatedAt: new Date().toISOString(),
   });
-  touch("profile");
+  touch("profile"); clearTimeout(T.profile); T.profile = null; flush("profile");
   S.ob = null; S.tab = "today"; render();
   toast("Your compass is set");
   const btn = $("#hneedle"); if (btn) burst(btn.closest("svg"), "var(--brass)", 14);
@@ -2375,6 +2432,8 @@ document.addEventListener("click", e => {
       return;
     }
     case "signin": signIn(); return;
+    case "retryLoad": { const uid = ST.uid; S.loadErr = false; render(); loadCore(uid).then(ok => { if (ok) { profileReady = true; ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe); loadHistory(); render(); } }); return; }
+    case "reloadApp": location.replace(location.pathname + "?v=" + Date.now()); return;
     case "tourGo": { const w = $("#tourWrap"); if (w) w.classList.remove("still"); tourShow(+b.dataset.i); return; }
     case "signout": signOutNow(); return;
     case "wk": case "wkStep": {
