@@ -232,7 +232,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .meter .bar{height:10px;border-radius:999px;background:var(--sunk);overflow:hidden;margin:8px 0 6px}
 .meter .fill{height:100%;border-radius:999px;background:var(--accent);transition:width .6s cubic-bezier(.2,.8,.2,1),background .3s}
 .meter.over .fill{background:var(--warn)}
-.meter .nums{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.meter .nums{display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:space-between;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
 
 /* sheet */
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;animation:fade .2s}
@@ -388,6 +388,23 @@ body.landing .top,body.landing #statusline{display:none}
 .finale .ctas{justify-content:center}
 .lfoot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding-block:22px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* ---------- your week ---------- */
+.waffle{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin:10px 0 8px}
+.waffle i{aspect-ratio:1;border-radius:2px;display:block}
+.wlegend{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:13px}
+@media (max-width:420px){.wlegend{grid-template-columns:1fr}}
+.wlegend li{display:flex;align-items:center;gap:8px}
+.wlegend li i{width:10px;height:10px;border-radius:2px;flex:none}
+.wlegend li span{flex:1;color:var(--ink2)}
+.wlegend li b{font:600 12.5px var(--mono)}
+.obrow + .obrow{border-top:1px solid var(--line)}
+.obrow .check{border:0}
+.tune{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:0 14px 12px 50px;font-size:13px}
+.stp{display:inline-flex;align-items:center;gap:4px;background:var(--sunk);border-radius:999px;padding:2px}
+.stp button{width:26px;height:26px;border-radius:50%;font-size:15px;line-height:1;background:var(--surface)}
+.stp span{min-width:74px;text-align:center;font:500 12.5px var(--mono);white-space:nowrap}
+.tune .eq{font:600 12.5px var(--mono);color:var(--ink2)}
 
 /* ---------- load breakdown ---------- */
 .explain{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:10px}
@@ -572,7 +589,7 @@ const VALUE_LIB = [
 ];
 const COMP_LIB = [
   { id: "reach",     value: "rel",    name: "Reach out to someone close", cadence: "daily",   target: 5, hours: 0.2, mvw: true, note: "A call, voice note or message" },
-  { id: "quality",   value: "rel",    name: "Quality time with someone close", cadence: "weekly", target: 2, hours: 2 },
+  { id: "quality",   value: "rel",    name: "Quality time with someone close", cadence: "weekly", target: 2, hours: 1.5 },
   { id: "queue",     value: "rel",    name: "Catch-up calls", cadence: "weekly", target: 2, hours: 0.4, people: true, note: "Compass picks who is due from your People list" },
   { id: "milestone", value: "rel",    name: "Plan something together", cadence: "monthly", target: 1, hours: 1 },
   { id: "deep",      value: "solve",  name: "Deep-work block", cadence: "weekly", target: 2, hours: 1.5, note: "90 minutes, phone in another room" },
@@ -638,7 +655,7 @@ function templateDraft() {
   ].map(c => Object.assign(c, { on: true }));
   return {
     goal: "", feel: [], values: ["rel", "solve", "create", "mind", "body", "serve", "money", "world", "time"], custom: [],
-    comps, seen: [], capacity: 22, template: true,
+    comps, seen: [], capacity: 22, week: Object.assign({}, WEEK_DEFAULT), template: true,
     cores: [{ value: "solve", text: "Move to a better-paid, more technically challenging role" }, { value: "rel", text: "Partner search, and where to live near my parents" }],
     ifthen: ["If work travel → MVW + parents call + journal line", "If sick → sleep only; nothing else counts against me", "If work crunch → drop satellites, then one gym session; never sleep or therapy", "If a rejection streak → app-free reset week; bring it to therapy", "If a parent's health event → everything drops except parents, therapy, sleep", "If motivation collapse → 2-minute versions of anchors only"],
   };
@@ -936,9 +953,10 @@ function capacity(list) {
   }, 0);
 }
 const weeklyHours = c => c.fun ? 0 : (c.hours || 0) * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? 0.5 : 1);
+const fmtDur = h => { const m = Math.round((h || 0) * 60); if (m < 60) return m + " min"; return m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`; };
 const hFmt = h => { const r = Math.round(h * 100) / 100; return (r % 1 === 0 ? r.toFixed(0) : String(r)).replace(/^0\./, "0."); };
 function loadFormula(c) {
-  const hv = c.hours || 0, h = hv > 0 && hv < 1 ? Math.round(hv * 60) + " min" : hFmt(hv) + " h";
+  const h = fmtDur(c.hours || 0);
   const base = c.cadence === "daily" ? `${h} × ${c.target} days` : c.cadence === "monthly" ? `${h} × ${c.target}/month ÷ 4.3` : `${h} × ${c.target}${c.unit ? "" : "/week"}`;
   return base + (c.alt ? " ÷ 2 (every other week)" : "");
 }
@@ -1004,6 +1022,55 @@ function tripwires() {
   const sleep = compById("sleep"), a = wk(1);
   if (sleep && a.w && Object.keys(a.w.days || {}).length >= 4 && compHave(sleep, a.w, a.id) < 4) out.push("Fewer than 4 good nights of sleep last week. Protect bedtime before adding anything.");
   return out;
+}
+
+/* ============ your week: where the 168 hours go ============ */
+const WEEK_DEFAULT = { sleep: 7.5, work: 40, commute: 0.5, care: 0, home: 21, other: 0, share: 0.5 };
+const WORK_OPTS = [[40, "Full-time"], [20, "Part-time"], [30, "Student"], [50, "Long hours"], [0, "Not right now"]];
+const COMMUTE_OPTS = [[0, "None"], [0.25, "15 min"], [0.5, "30 min"], [1, "1 h"], [2, "2 h"]];
+const CARE_OPTS = [[0, "No"], [5, "A few hours"], [15, "Every day"], [35, "Main carer"]];
+const HOME_OPTS = [[14, "Light"], [21, "Typical"], [28, "Heavy"]];
+const SHARE_OPTS = [[0.35, "About a third"], [0.5, "About half"], [0.65, "About two thirds"]];
+function weekCalc(w) {
+  w = Object.assign({}, WEEK_DEFAULT, w || {});
+  const workDays = w.work > 0 ? Math.min(6, Math.max(3, Math.round(w.work / 8))) : 0;
+  const parts = [
+    { k: "sleep", label: "Sleep", h: w.sleep * 7, color: "var(--muted)" },
+    { k: "work", label: "Work or study", h: w.work, color: "var(--accent)" },
+    { k: "commute", label: "Commute", h: w.commute * workDays, color: "#9C88C9" },
+    { k: "care", label: "Caring for someone", h: w.care, color: "var(--brass)" },
+    { k: "home", label: "Home & life admin", h: w.home, color: "#C98A6B" },
+    { k: "other", label: "Other commitments", h: w.other, color: "#5FA3B3" },
+  ];
+  const used = parts.reduce((a, p) => a + p.h, 0), free = Math.max(0, 168 - used);
+  const floors = Math.max(3, Math.min(50, Math.round(free * w.share)));
+  return { w, parts, free, floors, workDays };
+}
+function waffle(calc) {
+  const cells = [];
+  calc.parts.forEach(p => { for (let i = 0; i < Math.round(p.h); i++) cells.push(p.color); });
+  const floorsN = Math.min(calc.floors, Math.round(calc.free));
+  for (let i = cells.length; i < 168; i++) cells.push(i - (168 - Math.round(calc.free)) < floorsN ? "var(--good)" : "var(--good-soft)");
+  return `<div class="waffle" role="img" aria-label="Your week as 168 hours: ${calc.parts.map(p => `${p.label} ${hrs(p.h)} h`).join(", ")}, free ${hrs(calc.free)} h">${cells.slice(0, 168).map(c => `<i style="background:${c}"></i>`).join("")}</div>`;
+}
+function weekForm(w, prefix) {
+  const c = weekCalc(w), W = c.w;
+  const chips = (key, opts, fmt) => `<div class="chips">${opts.map(([v, l]) => `<button class="chip ${W[key] === v ? "sel" : ""}" data-act="wk" data-k="${key}" data-v="${v}">${l}${fmt ? `<span class="n">${fmt(v)}</span>` : ""}</button>`).join("")}</div>`;
+  const step = (key, st, min, max, unit) => `<div class="stepper"><button data-act="wkStep" data-k="${key}" data-d="${-st}" aria-label="Less">−</button><span class="v">${hFmt(W[key])} ${unit}</span><button class="plus" data-act="wkStep" data-k="${key}" data-d="${st}" data-min="${min}" data-max="${max}" aria-label="More">+</button></div>`;
+  const legend = c.parts.filter(p => p.h > 0).map(p => `<li><i style="background:${p.color}"></i><span>${p.label}</span><b>${hrs(p.h)} h</b></li>`).join("");
+  return `<div class="card"><div class="field"><span class="flabel">Sleep a night</span>${step("sleep", 0.5, 5, 10, "h")}</div>
+    <div class="field"><span class="flabel">Work or study a week</span>${chips("work", WORK_OPTS, v => v ? v + " h" : "")}<div class="row" style="margin-top:6px"><span class="hint">Or set exactly</span>${step("work", 5, 0, 80, "h")}</div></div>
+    ${W.work > 0 ? `<div class="field"><span class="flabel">Commute, round trip, per work day</span>${chips("commute", COMMUTE_OPTS)}</div>` : ""}
+    <div class="field"><span class="flabel">Caring for someone (children, a parent, a partner)</span>${chips("care", CARE_OPTS, v => v ? "~" + v + " h/wk" : "")}</div>
+    <div class="field"><span class="flabel">Home & life admin (cooking, chores, errands, getting ready)</span>${chips("home", HOME_OPTS, v => v + " h/wk")}</div>
+    <div class="field"><span class="flabel">Other fixed commitments (a second job, classes, faith)</span>${step("other", 1, 0, 40, "h/wk")}</div></div>
+    <div class="card pad" style="margin-top:12px">
+      <div class="row"><b>Your week, 168 hours</b><span class="hint">Each square is one hour</span></div>
+      ${waffle(c)}
+      <ul class="wlegend">${legend}<li><i style="background:var(--good)"></i><span>For your floors</span><b>${c.floors} h</b></li><li><i style="background:var(--good-soft)"></i><span>Unplanned free time</span><b>${hrs(Math.max(0, c.free - c.floors))} h</b></li></ul>
+      <p style="margin:10px 0 0">That leaves about <b>${hrs(c.free)} free hours</b> a week, around ${hrs(c.free / 7)} a day. How much of it should go to your floors?</p>
+      ${chips("share", SHARE_OPTS)}
+      <p class="hint" style="margin:8px 0 0">Compass suggests about half. The rest stays unplanned for rest, people and surprises, which is what makes a plan survivable.</p></div>`;
 }
 
 /* ============ tasks: capture, sort, place ============ */
@@ -1776,17 +1843,17 @@ function meter(list, avail, idPrefix = "") {
   const zero = rows.filter(r => !r.c.hours).length;
   return `<div class="card meter ${over ? "over" : ""}"><div class="row"><b>Weekly load</b><span class="hint" data-mstat="1">${esc(meterStatus(cap, avail))}</span></div>
     <div class="bar"><div class="fill" style="width:${pct.toFixed(1)}%"></div></div>
-    <div class="nums"><span>${hrs(cap)} h of floors</span><span>${avail} h you can give</span></div>
-    <label class="flabel" for="${idPrefix}cap" style="display:block;margin-top:10px">Hours a week you can give to these floors</label>
+    <div class="nums"><span>Floors take ~${hrs(cap)} h a week <span class="hint">(${fmtDur(cap / 7)} a day)</span></span><span>Your budget: ${avail} h</span></div>
+    <label class="flabel" for="${idPrefix}cap" style="display:block;margin-top:10px">Budget for floors, hours a week${S.ob && S.ob.d.week ? ` · Your week suggested ${weekCalc(S.ob.d.week).floors} h` : (profile() && profile().week ? ` · Your week suggested ${weekCalc(profile().week).floors} h` : "")}</label>
     <input type="range" min="4" max="50" step="1" value="${avail}" id="${idPrefix}cap" data-cap="1">
     <button class="linkish" data-act="loadToggle" aria-expanded="${!!S.loadOpen}">${S.loadOpen ? "Hide the maths ▴" : "How is this calculated? ▾"}</button>
     ${S.loadOpen ? `<div class="explain">
       <p><b>Floors:</b> each component has an estimate of how long it takes each time. Compass multiplies it by how often the floor asks for it: days a week for daily ones, times a week for weekly ones, and times a month ÷ 4.3 for monthly ones. Alternating-week components count half. Fun-menu items are never counted.</p>
-      <p><b>Hours you can give:</b> your own estimate of free time a week after work, sleep, commuting and chores. Most people with a full-time job have 25–40 truly free hours; giving 15–25 of them to floors leaves room for rest and surprises.</p>
+      <p><b>Your budget:</b> from the Your week step. 168 hours minus sleep, work, commute, caring and home life leaves your free time, and you chose how much of it to give to floors (about half by default). Drag the slider to override it.</p>
       <p><b>The check:</b> within 85% fits comfortably, up to 105% is tight, and anything more is over. Compass warns instead of blocking, because a plan that doesn't fit turns into a scoreboard you lose.</p>
-      <div class="brk">${rows.map(r => `<div class="brow"><div class="nm">${esc(r.c.name)}<small>${esc(loadFormula(r.c))}</small></div><span class="wk">${hFmt(Math.round(r.w * 10) / 10)} h</span><span class="adj"><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="-0.25" aria-label="Less time for ${esc(r.c.name)}">−</button><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="0.25" aria-label="More time for ${esc(r.c.name)}">+</button></span></div>`).join("")}
+      <div class="brk">${rows.map(r => `<div class="brow"><div class="nm">${esc(r.c.name)}<small>${esc(loadFormula(r.c))}</small></div><span class="wk">${fmtDur(r.w)}</span><span class="adj"><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="-1" aria-label="Less time for ${esc(r.c.name)}">−</button><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="1" aria-label="More time for ${esc(r.c.name)}">+</button></span></div>`).join("")}
         <div class="brow tot"><div class="nm">Total</div><span class="wk">${hrs(cap)} h</span><span></span></div></div>
-      <p class="hint" style="margin:0">Use − and + to set how long each takes you, in 15-minute steps.${zero ? ` ${zero} item${zero > 1 ? "s" : ""} like “Slept 7+ hours” cost no extra time, so ${zero > 1 ? "they count" : "it counts"} as 0.` : ""}</p></div>` : ""}</div>`;
+      <p class="hint" style="margin:0">Use − and + to set how long each takes you: 5-minute steps under an hour, 15-minute steps above.${zero ? ` ${zero} item${zero > 1 ? "s" : ""} like “Slept 7+ hours” cost no extra time, so ${zero > 1 ? "they count" : "it counts"} as 0.` : ""}</p></div>` : ""}</div>`;
 }
 function rCompass(id, F, trips, sugg) {
   const p = profile(), vals = valueList(), all = comps();
@@ -1798,6 +1865,8 @@ function rCompass(id, F, trips, sugg) {
     <div class="field"><label for="p-goal">Where I'm heading</label><textarea id="p-goal" data-p="goal" rows="3" placeholder="How you want a good year to feel, and what you want to be moving toward">${esc(p.goal)}</textarea></div>
     ${(p.feel || []).length ? `<div class="field"><span class="flabel">How I want it to feel</span><div class="chips">${p.feel.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div></div>` : ""}
   </div>
+  <h3>Your week</h3>
+  <div class="card pad"><div class="row"><div><b>${p.week ? `${hrs(weekCalc(p.week).free)} free hours a week` : "Not set up yet"}</b><div class="hint">${p.week ? `Sleep, work, commute, caring and home life take the rest. Suggested budget for floors: ${weekCalc(p.week).floors} h.` : "Answer six quick questions to get a realistic budget for your floors."}</div></div><button class="btn" data-act="weekEdit">${p.week ? "Update" : "Set up"}</button></div></div>
   <h3>Load</h3>
   ${meter(all, p.capacity || 20)}
   ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
@@ -1852,6 +1921,11 @@ function renderSheet() {
       <button class="btn" data-act="customComp">Write my own</button>
       <button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
     S.sheet.lib = lib; return;
+  }
+  if (sh.type === "week") {
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Your week"><div class="in"><div class="grab"></div><h2 style="margin:0">Where does your week go?</h2>${weekForm(sh.draft)}
+      <div class="row"><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="weekSave">Use ${weekCalc(sh.draft).floors} h for floors</button></div></div></div>`;
+    return;
   }
   if (sh.type === "sort" || sh.type === "capture") {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${sh.type === "sort" ? "Sort your inbox" : "Capture"}">${sh.type === "sort" ? rSortSheet() : rCaptureSheet()}</div>`;
@@ -2016,13 +2090,13 @@ async function runTailor() {
 }
 
 /* ============ ONBOARDING ============ */
-const OB_STEPS = ["welcome", "goal", "values", "comps", "season", "safety", "plan"];
+const OB_STEPS = ["welcome", "goal", "values", "week", "comps", "season", "safety", "plan"];
 function startOnboarding(fromExisting) {
   const p = profile();
   let d;
   if (fromExisting && p) {
-    d = { goal: p.goal || "", feel: p.feel || [], values: (p.values || []).slice(), custom: clone(p.customValues || []), comps: clone(p.components || []).map(c => Object.assign(c, { on: true, touched: true })), seen: COMP_LIB.map(c => c.id), capacity: p.capacity || 20, cores: clone(p.cores || []), ifthen: (p.ifthen || []).slice() };
-  } else d = { goal: "", feel: [], values: [], custom: [], comps: [], seen: [], capacity: 20, cores: [], ifthen: DEFAULT_IFTHEN.slice() };
+    d = { goal: p.goal || "", feel: p.feel || [], values: (p.values || []).slice(), custom: clone(p.customValues || []), comps: clone(p.components || []).map(c => Object.assign(c, { on: true, touched: true })), seen: COMP_LIB.map(c => c.id), capacity: p.capacity || 20, week: clone(p.week || null), cores: clone(p.cores || []), ifthen: (p.ifthen || []).slice() };
+  } else d = { goal: "", feel: [], values: [], custom: [], comps: [], seen: [], capacity: weekCalc(null).floors, week: Object.assign({}, WEEK_DEFAULT), cores: [], ifthen: DEFAULT_IFTHEN.slice() };
   S.ob = { step: fromExisting ? 1 : 0, d }; S.tailor = null; S.coach = null;
 }
 function ensureCandidates(d) {
@@ -2065,17 +2139,26 @@ function renderOnboarding() {
       <div class="vcards">${VALUE_LIB.concat(d.custom).map(v => `<button class="vcard" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${d.values.includes(v.id)}"><span class="tick"></span><b>${esc(v.name)}</b>${v.why ? `<small>${esc(v.why)}</small><span class="src">${esc(v.src)}</span>` : `<small>Your own value</small>`}</button>`).join("")}</div>
       <form class="addrow" id="obCustomValue" style="grid-template-columns:1fr auto;padding:12px 0 0"><input type="text" id="obCv" placeholder="Add your own, e.g. Faith, Family, Craft" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>`;
     canNext = d.values.length >= 1; next = d.values.length ? `Continue with ${d.values.length}` : "Pick at least one";
+  } else if (key === "week") {
+    d.week = d.week || Object.assign({}, WEEK_DEFAULT);
+    html = `<h1>Where does your week go?</h1>
+      <p class="lede">Before choosing floors, see how much time you really have. Six quick taps; rough answers are fine, and you can change them later in the Compass tab.</p>
+      ${weekForm(d.week)}`;
+    next = `Continue with ${weekCalc(d.week).floors} h a week`;
   } else if (key === "comps") {
     ensureCandidates(d);
     html = `<div class="${S.loadOpen ? "" : "stickymeter"}">${meter(obOn(d), d.capacity, "ob")}</div>
       <h1>Small pieces, each a floor.</h1>
-      <p class="lede">These are your components. Keep what fits; each floor is the minimum that already counts as a good week. You can change everything later.</p>
+      <p class="lede">These are your components. Keep what fits, and set how often and how long each takes <i>you</i>; the times are starting guesses. A floor is the minimum that already counts as a good week.</p>
       ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
       ${d.values.map(vid => {
         const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid);
         const list = d.comps.filter(c => c.value === vid && !c.fun);
         return `<div class="vgroup"><div class="gh"><b>${esc(v.name)}</b><span class="hint">${list.filter(c => c.on).length} on</span></div><div class="card">
-          ${list.map(c => `<button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${esc(cadenceText(c))}${c.hours ? " · ~" + hFmt(Math.round(weeklyHours(c) * 10) / 10) + " h/wk" : ""}${c.note ? " · " + esc(c.note) : ""}</small></span></button>`).join("")}
+          ${list.map(c => `<div class="obrow"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${c.on ? (c.note ? esc(c.note) : "Adjust how often and how long below") : esc(cadenceText(c)) + (c.note ? " · " + esc(c.note) : "")}</small></span></button>
+            ${c.on ? `<div class="tune"><span class="stp"><button data-act="obTgt" data-id="${esc(c.id)}" data-d="-1" aria-label="Less often">−</button><span>${c.cadence === "daily" ? c.target + " days/wk" : c.cadence === "monthly" ? c.target + "×/month" : c.target + (c.unit || "×") + "/wk"}</span><button data-act="obTgt" data-id="${esc(c.id)}" data-d="1" aria-label="More often">+</button></span>
+              ${c.unit ? "" : `<span class="stp"><button data-act="hrs" data-id="${esc(c.id)}" data-d="-1" aria-label="Shorter">−</button><span>${c.hours ? fmtDur(c.hours) : "no time"}</span><button data-act="hrs" data-id="${esc(c.id)}" data-d="1" aria-label="Longer">+</button></span>`}
+              <span class="eq">= ${fmtDur(weeklyHours(c))}/wk</span></div>` : ""}</div>`).join("")}
           <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(v.name)}"><button class="btn small" type="submit">Add</button></form></div></div>`;
       }).join("")}
       <div class="vgroup"><div class="gh"><b>Fun menu</b><span class="hint">never scored</span></div>
@@ -2101,7 +2184,7 @@ function renderOnboarding() {
     const on = obOn(d).filter(c => !c.fun), fun = obOn(d).filter(c => c.fun), cap = capacity(on);
     const coreNames = d.cores.map(c => (VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name);
     const steps = [
-      ["Floors, not ceilings", `${on.length} small floors, about ${hrs(cap)} hours a week${cap > d.capacity * 1.05 ? `, more than the ${d.capacity} you have. Consider trimming.` : `, inside the ${d.capacity} you have.`} Clearing a floor counts as a good week.`, "Schwartz et al. 2002"],
+      ["Floors, not ceilings", `${on.length} small floors, about ${hrs(cap)} hours a week${cap > d.capacity * 1.05 ? `, more than your ${d.capacity}-hour budget. Consider trimming.` : `, inside your ${d.capacity}-hour budget`}${d.week ? `, out of about ${hrs(weekCalc(d.week).free)} free hours` : ""}. Clearing a floor counts as a good week.`, "Schwartz et al. 2002"],
       ["A season with a direction", coreNames.length ? `${coreNames.join(" and ")} ${coreNames.length === 1 ? "gets" : "get"} most of your energy until next year. Everything else is a satellite.` : "No Cores yet. Everything is weighted equally, which is fine to start; pick Cores at your first monthly check.", "Emmons & King 1988"],
       ["A safety net", `${on.filter(c => c.mvw).length} things survive a hard week, and ${d.ifthen.filter(Boolean).length} if-then rules decide ahead of time.`, "Gollwitzer & Sheeran 2006"],
       ["Joy stays loose", fun.length ? `${fun.length} fun things on a menu, never scored.` : "Add a fun menu later. Scheduling joy precisely makes it feel like work.", "Tonietto & Malkoc 2016"],
@@ -2123,7 +2206,7 @@ function finishOnboarding() {
   const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; return x; });
   S.docs.profile = Object.assign({}, profile() || {}, {
     v: 2, onboarded: true, goal: d.goal.trim(), feel: d.feel, values: d.values, customValues: d.custom,
-    components, capacity: d.capacity, cores: d.cores.filter(c => d.values.includes(c.value)), ifthen: d.ifthen.map(s => s.trim()).filter(Boolean),
+    components, capacity: d.capacity, week: d.week || null, cores: d.cores.filter(c => d.values.includes(c.value)), ifthen: d.ifthen.map(s => s.trim()).filter(Boolean),
     updatedAt: new Date().toISOString(),
   });
   touch("profile");
@@ -2160,9 +2243,25 @@ document.addEventListener("click", e => {
     case "signin": signIn(); return;
     case "tourGo": { const w = $("#tourWrap"); if (w) w.classList.remove("still"); tourShow(+b.dataset.i); return; }
     case "signout": signOutNow(); return;
+    case "wk": case "wkStep": {
+      const tgt = S.ob && !S.sheet ? (S.ob.d.week = S.ob.d.week || Object.assign({}, WEEK_DEFAULT)) : S.sheet && S.sheet.type === "week" ? S.sheet.draft : null;
+      if (!tgt) return;
+      const k = b.dataset.k;
+      if (act === "wk") tgt[k] = +b.dataset.v;
+      else { const lim = { sleep: [5, 10], work: [0, 80], other: [0, 40] }[k] || [0, 100]; tgt[k] = Math.max(lim[0], Math.min(lim[1], Math.round(((Object.assign({}, WEEK_DEFAULT, tgt))[k] + (+b.dataset.d)) * 2) / 2)); }
+      if (S.ob && !S.sheet) { S.ob.d.capacity = weekCalc(tgt).floors; updateOb(); return; }
+      renderSheet(); return;
+    }
+    case "weekEdit": S.sheet = { type: "week", draft: Object.assign({}, WEEK_DEFAULT, (profile() || {}).week || {}) }; break;
+    case "weekSave": { const w = S.sheet.draft, f = weekCalc(w).floors; editProfile(p => { p.week = w; p.capacity = f; }); S.sheet = null; toast(`Budget set to ${f} h a week`); break; }
+    case "obTgt": {
+      const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return;
+      const max = c.cadence === "daily" ? 7 : c.cadence === "monthly" ? 4 : (c.unit ? 40 : 14), st = c.step || 1;
+      c.target = Math.max(st, Math.min(max, (c.target || 1) + (+b.dataset.d) * st)); c.touched = true; updateOb(); return;
+    }
     case "loadToggle": S.loadOpen = !S.loadOpen; if (S.ob) { updateOb(); return; } break;
     case "hrs": {
-      const d = +b.dataset.d, id = b.dataset.id, adj = c => { c.hours = Math.max(0, Math.min(12, Math.round(((c.hours || 0) + d) * 4) / 4)); c.touched = true; };
+      const dir = Math.sign(+b.dataset.d), id = b.dataset.id, adj = c => { const cur = c.hours || 0, st = (dir < 0 ? cur <= 1 : cur < 1) ? 5 / 60 : 0.25; c.hours = Math.max(0, Math.min(12, Math.round((cur + dir * st) * 60) / 60)); c.touched = true; };
       if (S.ob) { const c = S.ob.d.comps.find(x => x.id === id); if (c) adj(c); updateOb(); return; }
       editProfile(p => { const c = p.components.find(x => x.id === id); if (c) adj(c); }); break;
     }
@@ -2314,7 +2413,7 @@ document.addEventListener("input", e => {
   else if (ds.cap) {
     const v = +t.value;
     if (S.ob) { S.ob.d.capacity = v; } else editProfile(p => { p.capacity = v; });
-    const m = t.closest(".meter"); if (m) { const list = S.ob ? obOn(S.ob.d) : comps(); const cap = capacity(list), over = cap > v * 1.05; m.classList.toggle("over", over); m.querySelector(".fill").style.width = Math.min(100, cap / Math.max(v, 1) * 100).toFixed(1) + "%"; m.querySelector(".nums span:last-child").textContent = v + " h you can give"; m.querySelector("[data-mstat]").textContent = meterStatus(cap, v); }
+    const m = t.closest(".meter"); if (m) { const list = S.ob ? obOn(S.ob.d) : comps(); const cap = capacity(list), over = cap > v * 1.05; m.classList.toggle("over", over); m.querySelector(".fill").style.width = Math.min(100, cap / Math.max(v, 1) * 100).toFixed(1) + "%"; m.querySelector(".nums > span:last-child").textContent = "Your budget: " + v + " h"; m.querySelector("[data-mstat]").textContent = meterStatus(cap, v); }
   }
 });
 document.addEventListener("change", e => {
