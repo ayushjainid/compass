@@ -461,6 +461,16 @@ body.landing .top,body.landing #statusline{display:none}
 .linkish{color:var(--accent);font-weight:500;font-size:13.5px;padding:4px 0}
 
 .updbar{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.4);border-radius:999px;padding:6px 6px 6px 16px;font-size:13.5px;max-width:calc(100% - 32px);animation:rise .3s}
+.cpair{display:inline-flex;align-items:stretch;border:1px solid var(--line);background:var(--surface);border-radius:999px;overflow:hidden}
+.cpair .chip{border:0;background:transparent;border-radius:0}
+.cpair.done{background:var(--good-soft);border-color:transparent}
+.cpair.done .n{color:var(--good)}
+.cpair.fun{background:var(--brass-soft);border-color:transparent}
+.cpair.fun b{color:var(--brass)}
+.cminus{min-width:40px;padding:0 12px;border-left:1px solid var(--line);color:var(--ink2);font-size:18px;line-height:1}
+.cpair.done .cminus,.cpair.fun .cminus{border-left-color:color-mix(in srgb,var(--ink) 12%,transparent)}
+.cminus:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.cminus:active{transform:scale(.94)}
 /* ---------- tasks ---------- */
 .fab{position:fixed;right:max(16px,calc(50% - 300px + 16px));bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:12;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(10,20,30,.45);transition:transform .15s}
 .fab:active{transform:scale(.92)}
@@ -1312,7 +1322,8 @@ function taskRow(i, opts = {}) {
 }
 function rTasks(id) {
   const wk = weekErrands(), doneWk = doneErrandsThisWeek(), later = laterErrands(), projs = projectsList(), some = somedays();
-  const done = titems().filter(i => i.s === "done").sort((a, b) => ((a.doneAt || "") < (b.doneAt || "") ? 1 : -1));
+  const done = titems().filter(i => i.s === "done" || i.s === "dropped").sort((a, b) => ((a.doneAt || "") < (b.doneAt || "") ? 1 : -1));
+  const inbox = inboxItems();
   const mvw = isMvw(anyWeek(thisWk()), thisWk());
   const cores = ((profile() || {}).cores || []).map(c => c.value);
   const pgroups = {}; projs.forEach(p => { (pgroups[p.v || "_"] = pgroups[p.v || "_"] || []).push(p); });
@@ -1339,8 +1350,11 @@ function rTasks(id) {
   ${later.length ? `<div class="card">${later.sort((a, b) => (b.moves || 0) - (a.moves || 0)).map(i => taskRow(i, { actions: `<button class="btn small" data-act="tWeek" data-id="${i.id}">This week</button><button class="btn quiet small" data-act="tSomeday" data-id="${i.id}" aria-label="Move to someday">⋯</button>` })).join("")}</div>` : `<p class="hint">Empty. Errands you sort as “later” wait here calmly.</p>`}
   <details class="fold"><summary>Someday · ${some.length}</summary>
     ${some.length ? `<div class="card">${some.map(i => `<div class="task"><div class="tx"><span>${esc(i.t)}</span></div><button class="btn quiet small" data-act="tBack" data-id="${i.id}">Bring back</button><button class="btn quiet small danger" data-act="tDrop" data-id="${i.id}">Let go</button></div>`).join("")}</div>` : `<p class="hint">Ideas for another season. Parked without guilt.</p>`}</details>
-  <details class="fold"><summary>Done · ${done.length}</summary>
-    ${done.length ? `<div class="card">${done.slice(0, 30).map(i => `<div class="task"><button class="tick on" data-act="tUndo" data-id="${i.id}" aria-label="Undo"></button><div class="tx"><span style="color:var(--muted);text-decoration:line-through">${esc(i.t)}</span></div></div>`).join("")}</div>` : `<p class="hint">Finished things show up here.</p>`}</details>`;
+  ${inbox.length ? `<details class="fold"><summary>Unsorted · ${inbox.length}</summary><div class="card">${inbox.map(i => `<div class="task"><div class="tx"><span>${esc(i.t)}</span></div><button class="xbtn" data-act="tDrop" data-id="${i.id}" aria-label="Remove ${esc(i.t)}" title="Remove">✕</button></div>`).join("")}</div></details>` : ""}
+  <details class="fold"><summary>Done & let go · ${done.length}</summary>
+    ${done.length ? `<div class="card">${done.slice(0, 40).map(i => i.s === "dropped"
+      ? `<div class="task"><div class="tx"><span style="color:var(--muted)">${esc(i.t)}</span><small>Let go</small></div><button class="btn quiet small" data-act="tBack" data-id="${i.id}">Bring back</button></div>`
+      : `<div class="task"><button class="tick on" data-act="tUndo" data-id="${i.id}" aria-label="Mark “${esc(i.t)}” not done"></button><div class="tx"><span style="color:var(--muted);text-decoration:line-through">${esc(i.t)}</span></div></div>`).join("")}</div>` : `<p class="hint">Finished things show up here. Tap a tick to undo it.</p>`}</details>`;
 }
 function rSortSheet() {
   const list = inboxItems().filter(i => !S.sortSkip.has(i.id));
@@ -1417,12 +1431,10 @@ function burst(el, color, n = 8) {
     document.body.appendChild(d); setTimeout(() => d.remove(), 700);
   }
 }
-function toast(t, undo) {
+function toast(t) {
   S.toast = t; const old = $(".toast"); if (old) old.remove(); clearTimeout(S.toastT);
-  const el = document.createElement("div"); el.className = "toast" + (undo ? " withundo" : ""); el.setAttribute("role", "status");
-  const span = document.createElement("span"); span.textContent = t; el.appendChild(span);
-  if (undo) { const b = document.createElement("button"); b.type = "button"; b.textContent = "Undo"; b.addEventListener("click", ev => { ev.stopPropagation(); el.remove(); clearTimeout(S.toastT); undo(); }); el.appendChild(b); }
-  document.body.appendChild(el); S.toastT = setTimeout(() => el.remove(), undo ? 5000 : 2600);
+  const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.textContent = t;
+  document.body.appendChild(el); S.toastT = setTimeout(() => el.remove(), 2400);
 }
 function setNeedle(frac) {
   const n = $("#hneedle"); if (!n) return;
@@ -1787,6 +1799,13 @@ function render() {
 }
 
 /* ============ TODAY ============ */
+function countChip(c, v) {
+  const need = c.target, u = c.unit || "";
+  return `<span class="cpair ${v >= need ? "done" : ""}"><button class="chip" data-act="inc" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><b>+</b>${esc(c.name)}<span class="n">${hFmt(v)}${u}/${need}${u}</span></button>${v > 0 ? `<button class="cminus" data-act="dec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</span>`;
+}
+function funChip(c, v) {
+  return `<span class="cpair fun"><button class="chip" data-act="fun" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><b>♥</b>${esc(c.name)}${v ? `<span class="n">${v}</span>` : ""}</button>${v > 0 ? `<button class="cminus" data-act="funDec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</span>`;
+}
 function todayTasks(id) {
   if (id !== thisWk()) return "";
   const wk = weekErrands(), doneWk = doneErrandsThisWeek(), n = inboxItems().length;
@@ -1817,7 +1836,7 @@ function rToday(id) {
   const selDate = parse(S.selDay);
   const title = S.selDay === tk ? "Today" : WD[(selDate.getDay() + 6) % 7] + ", " + fmtShort(selDate);
   const checks = daily.filter(c => c.auto !== "journal").map(c => `<button class="check" data-act="anchor" data-k="${esc(c.id)}" aria-pressed="${!!a[c.id]}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span>${c.note ? `<small>${esc(c.note)}</small>` : ""}</span><span class="tail">${compHave(c, w, id)}/${c.target}</span></button>`).join("");
-  const chip = c => { const v = compHave(c, w, id), need = c.target; return `<button class="chip ${v >= need ? "done" : ""}" data-act="inc" data-k="${esc(c.id)}"><b>+</b>${esc(c.name)}<span class="n">${v}${c.unit || ""}/${need}${c.unit || ""}</span></button>`; };
+  const chip = c => countChip(c, compHave(c, w, id));
   const weekly = act.filter(c => c.cadence === "weekly"), monthly = act.filter(c => c.cadence === "monthly");
   const fun = comps().filter(c => c.fun);
   const funCount = fun.reduce((s, c) => s + ((w.c || {})[c.id] || 0), 0);
@@ -1833,7 +1852,7 @@ function rToday(id) {
   ${todayTasks(id)}
   ${weekly.length ? `<h3>Log for the week</h3><div class="chips">${weekly.map(chip).join("")}</div>` : ""}
   ${monthly.length ? `<h3>This month</h3><div class="chips">${monthly.map(chip).join("")}</div>` : ""}
-  ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => `<button class="chip fun" data-act="fun" data-k="${esc(c.id)}"><b>♥</b>${esc(c.name)}${(w.c || {})[c.id] ? `<span class="n">${w.c[c.id]}</span>` : ""}</button>`).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it.</p>` : ""}
+  ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => funChip(c, (w.c || {})[c.id] || 0)).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it, − to take one back.</p>` : ""}
   <h3>Journal · three lines${jc ? ` · ${compHave(jc, w, id)}/${jc.target} days` : ""}</h3>
   <div class="card">
     <div class="jf"><label for="j-win">Win</label><textarea id="j-win" data-j="win" rows="1" placeholder="One thing that moved forward">${esc(j.win)}</textarea></div>
@@ -1890,7 +1909,7 @@ function rPeople(id) {
   const scored = list.map(p => { const every = TIERS[p.tier] ? TIERS[p.tier].every : 14, since = p.last ? daysBetween(p.last, tk) : null; return { p, since, left: since === null ? -999 : every - since }; }).sort((a, b) => a.left - b.left);
   const dueTag = x => x.since === null ? `<span class="due now">Not called yet</span>` : x.left < 0 ? `<span class="due over">${-x.left}d overdue</span>` : x.left <= 2 ? `<span class="due now">Due ${x.left === 0 ? "today" : "in " + x.left + "d"}</span>` : `<span class="due later">In ${x.left}d</span>`;
   const row = x => `<div class="person"><div class="who"><b>${esc(x.p.name)}</b><small>${esc((TIERS[x.p.tier] || TIERS.t1).name)} · every ${(TIERS[x.p.tier] || TIERS.t1).every} days${x.since !== null ? " · last " + (x.since === 0 ? "today" : x.since + "d ago") : ""}</small></div>${dueTag(x)}
-    ${S.confirm === x.p.id ? `<button class="btn danger small" data-act="pDelYes" data-id="${x.p.id}">Remove</button><button class="btn quiet small" data-act="pDelNo">Keep</button>` : `<button class="btn primary small" data-act="pCalled" data-id="${x.p.id}">Called</button><button class="btn quiet small" data-act="pDel" data-id="${x.p.id}" aria-label="Remove ${esc(x.p.name)}">✕</button>`}</div>`;
+    ${S.confirm === x.p.id ? `<button class="btn danger small" data-act="pDelYes" data-id="${x.p.id}">Remove</button><button class="btn quiet small" data-act="pDelNo">Keep</button>` : `${x.p.last === todayKey() && x.p.prevLast !== undefined ? `<button class="btn small" data-act="pUncall" data-id="${x.p.id}" aria-pressed="true" title="Tap to take it back">Called ✓</button>` : `<button class="btn primary small" data-act="pCalled" data-id="${x.p.id}">Called</button>`}<button class="btn quiet small" data-act="pDel" data-id="${x.p.id}" aria-label="Remove ${esc(x.p.name)}">✕</button>`}</div>`;
   const have = pc ? compHave(pc, anyWeek(id), id) : 0;
   return `
   <h2>Rotation</h2>
@@ -1947,7 +1966,7 @@ function rReview(id, F, trips, sugg) {
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
   <h3>1 · Floors</h3>
   <div class="card pad"><ul class="floors" style="margin:0">${vals.map(v => { const st = valueStatus(v.id, F, id); return `<li class="${st.s === "clear" ? "ok" : ""}"><span>${esc(v.name)}</span><span class="f">${st.s === "clear" ? "✓" : st.s === "rest" ? "–" : st.s === "open" && st.t === "This month" ? "…" : "✗"}</span></li>`; }).join("")}</ul></div>
-  ${open.length ? `<p class="hint" style="margin:10px 0 6px">Forgot to log something?</p><div class="chips">${open.map(f => `<button class="chip" data-act="inc" data-k="${esc(f.c.id)}"><b>+</b>${esc(f.c.name)}<span class="n">${f.have}/${f.need}</span></button>`).join("")}</div>` : ""}
+  ${open.length ? `<p class="hint" style="margin:10px 0 6px">Forgot to log something?</p><div class="chips">${open.map(f => countChip(f.c, f.have)).join("")}</div>` : ""}
   <h3>2 · Am I at peace with where this is trending?</h3>
   <div class="felt" role="group">${[1, 2, 3, 4, 5].map(n => `<button data-act="felt" data-v="${n}" aria-pressed="${r.felt === n}"><b>${n}</b><small>${["Adrift", "Uneasy", "Steady", "Good", "At peace"][n - 1]}</small></button>`).join("")}</div>
   ${r.felt && r.felt <= 2 ? `<p class="hint" style="margin:10px 0 6px">Which need was starved?</p><div class="chips">${needs.map(n => `<button class="chip ${(r.starved || []).includes(n) ? "sel" : ""}" data-act="starve" data-v="${esc(n)}">${esc(n)}</button>`).join("")}</div>` : ""}
@@ -2472,11 +2491,6 @@ document.addEventListener("click", e => {
     case "sortStart": startSort(); break;
     case "sortPick": {
       const k = b.dataset.k, card = $("#sortCard"), cur = inboxItems().find(i => !S.sortSkip.has(i.id));
-      if (cur && !["project", "recurring"].includes(k)) {
-        const snap = clone(cur);
-        const label = { done: "Marked done", week: "Added to this week", later: "Moved to Next up", someday: "Moved to Someday", drop: "Let go", skip: "Skipped" }[k] || "Sorted";
-        setTimeout(() => toast(`${label}: “${snap.t.slice(0, 40)}”`, () => { restoreTask(snap); S.sortSkip.delete(snap.id); if (k !== "skip") { S.sortCount = Math.max(0, (S.sortCount || 1) - 1); if (S.sortTally[k]) S.sortTally[k]--; } if (!S.sheet || S.sheet.type !== "sort") S.sheet = { type: "sort" }; render(); }), 220);
-      }
       if (k === "done") burst(b, "var(--good)", 10); else if (k !== "skip" && k !== "project" && k !== "recurring") burst(b, "var(--accent)", 6);
       sortPick(k);
       if (card && !reduced() && !["project", "recurring"].includes(k)) { card.style.transition = "transform .22s ease, opacity .22s ease"; card.style.transform = k === "drop" ? "translateX(-110%) rotate(-6deg)" : "translateX(110%) rotate(6deg)"; card.style.opacity = "0"; setTimeout(() => { S.noFocus = true; render(); }, 200); return; }
@@ -2529,7 +2543,7 @@ document.addEventListener("click", e => {
       if (act === "inc") {
         const after = compHave(c, anyWeek(curWid()), curWid()), el = document.querySelector(`[data-act="inc"][data-k="${CSS.escape(k)}"]`), mon = S.viewMon;
         const undo = () => { const keep = S.viewMon; S.viewMon = mon; bump(c, -1); S.viewMon = keep; render(); };
-        if (before < c.target && after >= c.target) { burst(el, "var(--good)", 12); toast(`${c.name}: floor cleared`, undo); } else { burst(el, "var(--accent)", 5); toast(`${c.name} · ${hFmt(after)}${c.unit || ""} of ${c.target}${c.unit || ""}`, undo); }
+        if (before < c.target && after >= c.target) { burst(el, "var(--good)", 12); toast(`${c.name}: floor cleared`); } else burst(el, "var(--accent)", 5);
       }
       return;
     }
@@ -2538,7 +2552,7 @@ document.addEventListener("click", e => {
       const c = compById(k); if (!c) return; let n = 0;
       editWeek(w => { w.c[k] = (w.c[k] || 0) + 1; n = w.c[k]; }); render();
       burst(document.querySelector(`[data-act="fun"][data-k="${CSS.escape(k)}"]`), "var(--brass)", 10);
-      const wkId = curWid(); toast(`${c.name} · ${n} this week`, () => { const w = weekDoc(wkId); w.c[k] = Math.max(0, (w.c[k] || 0) - 1); touch(wkId); render(); });
+
       return;
     }
     case "mvw": editWeek(w => { w.mvw = !isMvw(w, curWid()); }); break;
@@ -2549,13 +2563,18 @@ document.addEventListener("click", e => {
     case "preMvw": editSettings(s => { s.preMvw = s.preMvw || {}; const n = wid(addDays(S.viewMon, 7)); if (s.preMvw[n]) delete s.preMvw[n]; else s.preMvw[n] = true; }); break;
     case "inboxDel": editSettings(s => { s.inbox = (s.inbox || []).filter(x => x.id !== b.dataset.id); }); break;
     case "pCalled": {
-      const who = people().list.find(y => y.id === b.dataset.id); if (!who) return; const prevLast = who.last || null;
-      editPeople(p => { const x = p.list.find(y => y.id === b.dataset.id); if (x) x.last = tk; });
+      const who = people().list.find(y => y.id === b.dataset.id); if (!who) return;
       const pc = comps().find(c => c.people), counted = !!(pc && curWid() === wid(monday(new Date())));
+      editPeople(p => { const x = p.list.find(y => y.id === who.id); if (x) { x.prevLast = x.last || null; x.last = tk; x.countedWk = counted ? thisWk() : null; } });
       if (counted) bump(pc, 1);
-      render(); burst(document.querySelector(`[data-act="pCalled"]`), "var(--good)");
-      toast(`Called ${who.name}`, () => { editPeople(p => { const x = p.list.find(y => y.id === who.id); if (x) x.last = prevLast; }); if (counted) { const keep = S.viewMon; S.viewMon = monday(new Date()); bump(pc, -1); S.viewMon = keep; } render(); });
-      return;
+      render(); burst(document.querySelector(`[data-act="pUncall"][data-id="${who.id}"]`), "var(--good)"); return;
+    }
+    case "pUncall": {
+      const who = people().list.find(y => y.id === b.dataset.id); if (!who) return;
+      const pc = comps().find(c => c.people);
+      if (pc && who.countedWk === thisWk()) { const keep = S.viewMon; S.viewMon = monday(new Date()); bump(pc, -1); S.viewMon = keep; }
+      editPeople(p => { const x = p.list.find(y => y.id === who.id); if (x) { x.last = x.prevLast || null; delete x.prevLast; delete x.countedWk; } });
+      break;
     }
     case "pDel": S.confirm = b.dataset.id; break;
     case "pDelNo": S.confirm = null; break;
