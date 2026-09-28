@@ -34,20 +34,21 @@ img{max-width:100%}
   --sans:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --r:12px;
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#4a3aa7;--s8:#e34948;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#88938F; --line:#2D3533;
     --accent:#93B3DC; --accent-soft:#1E2A39; --on-accent:#0D1623; --brass:#D8A75C; --brass-soft:#33291A;
-    --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);
+    --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
   --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#88938F; --line:#2D3533;
   --accent:#93B3DC; --accent-soft:#1E2A39; --on-accent:#0D1623; --brass:#D8A75C; --brass-soft:#33291A;
-  --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);
+  --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -412,11 +413,40 @@ body.landing .top,body.landing #statusline{display:none}
 .stp span{min-width:74px;text-align:center;font:500 12.5px var(--mono);white-space:nowrap}
 .tune .eq{font:600 12.5px var(--mono);color:var(--ink2)}
 
+/* ---------- allocation ---------- */
+.sbar{position:relative;display:flex;gap:2px;height:12px;border-radius:999px;background:var(--sunk);margin:10px 0 8px;overflow:visible}
+.sbar i{display:block;height:100%;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.sbar i:first-child{border-radius:999px 0 0 999px}
+.sbar i:last-of-type{border-radius:0 999px 999px 0}
+.sbar i:only-of-type{border-radius:999px}
+.sbar .bmark{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
+.mstat{font-size:13px;color:var(--good);font-weight:500}
+.mstat.bad{color:var(--warn)}
+.meter .nums b{font-family:var(--mono);font-weight:600}
+.vdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:1px;flex:none}
+.alloc{font-size:13px;white-space:nowrap}
+.alloc b{font:600 13px var(--mono)}
+.gbar{height:3px;border-radius:2px;background:var(--sunk);margin:-2px 0 8px;overflow:hidden}
+.gbar i{display:block;height:100%;border-radius:2px;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.sumpill{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;margin:0 14px 12px 50px;padding:6px 12px;border-radius:999px;background:var(--sunk);font-size:13px;color:var(--ink2);text-align:left;max-width:calc(100% - 64px)}
+.sumpill b{font:600 12.5px var(--mono);color:var(--ink);white-space:nowrap}
+.sumpill .pen{color:var(--accent);font-weight:600;margin-left:2px}
+.sumpill:hover{background:var(--line)}
+.tunegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.tunegrid{grid-template-columns:1fr}}
+.tunegrid .fl{display:flex;flex-direction:column;gap:4px}
+.stp2{display:flex;align-items:center;gap:4px;background:var(--sunk);border-radius:12px;padding:3px}
+.stp2 button{width:32px;height:32px;border-radius:9px;background:var(--surface);font-size:16px;flex:none}
+.stp2 input{flex:1;min-width:0;border:0;background:transparent;text-align:center;font:600 14px var(--mono);padding:6px 2px;color:var(--ink)}
+.stp2 input:focus{outline:2px solid var(--accent);border-radius:8px}
+.stp2 .suf{font:500 12px var(--mono);color:var(--muted);padding-right:6px;white-space:nowrap}
+.eqline{font:600 13px var(--mono);color:var(--ink2)}
+
 /* ---------- load breakdown ---------- */
 .explain{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:10px}
 .explain p{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.5}
 .brk{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
-.brow{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px}
+.brow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 10px;font-size:13.5px}
 .brow + .brow{border-top:1px solid var(--line)}
 .brow .nm{min-width:0}
 .brow .nm small{display:block;color:var(--muted);font:500 11.5px var(--mono)}
@@ -594,29 +624,29 @@ const VALUE_LIB = [
   { id: "time",   name: "Time you own",       why: "Unscheduled time protects autonomy; over-scheduled leisure starts to feel like work.", src: "Tonietto & Malkoc 2016" },
 ];
 const COMP_LIB = [
-  { id: "reach",     value: "rel",    name: "Reach out to someone close", cadence: "daily",   target: 5, hours: 0.2, mvw: true, note: "A call, voice note or message" },
+  { id: "reach",     value: "rel",    name: "Reach out to someone close", cadence: "daily",   target: 5, hours: 0.25, mvw: true, note: "A call, voice note or message" },
   { id: "quality",   value: "rel",    name: "Quality time with someone close", cadence: "weekly", target: 2, hours: 1.5 },
-  { id: "queue",     value: "rel",    name: "Catch-up calls", cadence: "weekly", target: 2, hours: 0.4, people: true, note: "Compass picks who is due from your People list" },
+  { id: "queue",     value: "rel",    name: "Catch-up calls", cadence: "weekly", target: 2, hours: 0.5, people: true, note: "Compass picks who is due from your People list" },
   { id: "milestone", value: "rel",    name: "Plan something together", cadence: "monthly", target: 1, hours: 1 },
   { id: "deep",      value: "solve",  name: "Deep-work block", cadence: "weekly", target: 2, hours: 1.5, note: "90 minutes, phone in another room" },
   { id: "win",       value: "solve",  name: "Ship one small win", cadence: "weekly", target: 1, hours: 1 },
   { id: "creative",  value: "create", name: "Creative session", cadence: "weekly", target: 1, hours: 1 },
-  { id: "practice",  value: "create", name: "Practise an instrument or craft", cadence: "weekly", target: 2, hours: 0.4, note: "20 minutes counts" },
-  { id: "med",       value: "mind",   name: "Meditate", cadence: "daily", target: 5, hours: 0.17, note: "10 minutes, right after waking" },
-  { id: "journal",   value: "mind",   name: "Three-line journal", cadence: "daily", target: 5, hours: 0.05, mvw: true, auto: "journal", note: "Ticks itself when you write your three lines" },
+  { id: "practice",  value: "create", name: "Practise an instrument or craft", cadence: "weekly", target: 2, hours: 1 / 3, note: "20 minutes counts" },
+  { id: "med",       value: "mind",   name: "Meditate", cadence: "daily", target: 5, hours: 1 / 6, note: "10 minutes, right after waking" },
+  { id: "journal",   value: "mind",   name: "Three-line journal", cadence: "daily", target: 5, hours: 1 / 12, mvw: true, auto: "journal", note: "Ticks itself when you write your three lines" },
   { id: "therapy",   value: "mind",   name: "Therapy or reflection session", cadence: "weekly", target: 1, hours: 1, mvw: true },
   { id: "social",    value: "mind",   name: "Social media under 1 hr", cadence: "daily", target: 5, hours: 0 },
   { id: "gym",       value: "body",   name: "Workout", cadence: "weekly", target: 3, hours: 1, mvw: true, mvwTarget: 1, note: "A 30-minute home session counts" },
   { id: "sleep",     value: "body",   name: "Slept 7+ hours", cadence: "daily", target: 5, hours: 0, mvw: true },
   { id: "sports",    value: "body",   name: "Play a sport", cadence: "weekly", target: 1, hours: 1.5 },
-  { id: "walk",      value: "body",   name: "Walk outside", cadence: "daily", target: 4, hours: 0.3 },
+  { id: "walk",      value: "body",   name: "Walk outside", cadence: "daily", target: 4, hours: 0.5 },
   { id: "ngo",       value: "serve",  name: "Volunteer session", cadence: "weekly", target: 1, hours: 3 },
-  { id: "kind",      value: "serve",  name: "One deliberate kind act", cadence: "weekly", target: 3, hours: 0.1 },
+  { id: "kind",      value: "serve",  name: "One deliberate kind act", cadence: "weekly", target: 3, hours: 1 / 6 },
   { id: "lifeTax",   value: "money",  name: "Money check-in", cadence: "weekly", target: 1, hours: 0.25, note: "Bills, splits and spending in 15 minutes" },
   { id: "autosave",  value: "money",  name: "Review automatic savings", cadence: "monthly", target: 1, hours: 0.5 },
   { id: "novelty",   value: "world",  name: "One new or awe-inspiring thing", cadence: "monthly", target: 1, hours: 3 },
   { id: "trip",      value: "world",  name: "Plan or take a trip", cadence: "monthly", target: 1, hours: 2 },
-  { id: "read",      value: "learn",  name: "Read", cadence: "daily", target: 4, hours: 0.33, note: "20 minutes" },
+  { id: "read",      value: "learn",  name: "Read", cadence: "daily", target: 4, hours: 1 / 3, note: "20 minutes" },
   { id: "course",    value: "learn",  name: "Course or study session", cadence: "weekly", target: 2, hours: 1 },
   { id: "recovery",  value: "time",   name: "Protected empty block", cadence: "weekly", target: 1, hours: 3, mvw: true, note: "Nothing goes here, ever" },
 ];
@@ -635,21 +665,21 @@ function templateDraft() {
   const L = id => Object.assign({}, COMP_LIB.find(c => c.id === id));
   const comps = [
     { id: "parents", value: "rel", name: "Parents call", cadence: "daily", target: 6, hours: 0.5, mvw: true, note: "Even 5 minutes counts" },
-    { id: "friend", value: "rel", name: "Tier 0 friend touchpoint", cadence: "daily", target: 6, hours: 0.1, mvw: true, note: "Any length" },
+    { id: "friend", value: "rel", name: "Tier 0 friend touchpoint", cadence: "daily", target: 6, hours: 1 / 6, mvw: true, note: "Any length" },
     { id: "friendHrs", value: "rel", name: "Tier 0 friend time", cadence: "weekly", target: 3, unit: "h", step: 0.5, hours: 1, note: "Batched hours", block: { days: [4], time: "19:30", dur: 180 } },
-    { id: "sib", value: "rel", name: "Sibling calls", cadence: "weekly", target: 2, hours: 0.33, block: { days: [1, 4], time: "21:00", dur: 20 } },
+    { id: "sib", value: "rel", name: "Sibling calls", cadence: "weekly", target: 2, hours: 1 / 3, block: { days: [1, 4], time: "21:00", dur: 20 } },
     Object.assign(L("queue"), { name: "Rotation calls", block: { days: [2, 5], time: "12:30", dur: 20 } }),
     { id: "apps", value: "rel", name: "Dating apps", cadence: "daily", target: 5, hours: 0.4, note: "20–30 min on a timer, never in bed" },
     { id: "dating", value: "rel", name: "Offline dating event", cadence: "weekly", target: 1, hours: 3, alt: "B", block: { days: [5], time: "10:00", dur: 240 } },
     Object.assign(L("deep"), { name: "Career deep work", block: { days: [0, 3], time: "19:30", dur: 90 } }),
     Object.assign(L("creative"), { note: "Painting, writing, DJing, electronic music", block: { days: [2], time: "19:00", dur: 60 } }),
-    { id: "guitar", value: "create", name: "Guitar", cadence: "weekly", target: 2, hours: 0.33, note: "20 minutes", block: { days: [2, 6], time: "20:15", dur: 20 } },
+    { id: "guitar", value: "create", name: "Guitar", cadence: "weekly", target: 2, hours: 1 / 3, note: "20 minutes", block: { days: [2, 6], time: "20:15", dur: 20 } },
     L("med"), L("journal"), L("social"),
     Object.assign(L("therapy"), { name: "Therapy", block: { days: [1], time: "17:30", dur: 60 } }),
     Object.assign(L("gym"), { name: "Gym", block: { days: [0, 2, 4], time: "07:00", dur: 60 } }),
     L("sleep"),
     Object.assign(L("sports"), { name: "Sports", note: "Badminton, table tennis, tennis", block: { days: [1], time: "19:00", dur: 90 } }),
-    { id: "skin", value: "body", name: "Skincare AM + PM", cadence: "daily", target: 5, hours: 0.1 },
+    { id: "skin", value: "body", name: "Skincare AM + PM", cadence: "daily", target: 5, hours: 1 / 6 },
     Object.assign(L("ngo"), { name: "NGO session", alt: "A", note: "Environmental health, kids", block: { days: [5], time: "10:00", dur: 240 } }),
     Object.assign(L("lifeTax"), { name: "Life Tax: Splitwise + Monarch", block: { days: [6], time: "18:30", dur: 25 } }),
     L("novelty"),
@@ -669,8 +699,8 @@ function templateDraft() {
 
 /* ============ colour themes ============ */
 const SEM = {
-  light: { good: "#2C7552", "good-soft": "#DFEFE5", warn: "#A8620E", "warn-soft": "#F6E9D6", scrim: "rgba(18,26,24,.38)" },
-  dark:  { good: "#72C69D", "good-soft": "#16302A", warn: "#E3A65C", "warn-soft": "#33281A", scrim: "rgba(0,0,0,.55)" },
+  light: { good: "#2C7552", "good-soft": "#DFEFE5", warn: "#A8620E", "warn-soft": "#F6E9D6", scrim: "rgba(18,26,24,.38)", "s1": "#2a78d6", "s2": "#eb6834", "s3": "#1baf7a", "s4": "#eda100", "s5": "#e87ba4", "s6": "#008300", "s7": "#4a3aa7", "s8": "#e34948" },
+  dark:  { good: "#72C69D", "good-soft": "#16302A", warn: "#E3A65C", "warn-soft": "#33281A", scrim: "rgba(0,0,0,.55)", "s1": "#3987e5", "s2": "#d95926", "s3": "#199e70", "s4": "#c98500", "s5": "#d55181", "s6": "#008300", "s7": "#9085e9", "s8": "#e66767" },
 };
 const K = ["bg","surface","sunk","ink","ink2","muted","line","accent","accent-soft","on-accent","brass","brass-soft"];
 const P = (a, b) => ({ light: Object.fromEntries(K.map((k, i) => [k, a[i]])), dark: Object.fromEntries(K.map((k, i) => [k, b[i]])) });
@@ -961,6 +991,34 @@ function capacity(list) {
 const weeklyHours = c => c.fun ? 0 : (c.hours || 0) * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? 0.5 : 1);
 const fmtDur = h => { const m = Math.round((h || 0) * 60); if (m < 60) return m + " min"; return m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`; };
 const hFmt = h => { const r = Math.round(h * 100) / 100; return (r % 1 === 0 ? r.toFixed(0) : String(r)).replace(/^0\./, "0."); };
+const SERIES = i => `var(--s${(i % 8) + 1})`;
+const valOrder = () => (S.ob ? S.ob.d.values : ((profile() || {}).values || []));
+const coreIds = () => (S.ob ? S.ob.d.cores : ((profile() || {}).cores || [])).map(c => c.value);
+const valColor = vid => { const i = valOrder().indexOf(vid); return SERIES(i < 0 ? 0 : i); };
+const valName = vid => (VALUE_LIB.find(v => v.id === vid) || ((S.ob && S.ob.d.custom) || []).find(v => v.id === vid) || ((profile() || {}).customValues || []).find(v => v.id === vid) || { name: "Other" }).name;
+function allocation(list) { const m = {}; list.filter(c => !c.fun && c.on !== false).forEach(c => { m[c.value] = (m[c.value] || 0) + weeklyHours(c); }); return valOrder().map(v => ({ v, h: m[v] || 0 })); }
+function suggestedSplit(budget) {
+  const order = valOrder(), cores = coreIds(), w = v => (cores.includes(v) ? 2 : 1), tot = order.reduce((a, v) => a + w(v), 0) || 1, o = {};
+  order.forEach(v => { o[v] = Math.max(0.5, Math.round(budget * w(v) / tot * 2) / 2); });
+  return o;
+}
+function parseDur(str) {
+  const t = String(str || "").toLowerCase().replace(/,/g, ".").trim(); if (!t) return null;
+  let m = t.match(/^(\d{1,2}):(\d{1,2})$/); if (m) return +m[1] + +m[2] / 60;
+  let h = 0, min = 0, found = false;
+  m = t.match(/(\d+(?:\.\d+)?)\s*(hours|hour|hrs|hr|h)(?![a-z])/); if (m) { h = +m[1]; found = true; const rest = t.slice(m.index + m[0].length).match(/^\s*(\d+)\s*(m|min|mins|minutes?)?\s*$/); if (rest) min = +rest[1]; }
+  m = t.match(/(\d+)\s*(minutes|minute|mins|min|m)(?![a-z])/); if (m) { min = +m[1]; found = true; }
+  if (!found) { m = t.match(/^(\d+(?:\.\d+)?)$/); if (!m) return null; const n = +m[1]; return n <= 5 ? n : n / 60; }
+  return h + min / 60;
+}
+const freqWords = c => c.unit ? `${hFmt(c.target)} h a week` : c.cadence === "daily" ? `${c.target} day${c.target > 1 ? "s" : ""} a week` : c.cadence === "monthly" ? `${c.target}× a month` : `${c.target}× a week`;
+const freqSuffix = c => c.unit ? "h/wk" : c.cadence === "daily" ? "days/wk" : c.cadence === "monthly" ? "×/month" : "×/wk";
+function setFreq(c, v) { const max = c.cadence === "daily" ? 7 : c.cadence === "monthly" ? 4 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, Math.round(v / st) * st)); c.touched = true; }
+function stepDur(c, dir) {
+  const cur = Math.round((c.hours || 0) * 60), st = (dir < 0 ? cur <= 60 : cur < 60) ? 5 : 15;
+  const next = dir > 0 ? Math.floor(cur / st) * st + st : Math.ceil(cur / st) * st - st;
+  c.hours = Math.max(0, Math.min(720, next)) / 60; c.touched = true;
+}
 function loadFormula(c) {
   const h = fmtDur(c.hours || 0);
   const base = c.cadence === "daily" ? `${h} × ${c.target} days` : c.cadence === "monthly" ? `${h} × ${c.target}/month ÷ 4.3` : `${h} × ${c.target}${c.unit ? "" : "/week"}`;
@@ -1838,28 +1896,42 @@ function compRow(c) {
   return `<button class="comp" data-act="editComp" data-id="${esc(c.id)}"><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}${c.hours && !c.fun ? " · ~" + hrs(c.hours * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? .5 : 1)) + " h/wk" : ""}</small>${tags ? `<span class="tags" style="margin-top:4px">${tags}</span>` : ""}</span><span class="chev">›</span></button>`;
 }
 function meterStatus(cap, avail) {
-  if (cap > avail * 1.05) return `Over by ${hrs(cap - avail)} h. Lower a floor, trim hours, or turn something off.`;
-  if (cap > avail * 0.85) return "Fits, but tight. Leave a little slack for real life.";
-  return `Fits, with ${hrs(avail - cap)} h to spare.`;
+  if (cap > avail * 1.05) return `Over by ${fmtDur(cap - avail)}`;
+  if (cap > avail * 0.85) return "Fits, but tight";
+  return `Fits, ${fmtDur(avail - cap)} to spare`;
+}
+function allocBar(list, avail) {
+  const al = allocation(list), cap = al.reduce((a, x) => a + x.h, 0), scale = Math.max(cap, avail, 0.01);
+  const segs = al.filter(x => x.h > 0).map(x => `<i style="width:${(x.h / scale * 100).toFixed(2)}%;background:${valColor(x.v)}" title="${esc(valName(x.v))}: ${fmtDur(x.h)} a week"></i>`).join("");
+  return `<div class="sbar" role="img" aria-label="${al.filter(x => x.h).map(x => `${valName(x.v)} ${fmtDur(x.h)}`).join(", ")}; budget ${avail} h">${segs}<b class="bmark" style="left:${Math.min(100, avail / scale * 100).toFixed(2)}%" aria-hidden="true"></b></div>`;
 }
 function meter(list, avail, idPrefix = "") {
   const scored = list.filter(c => !c.fun && c.on !== false);
-  const cap = capacity(list), pct = Math.min(100, cap / Math.max(avail, 1) * 100), over = cap > avail * 1.05;
+  const cap = capacity(list), over = cap > avail * 1.05;
   const rows = scored.map(c => ({ c, w: weeklyHours(c) })).sort((a, b) => b.w - a.w);
   const zero = rows.filter(r => !r.c.hours).length;
-  return `<div class="card meter ${over ? "over" : ""}"><div class="row"><b>Weekly load</b><span class="hint" data-mstat="1">${esc(meterStatus(cap, avail))}</span></div>
-    <div class="bar"><div class="fill" style="width:${pct.toFixed(1)}%"></div></div>
-    <div class="nums"><span>Floors take ~${hrs(cap)} h a week <span class="hint">(${fmtDur(cap / 7)} a day)</span></span><span>Your budget: ${avail} h</span></div>
-    <label class="flabel" for="${idPrefix}cap" style="display:block;margin-top:10px">Budget for floors, hours a week${S.ob && S.ob.d.week ? ` · Your week suggested ${weekCalc(S.ob.d.week).floors} h` : (profile() && profile().week ? ` · Your week suggested ${weekCalc(profile().week).floors} h` : "")}</label>
-    <input type="range" min="4" max="50" step="1" value="${avail}" id="${idPrefix}cap" data-cap="1">
-    <button class="linkish" data-act="loadToggle" aria-expanded="${!!S.loadOpen}">${S.loadOpen ? "Hide the maths ▴" : "How is this calculated? ▾"}</button>
+  const wk = S.ob && S.ob.d.week ? weekCalc(S.ob.d.week) : profile() && profile().week ? weekCalc(profile().week) : null;
+  return `<div class="card meter ${over ? "over" : ""}">
+    <div class="row"><b>This week's floors</b><span class="mstat ${over ? "bad" : ""}" data-mstat="1">${esc(meterStatus(cap, avail))}</span></div>
+    ${allocBar(list, avail)}
+    <div class="nums"><span><b>${fmtDur(cap)}</b> a week <span class="hint">· ${fmtDur(cap / 7)} a day</span></span><span>Budget <b data-budget="1">${avail} h</b> <button class="linkish" data-act="loadToggle" aria-expanded="${!!S.loadOpen}" style="margin-left:6px">${S.loadOpen ? "Hide ▴" : "Details ▾"}</button></span></div>
     ${S.loadOpen ? `<div class="explain">
-      <p><b>Floors:</b> each component has an estimate of how long it takes each time. Compass multiplies it by how often the floor asks for it: days a week for daily ones, times a week for weekly ones, and times a month ÷ 4.3 for monthly ones. Alternating-week components count half. Fun-menu items are never counted.</p>
-      <p><b>Your budget:</b> from the Your week step. 168 hours minus sleep, work, commute, caring and home life leaves your free time, and you chose how much of it to give to floors (about half by default). Drag the slider to override it.</p>
-      <p><b>The check:</b> within 85% fits comfortably, up to 105% is tight, and anything more is over. Compass warns instead of blocking, because a plan that doesn't fit turns into a scoreboard you lose.</p>
-      <div class="brk">${rows.map(r => `<div class="brow"><div class="nm">${esc(r.c.name)}<small>${esc(loadFormula(r.c))}</small></div><span class="wk">${fmtDur(r.w)}</span><span class="adj"><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="-1" aria-label="Less time for ${esc(r.c.name)}">−</button><button data-act="hrs" data-id="${esc(r.c.id)}" data-d="1" aria-label="More time for ${esc(r.c.name)}">+</button></span></div>`).join("")}
-        <div class="brow tot"><div class="nm">Total</div><span class="wk">${hrs(cap)} h</span><span></span></div></div>
-      <p class="hint" style="margin:0">Use − and + to set how long each takes you: 5-minute steps under an hour, 15-minute steps above.${zero ? ` ${zero} item${zero > 1 ? "s" : ""} like “Slept 7+ hours” cost no extra time, so ${zero > 1 ? "they count" : "it counts"} as 0.` : ""}</p></div>` : ""}</div>`;
+      <label class="flabel" for="${idPrefix}cap">Budget for floors: <span data-budget="1">${avail} h</span> a week${wk ? ` · Your week suggested ${wk.floors} h` : ""}</label>
+      <input type="range" min="4" max="50" step="1" value="${avail}" id="${idPrefix}cap" data-cap="1">
+      <p><b>How the total works:</b> each component's time × how often it happens in a week. Daily ones count their days, monthly ones are divided by 4.3, alternating-week ones count half, and fun-menu items are never counted.</p>
+      <p><b>The budget</b> comes from Your week: the free time left after sleep, work, commute, caring and home life, and the share you chose to give to floors. The marker on the bar shows it.</p>
+      <p><b>The suggested split</b> gives each value an equal share and your Cores a double share. It's a starting point, not a rule.</p>
+      <div class="brk">${rows.map(r => `<div class="brow"><div class="nm"><span class="vdot" style="background:${valColor(r.c.value)}"></span>${esc(r.c.name)}<small>${esc(loadFormula(r.c))}</small></div><span class="wk">${fmtDur(r.w)}</span></div>`).join("")}
+        <div class="brow tot"><div class="nm">Total</div><span class="wk">${fmtDur(cap)}</span></div></div>
+      ${zero ? `<p class="hint" style="margin:0">${zero} item${zero > 1 ? "s" : ""} like “Slept 7+ hours” take no extra time, so ${zero > 1 ? "they count" : "it counts"} as 0.</p>` : ""}</div>` : ""}</div>`;
+}
+function groupHead(vid, list, budget, opts = {}) {
+  const h = list.filter(c => !c.fun && c.on !== false).reduce((a, c) => a + weeklyHours(c), 0);
+  const sg = suggestedSplit(budget)[vid] || 0, core = coreIds().includes(vid);
+  const pct = sg ? Math.min(100, h / sg * 100) : 0, far = sg && h > sg * 1.6;
+  return `<div class="gh"><b><span class="vdot" style="background:${valColor(vid)}"></span>${esc(valName(vid))}${core ? '<span class="core">Core</span>' : ""}</b>
+      <span class="alloc"><b>${fmtDur(h)}</b><span class="hint"> / ~${hFmt(sg)} h suggested</span>${opts.extra || ""}</span></div>
+    <div class="gbar ${far ? "far" : ""}"><i style="width:${pct.toFixed(1)}%;background:${valColor(vid)}"></i></div>`;
 }
 function rCompass(id, F, trips, sugg) {
   const p = profile(), vals = valueList(), all = comps();
@@ -1880,7 +1952,7 @@ function rCompass(id, F, trips, sugg) {
   <p class="hint" style="margin:0 0 4px">Components are the small, trackable pieces. Each one flows into Today, the weekly floors, the review, the safety net and your calendar. Tap one to change it.</p>
   ${vals.map(v => {
     const list = all.filter(c => c.value === v.id && !c.fun);
-    return `<div class="vgroup"><div class="gh"><b>${esc(v.name)}${isCore(v.id) ? '<span class="core">Core</span>' : ""}</b><button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button></div>
+    return `<div class="vgroup">${groupHead(v.id, list, p.capacity || 20, { extra: ` <button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button>` })}
       ${list.length ? `<div class="card">${list.map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Nothing yet. Add one small floor.</p>`}</div>`;
   }).join("")}
   <div class="vgroup"><div class="gh"><b>Fun menu</b><button class="btn quiet small" data-act="addComp" data-value="__fun">+ Add</button></div>
@@ -2096,7 +2168,7 @@ async function runTailor() {
 }
 
 /* ============ ONBOARDING ============ */
-const OB_STEPS = ["welcome", "goal", "values", "week", "comps", "season", "safety", "plan"];
+const OB_STEPS = ["welcome", "goal", "values", "season", "week", "comps", "safety", "plan"];
 function startOnboarding(fromExisting) {
   const p = profile();
   let d;
@@ -2117,6 +2189,21 @@ function ensureCandidates(d) {
   });
 }
 const obOn = d => d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value)));
+function obRow(c) {
+  const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span>${c.note ? `<small>${esc(c.note)}</small>` : c.on ? "" : `<small>${esc(cadenceText(c))}</small>`}</span></button><button class="xbtn" data-act="obDel" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.name)}" title="Remove">✕</button></div>`;
+  if (!c.on) return `<div class="obrow">${top}</div>`;
+  if (S.obEdit !== c.id) return `<div class="obrow">${top}<button class="sumpill" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}"><span>${esc(freqWords(c))}${c.unit ? "" : ` · ${c.hours ? fmtDur(c.hours) : "no time"} each`}</span><b>= ${fmtDur(weeklyHours(c))}/wk</b><span class="pen">✎</span></button></div>`;
+  return `<div class="obrow">${top}<div class="obedit">
+    ${c.unit ? "" : `<div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="obCad" data-id="${esc(c.id)}" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>`}
+    <div class="tunegrid">
+      <div class="fl"><span class="flabel">How often</span><div class="stp2"><button data-act="obTgt" data-id="${esc(c.id)}" data-d="-1" aria-label="Less often">−</button><input type="text" inputmode="decimal" id="obf-${esc(c.id)}" data-tgt="${esc(c.id)}" value="${hFmt(c.target)}" aria-label="How often, ${freqSuffix(c)}"><span class="suf">${freqSuffix(c)}</span><button data-act="obTgt" data-id="${esc(c.id)}" data-d="1" aria-label="More often">+</button></div></div>
+      ${c.unit ? "" : `<div class="fl"><span class="flabel">How long each time</span><div class="stp2"><button data-act="hrs" data-id="${esc(c.id)}" data-d="-1" aria-label="Shorter">−</button><input type="text" id="obt-${esc(c.id)}" data-dur="${esc(c.id)}" value="${c.hours ? fmtDur(c.hours) : "0 min"}" aria-label="How long each time" placeholder="45 min or 1 h 30"><button data-act="hrs" data-id="${esc(c.id)}" data-d="1" aria-label="Longer">+</button></div></div>`}
+    </div>
+    <div class="eqline">= ${fmtDur(weeklyHours(c))} a week</div>
+    <label class="flabel" for="obe-name">Name</label><input type="text" id="obe-name" data-obe="name" value="${esc(c.name)}" maxlength="60">
+    <label class="flabel" for="obe-note">Note</label><input type="text" id="obe-note" data-obe="note" value="${esc(c.note)}" maxlength="90" placeholder="Optional, e.g. 20 minutes counts">
+    <div><button class="btn small primary" data-act="obEditDone">Done</button></div></div></div>`;
+}
 function hasOldLogs() { return Object.keys(S.hist).length > 0 || Object.keys(S.docs).some(k => k.startsWith("w-") && Object.keys((S.docs[k] || {}).days || {}).length); }
 function renderOnboarding() {
   applyTheme();
@@ -2158,20 +2245,11 @@ function renderOnboarding() {
       <p class="lede">These are your components. Keep what fits, and set how often and how long each takes <i>you</i>; the times are starting guesses. A floor is the minimum that already counts as a good week.</p>
       ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
       ${d.values.map(vid => {
-        const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid);
         const list = d.comps.filter(c => c.value === vid && !c.fun);
-        return `<div class="vgroup"><div class="gh"><b>${esc(v.name)}</b><span class="hint">${list.filter(c => c.on).length} on</span></div><div class="card">
+        return `<div class="vgroup">${groupHead(vid, list, d.capacity)}<div class="card">
           ${S.obRemoved && S.obRemoved.c.value === vid ? `<div class="undo"><span>Removed “${esc(S.obRemoved.c.name)}”.</span><button class="btn small" data-act="obUndo">Undo</button></div>` : ""}
-          ${list.map(c => `<div class="obrow"><div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span><small>${c.on ? (c.note ? esc(c.note) : "Adjust how often and how long below") : esc(cadenceText(c)) + (c.note ? " · " + esc(c.note) : "")}</small></span></button><button class="xbtn" data-act="obDel" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.name)}" title="Remove">✕</button></div>
-            ${S.obEdit === c.id ? `<div class="obedit">
-              <label class="flabel" for="obe-name">Name</label><input type="text" id="obe-name" data-obe="name" value="${esc(c.name)}" maxlength="60">
-              <label class="flabel" for="obe-note">Note</label><input type="text" id="obe-note" data-obe="note" value="${esc(c.note)}" maxlength="90" placeholder="Optional, e.g. 20 minutes counts">
-              <span class="flabel">How often</span><div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="obCad" data-id="${esc(c.id)}" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>
-              <div><button class="btn small primary" data-act="obEditDone">Done</button></div></div>`
-            : c.on ? `<div class="tune"><span class="stp"><button data-act="obTgt" data-id="${esc(c.id)}" data-d="-1" aria-label="Less often">−</button><span>${c.cadence === "daily" ? c.target + " days/wk" : c.cadence === "monthly" ? c.target + "×/month" : c.target + (c.unit || "×") + "/wk"}</span><button data-act="obTgt" data-id="${esc(c.id)}" data-d="1" aria-label="More often">+</button></span>
-              ${c.unit ? "" : `<span class="stp"><button data-act="hrs" data-id="${esc(c.id)}" data-d="-1" aria-label="Shorter">−</button><span>${c.hours ? fmtDur(c.hours) : "no time"}</span><button data-act="hrs" data-id="${esc(c.id)}" data-d="1" aria-label="Longer">+</button></span>`}
-              <span class="eq">= ${fmtDur(weeklyHours(c))}/wk</span><button class="linkish" data-act="obEdit" data-id="${esc(c.id)}">Edit</button></div>` : ""}</div>`).join("")}
-          <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(v.name)}"><button class="btn small" type="submit">Add</button></form></div></div>`;
+          ${list.map(obRow).join("")}
+          <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(valName(vid))}"><button class="btn small" type="submit">Add</button></form></div></div>`;
       }).join("")}
       <div class="vgroup"><div class="gh"><b>Fun menu</b><span class="hint">never scored</span></div>
         <div class="chips">${FUN_LIB.concat(d.comps.filter(c => c.fun && !FUN_LIB.includes(c.name)).map(c => c.name)).map(n => { const on = d.comps.some(c => c.fun && c.name === n && c.on); return `<button class="chip ${on ? "sel" : ""}" data-act="obFun" data-v="${esc(n)}">${esc(n)}</button>`; }).join("")}</div>
@@ -2179,7 +2257,7 @@ function renderOnboarding() {
     canNext = obOn(d).some(c => !c.fun);
   } else if (key === "season") {
     html = `<h1>Pick up to two Cores.</h1>
-      <p class="lede">For the next 12 to 18 months, two values get most of your energy. The rest become satellites, still tracked, explored without guilt. Chasing everything at once is how goals start fighting each other.</p>
+      <p class="lede">For the next 12 to 18 months, two values get most of your energy. The rest become satellites, still tracked, explored without guilt. Chasing everything at once is how goals start fighting each other. Cores get a double share of time in the suggested split.</p>
       <div class="vcards">${d.values.map(vid => { const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid); const on = d.cores.some(c => c.value === vid); return `<button class="vcard corecard" data-act="obCore" data-v="${esc(vid)}" aria-pressed="${on}"><span class="tick"></span><b>${esc(v.name)}</b><small>${on ? "Core" : "Satellite"}</small></button>`; }).join("")}</div>
       ${d.cores.length ? `<div class="card" style="margin-top:12px">${d.cores.map((c, i) => `<div class="field"><label for="ob-core-${i}">What does ${esc((VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name)} mean this season?</label><input type="text" id="ob-core-${i}" data-obcore="${i}" value="${esc(c.text)}" placeholder="e.g. Land a more challenging role by summer"></div>`).join("")}</div>` : ""}
       <p class="src" style="margin-top:14px">Emmons & King 1988; Riediger & Freund 2004</p>`;
@@ -2271,16 +2349,12 @@ document.addEventListener("click", e => {
     case "obCad": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; delete c.unit; delete c.step; } c.touched = true; updateOb(); return; }
     case "obDel": { const d = S.ob && S.ob.d; if (!d) return; const i = d.comps.findIndex(x => x.id === b.dataset.id); if (i < 0) return; const c = d.comps[i]; d.comps.splice(i, 1); if (!d.seen.includes(c.id)) d.seen.push(c.id); S.obRemoved = { c, i }; if (S.obEdit === c.id) S.obEdit = null; updateOb(); return; }
     case "obUndo": { const d = S.ob && S.ob.d, r = S.obRemoved; if (!d || !r) return; d.comps.splice(Math.min(r.i, d.comps.length), 0, r.c); S.obRemoved = null; updateOb(); return; }
-    case "obTgt": {
-      const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return;
-      const max = c.cadence === "daily" ? 7 : c.cadence === "monthly" ? 4 : (c.unit ? 40 : 14), st = c.step || 1;
-      c.target = Math.max(st, Math.min(max, (c.target || 1) + (+b.dataset.d) * st)); c.touched = true; updateOb(); return;
-    }
+    case "obTgt": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; setFreq(c, (c.target || 1) + (+b.dataset.d) * (c.step || 1)); updateOb(); return; }
     case "loadToggle": S.loadOpen = !S.loadOpen; if (S.ob) { updateOb(); return; } break;
     case "hrs": {
-      const dir = Math.sign(+b.dataset.d), id = b.dataset.id, adj = c => { const cur = c.hours || 0, st = (dir < 0 ? cur <= 1 : cur < 1) ? 5 / 60 : 0.25; c.hours = Math.max(0, Math.min(12, Math.round((cur + dir * st) * 60) / 60)); c.touched = true; };
-      if (S.ob) { const c = S.ob.d.comps.find(x => x.id === id); if (c) adj(c); updateOb(); return; }
-      editProfile(p => { const c = p.components.find(x => x.id === id); if (c) adj(c); }); break;
+      const dir = Math.sign(+b.dataset.d), id = b.dataset.id;
+      if (S.ob) { const c = S.ob.d.comps.find(x => x.id === id); if (c) stepDur(c, dir); updateOb(); return; }
+      editProfile(p => { const c = p.components.find(x => x.id === id); if (c) stepDur(c, dir); }); break;
     }
     case "capture": S.capMsg = ""; S.sheet = { type: "capture" }; break;
     case "capAdd": {
@@ -2431,11 +2505,18 @@ document.addEventListener("input", e => {
   else if (ds.cap) {
     const v = +t.value;
     if (S.ob) { S.ob.d.capacity = v; } else editProfile(p => { p.capacity = v; });
-    const m = t.closest(".meter"); if (m) { const list = S.ob ? obOn(S.ob.d) : comps(); const cap = capacity(list), over = cap > v * 1.05; m.classList.toggle("over", over); m.querySelector(".fill").style.width = Math.min(100, cap / Math.max(v, 1) * 100).toFixed(1) + "%"; m.querySelector(".nums > span:last-child").textContent = "Your budget: " + v + " h"; m.querySelector("[data-mstat]").textContent = meterStatus(cap, v); }
+    document.querySelectorAll("[data-budget]").forEach(el => { el.textContent = v + " h"; });
   }
 });
 document.addEventListener("change", e => {
   const t = e.target, ds = t.dataset;
+  if ((ds.tgt || ds.dur) && S.ob) {
+    const c = S.ob.d.comps.find(x => x.id === (ds.tgt || ds.dur)); if (!c) return;
+    if (ds.tgt) { const n = parseFloat(String(t.value).replace(",", ".")); if (isFinite(n) && n > 0) setFreq(c, n); else toast("Type a number, like 3"); }
+    else { const h = parseDur(t.value); if (h === null) toast("Try something like 45 min, 1 h 30 or 1:30"); else { c.hours = Math.max(0, Math.min(12, Math.round(h * 60) / 60)); c.touched = true; } }
+    updateOb(); return;
+  }
+  if (ds.cap) { if (S.ob) updateOb(); else render(); return; }
   if (t.id === "importFile" && t.files && t.files[0]) { importData(t.files[0]); t.value = ""; return; }
   if (ds.c === "value" && S.sheet && S.sheet.draft) S.sheet.draft.value = t.value;
   else if (ds.j || ds.cap) scheduleRender();
@@ -2443,6 +2524,7 @@ document.addEventListener("change", e => {
 document.addEventListener("keydown", e => {
   const t = e.target, typing = t && /^(TEXTAREA|INPUT|SELECT)$/.test(t.tagName);
   if (typing && t.tagName === "TEXTAREA" && t.closest(".capbox") && e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); const btn = t.closest(".capbox").querySelector('[data-act="capAdd"]'); if (btn) btn.click(); return; }
+  if (typing && (t.dataset.tgt || t.dataset.dur) && e.key === "Enter") { e.preventDefault(); t.blur(); return; }
   if (typing && (t.id === "obe-name" || t.id === "obe-note") && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="obEditDone"]'); if (btn) btn.click(); return; }
   if (typing && t.id === "sp-next" && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="sortProjSave"]'); if (btn) btn.click(); return; }
   if (typing && t.id && t.id.startsWith("step-") && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector(`[data-act="tStepSave"][data-id="${t.id.slice(5)}"]`); if (btn) btn.click(); return; }
