@@ -1962,7 +1962,7 @@ function rCompass(id, F, trips, sugg) {
   <h3>Values and components</h3>
   <p class="hint" style="margin:0 0 4px">Components are the small, trackable pieces. Each one flows into Today, the weekly floors, the review, the safety net and your calendar. Tap one to change it.</p>
   ${vals.map((v, gi) => {
-    const list = all.filter(c => c.value === v.id && !c.fun);
+    const list = all.filter(c => c.value === v.id && !c.fun).sort((a, b) => weeklyHours(b) - weeklyHours(a));
     return `${tierLabel(vals.map(x => x.id), gi, coreIds())}<div class="vgroup">${groupHead(v.id, list, p.capacity || 20, { extra: ` <button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button>` })}
       ${list.length ? `<div class="card">${list.map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Nothing yet. Add one small floor.</p>`}</div>`;
   }).join("")}
@@ -2200,11 +2200,15 @@ function ensureCandidates(d) {
   });
 }
 const obOn = d => d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value)));
+function byTime(list) {
+  if (S.obFrozen) { const idx = id => { const i = S.obFrozen.indexOf(id); return i < 0 ? 1e6 : i; }; return list.slice().sort((a, b) => idx(a.id) - idx(b.id)); }
+  return list.slice().sort((a, b) => ((b.on !== false) - (a.on !== false)) || (weeklyHours(b) - weeklyHours(a)));
+}
 function obRow(c) {
   const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}</span>${c.note ? `<small>${esc(c.note)}</small>` : c.on ? "" : `<small>${esc(cadenceText(c))}</small>`}</span></button><button class="xbtn" data-act="obDel" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.name)}" title="Remove">✕</button></div>`;
-  if (!c.on) return `<div class="obrow">${top}</div>`;
-  if (S.obEdit !== c.id) return `<div class="obrow">${top}<button class="sumpill" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}"><span>${esc(freqWords(c))}${c.unit ? "" : ` · ${c.hours ? fmtDur(c.hours) : "no time"} each`}</span><b>= ${fmtDur(weeklyHours(c))}/wk</b><span class="pen">✎</span></button></div>`;
-  return `<div class="obrow">${top}<div class="obedit">
+  if (!c.on) return `<div class="obrow" data-rid="${esc(c.id)}">${top}</div>`;
+  if (S.obEdit !== c.id) return `<div class="obrow" data-rid="${esc(c.id)}">${top}<button class="sumpill" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}"><span>${esc(freqWords(c))}${c.unit ? "" : ` · ${c.hours ? fmtDur(c.hours) : "no time"} each`}</span><b>= ${fmtDur(weeklyHours(c))}/wk</b><span class="pen">✎</span></button></div>`;
+  return `<div class="obrow" data-rid="${esc(c.id)}">${top}<div class="obedit">
     ${c.unit ? "" : `<div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="obCad" data-id="${esc(c.id)}" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>`}
     <div class="tunegrid">
       <div class="fl"><span class="flabel">How often</span><div class="stp2"><button data-act="obTgt" data-id="${esc(c.id)}" data-d="-1" aria-label="Less often">−</button><input type="text" inputmode="decimal" id="obf-${esc(c.id)}" data-tgt="${esc(c.id)}" value="${hFmt(c.target)}" aria-label="How often, ${freqSuffix(c)}"><span class="suf">${freqSuffix(c)}</span><button data-act="obTgt" data-id="${esc(c.id)}" data-d="1" aria-label="More often">+</button></div></div>
@@ -2256,7 +2260,7 @@ function renderOnboarding() {
       <p class="lede">These are your components. Keep what fits, and set how often and how long each takes <i>you</i>; the times are starting guesses. A floor is the minimum that already counts as a good week.</p>
       ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
       ${(() => { const cs = d.cores.map(c => c.value), ids = coresFirst(d.values, cs); return ids.map((vid, gi) => {
-        const list = d.comps.filter(c => c.value === vid && !c.fun);
+        const list = byTime(d.comps.filter(c => c.value === vid && !c.fun));
         return `${tierLabel(ids, gi, cs)}<div class="vgroup">${groupHead(vid, list, d.capacity)}<div class="card">
           ${S.obRemoved && S.obRemoved.c.value === vid ? `<div class="undo"><span>Removed “${esc(S.obRemoved.c.name)}”.</span><button class="btn small" data-act="obUndo">Undo</button></div>` : ""}
           ${list.map(obRow).join("")}
@@ -2323,7 +2327,7 @@ document.addEventListener("click", e => {
   const ob = S.ob && S.ob.d;
   switch (act) {
     /* onboarding */
-    case "obNext": S.obEdit = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
+    case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
     case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); window.scrollTo(0, 0); return renderOnboarding();
     case "obCancel": S.ob = null; return render();
     case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
@@ -2355,8 +2359,8 @@ document.addEventListener("click", e => {
     }
     case "weekEdit": S.sheet = { type: "week", draft: Object.assign({}, WEEK_DEFAULT, (profile() || {}).week || {}) }; break;
     case "weekSave": { const w = S.sheet.draft, f = weekCalc(w).floors; editProfile(p => { p.week = w; p.capacity = f; }); S.sheet = null; toast(`Budget set to ${f} h a week`); break; }
-    case "obEdit": S.obEdit = b.dataset.id; S.obRemoved = null; updateOb(); { const f = $("#obe-name"); if (f) f.focus(); } return;
-    case "obEditDone": { const c = S.ob && S.ob.d.comps.find(x => x.id === S.obEdit); if (c && !(c.name || "").trim()) { toast("Give it a name first."); return; } if (c) c.name = c.name.trim(); S.obEdit = null; updateOb(); return; }
+    case "obEdit": S.obFrozen = byTime(S.ob.d.comps).map(c => c.id); S.obEdit = b.dataset.id; S.obRemoved = null; updateOb(); { const f = $("#obe-name"); if (f) f.focus(); } return;
+    case "obEditDone": { S.obFrozen = null; const c = S.ob && S.ob.d.comps.find(x => x.id === S.obEdit); if (c && !(c.name || "").trim()) { toast("Give it a name first."); return; } if (c) c.name = c.name.trim(); S.obEdit = null; updateOb(); return; }
     case "obCad": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; delete c.unit; delete c.step; } c.touched = true; updateOb(); return; }
     case "obDel": { const d = S.ob && S.ob.d; if (!d) return; const i = d.comps.findIndex(x => x.id === b.dataset.id); if (i < 0) return; const c = d.comps[i]; d.comps.splice(i, 1); if (!d.seen.includes(c.id)) d.seen.push(c.id); S.obRemoved = { c, i }; if (S.obEdit === c.id) S.obEdit = null; updateOb(); return; }
     case "obUndo": { const d = S.ob && S.ob.d, r = S.obRemoved; if (!d || !r) return; d.comps.splice(Math.min(r.i, d.comps.length), 0, r.c); S.obRemoved = null; updateOb(); return; }
@@ -2487,8 +2491,15 @@ document.addEventListener("click", e => {
   render();
 });
 function updateOb() {
-  // re-render the onboarding step without replaying the entrance animation
+  // re-render the onboarding step without replaying the entrance animation; rows that move slide into place
+  const before = {}; document.querySelectorAll(".obrow[data-rid]").forEach(el => { before[el.dataset.rid] = el.getBoundingClientRect().top; });
   const y = window.scrollY; renderOnboarding(); const st = $("#obStep"); if (st) st.classList.remove("stepin"); window.scrollTo(0, y);
+  if (reduced()) return;
+  document.querySelectorAll(".obrow[data-rid]").forEach(el => {
+    const t = before[el.dataset.rid]; if (t === undefined) return;
+    const dy = t - el.getBoundingClientRect().top; if (Math.abs(dy) < 2) return;
+    el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 380, easing: "cubic-bezier(.2,.8,.2,1)" });
+  });
 }
 document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
