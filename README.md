@@ -109,6 +109,19 @@ Your setup, weeks, people and theme come across.
 - **Blank page saying "Almost there"**: `firebase-config.js` still has `PASTE_…` values.
 - **Custom domain** (like `compass.yourname.com`): Hosting → Add custom domain, then add it to Authorized domains.
 
+## Trying changes without redeploying
+
+You don't need to redeploy, or clear cookies, to see a change.
+
+- **Setup keeps its place.** If you're partway through setup, reloading or redeploying picks up on the same step with your edits. To run setup again after finishing it, use **Compass tab → Start over → Run setup**. Your logs are kept.
+- **Run it on your computer.** From the repo folder:
+  ```bash
+  git pull
+  npx live-server public --port=5173
+  ```
+  This opens http://localhost:5173 and reloads the page by itself whenever the files change, including right after a `git pull`. Google sign-in works on `localhost`. If it says the address isn't allowed, add `localhost` under Firebase → Security → Authentication → Settings → Authorized domains. It uses your real account and data.
+- **Deploy only when you're happy:** `npx firebase-tools deploy`.
+
 ## For developers
 
 - Rebuild the bundled SDK after changing `src/firebase.js`: `npm install && npm run build:sdk`.

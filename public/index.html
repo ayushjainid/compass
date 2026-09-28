@@ -840,7 +840,7 @@ async function flushAll() {
 }
 function teardown() {
   Object.keys(ST.subs).forEach(unsubscribe);
-  S.docs = {}; S.hist = {}; S.ob = null; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
+  S.docs = {}; S.hist = {}; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
   ST.uid = null; S.mode = "connecting"; profileReady = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
 }
 function authMessage(e) {
@@ -1687,11 +1687,12 @@ function render() {
   if (S.authState !== "in") return renderGate();
   document.body.classList.remove("landing"); stopDemo(); S.gateKey = null;
   renderAvatar();
+  if (!S.ob && profileReady && onboarded() && !S.obChecked) { S.obChecked = true; const dr = resumeDraft(); if (dr) { S.ob = dr; toast("Picked up setup where you left off"); } }
   const inOb = !onboarded() || !!S.ob;
   $("#weeknav").hidden = inOb; $("#statusline").hidden = false; $("#tabbar").hidden = inOb;
   if (inOb) {
     if (!profileReady) { $("#main").innerHTML = `<div class="hero">${bigCompass()}</div>`; $("#obbar").innerHTML = ""; updSync(); return; }
-    if (!S.ob) { startOnboarding(false); S.ob.auto = true; }
+    if (!S.ob) { const dr = resumeDraft(); if (dr) S.ob = dr; else { startOnboarding(false); S.ob.auto = true; } }
     renderOnboarding(); renderSheet(); updSync(); return;
   }
   $("#obbar").innerHTML = "";
@@ -2180,6 +2181,11 @@ async function runTailor() {
 
 /* ============ ONBOARDING ============ */
 const OB_STEPS = ["welcome", "goal", "values", "season", "week", "comps", "safety", "plan"];
+function resumeDraft() {
+  const dr = LS.get("obdraft");
+  if (!dr || !dr.d || !Array.isArray(dr.d.comps) || Date.now() - (dr.at || 0) > 30 * 864e5) return null;
+  return { step: Math.min(dr.step || 1, OB_STEPS.length - 1), d: dr.d, resumed: true };
+}
 function startOnboarding(fromExisting) {
   const p = profile();
   let d;
@@ -2305,9 +2311,10 @@ function renderOnboarding() {
   $("#obbar").innerHTML = `<div class="obbar"><div class="in">${back ? `<button class="btn quiet" data-act="obBack">Back</button>` : (onboarded() ? `<button class="btn quiet" data-act="obCancel">Cancel</button>` : "<span></span>")}<button class="btn primary" data-act="obNext" ${canNext ? "" : "disabled"}>${esc(next)}</button></div></div>`;
   $("#tabbar").hidden = true; $("#weeknav").hidden = true; $("#heading").textContent = "";
   setNeedle(1);
+  if (S.ob.step > 0) LS.set("obdraft", { step: S.ob.step, d: S.ob.d, at: Date.now() });
 }
 function finishOnboarding() {
-  const d = S.ob.d;
+  const d = S.ob.d; LS.set("obdraft", null);
   const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; return x; });
   S.docs.profile = Object.assign({}, profile() || {}, {
     v: 2, onboarded: true, goal: d.goal.trim(), feel: d.feel, values: d.values, customValues: d.custom,
@@ -2329,7 +2336,7 @@ document.addEventListener("click", e => {
     /* onboarding */
     case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
     case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); window.scrollTo(0, 0); return renderOnboarding();
-    case "obCancel": S.ob = null; return render();
+    case "obCancel": S.ob = null; LS.set("obdraft", null); return render();
     case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
     case "obFeel": { const v = b.dataset.v; ob.feel = ob.feel.includes(v) ? ob.feel.filter(x => x !== v) : ob.feel.concat(v); const was = ob.feel.includes(v); updateOb(); if (was) burst(document.querySelector(`[data-act="obFeel"][data-v="${CSS.escape(v)}"]`), "var(--accent)", 6); return; }
     case "obValue": { const v = b.dataset.v; if (ob.values.includes(v)) { ob.values = ob.values.filter(x => x !== v); ob.cores = ob.cores.filter(c => c.value !== v); } else { if (ob.values.length >= 9) return toast("Nine is plenty. Fewer values, clearer direction."); ob.values.push(v); } updateOb(); if (ob.values.includes(v)) burst(document.querySelector(`[data-act="obValue"][data-v="${CSS.escape(v)}"] .tick`), "var(--accent)"); return; }
