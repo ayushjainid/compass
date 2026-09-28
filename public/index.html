@@ -500,13 +500,33 @@ body.landing .top,body.landing #statusline{display:none}
 @media (min-width:900px){
   .pweek{grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;width:min(1180px,calc(100vw - 48px));position:relative;left:50%;transform:translateX(-50%)}
   .pday{min-height:170px;padding:10px}
-  .pdh{flex-wrap:wrap;row-gap:0;gap:6px}.pmin{margin-left:0;flex-basis:100%}
+  .pdh{flex-wrap:wrap;row-gap:0;gap:6px}.pmin,.pleft{margin-left:0;flex-basis:100%}
   .pblocks{flex-direction:column;flex-wrap:nowrap}
   .pblk{display:flex;flex-direction:column;gap:1px;padding:6px 8px}
   .pblk .t{align-self:auto}.pblk .nm{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
   .padd{padding:7px 8px;text-align:left}
+  .pfix,.pslot{display:flex;flex-direction:column;gap:1px;padding:6px 8px}
+  .psum{grid-template-columns:repeat(4,auto);justify-content:start}.psum>div{padding:10px 18px}
 }
 .mdate{width:auto;max-width:150px;font-size:13px;padding:6px 8px}
+.psum{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:12px}
+.psum>div{background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.psum b{font:600 15px var(--mono)}.psum span{font-size:12px;color:var(--muted)}.psum .warm b{color:var(--brass)}
+.pleft{margin-left:auto;font:500 12px var(--mono);color:var(--good)}.pleft.over{color:var(--warn)}
+.pbar{height:4px;border-radius:4px;background:var(--sunk);overflow:hidden;margin-top:-2px}.pbar i{display:block;height:100%;background:var(--good);border-radius:4px}.pbar.over i{background:var(--warn)}
+.pfix{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border-radius:10px;padding:6px 10px;background:repeating-linear-gradient(135deg,var(--sunk) 0 6px,transparent 6px 12px),var(--surface);border:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.pfix .t{font:500 12px var(--mono);color:var(--muted)}
+.pblk.clash{box-shadow:inset 0 0 0 1.5px var(--warn)}.pblk.clash .dur{color:var(--warn)}
+@media (min-width:900px){.pfix,.pslot{display:flex;flex-direction:column;gap:1px;padding:6px 8px}.pfix .nm,.pslot .nm{line-height:1.25}}
+.pslot{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border:1.5px dashed color-mix(in srgb,var(--c,var(--good)) 60%,transparent);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--ink2);animation:pop .2s}
+.pslot .t{font:500 12px var(--mono);color:var(--muted)}.pslot .nm{font-weight:600;color:var(--ink)}
+.pslot.over,.pday.over{background:color-mix(in srgb,var(--good) 14%,var(--surface));border-color:var(--good)}
+.pslot:hover{border-style:solid}
+[data-drag]{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
+.ghost{position:fixed;left:0;top:0;z-index:80;pointer-events:none;opacity:.92;box-shadow:0 10px 30px rgba(0,0,0,.25);transform-origin:center;cursor:grabbing;margin:0}
+.daypick{display:flex;gap:6px;flex-wrap:wrap}.daypick button{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink2)}
+.daypick button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.whours{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px}.wstart{display:flex;align-items:center;gap:8px}.wstart input{width:auto;padding:6px 8px;font-size:14px}
 /* ---------- import ---------- */
 .drop{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:1.5px dashed var(--line);border-radius:16px;padding:26px 16px;margin-top:14px;background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s}
 .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
@@ -1239,7 +1259,7 @@ const HOME_OPTS = [[14, "Light"], [21, "Typical"], [28, "Heavy"]];
 const SHARE_OPTS = [[0.35, "About a third"], [0.5, "About half"], [0.65, "About two thirds"]];
 function weekCalc(w) {
   w = Object.assign({}, WEEK_DEFAULT, w || {});
-  const workDays = w.work > 0 ? Math.min(6, Math.max(3, Math.round(w.work / 8))) : 0;
+  const workDays = w.work > 0 ? (Array.isArray(w.workDays) && w.workDays.length ? w.workDays.length : Math.min(6, Math.max(3, Math.round(w.work / 8)))) : 0;
   const parts = [
     { k: "sleep", label: "Sleep", h: w.sleep * 7, color: "var(--muted)" },
     { k: "work", label: "Work or study", h: w.work, color: "var(--accent)" },
@@ -1265,7 +1285,8 @@ function weekForm(w, prefix) {
   const step = (key, st, min, max, unit) => `<div class="stepper"><button data-act="wkStep" data-k="${key}" data-d="${-st}" aria-label="Less">−</button><span class="v">${hFmt(W[key])} ${unit}</span><button class="plus" data-act="wkStep" data-k="${key}" data-d="${st}" data-min="${min}" data-max="${max}" aria-label="More">+</button></div>`;
   const legend = c.parts.filter(p => p.h > 0).map(p => `<li><i style="background:${p.color}"></i><span>${p.label}</span><b>${hrs(p.h)} h</b></li>`).join("");
   return `<div class="card"><div class="field"><span class="flabel">Sleep a night</span>${step("sleep", 0.5, 5, 10, "h")}</div>
-    <div class="field"><span class="flabel">Work or study a week</span>${chips("work", WORK_OPTS, v => v ? v + " h" : "")}<div class="row" style="margin-top:6px"><span class="hint">Or set exactly</span>${step("work", 5, 0, 80, "h")}</div></div>
+    <div class="field"><span class="flabel">Work or study a week</span>${chips("work", WORK_OPTS, v => v ? v + " h" : "")}<div class="row" style="margin-top:6px"><span class="hint">Or set exactly</span>${step("work", 5, 0, 80, "h")}</div>
+      ${W.work > 0 ? (() => { const wd = workDaysOf(W), st = W.workStart || "09:00", len = Math.round(W.work / Math.max(1, wd.length) * 60); return `<div class="whours"><div class="daypick" role="group" aria-label="Work days">${WD.map((d, i) => `<button data-act="wkDay" data-d="${i}" aria-pressed="${wd.includes(i)}">${d.slice(0, 2)}</button>`).join("")}</div><div class="wstart"><span class="hint">from</span><input type="time" data-wkt="workStart" value="${st}" aria-label="Usual start time"><span class="hint">to ${t12(tstr(tmins(st) + len))}</span></div></div>`; })() : ""}</div>
     ${W.work > 0 ? `<div class="field"><span class="flabel">Commute, round trip, per work day</span>${chips("commute", COMMUTE_OPTS)}</div>` : ""}
     <div class="field"><span class="flabel">Caring for someone (children, a parent, a partner)</span>${chips("care", CARE_OPTS, v => v ? "~" + v + " h/wk" : "")}</div>
     <div class="field"><span class="flabel">Home & life admin (cooking, chores, errands, getting ready)</span>${chips("home", HOME_OPTS, v => v + " h/wk")}</div>
@@ -1954,42 +1975,203 @@ function weeklyPlannable() {
   const cores = coreIds();
   return comps().filter(c => !c.fun && c.cadence === "weekly").sort((a, b) => (cores.includes(b.value) - cores.includes(a.value)) || (weeklyHours(b) - weeklyHours(a)));
 }
+/* ---- the shape of a day: waking hours, fixed time (work, classes), and what's left for floors ---- */
+const tmins = t => { if (!t) return null; const [h, m] = String(t).split(":").map(Number); return h * 60 + (m || 0); };
+const tstr = m => pad(Math.floor(m / 60) % 24) + ":" + pad(Math.round(m % 60));
+const tRange = (s, e) => { const a = t12(tstr(s)), b = t12(tstr(e)); const sa = a.split(" "), sb = b.split(" "); return (sa[1] === sb[1] ? sa[0] : a) + "–" + b; };
+const myWeek = () => weekCalc((profile() || {}).week).w;
+function workDaysOf(w) { if (!(w.work > 0)) return []; if (Array.isArray(w.workDays) && w.workDays.length) return w.workDays.slice().sort(); const n = Math.min(6, Math.max(3, Math.round(w.work / 8))); return [0, 1, 2, 3, 4, 5].slice(0, n); }
+function wakeBed(w) { const bed = 23 * 60; return { wake: Math.max(4 * 60, Math.min(11 * 60, bed + Math.round(w.sleep * 60) - 24 * 60)), bed }; }
+function fixedOn(di, w = myWeek()) {
+  const out = [], wd = workDaysOf(w);
+  if (wd.includes(di)) { const s = tmins(w.workStart) ?? 9 * 60, len = Math.round(w.work / wd.length * 60), c = Math.round((w.commute || 0) * 30); out.push({ kind: "work", name: w.work >= 30 ? "Work or study" : "Work", s, e: s + len, bs: s - c, be: s + len + c }); }
+  (w.fixed || []).forEach(f => { if ((f.days || []).includes(di) && f.start) { const s = tmins(f.start); out.push({ kind: "fixed", id: f.id, name: f.name || "Fixed", s, e: s + (f.dur || 60), bs: s, be: s + (f.dur || 60) }); } });
+  return out.sort((a, b) => a.s - b.s);
+}
+const schedFixedH = w => (w.fixed || []).reduce((a, f) => a + (f.days || []).length * (f.dur || 60) / 60, 0);
+function dayBudget(di, w = myWeek()) {
+  const { wake, bed } = wakeBed(w);
+  const fixedH = fixedOn(di, w).reduce((a, f) => a + (f.be - f.bs) / 60, 0);
+  const spread = ((w.care || 0) + (w.home || 0) + Math.max(0, (w.other || 0) - schedFixedH(w))) / 7;
+  return Math.max(0, ((bed - wake) / 60 - fixedH - spread) * (w.share || 0.5));
+}
+const dailyMinsPerDay = () => comps().filter(c => !c.fun && c.cadence === "daily").reduce((a, c) => a + weeklyHours(c) * 60, 0) / 7;
+function dayItems(di, mon = S.viewMon) {
+  const date = addDays(mon, di), dk = dkey(date), mpd = monthPlan(monthKey(date));
+  const wk = weeklyPlannable().filter(c => plannedOn(c, di)).map(c => ({ c, t: timeOn(c, di), d: durOf(c), alt: c.alt && weekKind(dkey(mon)) !== c.alt }));
+  const mo = comps().filter(c => !c.fun && c.cadence === "monthly" && mpd[c.id] && mpd[c.id].date === dk).map(c => ({ c, t: mpd[c.id].time || "", d: durOf(c), m: true, ym: monthKey(date) }));
+  return wk.concat(mo);
+}
+function freeWindows(di, items, w = myWeek()) {
+  const { wake, bed } = wakeBed(w);
+  const busy = fixedOn(di, w).map(f => [f.bs, f.be]).concat(items.filter(x => x.t && !x.alt).map(x => [tmins(x.t), tmins(x.t) + x.d])).sort((a, b) => a[0] - b[0]);
+  const out = []; let cur = wake;
+  busy.forEach(([s, e]) => { if (s - cur >= 15) out.push({ s: cur, e: Math.min(s, bed) }); cur = Math.max(cur, e); });
+  if (bed - cur >= 15) out.push({ s: cur, e: bed });
+  return out.filter(x => x.e - x.s >= 15);
+}
+/* where a floor of `dur` minutes should start inside a free window: skip the first half hour after waking, snap to 15 */
+/* a free day (no work) starts its first suggestion mid-morning, not at wake-up */
+function slotStart(win, dur, w = myWeek(), di) {
+  let s = win.s; const wake = wakeBed(w).wake;
+  if (s === wake) { const late = di != null && !workDaysOf(w).includes(di) ? Math.max(s, 9 * 60) : s + 30; if (win.e - late >= Math.min(dur, 60)) s = late; }
+  s = Math.ceil(s / 15) * 15; return Math.min(s, Math.max(win.s, win.e - 15));
+}
+/* prefer the time this floor already has on its other days, if that is free here */
+function bestSlot(di, dur, items, prefer) {
+  const wins = freeWindows(di, items), p = tmins(prefer);
+  if (p != null && wins.some(x => p >= x.s && p + dur <= x.e)) return prefer;
+  const fit = wins.find(x => x.e - slotStart(x, dur, undefined, di) >= dur) || null; return fit ? tstr(slotStart(fit, dur, undefined, di)) : "";
+}
+function setDayTime(bl, di, t) { if (bl.days.length <= 1) { bl.time = t; bl.times = {}; } else if (t === (bl.time || "")) { if (bl.times) delete bl.times[di]; } else { bl.times = Object.assign({}, bl.times || {}, { [di]: t }); } }
+function placeFloor(id, di, t, from) {
+  const c = compById(id); if (!c) return false;
+  if (from == null && plannedOn(c, di)) { toast(`${c.name} is already on ${WD[di]}`); return false; }
+  if (from != null && from !== di && plannedOn(c, di)) { toast(`${c.name} is already on ${WD[di]}`); return false; }
+  planBlock(id, bl => {
+    if (!bl.dur) bl.dur = durOf(c);
+    if (from != null && from !== di) { bl.days = bl.days.filter(x => x !== from); if (bl.times) delete bl.times[from]; }
+    if (!bl.days.includes(di)) bl.days.push(di);
+    bl.days.sort((a, b) => a - b); setDayTime(bl, di, t);
+  });
+  const cc = compById(id); if (from == null && !sessionsLeft(cc)) S.planPick = null;
+  render();
+  const el = document.querySelector(`[data-act="blkEdit"][data-id="${CSS.escape(id)}"][data-d="${di}"]`);
+  if (el) burst(el, valColor(c.value), 8);
+  toast(`${c.name} · ${WD[di]} ${t ? t12(t) : "anytime"}. Tap it to change.`);
+  return true;
+}
 function rPlanView(id) {
   const wk = weeklyPlannable(), mon = S.viewMon, mo = comps().filter(c => !c.fun && c.cadence === "monthly");
-  const pick = S.planPick && compById(S.planPick);
+  const pick = S.planPick && compById(S.planPick), w = myWeek(), hasWeek = !!(profile() || {}).week;
   const left = wk.filter(c => sessionsLeft(c) > 0);
-  const perDayFree = (() => { const w = (profile() || {}).week; return w ? weekCalc(w).free / 7 : null; })();
+  const dailyM = dailyMinsPerDay();
+  const toPlaceH = left.reduce((a, c) => a + sessionsLeft(c) * durOf(c), 0) / 60;
+  const budgetW = WD.reduce((a, _, di) => a + dayBudget(di, w), 0);
+  let placedH = 0;
   const tray = left.length
-    ? `<div class="chips">${left.map(c => `<button class="pchip ${S.planPick === c.id ? "sel" : ""}" data-act="planPick" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}"><i></i>${esc(c.name)}<span>${sessionsLeft(c)} left</span></button>`).join("")}</div>
-       <p class="hint" style="margin:8px 0 0">${pick ? `Now tap <b>+ ${esc(pick.name)}</b> on a day below.` : "Tap a floor, then tap a day."}</p>`
-    : wk.length ? `<p class="hint" style="margin:0">Every weekly floor has its days. Tap any block to change its time.</p>` : `<p class="hint" style="margin:0">You have no weekly floors yet. Add some in the Compass tab.</p>`;
+    ? `<div class="chips ptray">${left.map(c => `<button class="pchip ${S.planPick === c.id ? "sel" : ""}" data-act="planPick" data-drag="new" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}"><i></i>${esc(c.name)}<span>${fmtDur(durOf(c) / 60)} · ${sessionsLeft(c)} left</span></button>`).join("")}</div>
+       <p class="hint" style="margin:8px 0 0">${pick ? `Tap a free slot below to place <b>${esc(pick.name)}</b>, or tap it again to cancel.` : "Drag a floor onto a day, or tap it and then tap a free slot. Blocks can be dragged to another day too."}</p>`
+    : wk.length ? `<p class="hint" style="margin:0">Every weekly floor has its days. Drag a block to move it, or tap it to change its time.</p>` : `<p class="hint" style="margin:0">You have no weekly floors yet. Add some in the Compass tab.</p>`;
   const days = WD.map((dn, di) => {
-    const date = addDays(mon, di), dk = dkey(date);
-    const blocks = wk.filter(c => plannedOn(c, di)).map(c => ({ c, t: timeOn(c, di), d: durOf(c), alt: c.alt && weekKind(dkey(mon)) !== c.alt }));
-    const mpd = monthPlan(monthKey(date));
-    const monthly = mo.filter(c => mpd[c.id] && mpd[c.id].date === dk).map(c => ({ c, t: mpd[c.id].time || "", d: durOf(c), m: true, ym: monthKey(date) }));
-    const all = blocks.concat(monthly).sort((a, b) => (a.t || "99") < (b.t || "99") ? -1 : 1);
-    const mins = all.filter(x => !x.alt).reduce((a, x) => a + x.d, 0);
-    const heavy = perDayFree && mins / 60 > perDayFree * 1.25;
+    const date = addDays(mon, di), dk = dkey(date), items = dayItems(di, mon);
+    const fx = fixedOn(di, w).map(f => ({ fx: f, t: tstr(f.s) }));
+    const minsW = items.filter(x => !x.alt).reduce((a, x) => a + x.d, 0); placedH += minsW / 60;
+    const budget = dayBudget(di, w) * 60, used = minsW + dailyM, leftM = Math.round((budget - used) / 5) * 5;
+    const wins = pick || S.dragging ? freeWindows(di, items, w) : [];
     const canAdd = pick && !plannedOn(pick, di);
-    return `<div class="pday ${dk === todayKey() ? "today" : ""}">
-      <div class="pdh"><b>${dn}</b><span class="hint">${fmtShort(date)}</span><span class="pmin ${heavy ? "heavy" : ""}">${mins ? fmtDur(mins / 60) : ""}${heavy ? " · heavy day" : ""}</span></div>
-      <div class="pblocks">${all.map(x => `<button class="pblk ${x.alt ? "off" : ""}" data-act="${x.m ? "mEdit" : "blkEdit"}" data-id="${esc(x.c.id)}" data-d="${di}"${x.m ? ` data-ym="${x.ym}"` : ""} style="--c:${valColor(x.c.value)}"><span class="t">${t12(x.t)}</span><span class="nm">${esc(x.c.name)}</span><span class="dur">${fmtDur(x.d / 60)}${x.m ? " · this month" : x.alt ? " · off week" : ""}</span></button>`).join("")}
-        ${canAdd ? `<button class="padd" data-act="planDay" data-d="${di}" style="--c:${valColor(pick.value)}">+ ${esc(pick.name)}</button>` : ""}
-        ${!all.length && !canAdd ? `<span class="pempty">Free</span>` : ""}</div></div>`;
+    const rows = [], fxl = fixedOn(di, w);
+    items.forEach(x => { if (!x.t || x.alt) return; const a = tmins(x.t), e = a + x.d;
+      const hit = fxl.find(f => a < f.e && e > f.s) || items.find(y => y !== x && y.t && !y.alt && a < tmins(y.t) + y.d && e > tmins(y.t));
+      if (hit) x.clash = hit.name || (hit.c && hit.c.name); });
+    items.filter(x => !x.t).forEach(x => rows.push({ k: -1, h: blkHtml(x, di) }));
+    items.filter(x => x.t).forEach(x => rows.push({ k: tmins(x.t), h: blkHtml(x, di) }));
+    fx.forEach(({ fx: f }) => rows.push({ k: f.s, h: `<button class="pfix" data-act="${f.kind === "work" ? "weekEdit" : "fixEdit"}" ${f.id ? `data-id="${esc(f.id)}"` : ""}><span class="t">${tRange(f.s, f.e)}</span><span class="nm">${esc(f.name)}</span></button>` }));
+    if (wins.length && (canAdd || S.dragging)) wins.forEach(x => { const st = slotStart(x, pick ? durOf(pick) : 60, w, di); rows.push({ k: x.s + 0.5, h: `<button class="pslot" data-act="planSlot" data-drop="slot" data-d="${di}" data-t="${tstr(st)}" ${pick ? `style="--c:${valColor(pick.value)}" aria-label="Place ${esc(pick.name)} on ${WD[di]} at ${t12(tstr(st))}"` : ""}><span class="t">${tRange(x.s, x.e)}</span><span class="nm">${canAdd ? `+ ${t12(tstr(st))}` : `Free · ${fmtDur((x.e - x.s) / 60)}`}</span></button>` }); });
+    rows.sort((a, b) => a.k - b.k);
+    const pct = budget > 0 ? Math.min(100, Math.round(used / budget * 100)) : 100;
+    return `<div class="pday ${dk === todayKey() ? "today" : ""}" data-drop="day" data-d="${di}">
+      <div class="pdh"><b>${dn}</b><span class="hint">${fmtShort(date)}</span><span class="pleft ${leftM < 0 ? "over" : ""}" title="${hasWeek ? "Time for floors today, from Your week" : "Estimated; set up Your week in the Compass tab"}">${leftM >= 0 ? fmtDur(leftM / 60) + " left" : fmtDur(-leftM / 60) + " over"}</span></div>
+      <div class="pbar ${leftM < 0 ? "over" : ""}" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      <div class="pblocks">${rows.map(r => r.h).join("")}${!rows.length ? `<span class="pempty">Free all day</span>` : ""}</div></div>`;
   }).join("");
   const maxD = dkey(new Date(mon.getFullYear(), mon.getMonth() + 2, 0));
   const monthRows = mo.map(c => { const { ym, pl } = mEntry(c.id); const done = compHave(c, anyWeek(id), id) >= c.target;
-    return `<div class="task"><span class="vdot" style="background:${valColor(c.value)}"></span><div class="tx"><span>${esc(c.name)}</span><small>${done ? "Done this month ✓" : pl.date ? `${WD[dayIdx(pl.date)]}, ${fmtShort(parse(pl.date))} · ${t12(pl.time)}` : "No date yet"}</small></div>
+    return `<div class="task"><span class="vdot" style="background:${valColor(c.value)}"></span><div class="tx"><span>${esc(c.name)}</span><small>${done ? "Done this month ✓" : pl.date ? `${WD[dayIdx(pl.date)]}, ${fmtShort(parse(pl.date))} · ${t12(pl.time)}` : "No date yet"} · ${fmtDur(durOf(c) / 60)}</small></div>
       <input type="date" class="mdate" data-mplan="${esc(c.id)}" data-ym="${ym}" value="${pl.date || ""}" min="${monthKey(mon)}-01" max="${maxD}" aria-label="Date for ${esc(c.name)}"></div>`; }).join("");
+  const fixedList = (w.fixed || []);
+  const wd = workDaysOf(w);
   return `
   <p class="lede" style="margin-top:14px">Give each weekly floor a day. The plan repeats every week until you change it, and shows up on Today with its time.</p>
+  <div class="psum"><div><b>${hrs(budgetW)} h</b><span>for floors a week</span></div><div><b>${hrs(dailyM * 7 / 60)} h</b><span>daily habits</span></div><div><b>${hrs(placedH)} h</b><span>placed</span></div><div class="${toPlaceH ? "warm" : ""}"><b>${hrs(toPlaceH)} h</b><span>to place</span></div></div>
+  ${!hasWeek ? `<p class="hint" style="margin:6px 0 0">These hours are estimates. <button class="linkish" data-act="weekEdit">Set up Your week</button> for your real ones.</p>` : ""}
   <h3>To place</h3>${tray}
   <h3>Your week</h3>
-  <div class="pweek">${days}</div>
+  <div class="pweek ${pick ? "picking" : ""}">${days}</div>
+  <h3>Fixed time</h3>
+  <div class="card">${wd.length ? `<div class="task"><span class="vdot" style="background:var(--muted)"></span><div class="tx"><span>Work or study</span><small>${wd.map(d => WD[d]).join(", ")} · ${tRange(tmins(w.workStart) ?? 540, (tmins(w.workStart) ?? 540) + Math.round(w.work / wd.length * 60))}</small></div><button class="btn small quiet" data-act="weekEdit">Edit</button></div>` : ""}
+    ${fixedList.map(f => `<div class="task"><span class="vdot" style="background:var(--muted)"></span><div class="tx"><span>${esc(f.name)}</span><small>${(f.days || []).map(d => WD[d]).join(", ") || "No days"} · ${f.start ? tRange(tmins(f.start), tmins(f.start) + (f.dur || 60)) : "no time"}</small></div><button class="btn small quiet" data-act="fixEdit" data-id="${esc(f.id)}">Edit</button></div>`).join("")}
+    <div class="task"><div class="tx"><span class="hint">Classes, school runs, a second job: anything that takes the same slot every week.</span></div><button class="btn small" data-act="fixAdd">Add</button></div></div>
   ${mo.length ? `<h3>Monthly one-offs</h3><div class="card">${monthRows}</div><p class="hint" style="margin-top:6px">Pick a date for each monthly floor, this month or next. It appears on that day's plan.</p>` : ""}
   <div class="card pad" style="margin-top:18px"><div class="row"><div><b>Add your plan to a calendar</b><div class="hint">One file with every weekly block as a repeating event, plus one-offs dated this month or next. Works with Apple and Google Calendar.</div></div><button class="btn primary" data-act="icsOpen">Export</button></div></div>`;
 }
+function blkHtml(x, di) {
+ return `<button class="pblk ${x.alt ? "off" : ""} ${x.clash ? "clash" : ""}" data-act="${x.m ? "mEdit" : "blkEdit"}" ${x.m ? "" : `data-drag="move"`} data-id="${esc(x.c.id)}" data-d="${di}"${x.m ? ` data-ym="${x.ym}"` : ""} style="--c:${valColor(x.c.value)}"><span class="t">${x.t ? tRange(tmins(x.t), tmins(x.t) + x.d) : "Anytime"}</span><span class="nm">${esc(x.c.name)}</span><span class="dur">${fmtDur(x.d / 60)}${x.m ? " · this month" : x.alt ? " · off week" : ""}${x.clash ? ` · clashes with ${esc(x.clash)}` : ""}</span></button>`;
+}
+function fixedSheet(sh) {
+  const f = sh.draft;
+  return `<div class="in"><div class="grab"></div><h2 style="margin:0">${sh.id ? "Fixed time" : "Add fixed time"}</h2>
+    <p class="hint" style="margin:0">Time that's already spoken for every week. Compass plans your floors around it.</p>
+    <div class="fl"><label class="flabel" for="fx-name">What is it</label><input type="text" id="fx-name" data-fx="name" value="${esc(f.name)}" maxlength="40" placeholder="e.g. Evening class, school run"></div>
+    <div class="fl"><span class="flabel">Days</span><div class="daypick">${WD.map((d, i) => `<button data-act="fxDay" data-d="${i}" aria-pressed="${f.days.includes(i)}">${d.slice(0, 2)}</button>`).join("")}</div></div>
+    <div class="tunegrid"><div class="fl"><label class="flabel" for="fx-start">Starts</label><input type="time" id="fx-start" data-fx="start" value="${f.start}"></div>
+      <div class="fl"><label class="flabel" for="fx-dur">How long</label><input type="text" id="fx-dur" data-fx="dur" value="${fmtDur(f.dur / 60)}" placeholder="2 h"></div></div>
+    <div class="row">${sh.id ? `<button class="btn quiet danger" data-act="fxRemove">Remove</button>` : `<button class="btn quiet" data-act="closeSheet">Cancel</button>`}<button class="btn primary" data-act="fxSave">Save</button></div></div>`;
+}
+/* ---- drag and drop: mouse drags straight away, touch after a short press so the page still scrolls ---- */
+const DRAG = { st: null, until: 0 };
+function dragStart() {
+  const st = DRAG.st; if (!st || st.on) return;
+  st.on = true; S.dragging = st.id; if (st.kind === "new") S.planPick = null;
+  const r = st.src.getBoundingClientRect();
+  const g = st.src.cloneNode(true); g.classList.add("ghost"); g.style.width = r.width + "px"; g.removeAttribute("data-act");
+  document.body.appendChild(g); st.ghost = g; st.dx = st.x - r.left; st.dy = st.y - r.top;
+  render(); dragMove(st.x, st.y);
+  if (navigator.vibrate && st.touch) try { navigator.vibrate(8); } catch (e) {}
+  const loop = () => { if (!DRAG.st || !DRAG.st.on) return; const y = DRAG.st.cy, m = 90; if (y < m) window.scrollBy(0, -Math.ceil((m - y) / 6)); else if (y > innerHeight - m) window.scrollBy(0, Math.ceil((y - innerHeight + m) / 6)); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+function dragTarget(x, y) {
+  const el = document.elementFromPoint(x, y); if (!el) return null;
+  return el.closest("[data-drop=slot]") || el.closest("[data-drop=day]");
+}
+function dragMove(x, y) {
+  const st = DRAG.st; st.cx = x; st.cy = y;
+  st.ghost.style.transform = `translate(${x - st.dx}px, ${y - st.dy}px)`;
+  const t = dragTarget(x, y);
+  if (t !== st.over) { if (st.over) st.over.classList.remove("over"); if (t) t.classList.add("over"); st.over = t; }
+}
+function dragEnd(drop) {
+  const st = DRAG.st; DRAG.st = null; clearTimeout(st.lp);
+  if (!st.on) return;
+  DRAG.until = Date.now() + 400;
+  st.ghost.remove(); S.dragging = null;
+  const t = drop ? dragTarget(st.cx, st.cy) : null;
+  if (!t) { render(); return; }
+  const di = +t.dataset.d, c = compById(st.id); if (!c) { render(); return; }
+  let time = t.dataset.t;
+  if (time == null) {
+    const items = dayItems(di).filter(x => !(x.c.id === st.id && !x.m));
+    time = st.kind === "move" && st.from === di ? timeOn(c, di) : bestSlot(di, durOf(c), items, st.kind === "move" ? timeOn(c, st.from) : (c.block && c.block.time) || "");
+  }
+  if (!placeFloor(st.id, di, time, st.kind === "move" ? st.from : null)) render();
+}
+document.addEventListener("pointerdown", e => {
+  if (e.button > 0 || S.tab !== "week" || S.weekView !== "plan") return;
+  const src = e.target.closest("[data-drag]"); if (!src) return;
+  const st = DRAG.st = { src, id: src.dataset.id, kind: src.dataset.drag, from: src.dataset.d != null ? +src.dataset.d : null, x: e.clientX, y: e.clientY, cx: e.clientX, cy: e.clientY, touch: e.pointerType !== "mouse", on: false };
+  if (!st.touch) return;
+  /* touch events keep going to the element the finger started on, even after a re-render removes it, so listen there */
+  st.lp = setTimeout(dragStart, 260);
+  const tm = ev => { if (DRAG.st !== st) return off(); const t = ev.touches[0]; if (!t) return;
+    if (!st.on) { if (Math.hypot(t.clientX - st.x, t.clientY - st.y) > 10) { clearTimeout(st.lp); DRAG.st = null; off(); } return; }
+    ev.preventDefault(); dragMove(t.clientX, t.clientY); };
+  const te = () => { off(); if (DRAG.st === st) dragEnd(true); };
+  const tc = () => { off(); if (DRAG.st === st) dragEnd(false); };
+  const off = () => { src.removeEventListener("touchmove", tm); src.removeEventListener("touchend", te); src.removeEventListener("touchcancel", tc); };
+  src.addEventListener("touchmove", tm, { passive: false }); src.addEventListener("touchend", te); src.addEventListener("touchcancel", tc);
+});
+document.addEventListener("pointermove", e => {
+  const st = DRAG.st; if (!st) return;
+  if (st.touch) { if (st.on) dragMove(e.clientX, e.clientY); else if (Math.hypot(e.clientX - st.x, e.clientY - st.y) > 10) { clearTimeout(st.lp); DRAG.st = null; } return; }
+  if (!st.on) { if (Math.hypot(e.clientX - st.x, e.clientY - st.y) > 6) { st.x = e.clientX; st.y = e.clientY; dragStart(); } return; }
+  e.preventDefault(); dragMove(e.clientX, e.clientY);
+});
+document.addEventListener("touchmove", e => { if (DRAG.st && DRAG.st.on) e.preventDefault(); }, { passive: false });
+document.addEventListener("pointerup", () => { if (DRAG.st) dragEnd(true); });
+document.addEventListener("pointercancel", () => { if (DRAG.st && !DRAG.st.touch) dragEnd(false); });
+document.addEventListener("contextmenu", e => { if (DRAG.st && DRAG.st.touch) e.preventDefault(); });
+document.addEventListener("click", e => { if (Date.now() < DRAG.until && e.target.closest("[data-drag],[data-drop]")) { e.stopPropagation(); e.preventDefault(); } }, true);
 function blockSheet(sh) {
   const c = compById(sh.id); if (!c) return "";
   const di = +sh.day, mplan = sh.type === "mblock", mp = (mplan && monthPlan(sh.ym)[c.id]) || {};
@@ -2301,6 +2483,7 @@ function renderSheet() {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${sh.type === "ics" ? "Export to calendar" : "Plan block"}">${sh.type === "ics" ? icsSheet() : blockSheet(sh)}</div>`;
     return;
   }
+  if (sh.type === "fixed") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Fixed time">${fixedSheet(sh)}</div>`; return; }
   if (sh.type === "week") {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Your week"><div class="in"><div class="grab"></div><h2 style="margin:0">Where does your week go?</h2>${weekForm(sh.draft)}
       <div class="row"><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="weekSave">Use ${weekCalc(sh.draft).floors} h for floors</button></div></div></div>`;
@@ -2521,7 +2704,7 @@ function impUse() {
   r.unplaced.forEach((u, i) => { const v = sel.unplaced[i]; if (!v) return; if (!d.values.includes(v)) d.values.push(v); const x = { id: "imp-u" + i + "-" + uidGen(), value: v, name: u.name, cadence: u.cadence, target: u.target, hours: u.hours, note: u.why, imp: u.imp, on: true, touched: true }; if (u.cadence === "weekly" && (u.days.length || u.time)) x.block = { days: u.days, time: u.time || "", dur: Math.max(5, Math.round(u.hours * 60)) }; comps.push(x); });
   comps.forEach(c => { const i = d.comps.findIndex(x => x.id === c.id); if (i >= 0) d.comps[i] = c; else d.comps.push(c); });
   if (sel.cores) d.cores = r.cores.filter(c => d.values.includes(c.value)).slice(0, 2).map(c => ({ value: c.value, text: "" }));
-  if (sel.week && r.week) { d.week = Object.assign({}, WEEK_DEFAULT, d.week || {}); ["work", "care", "other"].forEach(k => { if (r.week[k] != null) d.week[k] = r.week[k]; }); d.capacity = weekCalc(d.week).floors; }
+  if (sel.week && r.week) { d.week = Object.assign({}, WEEK_DEFAULT, d.week || {}); ["work", "care", "other", "workStart", "workDays", "fixed"].forEach(k => { if (r.week[k] != null) d.week[k] = clone(r.week[k]); }); d.capacity = weekCalc(d.week).floors; }
   const ppl = r.people.filter(p => sel.people[p.name]).map(p => ({ name: p.name, tier: p.tier }));
   d.impPeople = ppl;
   if (ppl.length >= 2 && d.values.includes("rel") && !d.comps.some(c => c.people && c.on)) {
@@ -2874,6 +3057,20 @@ document.addEventListener("click", e => {
     }
     case "weekView": S.weekView = b.dataset.v; S.planPick = null; break;
     case "gotoPlan": S.tab = "week"; S.weekView = "plan"; window.scrollTo(0, 0); break;
+    case "planSlot": { if (!S.planPick) return; placeFloor(S.planPick, +b.dataset.d, b.dataset.t, null); return; }
+    case "wkDay": { const tgt = S.ob && !S.sheet ? (S.ob.d.week = S.ob.d.week || Object.assign({}, WEEK_DEFAULT)) : S.sheet && S.sheet.type === "week" ? S.sheet.draft : null; if (!tgt) return;
+      const d = +b.dataset.d, cur = workDaysOf(Object.assign({}, WEEK_DEFAULT, tgt)); const nx = cur.includes(d) ? cur.filter(x => x !== d) : cur.concat(d).sort(); if (!nx.length) return toast("Keep at least one day, or pick “Not right now”.");
+      tgt.workDays = nx; if (S.ob && !S.sheet) { S.ob.d.capacity = weekCalc(tgt).floors; updateOb(); } else renderSheet(); return; }
+    case "fixAdd": S.sheet = { type: "fixed", draft: { name: "", days: [], start: "18:00", dur: 60 } }; break;
+    case "fixEdit": { const f = (myWeek().fixed || []).find(x => x.id === b.dataset.id); if (!f) return; S.sheet = { type: "fixed", id: f.id, draft: clone(f) }; break; }
+    case "fxDay": { const f = S.sheet.draft, d = +b.dataset.d; f.days = f.days.includes(d) ? f.days.filter(x => x !== d) : f.days.concat(d).sort(); renderSheet(); return; }
+    case "fxSave": {
+      const sh = S.sheet, f = sh.draft; f.name = (($("#fx-name") || {}).value || "").trim(); f.start = ($("#fx-start") || {}).value || ""; const h = parseDur(($("#fx-dur") || {}).value);
+      if (!f.name) return toast("Give it a name first."); if (!f.days.length) return toast("Pick at least one day."); if (!f.start) return toast("Add a start time."); if (h === null) return toast("Try a length like 45 min or 2 h");
+      f.dur = Math.max(15, Math.round(h * 60));
+      editProfile(p => { p.week = Object.assign({}, WEEK_DEFAULT, p.week || {}); const L = p.week.fixed = (p.week.fixed || []).filter(x => x.id !== sh.id); L.push(Object.assign({ id: sh.id || uidGen() }, f, { id: sh.id || uidGen() })); const sch = schedFixedH(p.week); if (sch > (p.week.other || 0)) p.week.other = Math.round(sch * 2) / 2; p.capacity = weekCalc(p.week).floors; });
+      S.sheet = null; toast(`${f.name} is blocked out`); break; }
+    case "fxRemove": { const id = S.sheet.id; editProfile(p => { if (p.week) p.week.fixed = (p.week.fixed || []).filter(x => x.id !== id); }); S.sheet = null; break; }
     case "planPick": S.planPick = S.planPick === b.dataset.id ? null : b.dataset.id; break;
     case "planDay": {
       const c = compById(S.planPick); if (!c) return; const di = +b.dataset.d;
@@ -3022,6 +3219,8 @@ document.addEventListener("input", e => {
   else if (ds.ob === "goal") { S.ob.d.goal = t.value; saveDraft(); const nb = document.querySelector('[data-act="obNext"]'); if (nb) nb.disabled = !(t.value.trim().length > 3 || S.ob.d.feel.length); }
   else if (ds.ob === "ifthen") { S.ob.d.ifthen = t.value.split("\n"); saveDraft(); }
   else if (ds.obe && S.ob) { const c = S.ob.d.comps.find(x => x.id === S.obEdit); if (c) c[ds.obe] = t.value;  saveDraft(); }
+  else if (ds.fx && S.sheet && S.sheet.type === "fixed" && ds.fx !== "dur") { S.sheet.draft[ds.fx] = t.value; }
+  else if (ds.fx === "dur" && S.sheet && S.sheet.type === "fixed") { const h = parseDur(t.value); if (h !== null) S.sheet.draft.dur = Math.max(15, Math.round(h * 60)); }
   else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value;  saveDraft(); }
   else if (ds.c && S.sheet && S.sheet.draft) { S.sheet.draft[ds.c] = ds.c === "hours" ? Math.max(0, Number(t.value) || 0) : t.value; }
   else if (ds.cb && S.sheet && S.sheet.draft && S.sheet.draft.block) { S.sheet.draft.block[ds.cb] = ds.cb === "dur" ? Math.max(5, Number(t.value) || 30) : t.value; S.sheet.draft.gcal = false; }
@@ -3048,6 +3247,7 @@ document.addEventListener("change", e => {
   }
   if (ds.cap) { if (S.ob) updateOb(); else render(); return; }
   if (t.id === "impFiles" && t.files && t.files.length) { impAddFiles([...t.files]); t.value = ""; return; }
+  if (ds.wkt) { const tgt = S.ob && !S.sheet ? (S.ob.d.week = S.ob.d.week || Object.assign({}, WEEK_DEFAULT)) : S.sheet && S.sheet.type === "week" ? S.sheet.draft : null; if (tgt && t.value) { tgt[ds.wkt] = t.value; if (S.ob && !S.sheet) updateOb(); else renderSheet(); } return; }
   if (ds.impu !== undefined && S.imp && S.imp.sel) { S.imp.sel.unplaced[+ds.impu] = t.value; return; }
   if (t.id === "importFile" && t.files && t.files[0]) { importData(t.files[0]); t.value = ""; return; }
   if (ds.c === "value" && S.sheet && S.sheet.draft) S.sheet.draft.value = t.value;

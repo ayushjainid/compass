@@ -378,6 +378,7 @@ const median = a => { if (!a.length) return null; const s = a.slice().sort((x, y
 const roundTo = (m, step) => Math.max(step, Math.round(m / step) * step);
 const tmin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
 const tstr = m => String(Math.floor(m / 60) % 24).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+const h12 = t => { const [h, m] = t.split(":").map(Number); return `${((h + 11) % 12) + 1}${m ? ":" + String(m).padStart(2, "0") : ""} ${h < 12 ? "am" : "pm"}`; };
 const DAYN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 const cleanName = t => cap1(String(t).replace(/\s*[\(\[][^)\]]*[\)\]]\s*$/, "").replace(/\s+/g, " ").trim()).slice(0, 60);
@@ -501,13 +502,22 @@ export function analyze(items, ctx) {
     const spans = Object.values(perDay).map(o => (o.e - o.s) / 60), dpw = spans.length / nW;
     if (nW >= 2 && dpw >= 2.5) {
       const est = Math.round(Math.min(70, Math.max(20, median(spans) * Math.min(5, Math.round(dpw)) + 1)) / 5) * 5;
-      week.work = est; weekWhy.push(`Work about ${est} h a week, from meetings spread over ${Math.round(dpw * 10) / 10} days`);
+      week.work = est;
+      const byDay = Array(7).fill(0); const seenD = new Set(); work.forEach(e => { const k = e.start.toDateString(); if (!seenD.has(k)) { seenD.add(k); byDay[di(e.start)]++; } });
+      const wdays = byDay.map((n, i) => n >= nW * 0.5 ? i : -1).filter(i => i >= 0);
+      if (wdays.length) week.workDays = wdays;
+      const st = median(Object.values(perDay).map(o => o.s)); if (st != null) week.workStart = tstr(Math.round(st / 15) * 15);
+      weekWhy.push(`Work about ${est} h a week${wdays.length ? `, ${wdays.map(d => DAYN[d]).join(", ")}` : ""}${week.workStart ? ` from around ${h12(week.workStart)}` : ""}, judging by your meetings`);
     }
     const care = evts.filter(e => CARELEX.test(e.title.toLowerCase()));
     if (care.length / nW >= 2) { week.care = care.length / nW >= 5 ? 15 : 5; weekWhy.push("School runs or childcare show up every week"); }
     const fixed = evts.filter(e => !e.v && !isWork(e) && !CARELEX.test(e.title.toLowerCase()) && groups.get(e.key) && groups.get(e.key).occ.length >= nW * 0.6);
     const otherH = Math.round(fixed.reduce((a, e) => a + e.dur, 0) / 60 / nW);
-    if (otherH >= 1) { week.other = Math.min(30, otherH); weekWhy.push(`${otherH} h of other regular commitments`); }
+    if (otherH >= 1) { week.other = Math.min(30, otherH); }
+    const fg = {}; fixed.forEach(e => { const g = fg[e.key] = fg[e.key] || { name: cleanName(e.title), days: Array(7).fill(0), st: [], du: [] }; g.days[di(e.start)]++; g.st.push(e.start.getHours() * 60 + e.start.getMinutes()); g.du.push(e.dur); });
+    week.fixed = Object.values(fg).map((g, i) => ({ id: "imp-fx-" + i, name: g.name, days: g.days.map((n, d) => n >= nW * 0.5 ? d : -1).filter(d => d >= 0), start: tstr(Math.round(median(g.st) / 15) * 15), dur: Math.round(median(g.du) / 5) * 5 })).filter(f => f.days.length).slice(0, 6);
+    if (week.fixed.length) weekWhy.push(`Fixed every week: ${week.fixed.map(f => `${f.name} (${f.days.map(d => DAYN[d]).join(", ")} ${h12(f.start)})`).join("; ")}`);
+    else { delete week.fixed; if (otherH >= 1) weekWhy.push(`${otherH} h of other regular commitments`); }
   }
 
   /* ---- 5. people you keep in touch with ---- */
