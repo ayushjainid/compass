@@ -543,6 +543,7 @@ body.landing .top,body.landing #statusline{display:none}
 .pstime.on{border-color:var(--good);color:var(--good)}
 .pstime:disabled{opacity:.45}
 .pstime.more{border-style:dashed;color:var(--muted);font-family:inherit}
+@media (max-width:380px){.psd{width:86px}.psd span{font-size:11px}.pstime{padding:6px 9px;font-size:12.5px;min-height:34px}.psrow{padding:8px 10px;gap:8px}}
 .psrow{flex-wrap:wrap}.pscustom{flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0 2px 114px}
 .pscustom input{width:auto;padding:7px 10px;font-size:15px}.pscustom .flabel{margin:0}
 @media (max-width:420px){.pscustom{padding-left:0}}.daypick button:disabled{opacity:.35}
@@ -553,6 +554,9 @@ body.landing .top,body.landing #statusline{display:none}
 .pslot:hover{border-style:solid}
 [data-drag]{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
 html.dragging{scroll-behavior:auto!important}
+/* anything scrolled into view on the plan stops below the pinned tray */
+.pday,.pblk,.pdh{scroll-margin-top:calc(var(--trayh,210px) + 12px)}
+#dragkeep{position:fixed;left:-200vw;top:0;width:1px;height:1px;overflow:hidden;opacity:0}
 .ghost{position:fixed;left:0;top:0;z-index:80;pointer-events:none;opacity:.92;box-shadow:0 10px 30px rgba(0,0,0,.25);transform-origin:center;cursor:grabbing;margin:0}
 .daypick{display:flex;gap:6px;flex-wrap:wrap}.daypick button{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink2)}
 .daypick button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
@@ -1564,7 +1568,14 @@ function scheduleRender() {
   if (a && a.closest && (a.closest("#main") || a.closest("#sheetRoot")) && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) { S.pendingRender = true; return; }
   render();
 }
-document.addEventListener("focusout", () => setTimeout(() => { if (S.pendingRender) { S.pendingRender = false; scheduleRender(); } }, 60));
+/* A render held back while typing must not land mid-tap: tapping a button blurs the field first, and redrawing
+   then would replace the button under the finger and swallow the tap. Wait until the finger lifts and the click has run. */
+let PTR_DOWN = false;
+const flushPending = () => { if (S.pendingRender && !PTR_DOWN) { S.pendingRender = false; scheduleRender(); } };
+document.addEventListener("pointerdown", () => { PTR_DOWN = true; }, true);
+const ptrUp = () => setTimeout(() => { PTR_DOWN = false; flushPending(); }, 80);
+document.addEventListener("pointerup", ptrUp, true); document.addEventListener("pointercancel", ptrUp, true);
+document.addEventListener("focusout", () => setTimeout(flushPending, 60));
 
 const TABS = [
   { t: "today", name: "Today", svg: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
@@ -2089,6 +2100,7 @@ function customRow(sh, di, t) {
   if (sh.custom !== di) return "";
   return `<div class="pscustom"><label class="flabel" for="ps-time">Start at</label><input type="time" id="ps-time" value="${t || "18:00"}"><button class="btn small primary" data-act="psCustomGo" data-d="${di}">${plannedOn(compById(sh.id), di) ? "Update" : "Place"}</button><button class="btn small quiet" data-act="psCustom" data-d="-1">Cancel</button></div>`;
 }
+const shortDur = m => m < 60 ? m + " min" : Math.floor(m / 60) + " h" + (m % 60 ? " " + (m % 60) : "");
 const leftTxt = m => m >= 0 ? fmtDur(m / 60) + " left" : fmtDur(-m / 60) + " over";
 function placeSheet(sh) {
   const c = compById(sh.id); if (!c) return "";
@@ -2134,7 +2146,7 @@ function rPlanView(id) {
   let placedH = 0;
   const tray = left.length
     ? `<div class="ptraywrap"><div class="ptrayhead"><h3>To place · ${left.reduce((a, c) => a + sessionsLeft(c), 0)}</h3><button class="btn small primary" data-act="autoPlan">Fill my week</button></div>
-       <div class="chips ptray">${left.map(c => `<button class="pchip" data-act="planPick" data-drag="new" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}" aria-label="${esc(c.name)}, ${fmtDur(durOf(c) / 60)} each, ${sessionsLeft(c)} left"><i></i><b class="nm">${esc(c.name)}</b><span>${fmtDur(durOf(c) / 60)} · ${sessionsLeft(c)} left</span></button>`).join("")}</div>
+       <div class="chips ptray">${left.map(c => `<button class="pchip" data-act="planPick" data-drag="new" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}" aria-label="${esc(c.name)}, ${fmtDur(durOf(c) / 60)} each, ${sessionsLeft(c)} left"><i></i><b class="nm">${esc(c.name)}</b><span>${shortDur(durOf(c))} · ${sessionsLeft(c)} left</span></button>`).join("")}</div>
        <p class="hint" style="margin:6px 0 0">Tap a floor to pick its day and time, or drag it onto a day.</p></div>`
     : wk.length ? `<p class="hint" style="margin:0">Every weekly floor has its days. Drag a block to move it, or tap it to change its time.</p>` : `<p class="hint" style="margin:0">You have no weekly floors yet. Add some in the Compass tab.</p>`;
   const days = WD.map((dn, di) => {
@@ -2200,6 +2212,9 @@ function dragStart() {
   const r = st.src.getBoundingClientRect();
   const g = st.src.cloneNode(true); g.classList.add("ghost"); g.style.width = r.width + "px"; g.removeAttribute("data-act");
   document.body.appendChild(g); st.ghost = g; st.dx = st.x - r.left; st.dy = st.y - r.top;
+  /* keep the element under the finger in the page (hidden) while the plan redraws, or phones stop reporting the finger to us */
+  let keep = document.getElementById("dragkeep"); if (!keep) { keep = document.createElement("div"); keep.id = "dragkeep"; keep.setAttribute("aria-hidden", "true"); document.body.appendChild(keep); }
+  keep.appendChild(st.src);
   render(); dragMove(st.x, st.y);
   if (navigator.vibrate && st.touch) try { navigator.vibrate(8); } catch (e) {}
   const loop = () => {
@@ -2210,7 +2225,8 @@ function dragStart() {
     const now = performance.now(), dt = Math.min(120, now - (st.lastT || now)); st.lastT = now;
     const zone = 90, y = st.cy; let dy = 0;
     if (y > top + zone + 10) st.armed = true;
-    const speed = d => (0.25 + Math.min(1, d / zone) * 1.1) * dt;
+    /* gentle near the zone's edge, faster as the finger pushes further in: about 300 px/s at a normal hold, 700 at the very edge */
+    const speed = d => { const k = Math.min(1, Math.max(0, d / zone)); return (0.08 + k * k * 0.62) * dt; };
     if (y > bot - zone) dy = Math.ceil(speed(y - (bot - zone)));
     else if (st.armed && y < top + zone) dy = -Math.ceil(speed(top + zone - y));
     if (dy) { window.scrollBy({ top: dy, left: 0, behavior: "instant" }); dragMove(st.cx, st.cy); }
@@ -2233,6 +2249,7 @@ function dragEnd(drop) {
   if (!st.on) return;
   DRAG.until = Date.now() + 400;
   st.ghost.remove(); S.dragging = null; document.documentElement.classList.remove("dragging");
+  const keep = document.getElementById("dragkeep"); if (keep) keep.textContent = "";
   const t = drop ? dragTarget(st.cx, st.cy) : null;
   if (!t) { render(); return; }
   const di = +t.dataset.d, c = compById(st.id); if (!c) { render(); return; }
@@ -2264,7 +2281,7 @@ document.addEventListener("pointermove", e => {
   if (!st.on) { if (Math.hypot(e.clientX - st.x, e.clientY - st.y) > 6) { st.x = e.clientX; st.y = e.clientY; dragStart(); } return; }
   e.preventDefault(); dragMove(e.clientX, e.clientY);
 });
-document.addEventListener("touchmove", e => { if (DRAG.st && DRAG.st.on) e.preventDefault(); }, { passive: false });
+document.addEventListener("touchmove", e => { const st = DRAG.st; if (!st || !st.on) return; e.preventDefault(); const t = e.touches[0]; if (t) dragMove(t.clientX, t.clientY); }, { passive: false });
 document.addEventListener("pointerup", () => { if (DRAG.st) dragEnd(true); });
 document.addEventListener("pointercancel", () => { if (DRAG.st && !DRAG.st.touch) dragEnd(false); });
 document.addEventListener("contextmenu", e => { if (DRAG.st && DRAG.st.touch) e.preventDefault(); });
