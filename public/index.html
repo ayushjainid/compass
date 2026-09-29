@@ -517,6 +517,21 @@ body.landing .top,body.landing #statusline{display:none}
 .pfix{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border-radius:10px;padding:6px 10px;background:repeating-linear-gradient(135deg,var(--sunk) 0 6px,transparent 6px 12px),var(--surface);border:1px solid var(--line);font-size:13px;color:var(--ink2)}
 .pfix .t{font:500 12px var(--mono);color:var(--muted)}
 .pblk.clash{box-shadow:inset 0 0 0 1.5px var(--warn)}.pblk.clash .dur{color:var(--warn)}
+.ptraywrap{position:sticky;top:0;z-index:6;background:var(--bg);margin:0 -16px;padding:calc(2px + env(safe-area-inset-top,0px)) 16px 10px;border-bottom:1px solid var(--line)}
+.ptrayhead{display:flex;align-items:center;justify-content:space-between;gap:10px}.ptrayhead h3{margin:14px 0 8px}
+.ptray{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.ptray::-webkit-scrollbar{display:none}.ptray .pchip{flex:none;white-space:nowrap}
+.pshead{display:flex;gap:12px;align-items:center}.pshead>i{width:12px;height:12px;border-radius:50%;flex:none}
+.psrows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.psrow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}.psrow:last-child{border-bottom:0}
+.psrow.on{background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+.psd{width:104px;flex:none;display:flex;flex-direction:column}.psd b{font:600 15px var(--display)}.psd span{font:500 11.5px var(--mono);color:var(--good)}.psd span.over{color:var(--warn)}
+.pst{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.pstime{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font:500 13px var(--mono);color:var(--ink);display:inline-flex;gap:6px;align-items:center;min-height:36px}
+.pstime span{font-size:11px;font-family:inherit;color:var(--muted)}
+.pstime.sug{border-color:var(--accent);background:var(--accent-soft)}.pstime.sug span{color:var(--accent)}
+.pstime.on{border-color:var(--good);color:var(--good)}
+.pstime:disabled{opacity:.45}.daypick button:disabled{opacity:.35}
 @media (min-width:900px){.pfix,.pslot{display:flex;flex-direction:column;gap:1px;padding:6px 8px}.pfix .nm,.pslot .nm{line-height:1.25}}
 .pslot{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border:1.5px dashed color-mix(in srgb,var(--c,var(--good)) 60%,transparent);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--ink2);animation:pop .2s}
 .pslot .t{font:500 12px var(--mono);color:var(--muted)}.pslot .nm{font-weight:600;color:var(--ink)}
@@ -2004,7 +2019,8 @@ function dayItems(di, mon = S.viewMon) {
 }
 function freeWindows(di, items, w = myWeek()) {
   const { wake, bed } = wakeBed(w);
-  const busy = fixedOn(di, w).map(f => [f.bs, f.be]).concat(items.filter(x => x.t && !x.alt).map(x => [tmins(x.t), tmins(x.t) + x.d])).sort((a, b) => a[0] - b[0]);
+  /* floors keep a 15-minute breather after them */
+  const busy = fixedOn(di, w).map(f => [f.bs, f.be]).concat(items.filter(x => x.t && !x.alt).map(x => [tmins(x.t), tmins(x.t) + x.d + 15])).sort((a, b) => a[0] - b[0]);
   const out = []; let cur = wake;
   busy.forEach(([s, e]) => { if (s - cur >= 15) out.push({ s: cur, e: Math.min(s, bed) }); cur = Math.max(cur, e); });
   if (bed - cur >= 15) out.push({ s: cur, e: bed });
@@ -2014,17 +2030,19 @@ function freeWindows(di, items, w = myWeek()) {
 /* a free day (no work) starts its first suggestion mid-morning, not at wake-up */
 function slotStart(win, dur, w = myWeek(), di) {
   let s = win.s; const wake = wakeBed(w).wake;
-  if (s === wake) { const late = di != null && !workDaysOf(w).includes(di) ? Math.max(s, 9 * 60) : s + 30; if (win.e - late >= Math.min(dur, 60)) s = late; }
+  if (s <= wake) s = di != null && !workDaysOf(w).includes(di) ? Math.max(s, 9 * 60) : s + 30;
   s = Math.ceil(s / 15) * 15; return Math.min(s, Math.max(win.s, win.e - 15));
 }
 /* prefer the time this floor already has on its other days, if that is free here */
 function bestSlot(di, dur, items, prefer) {
   const wins = freeWindows(di, items), p = tmins(prefer);
   if (p != null && wins.some(x => p >= x.s && p + dur <= x.e)) return prefer;
-  const fit = wins.find(x => x.e - slotStart(x, dur, undefined, di) >= dur) || null; return fit ? tstr(slotStart(fit, dur, undefined, di)) : "";
+  /* the roomiest free stretch that fits (usually the evening on a work day), earliest if tied */
+  const fit = wins.filter(x => x.e - slotStart(x, dur, undefined, di) >= dur).sort((a, b) => (b.e - b.s) - (a.e - a.s) || a.s - b.s)[0];
+  return fit ? tstr(slotStart(fit, dur, undefined, di)) : "";
 }
 function setDayTime(bl, di, t) { if (bl.days.length <= 1) { bl.time = t; bl.times = {}; } else if (t === (bl.time || "")) { if (bl.times) delete bl.times[di]; } else { bl.times = Object.assign({}, bl.times || {}, { [di]: t }); } }
-function placeFloor(id, di, t, from) {
+function placeFloor(id, di, t, from, quiet) {
   const c = compById(id); if (!c) return false;
   if (from == null && plannedOn(c, di)) { toast(`${c.name} is already on ${WD[di]}`); return false; }
   if (from != null && from !== di && plannedOn(c, di)) { toast(`${c.name} is already on ${WD[di]}`); return false; }
@@ -2034,24 +2052,71 @@ function placeFloor(id, di, t, from) {
     if (!bl.days.includes(di)) bl.days.push(di);
     bl.days.sort((a, b) => a - b); setDayTime(bl, di, t);
   });
-  const cc = compById(id); if (from == null && !sessionsLeft(cc)) S.planPick = null;
   render();
+  if (quiet) return true;
   const el = document.querySelector(`[data-act="blkEdit"][data-id="${CSS.escape(id)}"][data-d="${di}"]`);
   if (el) burst(el, valColor(c.value), 8);
   toast(`${c.name} · ${WD[di]} ${t ? t12(t) : "anytime"}. Tap it to change.`);
   return true;
 }
+/* minutes of floor time still open on a day, after daily habits and what's placed */
+function dayLeftMins(di, items, w = myWeek()) { return dayBudget(di, w) * 60 - dailyMinsPerDay() - items.filter(x => !x.alt).reduce((a, x) => a + x.d, 0); }
+/* start times worth offering on a day: the floor's usual time if free, then the start of each free window that fits */
+function dayStarts(c, di, items) {
+  const dur = durOf(c), wins = freeWindows(di, items), out = [], pref = c.block && c.block.time, p = tmins(pref);
+  if (p != null && wins.some(x => p >= x.s && p + dur <= x.e)) out.push(pref);
+  wins.forEach(x => { const s = slotStart(x, dur, undefined, di); if (x.e - s >= dur) { const t = tstr(s); if (!out.includes(t)) out.push(t); } });
+  return out.slice(0, 3);
+}
+/* which day suits a session best: most time left, not next to another session of the same floor */
+function dayScore(c, di, leftM, have) { let sc = leftM - durOf(c); if (have.some(d => Math.abs(d - di) === 1 || Math.abs(d - di) === 6)) sc -= 90; if (leftM - durOf(c) < 0) sc -= 200; return sc; }
+const leftTxt = m => m >= 0 ? fmtDur(m / 60) + " left" : fmtDur(-m / 60) + " over";
+function placeSheet(sh) {
+  const c = compById(sh.id); if (!c) return "";
+  const n = sessionsLeft(c), have = planDays(c);
+  let best = null;
+  const rows = WD.map((dn, di) => {
+    const items = dayItems(di), leftM = Math.round(dayLeftMins(di, items) / 5) * 5;
+    if (plannedOn(c, di)) { const t = timeOn(c, di); return { di, html: `<div class="psrow on"><div class="psd"><b>${dn}</b><span class="${leftM < 0 ? "over" : ""}">${leftTxt(leftM)}</span></div><div class="pst"><button class="pstime on" data-act="psRemove" data-d="${di}" aria-label="Remove ${esc(c.name)} from ${dn}">✓ ${t ? tRange(tmins(t), tmins(t) + durOf(c)) : "Anytime"}<span>Remove</span></button></div></div>` }; }
+    const starts = dayStarts(c, di, items);
+    if (starts.length) { const sc = dayScore(c, di, leftM, have); if (!best || sc > best.sc) best = { di, sc, t: bestSlot(di, durOf(c), items, (c.block && c.block.time) || "") }; }
+    return { di, leftM, starts };
+  });
+  const body = rows.map(r => r.html || `<div class="psrow"><div class="psd"><b>${WD[r.di]}</b><span class="${r.leftM < 0 ? "over" : ""}">${leftTxt(r.leftM)}</span></div><div class="pst">${(r.starts.length ? r.starts : [""]).map((t, i) => { const sug = best && best.di === r.di && t === best.t && n; return `<button class="pstime ${sug ? "sug" : ""}" data-act="psPlace" data-d="${r.di}" data-t="${t}" ${n ? "" : "disabled"}>${t ? t12(t) : "Anytime"}${sug ? "<span>Suggested</span>" : ""}</button>`; }).join("")}</div></div>`).join("");
+  return `<div class="in"><div class="grab"></div>
+    <div class="pshead"><i style="background:${valColor(c.value)}"></i><div><h2 style="margin:0">${esc(c.name)}</h2><div class="hint">${fmtDur(durOf(c) / 60)} each · ${n ? `${n} more to place` : "all placed ✓"}</div></div></div>
+    <div class="psrows">${body}</div>
+    <p class="hint" style="margin:0">Times are free slots around work and fixed time. Tap a placed block later to fine-tune it.</p>
+    <button class="btn primary" data-act="closeSheet">Done</button></div>`;
+}
+/* place every session still left, spread over the days with the most room */
+function autoPlan() {
+  const sim = WD.map((_, di) => dayItems(di)), leftM = WD.map((_, di) => dayLeftMins(di, sim[di]));
+  const cores = coreIds(), todo = [];
+  weeklyPlannable().forEach(c => { for (let i = 0; i < sessionsLeft(c); i++) todo.push(c); });
+  todo.sort((a, b) => (cores.includes(b.value) - cores.includes(a.value)) || (durOf(b) - durOf(a)));
+  const add = {}; let n = 0;
+  todo.forEach(c => {
+    const have = planDays(c).concat((add[c.id] || []).map(x => x.di)); let best = null;
+    WD.forEach((_, di) => { if (have.includes(di)) return; const t = bestSlot(di, durOf(c), sim[di], (c.block && c.block.time) || (add[c.id] && add[c.id][0].t) || ""); if (!t) return; const sc = dayScore(c, di, leftM[di], have); if (!best || sc > best.sc) best = { di, t, sc }; });
+    if (!best) return;
+    (add[c.id] = add[c.id] || []).push(best); sim[best.di].push({ c, t: best.t, d: durOf(c) }); leftM[best.di] -= durOf(c); n++;
+  });
+  if (n) editProfile(p => Object.entries(add).forEach(([id, list]) => { const c = p.components.find(x => x.id === id); if (!c) return; c.block = c.block || { days: [], time: "", dur: durOf(c) }; c.block.days = c.block.days || []; list.forEach(({ di, t }) => { c.block.days.push(di); c.block.days.sort((a, b) => a - b); setDayTime(c.block, di, t); }); c.gcal = false; }));
+  return { n, skipped: todo.length - n };
+}
 function rPlanView(id) {
   const wk = weeklyPlannable(), mon = S.viewMon, mo = comps().filter(c => !c.fun && c.cadence === "monthly");
-  const pick = S.planPick && compById(S.planPick), w = myWeek(), hasWeek = !!(profile() || {}).week;
+  const pick = null, w = myWeek(), hasWeek = !!(profile() || {}).week;
   const left = wk.filter(c => sessionsLeft(c) > 0);
   const dailyM = dailyMinsPerDay();
   const toPlaceH = left.reduce((a, c) => a + sessionsLeft(c) * durOf(c), 0) / 60;
   const budgetW = WD.reduce((a, _, di) => a + dayBudget(di, w), 0);
   let placedH = 0;
   const tray = left.length
-    ? `<div class="chips ptray">${left.map(c => `<button class="pchip ${S.planPick === c.id ? "sel" : ""}" data-act="planPick" data-drag="new" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}"><i></i>${esc(c.name)}<span>${fmtDur(durOf(c) / 60)} · ${sessionsLeft(c)} left</span></button>`).join("")}</div>
-       <p class="hint" style="margin:8px 0 0">${pick ? `Tap a free slot below to place <b>${esc(pick.name)}</b>, or tap it again to cancel.` : "Drag a floor onto a day, or tap it and then tap a free slot. Blocks can be dragged to another day too."}</p>`
+    ? `<div class="ptraywrap"><div class="ptrayhead"><h3>To place · ${left.reduce((a, c) => a + sessionsLeft(c), 0)}</h3><button class="btn small primary" data-act="autoPlan">Fill my week</button></div>
+       <div class="chips ptray">${left.map(c => `<button class="pchip" data-act="planPick" data-drag="new" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}"><i></i>${esc(c.name)}<span>${fmtDur(durOf(c) / 60)} · ${sessionsLeft(c)} left</span></button>`).join("")}</div>
+       <p class="hint" style="margin:6px 0 0">Tap a floor to pick its day and time, or drag it onto a day.</p></div>`
     : wk.length ? `<p class="hint" style="margin:0">Every weekly floor has its days. Drag a block to move it, or tap it to change its time.</p>` : `<p class="hint" style="margin:0">You have no weekly floors yet. Add some in the Compass tab.</p>`;
   const days = WD.map((dn, di) => {
     const date = addDays(mon, di), dk = dkey(date), items = dayItems(di, mon);
@@ -2085,8 +2150,8 @@ function rPlanView(id) {
   <p class="lede" style="margin-top:14px">Give each weekly floor a day. The plan repeats every week until you change it, and shows up on Today with its time.</p>
   <div class="psum"><div><b>${hrs(budgetW)} h</b><span>for floors a week</span></div><div><b>${hrs(dailyM * 7 / 60)} h</b><span>daily habits</span></div><div><b>${hrs(placedH)} h</b><span>placed</span></div><div class="${toPlaceH ? "warm" : ""}"><b>${hrs(toPlaceH)} h</b><span>to place</span></div></div>
   ${!hasWeek ? `<p class="hint" style="margin:6px 0 0">These hours are estimates. <button class="linkish" data-act="weekEdit">Set up Your week</button> for your real ones.</p>` : ""}
-  <h3>To place</h3>${tray}
-  <h3>Your week</h3>
+  ${left.length ? tray : `<h3>To place</h3>${tray}`}
+  <div class="ptrayhead"><h3>Your week</h3>${wk.some(c => planDays(c).length) ? (S.confirm === "clearPlan" ? `<span><button class="btn small danger" data-act="clearPlanYes">Clear all days</button> <button class="btn small quiet" data-act="clearPlanNo">Keep</button></span>` : `<button class="linkish" data-act="clearPlan">Start over</button>`) : ""}</div>
   <div class="pweek ${pick ? "picking" : ""}">${days}</div>
   <h3>Fixed time</h3>
   <div class="card">${wd.length ? `<div class="task"><span class="vdot" style="background:var(--muted)"></span><div class="tx"><span>Work or study</span><small>${wd.map(d => WD[d]).join(", ")} · ${tRange(tmins(w.workStart) ?? 540, (tmins(w.workStart) ?? 540) + Math.round(w.work / wd.length * 60))}</small></div><button class="btn small quiet" data-act="weekEdit">Edit</button></div>` : ""}
@@ -2182,6 +2247,7 @@ function blockSheet(sh) {
       <div class="fl"><label class="flabel" for="blk-time">Starts</label><input type="time" id="blk-time" value="${t}"><button class="linkish" data-act="blkAnytime" style="text-align:left">No set time</button></div>
       <div class="fl"><label class="flabel" for="blk-dur">How long</label><input type="text" id="blk-dur" value="${fmtDur(durOf(c) / 60)}" placeholder="45 min or 1 h 30"></div>
     </div>
+    ${!mplan ? `<div class="fl"><span class="flabel">Day</span><div class="daypick">${WD.map((d, i) => `<button data-act="blkMove" data-d="${i}" aria-pressed="${i === di}" ${i !== di && plannedOn(c, i) ? "disabled" : ""}>${d.slice(0, 2)}</button>`).join("")}</div></div>` : ""}
     ${!mplan && planDays(c).length > 1 ? `<label class="mini" style="gap:8px"><input type="checkbox" id="blk-all" ${!(c.block.times && Object.keys(c.block.times).length) ? "checked" : ""}> Same time on all its days (${planDays(c).map(d => WD[d]).join(", ")})</label>` : ""}
     <div class="row"><button class="btn quiet danger" data-act="${mplan ? "mRemove" : "blkRemove"}">${mplan ? "Remove the date" : `Remove from ${WD[di]}`}</button><button class="btn primary" data-act="blkSave">Save</button></div></div>`;
 }
@@ -2483,6 +2549,7 @@ function renderSheet() {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${sh.type === "ics" ? "Export to calendar" : "Plan block"}">${sh.type === "ics" ? icsSheet() : blockSheet(sh)}</div>`;
     return;
   }
+  if (sh.type === "place") { const ex = root.querySelector('.sheet[data-k="place"]'), inner = placeSheet(sh); if (ex) { ex.innerHTML = inner; return; } root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" data-k="place" role="dialog" aria-label="Place a floor">${inner}</div>`; return; }
   if (sh.type === "fixed") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Fixed time">${fixedSheet(sh)}</div>`; return; }
   if (sh.type === "week") {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Your week"><div class="in"><div class="grab"></div><h2 style="margin:0">Where does your week go?</h2>${weekForm(sh.draft)}
@@ -3071,7 +3138,19 @@ document.addEventListener("click", e => {
       editProfile(p => { p.week = Object.assign({}, WEEK_DEFAULT, p.week || {}); const L = p.week.fixed = (p.week.fixed || []).filter(x => x.id !== sh.id); L.push(Object.assign({ id: sh.id || uidGen() }, f, { id: sh.id || uidGen() })); const sch = schedFixedH(p.week); if (sch > (p.week.other || 0)) p.week.other = Math.round(sch * 2) / 2; p.capacity = weekCalc(p.week).floors; });
       S.sheet = null; toast(`${f.name} is blocked out`); break; }
     case "fxRemove": { const id = S.sheet.id; editProfile(p => { if (p.week) p.week.fixed = (p.week.fixed || []).filter(x => x.id !== id); }); S.sheet = null; break; }
-    case "planPick": S.planPick = S.planPick === b.dataset.id ? null : b.dataset.id; break;
+    case "planPick": S.sheet = { type: "place", id: b.dataset.id }; break;
+    case "psPlace": { const sh = S.sheet; if (!sh) return; const c = compById(sh.id); placeFloor(sh.id, +b.dataset.d, b.dataset.t, null, true);
+      const el = document.querySelector(`.psrow [data-act="psRemove"][data-d="${b.dataset.d}"]`); if (el) burst(el, valColor(c.value), 8);
+      if (!sessionsLeft(compById(sh.id))) setTimeout(() => { if (S.sheet && S.sheet.type === "place" && S.sheet.id === sh.id) { S.sheet = null; render(); toast(`${c.name}: ${planDays(compById(sh.id)).map(d => WD[d]).join(", ")}`); } }, 650);
+      return; }
+    case "psRemove": { const sh = S.sheet, d = +b.dataset.d; planBlock(sh.id, bl => { bl.days = bl.days.filter(x => x !== d); if (bl.times) delete bl.times[d]; }); render(); return; }
+    case "autoPlan": { const r = autoPlan(); render(); toast(r.n ? `Placed ${r.n} session${r.n > 1 ? "s" : ""}${r.skipped ? `; ${r.skipped} didn't fit anywhere` : ""}. Tap any block to adjust.` : "No free slot fits what's left. Try shorter sessions or fewer."); return; }
+    case "clearPlan": S.confirm = "clearPlan"; break;
+    case "clearPlanNo": S.confirm = null; break;
+    case "clearPlanYes": S.confirm = null; editProfile(p => p.components.forEach(c => { if (c.cadence === "weekly" && c.block) { c.block.days = []; c.block.times = {}; c.gcal = false; } })); toast("Every day is clear again"); break;
+    case "blkMove": { const sh = S.sheet, nd = +b.dataset.d; if (!sh || nd === sh.day) return; const c = compById(sh.id); if (!c) return;
+      const t = bestSlot(nd, durOf(c), dayItems(nd), timeOn(c, sh.day));
+      if (placeFloor(sh.id, nd, t, sh.day, true)) { S.sheet = { type: "block", id: sh.id, day: nd }; render(); toast(`Moved to ${WD[nd]}${t ? ", " + t12(t) : ""}`); } return; }
     case "planDay": {
       const c = compById(S.planPick); if (!c) return; const di = +b.dataset.d;
       planBlock(c.id, bl => { if (!bl.days.includes(di)) bl.days.push(di); if (!bl.dur) bl.dur = durOf(c); });
