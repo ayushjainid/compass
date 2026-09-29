@@ -10,3 +10,7 @@ window.COMPASS_FIREBASE_CONFIG = {
   appId: "1:21302101961:web:4d6d1fe1f1a91813370a18",
   measurementId: "G-MNRXLWFC2T"
 };
+
+// Microsoft To Do import (optional): the Application (client) ID of a free Microsoft app registration.
+// Leave empty to hide the Connect button; the Outlook CSV route still works. It is public by design (no secret).
+window.COMPASS_MS_CLIENT_ID = "";

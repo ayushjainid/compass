@@ -575,6 +575,7 @@ html.dragging{scroll-behavior:auto!important}
 .tag.imp{background:var(--sunk);color:var(--ink2);text-transform:none;letter-spacing:0;font-weight:500}
 .impcard{display:flex;gap:14px;align-items:center}
 .impcard .glyph{flex:none;width:40px;height:40px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center}
+.impcard .glyph.mslogo{display:grid;grid-template-columns:repeat(2,9px);gap:2px;place-content:center;background:var(--sunk)}.mslogo i{width:9px;height:9px;display:block}.mslogo i:nth-child(1){background:#f25022}.mslogo i:nth-child(2){background:#7fba00}.mslogo i:nth-child(3){background:#00a4ef}.mslogo i:nth-child(4){background:#ffb900}
 .impcard .glyph svg{width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fromapps{font-size:12.5px;color:var(--accent);font-weight:500}
 /* ---------- tasks ---------- */
@@ -1092,6 +1093,7 @@ async function init() {
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     loadHistory(); render();
+    if (!onboarded()) msResume();
   });
 }
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
@@ -1842,7 +1844,7 @@ function rLanding() {
       <details><summary>Is Compass free?</summary><p>Yes. There's no subscription and nothing to buy.</p></details>
       <details><summary>What do I need to start?</summary><p>A Google account. Setup takes about five minutes and you can change everything later.</p></details>
       <details><summary>Can Compass hold my to-do list?</summary><p>Yes. Capture anything into the inbox, sort it once, and Compass turns errands into a short weekly list, habits into floors and big goals into projects with one next step each.</p></details>
-      <details><summary>Can I bring my Todoist, TickTick or Sunsama data?</summary><p>Yes. During setup, add an export from Todoist, TickTick, Sunsama, Google or Apple Calendar, or paste a list. Compass finds your routines, how often you really do them and where your week goes, then fills in most of setup. Files are read on your device and never uploaded.</p></details>
+      <details><summary>Can I bring my Todoist, TickTick, Microsoft To Do or Sunsama data?</summary><p>Yes. During setup, sign in to Microsoft To Do, or add an export from Todoist, TickTick, Sunsama, Outlook, Google or Apple Calendar, or paste a list. Compass finds your routines, how often you really do them and where your week goes, then fills in most of setup. Files are read on your device and never uploaded.</p></details>
       <details><summary>Does it work offline?</summary><p>Yes. Changes save on your device and sync when you're back online.</p></details>
       <details><summary>What if I have a terrible week?</summary><p>Turn on a Minimum Viable Week. Only the few things you chose as your safety net count, and everything else pauses with no penalty.</p></details>
       <details><summary>Is this therapy or medical advice?</summary><p>No. Compass is a planning and reflection tool. It can sit alongside therapy, but it doesn't replace care from a professional.</p></details>
@@ -2781,8 +2783,75 @@ const IMP_HOW = [
   ["TickTick", "On the web: Settings → Account → Backup → Generate backup (.csv). It includes finished tasks, so Compass can see how often you really do things."],
   ["Sunsama", "Settings → Account → Export my data. Choose the CSV or JSON file it gives you."],
   ["Google Calendar", "On a computer: Settings → Import & export → Export. Choose the .zip it downloads. Past events show where your week goes."],
+  ["Microsoft To Do", "No export of its own, but its tasks sync to Outlook. In classic Outlook on Windows: File → Open & Export → Import/Export → Export to a file → Comma Separated Values → pick Tasks. Finished tasks come along, so Compass sees what you really do."],
   ["Apple Calendar or Reminders", "Calendar on a Mac: File → Export → Export (.ics). Reminders, Things or Notes: select your items, copy, and paste them below."],
 ];
+/* ---- Microsoft To Do: read-only sign-in (OAuth code flow with PKCE, no server) ---- */
+const MS_AUTH = "https://login.microsoftonline.com/common/oauth2/v2.0", MS_GRAPH = "https://graph.microsoft.com/v1.0";
+const msClientId = () => (window.COMPASS_MS_CLIENT_ID || "").trim();
+const msRedirect = () => location.origin + "/ms-auth.html";
+const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const randStr = n => b64url(crypto.getRandomValues(new Uint8Array(n)));
+function msSaveFlow(f) { const v = JSON.stringify(Object.assign(f, { at: Date.now() })); try { sessionStorage.setItem("compass-ms-flow", v); } catch (e) {} try { localStorage.setItem("compass-ms-flow", v); } catch (e) {} }
+function msLoadFlow() { let f = null; try { f = JSON.parse(sessionStorage.getItem("compass-ms-flow") || localStorage.getItem("compass-ms-flow") || "null"); } catch (e) {} return f && Date.now() - f.at < 15 * 60000 ? f : null; }
+function msClearFlow() { try { sessionStorage.removeItem("compass-ms-flow"); localStorage.removeItem("compass-ms-flow"); localStorage.removeItem("compass-ms-auth"); } catch (e) {} }
+async function msAuthUrl(flow) {
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(flow.verifier)));
+  return `${MS_AUTH}/authorize?` + new URLSearchParams({ client_id: msClientId(), response_type: "code", redirect_uri: msRedirect(), response_mode: "query", scope: "Tasks.Read", code_challenge: challenge, code_challenge_method: "S256", state: flow.state, prompt: "select_account" });
+}
+function msConnect() {
+  const im = S.imp; if (!im || !msClientId()) return;
+  const flow = { verifier: randStr(48), state: randStr(16) }; msSaveFlow(flow);
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  /* the popup must open inside the tap, before any await, or browsers block it */
+  const w = standalone ? null : window.open("about:blank", "compass-ms", "width=480,height=680");
+  im.err = ""; im.busy = "Waiting for Microsoft sign-in…"; renderOnboarding();
+  if (!(window.crypto && crypto.subtle)) { if (w) w.close(); im.busy = false; im.err = "This browser can't sign in to Microsoft securely here. Use the Outlook CSV instead, or open Compass at its https address."; renderOnboarding(); return; }
+  msAuthUrl(flow).then(url => {
+    if (w && !w.closed) { w.location.href = url; im.msWin = w; const t = setInterval(() => { if (w.closed) { clearInterval(t); if (S.imp && S.imp.busy === "Waiting for Microsoft sign-in…") { S.imp.busy = false; renderOnboarding(); } } }, 700); }
+    else location.href = url; /* no popups here (home-screen app or blocked): go and come back */
+  }).catch(() => { if (w) w.close(); im.busy = false; im.err = "Couldn't start the Microsoft sign-in. Try again."; renderOnboarding(); });
+}
+async function msFinish(msg) {
+  const flow = msLoadFlow();
+  if (!S.ob) { S.imp = null; startOnboarding(false); }
+  if (!S.imp) impOpen();
+  const im = S.imp;
+  if (msg.error || !msg.code) { im.busy = false; im.err = msg.error ? `Microsoft said: ${msg.error}` : "Sign-in was cancelled."; msClearFlow(); renderOnboarding(); return; }
+  if (!flow || flow.state !== msg.state) { im.busy = false; im.err = "That sign-in expired. Tap Connect again."; msClearFlow(); renderOnboarding(); return; }
+  im.busy = "Reading your Microsoft To Do lists…"; renderOnboarding();
+  try {
+    const tok = await fetch(`${MS_AUTH}/token`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: msClientId(), grant_type: "authorization_code", code: msg.code, redirect_uri: msRedirect(), code_verifier: flow.verifier, scope: "Tasks.Read" }) }).then(r => r.json());
+    msClearFlow();
+    if (!tok.access_token) throw new Error(tok.error_description ? tok.error_description.split(/\r?\n/)[0] : "Microsoft didn't grant access.");
+    const get = async url => { const r = await fetch(url, { headers: { Authorization: "Bearer " + tok.access_token } }); if (!r.ok) throw new Error(r.status === 403 ? "Microsoft To Do access was refused for this account." : `Microsoft To Do didn't answer (${r.status}).`); return r.json(); };
+    const lists = (await get(`${MS_GRAPH}/me/todo/lists`)).value || [];
+    let total = 0;
+    for (const L of lists) {
+      if (L.wellknownListName === "flaggedEmails") continue;
+      im.busy = `Reading “${L.displayName}”…`; renderOnboarding();
+      L.tasks = []; let url = `${MS_GRAPH}/me/todo/lists/${encodeURIComponent(L.id)}/tasks?$top=100`;
+      for (let page = 0; url && page < 15 && total < 5000; page++) { const d = await get(url); L.tasks.push(...(d.value || [])); total += (d.value || []).length; url = d["@odata.nextLink"]; }
+    }
+    const M = await impMod(), got = M.fromMsTodo({ lists });
+    const name = "Microsoft To Do";
+    im.files = im.files.filter(f => f.name !== name).concat({ name, n: got.length, src: "Microsoft To Do", live: true });
+    im.items = im.items.filter(i => i._f !== name).concat(got.map(i => Object.assign(i, { _f: name })));
+    if (!got.length) im.err = "Connected, but your Microsoft To Do lists are empty.";
+  } catch (e) { im.err = (e && e.message) || "Couldn't read Microsoft To Do."; }
+  im.busy = false; renderOnboarding();
+}
+window.addEventListener("message", e => { if (e.origin === location.origin && e.data && e.data.type === "ms-auth") msFinish(e.data); });
+/* came back from a full-page sign-in (home-screen app, or popups blocked) */
+function msResume() {
+  if (!/[?&]ms=1\b/.test(location.search)) return false;
+  history.replaceState(null, "", location.pathname);
+  let msg = null; try { msg = JSON.parse(localStorage.getItem("compass-ms-auth") || "null"); } catch (e) {}
+  if (!msg || Date.now() - (msg.at || 0) > 15 * 60000) return false;
+  try { localStorage.removeItem("compass-ms-auth"); } catch (e) {}
+  msFinish(msg); return true;
+}
 function impOpen() { S.imp = { view: "pick", files: [], items: [], pasted: 0, res: null, sel: null, busy: false, err: "" }; renderOnboarding(); window.scrollTo(0, 0); }
 async function impAddFiles(list) {
   const im = S.imp; if (!im || !list || !list.length) return;
@@ -2848,9 +2917,10 @@ function impView() {
   if (im.view === "pick") {
     return { html: `<h1>Bring in what you already track.</h1>
       <p class="lede">Compass looks for your routines, how often you really do them, where your week goes and who you keep in touch with, then fills in setup for you. Files are read on this device and never uploaded.</p>
+      ${msClientId() ? `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph mslogo" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div style="flex:1"><b>Microsoft To Do</b><div class="hint">${im.files.some(f => f.live) ? "Connected. Your lists are in, including finished tasks." : "Sign in and Compass reads your lists and finished tasks, once, read-only."}</div></div><button class="btn ${im.files.some(f => f.live) ? "quiet" : ""}" data-act="msConnect" ${im.busy ? "disabled" : ""}>${im.files.some(f => f.live) ? "Refresh" : "Connect"}</button></div></div>` : ""}
       <label class="drop" id="impDrop"><input type="file" id="impFiles" multiple accept=".csv,.zip,.ics,.json,.txt,.md,text/csv,text/calendar,application/json,application/zip">
         <span class="dicon">${ICON.upload}</span><b>Choose files or drop them here</b><span class="hint">CSV, ZIP, ICS or JSON · add as many as you like</span></label>
-      ${im.busy ? `<p class="hint" style="text-align:center">Reading <span class="thinking"><i></i><i></i><i></i></span></p>` : ""}
+      ${im.busy ? `<p class="hint" style="text-align:center">${typeof im.busy === "string" ? esc(im.busy) : "Reading"} <span class="thinking"><i></i><i></i><i></i></span></p>` : ""}
       ${im.err ? `<p class="imperr">${esc(im.err)}</p>` : ""}
       ${im.files.length ? `<div class="card" style="margin-top:12px">${im.files.map(f => `<div class="task"><span class="vdot" style="background:var(--good)"></span><div class="tx"><span>${esc(f.name)}</span><small>${f.src ? esc(f.src) + " · " : ""}${f.n} item${f.n === 1 ? "" : "s"}</small></div><button class="xbtn" data-act="impDrop" data-v="${esc(f.name)}" aria-label="Remove ${esc(f.name)}" title="Remove">✕</button></div>`).join("")}</div>` : ""}
       <details class="fold"><summary>Or paste a list</summary><div class="card pad"><textarea id="imp-paste" rows="4" placeholder="One per line. Add how often if you like, e.g.&#10;Gym every mon, wed, fri at 7am&#10;Call Dad every sunday"></textarea><div style="margin-top:8px"><button class="btn small" data-act="impPaste">Add list</button></div></div></details>
@@ -2943,7 +3013,7 @@ function renderOnboarding() {
       <h1>Know where your life is heading.</h1>
       <p class="lede">Compass turns what matters to you into a few small floors, checks them once a week, and tells you when you're drifting. Relaxed because you know the direction, not because you're doing nothing.</p>
       ${d.imp ? `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Imported from ${esc(d.imp.from.join(", "))}</b><div class="hint">Setup is pre-filled with ${d.imp.comps} routine${d.imp.comps === 1 ? "" : "s"} and your values. Tap Continue to review.</div></div><button class="btn small quiet" data-act="impOpen">Redo</button></div></div>`
-        : `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Already use Todoist, TickTick, Sunsama or a calendar?</b><div class="hint">Bring it in and Compass fills in most of setup from what you already do. Read on this device, never uploaded.</div></div></div><div style="margin-top:10px"><button class="btn" data-act="impOpen">Import from my apps</button></div></div>`}
+        : `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Already use Todoist, TickTick, Microsoft To Do, Sunsama or a calendar?</b><div class="hint">Bring it in and Compass fills in most of setup from what you already do. Read on this device, never uploaded.</div></div></div><div style="margin-top:10px"><button class="btn" data-act="impOpen">Import from my apps</button></div></div>`}
       <div class="card pad" style="margin-top:10px"><b>Pick your colours</b><div style="margin-top:10px">${themePicker()}</div></div>
       <div class="card pad" style="margin-top:10px"><b>What setup covers</b><div class="hint" style="margin-top:4px">Your goal · the values that matter · small components for each · up to two Cores for this season · a safety net for hard weeks. About five minutes.</div></div>
       ${hasOldLogs() || (profile() && !profile().onboarded) ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>You have earlier logs</b><div class="hint">Start from the original Compass setup to keep them counting.</div></div><button class="btn" data-act="obTemplate">Use it</button></div></div>` : `<p style="margin-top:12px"><button class="btn quiet" data-act="obTemplate">Or start from the full Compass template</button></p>`}`;
@@ -3051,6 +3121,7 @@ document.addEventListener("click", e => {
     /* onboarding */
     case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
     case "impOpen": return impOpen();
+    case "msConnect": return msConnect();
     case "impClose": S.imp = null; renderOnboarding(); window.scrollTo(0, 0); return;
     case "impBack": S.imp.view = "pick"; renderOnboarding(); window.scrollTo(0, 0); return;
     case "impRun": return impRun();

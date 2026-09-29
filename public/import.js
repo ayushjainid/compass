@@ -77,6 +77,14 @@ function parseDate(v) {
   }
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (m) return Object.assign(new Date(+m[1], +m[2] - 1, +m[3]), { allDay: true });
+  m = s.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})(?:[ T]+(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]m)?)?$/i);
+  if (m) {
+    let [, a, b, y, h, mi, ap] = m; a = +a; b = +b; y = +y < 100 ? 2000 + +y : +y;
+    const [mo, d] = a > 12 ? [b, a] : [a, b]; /* US month-first unless the first number can't be a month */
+    if (h == null) return Object.assign(new Date(y, mo - 1, d), { allDay: true });
+    h = +h; if (ap && /pm/i.test(ap) && h < 12) h += 12; if (ap && /am/i.test(ap) && h === 12) h = 0;
+    return new Date(y, mo - 1, d, h, +mi);
+  }
   const t = Date.parse(s.replace(/([+-]\d{2})(\d{2})$/, "$1:$2").replace(" ", "T"));
   if (!isNaN(t)) return new Date(t);
   const t2 = Date.parse(s);
@@ -182,6 +190,7 @@ function fromCsv(text, name) {
   if (tt >= 0 && tt < 15) return ticktick(rows.slice(tt));
   const h0 = low(rows[0]);
   if (h0[0] === "type" && h0.includes("content")) return todoist(rows, name);
+  if (h0.includes("subject") && (h0.includes("date completed") || h0.includes("% complete") || h0.includes("reminder on/off"))) return outlookTasks(rows);
   return generic(rows, name);
 }
 const rowObj = (hdr, r) => Object.fromEntries(hdr.map((h, i) => [h, (r[i] ?? "").trim()]));
@@ -221,6 +230,19 @@ function todoist(rows, name) {
   return out;
 }
 
+/* Microsoft To Do has no export of its own; its tasks sync to Outlook, which exports the Tasks folder as CSV */
+function outlookTasks(rows) {
+  const hdr = rows[0].map(h => h.trim().toLowerCase()), out = [];
+  for (const r of rows.slice(1)) {
+    const o = rowObj(hdr, r); if (!o.subject) continue;
+    const doneAt = parseDate(o["date completed"]), done = /complete/i.test(o.status || "") || o["% complete"] === "100%" || o["% complete"] === "100" || !!doneAt;
+    const remOn = /true|yes|on|1/i.test(o["reminder on/off"] || ""), rem = remOn ? parseDate(`${o["reminder date"] || ""} ${o["reminder time"] || ""}`.trim()) : null;
+    const due = parseDate(o["due date"]), start = parseDate(o["start date"]) || due;
+    out.push(item({ title: o.subject, notes: (o.notes || "").slice(0, 300), list: "Tasks", tags: (o.categories || "").split(/[;,]/).map(x => x.trim()).filter(Boolean),
+      start: done ? (doneAt || start) : start, due, done, doneAt, time: hhmm(rem), src: "mstodo" }));
+  }
+  return out;
+}
 const SYN = {
   title: ["title", "name", "task", "task name", "text", "content", "summary", "subject", "description"],
   notes: ["notes", "note", "details", "body", "description"],
@@ -272,7 +294,49 @@ const JK = {
   dur: ["timeEstimate", "plannedTime", "estimate", "duration", "actualTime", "timeSpent"],
   repeat: ["recurrence", "repeat", "rrule", "recurrenceRule", "recurring"],
 };
+const MS_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+function msDate(v) {
+  if (!v) return null; if (typeof v === "string") return parseDate(v);
+  if (!v.dateTime) return null;
+  const iso = String(v.dateTime).replace(/(\.\d{3})\d+/, "$1");
+  return new Date(/^utc$/i.test(v.timeZone || "UTC") && !/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso + "Z" : iso);
+}
+function msRepeat(rec) {
+  const p = rec && rec.pattern; if (!p || !p.type) return null;
+  const t = String(p.type).toLowerCase();
+  const freq = t === "daily" ? "daily" : t === "weekly" ? "weekly" : /monthly/.test(t) ? "monthly" : /yearly/.test(t) ? "yearly" : null; if (!freq) return null;
+  const days = (p.daysOfWeek || []).map(d => MS_DAYS.indexOf(String(d).toLowerCase())).filter(d => d >= 0).sort();
+  const end = rec.range && /enddate/i.test(rec.range.type || "") && rec.range.endDate ? parseDate(rec.range.endDate) : null;
+  return { freq, n: Math.max(1, +p.interval || 1), days: freq === "weekly" ? days : [], until: end };
+}
+const isMsTask = o => o && typeof o === "object" && typeof o.title === "string" && "status" in o && ("importance" in o || "dueDateTime" in o || "recurrence" in o || "@odata.etag" in o || "completedDateTime" in o);
+const stripHtml = t => String(t || "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+/* lists: [{ displayName, wellknownListName, tasks: [todoTask] }] as the Connect button fetches them, or any JSON holding todoTask objects */
+export function fromMsTodo(data) {
+  const out = [], seen = new Set();
+  const walk = (x, listName, depth) => {
+    if (!x || typeof x !== "object" || depth > 7 || seen.has(x)) return; seen.add(x);
+    if (Array.isArray(x)) {
+      if (x.some(isMsTask)) { x.filter(isMsTask).forEach(t => out.push(msItem(t, listName))); return; }
+      x.forEach(v => walk(v, listName, depth + 1)); return;
+    }
+    if (x.wellknownListName === "flaggedEmails") return;
+    const nm = typeof x.displayName === "string" ? (x.wellknownListName === "defaultList" ? "Tasks" : x.displayName) : listName;
+    Object.values(x).forEach(v => walk(v, nm, depth + 1));
+  };
+  walk(data, "", 0);
+  return out;
+}
+function msItem(t, listName) {
+  const r = msRepeat(t.recurrence), due = msDate(t.dueDateTime), start = msDate(t.startDateTime) || due;
+  const rem = t.isReminderOn ? msDate(t.reminderDateTime) : null, doneAt = msDate(t.completedDateTime);
+  const body = t.body ? (/html/i.test(t.body.contentType || "") ? stripHtml(t.body.content) : String(t.body.content || "")) : "";
+  return item({ title: t.title.trim(), notes: body.slice(0, 300), list: listName || "", tags: Array.isArray(t.categories) ? t.categories : [],
+    start, due, done: t.status === "completed", doneAt, created: msDate(t.createdDateTime), src: "mstodo",
+    repeat: r && Object.assign(r, { days: r.freq === "weekly" && !r.days.length && (start || due) ? [di(start || due)] : r.days }), time: hhmm(rem) });
+}
 function fromJson(data, name) {
+  { const ms = fromMsTodo(data); if (ms.length) return ms; }
   const src = srcFromName(name) === "csv" ? (JSON.stringify(data).slice(0, 4000).match(/sunsama|channel|timeEstimate|streamIds/i) ? "sunsama" : "json") : srcFromName(name);
   const out = [], seen = new Set();
   const val = (o, keys) => { for (const k of keys) { if (o[k] != null && o[k] !== "") return o[k]; } return null; };
@@ -384,7 +448,7 @@ const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 const cleanName = t => cap1(String(t).replace(/\s*[\(\[][^)\]]*[\)\]]\s*$/, "").replace(/\s+/g, " ").trim()).slice(0, 60);
 /* floors, not ceilings: start a little below what the apps asked for */
 const floorOf = n => n <= 2 ? n : Math.max(1, Math.round(n * 0.75));
-const SRC_NAME = { todoist: "Todoist", ticktick: "TickTick", sunsama: "Sunsama", calendar: "Calendar", csv: "CSV", json: "JSON", list: "Pasted list" };
+const SRC_NAME = { todoist: "Todoist", ticktick: "TickTick", sunsama: "Sunsama", mstodo: "Microsoft To Do", calendar: "Calendar", csv: "CSV", json: "JSON", list: "Pasted list" };
 
 export function analyze(items, ctx) {
   const now = ctx.now ? new Date(ctx.now) : new Date(), H = ctx.VALUE_LIB, LIB = ctx.COMP_LIB;
@@ -399,7 +463,7 @@ export function analyze(items, ctx) {
   const g = key => { if (!groups.has(key)) groups.set(key, { key, items: [], rep: null, occ: [], times: [], days: [], durs: [], src: new Set(), titles: {} }); return groups.get(key); };
   for (const it of items) {
     if (!it.key || it.key.length < 2) continue;
-    if (it.repeat && it.repeat.freq !== "yearly" && !(it.repeat.until && it.repeat.until < now)) { const x = g(it.key); x.rep = x.rep && x.rep.src === "calendar" && it.src !== "calendar" ? x.rep : Object.assign({}, it.repeat, { src: it.src }); x.items.push(it); if (it.time) x.times.push(tmin(it.time)); if (it.dur) x.durs.push(it.dur); x.src.add(it.src); x.titles[it.title] = (x.titles[it.title] || 0) + 1; if (it.start) x.first = it.start; }
+    if (it.repeat && it.repeat.freq !== "yearly" && !(it.repeat.until && it.repeat.until < now)) { const x = g(it.key); x.rep = x.rep && x.rep.src === "calendar" && it.src !== "calendar" ? x.rep : Object.assign({}, it.repeat, { src: it.src }); x.items.push(it); if (it.time) x.times.push(tmin(it.time)); if (it.dur) x.durs.push(it.dur); x.src.add(it.src); x.titles[it.title] = (x.titles[it.title] || 0) + 1; if (it.start) x.first = it.start; if (it.done && recent(it)) { x.occ.push(it.when); x.days.push(di(it.when)); } }
     else if ((it.done || (it.kind === "event" && it.when && it.when <= now)) && recent(it)) { const x = g(it.key); x.occ.push(it.when); x.items.push(it); if (it.time) x.times.push(tmin(it.time)); x.days.push(di(it.when)); if (it.dur) x.durs.push(it.dur); x.src.add(it.src); x.titles[it.title] = (x.titles[it.title] || 0) + 1; }
   }
   const habits = [];
