@@ -24,7 +24,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0}
+body{margin:0;overflow-x:clip}
+/* iOS zooms into any field under 16px and leaves the page panned sideways; touch screens get 16px fields */
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
 img{max-width:100%}
 :root{
   --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#E9EDEA; --ink:#17201E; --ink2:#46524E; --muted:#6F7B77; --line:#D9DFDB;
@@ -236,8 +238,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .meter .nums{display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:space-between;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
 
 /* sheet */
-.scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;animation:fade .2s}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-height:90vh;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:up .28s cubic-bezier(.2,.9,.3,1)}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;animation:fade .2s;touch-action:none}
+html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
+.sheet .in>h2:first-of-type,.sheet .in>div:nth-child(2) h2,.sheet .pshead h2{padding-right:44px}
+.sheetx{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:50%;background:var(--sunk);color:var(--ink2);font-size:15px;display:grid;place-items:center;z-index:2}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-height:90vh;max-height:88dvh;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:var(--surface);border-radius:18px 18px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:up .28s cubic-bezier(.2,.9,.3,1)}
 .sheet .in{max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 4px}
 .sheet .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -431,7 +436,8 @@ body.landing .top,body.landing #statusline{display:none}
 .mstat.bad{color:var(--warn)}
 .meter .nums b{font-family:var(--mono);font-weight:600}
 .vdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:1px;flex:none}
-.alloc{font-size:13px;white-space:nowrap}
+.alloc{font-size:13px;white-space:nowrap;margin-left:auto}
+.gh{flex-wrap:wrap;row-gap:2px}
 .alloc b{font:600 13px var(--mono)}
 .gbar{height:3px;border-radius:2px;background:var(--sunk);margin:-2px 0 8px;overflow:hidden}
 .gbar i{display:block;height:100%;border-radius:2px;transition:width .45s cubic-bezier(.2,.8,.2,1)}
@@ -519,8 +525,12 @@ body.landing .top,body.landing #statusline{display:none}
 .pblk.clash{box-shadow:inset 0 0 0 1.5px var(--warn)}.pblk.clash .dur{color:var(--warn)}
 .ptraywrap{position:sticky;top:0;z-index:6;background:var(--bg);margin:0 -16px;padding:calc(2px + env(safe-area-inset-top,0px)) 16px 10px;border-bottom:1px solid var(--line)}
 .ptrayhead{display:flex;align-items:center;justify-content:space-between;gap:10px}.ptrayhead h3{margin:14px 0 8px}
-.ptray{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
-.ptray::-webkit-scrollbar{display:none}.ptray .pchip{flex:none;white-space:nowrap}
+.ptray{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:calc(50% - 4px);gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;scroll-snap-type:x proximity}
+.ptray::-webkit-scrollbar{display:none}
+.ptray .pchip,.pchip.ghost{display:grid;grid-template-columns:9px minmax(0,1fr);column-gap:8px;row-gap:1px;align-items:center;text-align:left;border-radius:14px;padding:8px 10px;min-width:0;min-height:52px;scroll-snap-align:start}
+.ptray .pchip .nm,.pchip.ghost .nm{font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptray .pchip span,.pchip.ghost span{grid-column:2;font-size:11.5px}
+@media (min-width:900px){.ptray{grid-auto-columns:minmax(190px,240px)}}
 .pshead{display:flex;gap:12px;align-items:center}.pshead>i{width:12px;height:12px;border-radius:50%;flex:none}
 .psrows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .psrow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}.psrow:last-child{border-bottom:0}
@@ -531,13 +541,18 @@ body.landing .top,body.landing #statusline{display:none}
 .pstime span{font-size:11px;font-family:inherit;color:var(--muted)}
 .pstime.sug{border-color:var(--accent);background:var(--accent-soft)}.pstime.sug span{color:var(--accent)}
 .pstime.on{border-color:var(--good);color:var(--good)}
-.pstime:disabled{opacity:.45}.daypick button:disabled{opacity:.35}
+.pstime:disabled{opacity:.45}
+.pstime.more{border-style:dashed;color:var(--muted);font-family:inherit}
+.psrow{flex-wrap:wrap}.pscustom{flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0 2px 114px}
+.pscustom input{width:auto;padding:7px 10px;font-size:15px}.pscustom .flabel{margin:0}
+@media (max-width:420px){.pscustom{padding-left:0}}.daypick button:disabled{opacity:.35}
 @media (min-width:900px){.pfix,.pslot{display:flex;flex-direction:column;gap:1px;padding:6px 8px}.pfix .nm,.pslot .nm{line-height:1.25}}
 .pslot{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border:1.5px dashed color-mix(in srgb,var(--c,var(--good)) 60%,transparent);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--ink2);animation:pop .2s}
 .pslot .t{font:500 12px var(--mono);color:var(--muted)}.pslot .nm{font-weight:600;color:var(--ink)}
 .pslot.over,.pday.over{background:color-mix(in srgb,var(--good) 14%,var(--surface));border-color:var(--good)}
 .pslot:hover{border-style:solid}
 [data-drag]{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
+html.dragging{scroll-behavior:auto!important}
 .ghost{position:fixed;left:0;top:0;z-index:80;pointer-events:none;opacity:.92;box-shadow:0 10px 30px rgba(0,0,0,.25);transform-origin:center;cursor:grabbing;margin:0}
 .daypick{display:flex;gap:6px;flex-wrap:wrap}.daypick button{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--ink2)}
 .daypick button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
@@ -600,8 +615,8 @@ details.fold[open] summary::before{content:"▾ ";}
 
 /* ---------- landing: tour ---------- */
 .tour{display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center;margin-top:30px}
-@media (max-width:880px){.tour{grid-template-columns:1fr;gap:24px}.tour .phone{order:-1;margin-inline:auto}}
-.tsteps{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+@media (max-width:880px){.tour{grid-template-columns:minmax(0,1fr);gap:24px}.tour .phone{order:-1;margin-inline:auto}}
+.tsteps{list-style:none;margin:0;padding:0;display:grid;gap:6px;min-width:0}
 .tsteps button{width:100%;text-align:left;border-radius:14px;padding:14px 16px;display:grid;gap:4px;border:1px solid transparent;transition:background .2s,border-color .2s}
 .tsteps button b{font:600 18px/1.2 var(--display)}
 .tsteps button span{color:var(--muted);font-size:14px}
@@ -1985,7 +2000,7 @@ const monthPlan = (ym = monthKey(S.viewMon)) => ((settings().months || {})[ym] |
 const nextYm = d => monthKey(new Date(d.getFullYear(), d.getMonth() + 1, 1));
 function mEntry(cid, mon = S.viewMon) { for (const ym of [monthKey(mon), nextYm(mon)]) { const pl = monthPlan(ym)[cid]; if (pl && pl.date) return { ym, pl }; } return { ym: monthKey(mon), pl: {} }; }
 function setMonthPlan(ym, cid, fn) { editSettings(st => { st.months = st.months || {}; const m = st.months[ym] = st.months[ym] || {}; m.plan = m.plan || {}; const cur = m.plan[cid] ? Object.assign({}, m.plan[cid]) : {}; const out = fn(cur); if (out) m.plan[cid] = out; else delete m.plan[cid]; }); }
-function planBlock(id, fn) { editProfile(p => { const c = p.components.find(x => x.id === id); if (!c) return; c.block = c.block || { days: [], time: "", dur: durOf(c) }; c.block.days = c.block.days || []; fn(c.block, c); c.block.days.sort((a, b) => a - b); c.gcal = false; }); }
+function planBlock(id, fn) { editProfile(p => { const c = p.components.find(x => x.id === id); if (!c) return; c.block = c.block || { days: [], time: "", dur: durOf(c) }; c.block.days = c.block.days || []; fn(c.block, c); c.block.days.sort((a, b) => a - b); if (!c.block.days.length) { c.block.time = ""; c.block.times = {}; } c.gcal = false; }); }
 function weeklyPlannable() {
   const cores = coreIds();
   return comps().filter(c => !c.fun && c.cadence === "weekly").sort((a, b) => (cores.includes(b.value) - cores.includes(a.value)) || (weeklyHours(b) - weeklyHours(a)));
@@ -2070,6 +2085,10 @@ function dayStarts(c, di, items) {
 }
 /* which day suits a session best: most time left, not next to another session of the same floor */
 function dayScore(c, di, leftM, have) { let sc = leftM - durOf(c); if (have.some(d => Math.abs(d - di) === 1 || Math.abs(d - di) === 6)) sc -= 90; if (leftM - durOf(c) < 0) sc -= 200; return sc; }
+function customRow(sh, di, t) {
+  if (sh.custom !== di) return "";
+  return `<div class="pscustom"><label class="flabel" for="ps-time">Start at</label><input type="time" id="ps-time" value="${t || "18:00"}"><button class="btn small primary" data-act="psCustomGo" data-d="${di}">${plannedOn(compById(sh.id), di) ? "Update" : "Place"}</button><button class="btn small quiet" data-act="psCustom" data-d="-1">Cancel</button></div>`;
+}
 const leftTxt = m => m >= 0 ? fmtDur(m / 60) + " left" : fmtDur(-m / 60) + " over";
 function placeSheet(sh) {
   const c = compById(sh.id); if (!c) return "";
@@ -2077,12 +2096,12 @@ function placeSheet(sh) {
   let best = null;
   const rows = WD.map((dn, di) => {
     const items = dayItems(di), leftM = Math.round(dayLeftMins(di, items) / 5) * 5;
-    if (plannedOn(c, di)) { const t = timeOn(c, di); return { di, html: `<div class="psrow on"><div class="psd"><b>${dn}</b><span class="${leftM < 0 ? "over" : ""}">${leftTxt(leftM)}</span></div><div class="pst"><button class="pstime on" data-act="psRemove" data-d="${di}" aria-label="Remove ${esc(c.name)} from ${dn}">✓ ${t ? tRange(tmins(t), tmins(t) + durOf(c)) : "Anytime"}<span>Remove</span></button></div></div>` }; }
+    if (plannedOn(c, di)) { const t = timeOn(c, di); return { di, html: `<div class="psrow on"><div class="psd"><b>${dn}</b><span class="${leftM < 0 ? "over" : ""}">${leftTxt(leftM)}</span></div><div class="pst"><button class="pstime on" data-act="psRemove" data-d="${di}" aria-label="Remove ${esc(c.name)} from ${dn}">✓ ${t ? tRange(tmins(t), tmins(t) + durOf(c)) : "Anytime"}<span>Remove</span></button><button class="pstime more" data-act="psCustom" data-d="${di}">Change time</button></div>${customRow(sh, di, t)}</div>` }; }
     const starts = dayStarts(c, di, items);
     if (starts.length) { const sc = dayScore(c, di, leftM, have); if (!best || sc > best.sc) best = { di, sc, t: bestSlot(di, durOf(c), items, (c.block && c.block.time) || "") }; }
     return { di, leftM, starts };
   });
-  const body = rows.map(r => r.html || `<div class="psrow"><div class="psd"><b>${WD[r.di]}</b><span class="${r.leftM < 0 ? "over" : ""}">${leftTxt(r.leftM)}</span></div><div class="pst">${(r.starts.length ? r.starts : [""]).map((t, i) => { const sug = best && best.di === r.di && t === best.t && n; return `<button class="pstime ${sug ? "sug" : ""}" data-act="psPlace" data-d="${r.di}" data-t="${t}" ${n ? "" : "disabled"}>${t ? t12(t) : "Anytime"}${sug ? "<span>Suggested</span>" : ""}</button>`; }).join("")}</div></div>`).join("");
+  const body = rows.map(r => r.html || `<div class="psrow"><div class="psd"><b>${WD[r.di]}</b><span class="${r.leftM < 0 ? "over" : ""}">${leftTxt(r.leftM)}</span></div><div class="pst">${(r.starts.length ? r.starts : [""]).map((t, i) => { const sug = best && best.di === r.di && t === best.t && n; return `<button class="pstime ${sug ? "sug" : ""}" data-act="psPlace" data-d="${r.di}" data-t="${t}" ${n ? "" : "disabled"}>${t ? t12(t) : "Anytime"}${sug ? "<span>Suggested</span>" : ""}</button>`; }).join("")}${n ? `<button class="pstime more" data-act="psCustom" data-d="${r.di}" aria-label="Pick another time on ${WD[r.di]}">Other time</button>` : ""}</div>${customRow(sh, r.di, r.starts[0] || "")}</div>`).join("");
   return `<div class="in"><div class="grab"></div>
     <div class="pshead"><i style="background:${valColor(c.value)}"></i><div><h2 style="margin:0">${esc(c.name)}</h2><div class="hint">${fmtDur(durOf(c) / 60)} each · ${n ? `${n} more to place` : "all placed ✓"}</div></div></div>
     <div class="psrows">${body}</div>
@@ -2115,7 +2134,7 @@ function rPlanView(id) {
   let placedH = 0;
   const tray = left.length
     ? `<div class="ptraywrap"><div class="ptrayhead"><h3>To place · ${left.reduce((a, c) => a + sessionsLeft(c), 0)}</h3><button class="btn small primary" data-act="autoPlan">Fill my week</button></div>
-       <div class="chips ptray">${left.map(c => `<button class="pchip" data-act="planPick" data-drag="new" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}"><i></i>${esc(c.name)}<span>${fmtDur(durOf(c) / 60)} · ${sessionsLeft(c)} left</span></button>`).join("")}</div>
+       <div class="chips ptray">${left.map(c => `<button class="pchip" data-act="planPick" data-drag="new" data-id="${esc(c.id)}" style="--c:${valColor(c.value)}" aria-label="${esc(c.name)}, ${fmtDur(durOf(c) / 60)} each, ${sessionsLeft(c)} left"><i></i><b class="nm">${esc(c.name)}</b><span>${fmtDur(durOf(c) / 60)} · ${sessionsLeft(c)} left</span></button>`).join("")}</div>
        <p class="hint" style="margin:6px 0 0">Tap a floor to pick its day and time, or drag it onto a day.</p></div>`
     : wk.length ? `<p class="hint" style="margin:0">Every weekly floor has its days. Drag a block to move it, or tap it to change its time.</p>` : `<p class="hint" style="margin:0">You have no weekly floors yet. Add some in the Compass tab.</p>`;
   const days = WD.map((dn, di) => {
@@ -2143,7 +2162,7 @@ function rPlanView(id) {
   const maxD = dkey(new Date(mon.getFullYear(), mon.getMonth() + 2, 0));
   const monthRows = mo.map(c => { const { ym, pl } = mEntry(c.id); const done = compHave(c, anyWeek(id), id) >= c.target;
     return `<div class="task"><span class="vdot" style="background:${valColor(c.value)}"></span><div class="tx"><span>${esc(c.name)}</span><small>${done ? "Done this month ✓" : pl.date ? `${WD[dayIdx(pl.date)]}, ${fmtShort(parse(pl.date))} · ${t12(pl.time)}` : "No date yet"} · ${fmtDur(durOf(c) / 60)}</small></div>
-      <input type="date" class="mdate" data-mplan="${esc(c.id)}" data-ym="${ym}" value="${pl.date || ""}" min="${monthKey(mon)}-01" max="${maxD}" aria-label="Date for ${esc(c.name)}"></div>`; }).join("");
+      <input type="date" class="mdate" data-mplan="${esc(c.id)}" data-ym="${ym}" value="${pl.date || ""}" min="${monthKey(mon)}-01" max="${maxD}" aria-label="Date for ${esc(c.name)}">${pl.date ? `<button class="xbtn" data-act="mClear" data-id="${esc(c.id)}" data-ym="${ym}" aria-label="Clear the date for ${esc(c.name)}" title="Clear the date">✕</button>` : ""}</div>`; }).join("");
   const fixedList = (w.fixed || []);
   const wd = workDaysOf(w);
   return `
@@ -2171,19 +2190,32 @@ function fixedSheet(sh) {
     <div class="fl"><span class="flabel">Days</span><div class="daypick">${WD.map((d, i) => `<button data-act="fxDay" data-d="${i}" aria-pressed="${f.days.includes(i)}">${d.slice(0, 2)}</button>`).join("")}</div></div>
     <div class="tunegrid"><div class="fl"><label class="flabel" for="fx-start">Starts</label><input type="time" id="fx-start" data-fx="start" value="${f.start}"></div>
       <div class="fl"><label class="flabel" for="fx-dur">How long</label><input type="text" id="fx-dur" data-fx="dur" value="${fmtDur(f.dur / 60)}" placeholder="2 h"></div></div>
-    <div class="row">${sh.id ? `<button class="btn quiet danger" data-act="fxRemove">Remove</button>` : `<button class="btn quiet" data-act="closeSheet">Cancel</button>`}<button class="btn primary" data-act="fxSave">Save</button></div></div>`;
+    <div class="row">${sh.id ? `<button class="btn quiet danger" data-act="fxRemove">Remove</button>` : ""}<span style="flex:1"></span><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="fxSave">Save</button></div></div>`;
 }
 /* ---- drag and drop: mouse drags straight away, touch after a short press so the page still scrolls ---- */
 const DRAG = { st: null, until: 0 };
 function dragStart() {
   const st = DRAG.st; if (!st || st.on) return;
-  st.on = true; S.dragging = st.id; if (st.kind === "new") S.planPick = null;
+  st.on = true; S.dragging = st.id; document.documentElement.classList.add("dragging"); if (st.kind === "new") S.planPick = null;
   const r = st.src.getBoundingClientRect();
   const g = st.src.cloneNode(true); g.classList.add("ghost"); g.style.width = r.width + "px"; g.removeAttribute("data-act");
   document.body.appendChild(g); st.ghost = g; st.dx = st.x - r.left; st.dy = st.y - r.top;
   render(); dragMove(st.x, st.y);
   if (navigator.vibrate && st.touch) try { navigator.vibrate(8); } catch (e) {}
-  const loop = () => { if (!DRAG.st || !DRAG.st.on) return; const y = DRAG.st.cy, m = 90; if (y < m) window.scrollBy(0, -Math.ceil((m - y) / 6)); else if (y > innerHeight - m) window.scrollBy(0, Math.ceil((y - innerHeight + m) / 6)); requestAnimationFrame(loop); };
+  const loop = () => {
+    const st = DRAG.st; if (!st || !st.on) return;
+    const tray = document.querySelector(".ptraywrap"), bar = $("#tabbar");
+    const top = Math.max(0, tray ? tray.getBoundingClientRect().bottom : 0), bot = bar && !bar.hidden ? bar.getBoundingClientRect().top : innerHeight;
+    /* speed is per millisecond, so it feels the same however fast the phone draws frames */
+    const now = performance.now(), dt = Math.min(120, now - (st.lastT || now)); st.lastT = now;
+    const zone = 90, y = st.cy; let dy = 0;
+    if (y > top + zone + 10) st.armed = true;
+    const speed = d => (0.25 + Math.min(1, d / zone) * 1.1) * dt;
+    if (y > bot - zone) dy = Math.ceil(speed(y - (bot - zone)));
+    else if (st.armed && y < top + zone) dy = -Math.ceil(speed(top + zone - y));
+    if (dy) { window.scrollBy({ top: dy, left: 0, behavior: "instant" }); dragMove(st.cx, st.cy); }
+    requestAnimationFrame(loop);
+  };
   requestAnimationFrame(loop);
 }
 function dragTarget(x, y) {
@@ -2200,7 +2232,7 @@ function dragEnd(drop) {
   const st = DRAG.st; DRAG.st = null; clearTimeout(st.lp);
   if (!st.on) return;
   DRAG.until = Date.now() + 400;
-  st.ghost.remove(); S.dragging = null;
+  st.ghost.remove(); S.dragging = null; document.documentElement.classList.remove("dragging");
   const t = drop ? dragTarget(st.cx, st.cy) : null;
   if (!t) { render(); return; }
   const di = +t.dataset.d, c = compById(st.id); if (!c) { render(); return; }
@@ -2533,6 +2565,12 @@ function calRow(c) {
 
 /* ============ component editor sheet ============ */
 function renderSheet() {
+  renderSheetBody();
+  const sheet = $("#sheetRoot .sheet");
+  document.documentElement.classList.toggle("sheet-open", !!sheet);
+  if (sheet && !sheet.querySelector(".sheetx")) sheet.insertAdjacentHTML("afterbegin", `<button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>`);
+}
+function renderSheetBody() {
   const root = $("#sheetRoot"), sh = S.sheet;
   if (!sh) { root.innerHTML = ""; return; }
   if (sh.type === "pick") {
@@ -3143,11 +3181,18 @@ document.addEventListener("click", e => {
       const el = document.querySelector(`.psrow [data-act="psRemove"][data-d="${b.dataset.d}"]`); if (el) burst(el, valColor(c.value), 8);
       if (!sessionsLeft(compById(sh.id))) setTimeout(() => { if (S.sheet && S.sheet.type === "place" && S.sheet.id === sh.id) { S.sheet = null; render(); toast(`${c.name}: ${planDays(compById(sh.id)).map(d => WD[d]).join(", ")}`); } }, 650);
       return; }
+    case "psCustom": { const d = +b.dataset.d; S.sheet.custom = d < 0 ? null : d; renderSheet(); const f = $("#ps-time"); if (f) { f.focus(); try { f.showPicker && f.showPicker(); } catch (e) {} } return; }
+    case "psCustomGo": { const sh = S.sheet, d = +b.dataset.d, t = ($("#ps-time") || {}).value; if (!t) return toast("Pick a start time first."); const c = compById(sh.id); if (!c) return;
+      sh.custom = null;
+      if (plannedOn(c, d)) { planBlock(sh.id, bl => setDayTime(bl, d, t)); render(); toast(`${c.name} · ${WD[d]} ${t12(t)}`); return; }
+      placeFloor(sh.id, d, t, null, true);
+      if (!sessionsLeft(compById(sh.id))) setTimeout(() => { if (S.sheet && S.sheet.type === "place" && S.sheet.id === sh.id) { S.sheet = null; render(); toast(`${c.name}: ${planDays(compById(sh.id)).map(x => WD[x]).join(", ")}`); } }, 650);
+      return; }
     case "psRemove": { const sh = S.sheet, d = +b.dataset.d; planBlock(sh.id, bl => { bl.days = bl.days.filter(x => x !== d); if (bl.times) delete bl.times[d]; }); render(); return; }
     case "autoPlan": { const r = autoPlan(); render(); toast(r.n ? `Placed ${r.n} session${r.n > 1 ? "s" : ""}${r.skipped ? `; ${r.skipped} didn't fit anywhere` : ""}. Tap any block to adjust.` : "No free slot fits what's left. Try shorter sessions or fewer."); return; }
     case "clearPlan": S.confirm = "clearPlan"; break;
     case "clearPlanNo": S.confirm = null; break;
-    case "clearPlanYes": S.confirm = null; editProfile(p => p.components.forEach(c => { if (c.cadence === "weekly" && c.block) { c.block.days = []; c.block.times = {}; c.gcal = false; } })); toast("Every day is clear again"); break;
+    case "clearPlanYes": S.confirm = null; editProfile(p => p.components.forEach(c => { if (c.cadence === "weekly" && c.block) { c.block.days = []; c.block.times = {}; c.block.time = ""; c.gcal = false; } })); toast("Every day is clear again"); break;
     case "blkMove": { const sh = S.sheet, nd = +b.dataset.d; if (!sh || nd === sh.day) return; const c = compById(sh.id); if (!c) return;
       const t = bestSlot(nd, durOf(c), dayItems(nd), timeOn(c, sh.day));
       if (placeFloor(sh.id, nd, t, sh.day, true)) { S.sheet = { type: "block", id: sh.id, day: nd }; render(); toast(`Moved to ${WD[nd]}${t ? ", " + t12(t) : ""}`); } return; }
@@ -3173,6 +3218,7 @@ document.addEventListener("click", e => {
       S.sheet = null; break;
     }
     case "blkRemove": { const sh = S.sheet; planBlock(sh.id, bl => { bl.days = bl.days.filter(x => x !== sh.day); if (bl.times) delete bl.times[sh.day]; }); S.sheet = null; break; }
+    case "mClear": { setMonthPlan(b.dataset.ym, b.dataset.id, () => null); render(); toast("Date cleared"); return; }
     case "mRemove": { const sh = S.sheet; setMonthPlan(sh.ym, sh.id, () => null); S.sheet = null; break; }
     case "icsOpen": S.sheet = { type: "ics" }; break;
     case "icsDownload": downloadIcs(); return;
@@ -3289,6 +3335,7 @@ document.addEventListener("submit", e => {
 });
 document.addEventListener("input", e => {
   const t = e.target, ds = t.dataset;
+  if (ds.mplan && !t.value) { setMonthPlan(ds.ym, ds.mplan, () => null); t.blur(); render(); return; }
   if (ds.j) editWeek(w => { dayObj(w, S.selDay).j[ds.j] = t.value; });
   else if (ds.r) editWeek(w => { w.r[ds.r] = t.value; });
   else if (ds.m) editSettings(s => { s.months = s.months || {}; const m = s.months[monthKey()] = s.months[monthKey()] || {}; m[ds.m] = t.value; });
