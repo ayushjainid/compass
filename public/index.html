@@ -3247,7 +3247,7 @@ function renderOnboarding() {
     const order = POPULAR.filter(id => VALUE_LIB.some(v => v.id === id)).map(id => VALUE_LIB.find(v => v.id === id)).concat(VALUE_LIB.filter(v => !POPULAR.includes(v.id)), d.custom);
     const cores = d.cores.map(c => c.value);
     html = `<h1>What matters to you?</h1>
-      <p class="lede vlede">Pick 3 to 5 · star up to 2</p>
+      <p class="lede vlede">Pick 5 to 7 · star up to 2</p>
       <div class="goalcard">
         <label for="ob-goal"><span>This year, I'm heading toward…</span><span class="optpill">Optional</span></label>
         <textarea id="ob-goal" class="goalin" data-ob="goal" rows="2" placeholder="Calmer, fitter, closer to family">${esc(d.goal)}</textarea>
