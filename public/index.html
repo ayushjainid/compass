@@ -325,6 +325,7 @@ html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
 .obpen:hover{background:var(--sunk)}
 .obmore{display:block;width:100%;text-align:left;padding:12px 14px;font-size:14px;color:var(--accent);font-weight:500;border-top:1px solid var(--line)}
 .obsum{margin:8px 0 12px}
+.obsum .chip{gap:6px}.obsum .cstar{color:var(--brass)}
 .intro{margin:8px 0 14px;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
 .intro ul{margin:8px 0 12px;padding-left:18px;display:grid;gap:6px;color:var(--ink2);font-size:14.5px;line-height:1.45}
 .progress i{height:4px;flex:1;border-radius:2px;background:var(--line);transition:background .3s}
@@ -3293,7 +3294,7 @@ function renderOnboarding() {
     html = `<h1>Your floors</h1>
       <p class="lede">The minimum that already counts as a good week. ${d.skipped ? "Untick anything that doesn't fit." : "We picked one or two for each value."} Tap ✎ to change how often or how long.</p>
       ${d.skipped ? `<div class="card pad obsum"><div class="row" style="align-items:flex-start"><div><span class="flabel">Starting from</span><b style="display:block;font:600 18px var(--display)">${esc(d.starter ? d.starter.name : "your setup")}</b></div></div>
-        <div class="chips" style="margin-top:8px">${d.values.map(v => `<span class="chip ${cs.includes(v) ? "sel" : ""}">${cs.includes(v) ? "★ " : ""}${esc(vById(d, v).name)}</span>`).join("")}</div>
+        <div class="chips" style="margin-top:8px">${d.values.map(v => `<span class="chip">${cs.includes(v) ? '<span class="cstar" aria-label="Core">★</span>' : ""}${esc(vById(d, v).name)}</span>`).join("")}</div>
         <div class="hint" style="margin-top:8px">${wkName ? esc(wkName) + " · " : ""}about ${d.capacity} h a week for floors</div>
         <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small" data-act="obJump" data-step="1">Change values</button><button class="btn small" data-act="obJump" data-step="2">Change week</button></div></div>` : ""}
       <div class="${S.loadOpen ? "" : "stickymeter"}">${meter(obOn(d), d.capacity, "ob")}</div>
