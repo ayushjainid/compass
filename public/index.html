@@ -79,6 +79,13 @@ button:disabled{cursor:default}
 .sync{display:inline-flex;align-items:center;gap:6px}
 .sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
 .sync.ok i{background:var(--good)} .sync.busy i{background:var(--brass)}
+.island{background:color-mix(in srgb,var(--accent) 5%,var(--surface));border:1px solid var(--line);border-radius:20px;padding:4px 16px 12px;margin:6px 0 22px;box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 6%,transparent)}
+.island .statusline{padding-block:2px 0}
+.island .statusline[hidden]{display:none}
+.islandx:empty{display:none}
+.islandx{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.islandx .obprog{margin:0}
+body.landing .island{display:none}
 .banner{background:var(--warn-soft);color:var(--ink);border-radius:var(--r);padding:10px 12px;font-size:13.5px;margin-block:0 12px}
 
 /* type */
@@ -375,7 +382,7 @@ body{transition:background-color .35s ease,color .35s ease}
 /* ---------- landing ---------- */
 html{scroll-behavior:smooth}
 body.landing .wrap{max-width:1120px;padding-block:0 32px}
-body.landing .top,body.landing #statusline{display:none}
+body.landing .top,body.landing #statusline,body.landing .island{display:none}
 .lnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px;background:var(--bg);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .lnav .brand svg{width:26px;height:26px}
 .lnav .links{display:flex;gap:26px;font-size:14.5px}
@@ -755,10 +762,10 @@ details.fold[open] summary::before{content:"▾ ";}
 .calbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.calbtns .btn{flex:1 1 140px}
 /* phones: logo and account on one line, the week switcher gets its own full-width row */
 @media (max-width:560px){
-  .top{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:12px;padding-block:14px 4px}
+  .top{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:12px;padding-block:10px 4px}
   .topright{display:contents}
   #acctBtn{grid-column:2;grid-row:1;width:36px;height:36px}
-  .weeknav{grid-column:1/-1;grid-row:2;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 6px}
+  .weeknav{grid-column:1/-1;grid-row:2;justify-content:space-between;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:4px 6px}
   .weeknav[hidden]{display:none}
   .weeknav .lbl{flex:1}
 }
@@ -770,6 +777,7 @@ details.fold[open] summary::before{content:"▾ ";}
 <body>
 
 <div class="wrap">
+  <div class="island" id="island">
   <header class="top">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.6"/>
@@ -787,6 +795,8 @@ details.fold[open] summary::before{content:"▾ ";}
     </div>
   </header>
   <div class="statusline" id="statusline"><span class="sync" id="sync"><i></i><span>Connecting…</span></span><span id="heading"></span></div>
+  <div class="islandx" id="islandx"></div>
+  </div>
   <div class="banner" id="banner" hidden></div>
   <main id="main"></main>
 </div>
@@ -2005,7 +2015,7 @@ function rLanding() {
   <footer class="lfoot"><span>Compass · Free and private</span><span style="display:flex;gap:16px;flex-wrap:wrap"><a class="textlink" href="/privacy">Privacy policy</a><a class="textlink" href="/terms">Terms of service</a></span></footer>`;
 }
 function renderGate() {
-  $("#weeknav").hidden = true; $("#tabbar").hidden = true; $("#acctBtn").hidden = true; $("#obbar").innerHTML = ""; $("#heading").textContent = ""; $("#sheetRoot").innerHTML = "";
+  $("#weeknav").hidden = true; $("#tabbar").hidden = true; $("#acctBtn").hidden = true; $("#obbar").innerHTML = ""; $("#heading").textContent = ""; $("#islandx").innerHTML = ""; $("#sheetRoot").innerHTML = "";
   let body = "", wasIn = false;
   try { wasIn = localStorage.getItem("compass-was-signed-in") === "1"; } catch (e) {}
   const landing = S.authState === "signedOut" || (S.authState === "loading" && !wasIn);
@@ -2037,7 +2047,7 @@ function render() {
   renderAvatar();
   if (!S.ob && profileReady && onboarded() && !S.obChecked) { S.obChecked = true; const dr = resumeDraft(); if (dr) { S.ob = dr; toast("Picked up setup where you left off"); } }
   const inOb = !onboarded() || !!S.ob;
-  $("#weeknav").hidden = inOb; $("#statusline").hidden = false; $("#tabbar").hidden = inOb;
+  $("#weeknav").hidden = inOb; $("#statusline").hidden = false; $("#tabbar").hidden = inOb; if (!inOb) $("#islandx").innerHTML = "";
   if (inOb) {
     if (!profileReady) { $("#main").innerHTML = S.loadErr ? `<div class="signin"><div class="hero">${bigCompass(false)}</div><h1>Couldn't load your compass.</h1><p class="lede">Your data is safe in your account. Check your connection and try again.</p><button class="btn primary" data-act="retryLoad">Try again</button></div>` : `<div class="hero">${bigCompass()}</div><p class="hint" style="text-align:center">Loading your compass…</p>`; $("#obbar").innerHTML = ""; updSync(); return; }
     if (!S.ob) { const dr = resumeDraft(); if (dr) S.ob = dr; else { startOnboarding(false); S.ob.auto = true; } }
@@ -3295,7 +3305,8 @@ function renderOnboarding() {
         <form class="addrow" id="obFunAdd" style="grid-template-columns:1fr auto;padding:10px 0 0"><input type="text" id="obFunText" placeholder="Something you do just for joy" maxlength="50" aria-label="Add a fun thing"><button class="btn small" type="submit">Add</button></form></details>`;
     canNext = obOn(d).some(c => !c.fun); next = canNext ? "Start using Compass" : "Tick at least one floor";
   }
-  $("#main").innerHTML = `<div class="ob">${prog}<div class="stepin" id="obStep">${html}</div></div>`;
+  $("#islandx").innerHTML = prog;
+  $("#main").innerHTML = `<div class="ob"><div class="stepin" id="obStep">${html}</div></div>`;
   $("#obbar").innerHTML = `<div class="obbar"><div class="in">${back ? `<button class="btn quiet" data-act="${backAct}">Back</button>` : (onboarded() ? `<button class="btn quiet" data-act="obCancel">Cancel</button>` : "<span></span>")}<button class="btn primary" data-act="${nextAct}" ${canNext ? "" : "disabled"}>${esc(next)}</button></div></div>`;
   $("#tabbar").hidden = true; $("#weeknav").hidden = true; $("#heading").textContent = "";
   setNeedle(1);
