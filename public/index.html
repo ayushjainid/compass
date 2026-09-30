@@ -3438,7 +3438,7 @@ document.addEventListener("click", e => {
     }
     case "weekEdit": S.sheet = { type: "week", draft: Object.assign({}, WEEK_DEFAULT, (profile() || {}).week || {}) }; break;
     case "weekSave": { const w = S.sheet.draft, f = weekCalc(w).floors; editProfile(p => { p.week = w; p.capacity = f; if (p.pending) p.pending.week = false; }); S.sheet = null; toast(`Budget set to ${f} h a week`); break; }
-    case "obEdit": S.obFrozen = byTime(S.ob.d.comps).map(c => c.id); S.obEdit = b.dataset.id; S.obRemoved = null; updateOb(); { const f = $("#obe-name"); if (f) f.focus(); } return;
+    case "obEdit": S.obFrozen = byTime(S.ob.d.comps).map(c => c.id); S.obEdit = b.dataset.id; S.obRemoved = null; updateOb(); if (matchMedia("(pointer: fine)").matches) { const f = $("#obe-name"); if (f) f.focus({ preventScroll: true }); } return;
     case "obEditDone": { S.obFrozen = null; const c = S.ob && S.ob.d.comps.find(x => x.id === S.obEdit); if (c && !(c.name || "").trim()) { toast("Give it a name first."); return; } if (c) c.name = c.name.trim(); S.obEdit = null; updateOb(); return; }
     case "obCad": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; delete c.unit; delete c.step; } c.touched = true; updateOb(); return; }
     case "obDel": { const d = S.ob && S.ob.d; if (!d) return; const i = d.comps.findIndex(x => x.id === b.dataset.id); if (i < 0) return; const c = d.comps[i]; d.comps.splice(i, 1); if (!d.seen.includes(c.id)) d.seen.push(c.id); S.obRemoved = { c, i }; if (S.obEdit === c.id) S.obEdit = null; updateOb(); return; }
