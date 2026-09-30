@@ -278,7 +278,15 @@ html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
 .vt{display:flex;flex-direction:column;gap:3px;min-width:0}.vt b{font-weight:600}.vt small{color:var(--ink2);font-size:13px;line-height:1.4}.vt .src{display:inline;margin:0}
 .vstar{flex:none;width:52px;font-size:22px;color:var(--brass);border-left:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 .vstar[aria-pressed="false"]{color:var(--muted)}
-.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.vlede{color:var(--muted);margin:2px 0 22px}
+.goalcard{border-radius:var(--r);padding:14px 16px 10px;background:color-mix(in srgb,var(--accent) 7%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);transition:border-color .15s}
+.goalcard:focus-within{border-color:var(--accent)}
+.goalcard label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--ink2)}
+.optpill{flex:none;font-size:11px;letter-spacing:.04em;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.goalcard .goalin{display:block;border:0;background:transparent;padding:6px 0 2px;margin:0;resize:none;min-height:0;font:italic 400 19px/1.4 var(--display);color:var(--ink);field-sizing:content;box-shadow:none;outline:none}
+.goalcard .goalin::placeholder{color:var(--muted);opacity:.7}
+.vsec{margin:28px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .vtile{position:relative;display:flex;align-items:stretch;min-height:60px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);transition:border-color .15s,background .15s}
 .vtile .vmain{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:left;padding:12px 14px}
 .vtile .vmain b{font-weight:600;font-size:15px;line-height:1.25}
@@ -3239,10 +3247,13 @@ function renderOnboarding() {
     const order = POPULAR.filter(id => VALUE_LIB.some(v => v.id === id)).map(id => VALUE_LIB.find(v => v.id === id)).concat(VALUE_LIB.filter(v => !POPULAR.includes(v.id)), d.custom);
     const cores = d.cores.map(c => c.value);
     html = `<h1>What matters to you?</h1>
-      <p class="lede">Pick 3 to 5. Star up to 2 that matter most right now.</p>
-      <label class="flabel" for="ob-goal" style="margin-top:6px">Where are you heading this year? <span class="opt">Optional</span></label>
-      <textarea id="ob-goal" data-ob="goal" rows="2" placeholder="e.g. Calmer, fitter, closer to family">${esc(d.goal)}</textarea>
-      ${d.imp && d.imp.goalHint && !d.goal.trim() ? `<p class="hint" style="margin:6px 0 0"><button class="linkish" data-act="impGoal">Start from your apps</button>: “${esc(d.imp.goalHint)}”</p>` : ""}
+      <p class="lede vlede">Pick 3 to 5 · star up to 2</p>
+      <div class="goalcard">
+        <label for="ob-goal"><span>This year, I'm heading toward…</span><span class="optpill">Optional</span></label>
+        <textarea id="ob-goal" class="goalin" data-ob="goal" rows="2" placeholder="Calmer, fitter, closer to family">${esc(d.goal)}</textarea>
+        ${d.imp && d.imp.goalHint && !d.goal.trim() ? `<p class="hint" style="margin:6px 0 0"><button class="linkish" data-act="impGoal">Start from your apps</button>: “${esc(d.imp.goalHint)}”</p>` : ""}
+      </div>
+      <p class="vsec">Your values</p>
       <div class="vgrid">${order.map(v => { const on = d.values.includes(v.id), core = cores.includes(v.id);
         return `<div class="vtile ${on ? "on" : ""} ${core ? "starred" : ""}"><button class="vmain" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${on}"><b>${esc(v.name)}</b>${d.imp && d.imp.ev[v.id] ? `<small class="fromapps">In your apps</small>` : ""}</button>${on ? `<button class="vstar" data-act="obCore" data-v="${esc(v.id)}" aria-pressed="${core}" aria-label="${core ? "Unstar" : "Star"} ${esc(v.name)}">${core ? "★" : "☆"}</button>` : ""}</div>`; }).join("")}</div>
       <div class="vlinks"><button class="linkish" data-act="obAddV" aria-expanded="${!!S.obAddV}">+ Add your own</button><button class="linkish" data-act="obWhy" aria-expanded="${!!S.obWhy}">Why these?</button></div>
@@ -3680,7 +3691,7 @@ document.addEventListener("input", e => {
   else if (ds.p === "goal") editProfile(p => { p.goal = t.value; });
   else if (ds.p === "ifthen") editProfile(p => { p.ifthen = t.value.split("\n"); });
   else if (ds.core !== undefined) editProfile(p => { if (p.cores[+ds.core]) p.cores[+ds.core].text = t.value; });
-  else if (ds.ob === "goal") { S.ob.d.goal = t.value; saveDraft(); }
+  else if (ds.ob === "goal") { S.ob.d.goal = t.value; saveDraft(); if (!CSS.supports("field-sizing", "content")) { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; } }
   else if (ds.ob === "ifthen") { S.ob.d.ifthen = t.value.split("\n"); saveDraft(); }
   else if (ds.obe && S.ob) { const c = S.ob.d.comps.find(x => x.id === S.obEdit); if (c) c[ds.obe] = t.value;  saveDraft(); }
   else if (ds.fx && S.sheet && S.sheet.type === "fixed" && ds.fx !== "dur") { S.sheet.draft[ds.fx] = t.value; }
