@@ -776,6 +776,7 @@ details.fold[open] summary::before{content:"▾ ";}
   .weeknav .lbl{flex:1}
 }
 .greet{font:500 15px/1.3 var(--sans);color:var(--ink2);margin:4px 0 2px}
+.greetin{color:var(--ink);font-weight:500}
 .acct{display:flex;align-items:center;gap:12px}
 .acct .avatar{width:44px;height:44px;font-size:18px}
 </style>
@@ -2132,10 +2133,9 @@ function rToday(id) {
   const hr = new Date().getHours(), part = hr < 5 ? "evening" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
   const first = ((S.user && S.user.name) || "").split(" ")[0];
   return `${introCard()}
-  ${S.selDay === tk ? `<p class="greet">Good ${part}${first ? ", " + esc(first) : ""}.</p>` : ""}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
-  <p class="lede">${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
+  <p class="lede">${S.selDay === tk ? `<span class="greetin">Good ${part}${first ? ", " + esc(first) : ""}.</span> ` : ""}${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
   ${checks ? `<h3>Daily</h3><div class="card">${checks}</div>` : ""}
   ${todayTasks(id)}
   ${plannedHtml}
