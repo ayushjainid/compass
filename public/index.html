@@ -2895,7 +2895,7 @@ function renderSheetBody() {
     <div class="fl"><span class="flabel">How often</span><div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="cCad" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div></div>
     <div class="two">
       <div class="fl"><label class="flabel">${c.cadence === "daily" ? "Days a week (floor)" : c.cadence === "monthly" ? "Times a month (floor)" : "Per week (floor)"}</label><div class="stepper"><button data-act="cTarget" data-d="-1" aria-label="Lower floor">−</button><span class="v">${c.target}${c.unit || ""}</span><button class="plus" data-act="cTarget" data-d="1" aria-label="Raise floor">+</button></div></div>
-      <div class="fl"><label class="flabel" for="c-hours">Hours each time</label><input type="number" id="c-hours" data-c="hours" min="0" max="12" step="0.25" value="${c.hours || 0}"></div>
+      <div class="fl"><label class="flabel" for="c-mins">Minutes each time</label><input type="number" inputmode="numeric" id="c-mins" data-c="mins" min="0" max="720" step="5" value="${Math.round((c.hours || 0) * 60)}"></div>
     </div>
     <div class="row"><div><b>Safety net</b><div class="hint">Stays on during a Minimum Viable Week.</div></div><button class="switch" role="switch" aria-checked="${!!c.mvw}" data-act="cToggle" data-f="mvw" aria-label="Safety net"></button></div>
     ${c.cadence === "weekly" ? `<div class="row"><div><b>People rotation</b><div class="hint">Logging a call in Compass → People counts here.</div></div><button class="switch" role="switch" aria-checked="${!!c.people}" data-act="cToggle" data-f="people" aria-label="People rotation"></button></div>
@@ -3780,6 +3780,7 @@ document.addEventListener("input", e => {
   else if (ds.fx && S.sheet && S.sheet.type === "fixed" && ds.fx !== "dur") { S.sheet.draft[ds.fx] = t.value; }
   else if (ds.fx === "dur" && S.sheet && S.sheet.type === "fixed") { const h = parseDur(t.value); if (h !== null) S.sheet.draft.dur = Math.max(15, Math.round(h * 60)); }
   else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value;  saveDraft(); }
+  else if (ds.c === "mins" && S.sheet && S.sheet.draft) { S.sheet.draft.hours = Math.min(720, Math.max(0, Number(t.value) || 0)) / 60; }
   else if (ds.c && S.sheet && S.sheet.draft) { S.sheet.draft[ds.c] = ds.c === "hours" ? Math.max(0, Number(t.value) || 0) : t.value; }
   else if (ds.cb && S.sheet && S.sheet.draft && S.sheet.draft.block) { S.sheet.draft.block[ds.cb] = ds.cb === "dur" ? Math.max(5, Number(t.value) || 30) : t.value; S.sheet.draft.gcal = false; }
   else if (ds.cap) {
