@@ -98,6 +98,10 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 .strip .ring.full{background:var(--good)}
 .strip button[aria-pressed="true"]{background:var(--surface);box-shadow:0 0 0 1px var(--line)}
 .strip button.today .wd{color:var(--brass);font-weight:600}
+/* days still ahead stay grey but can be opened */
+.strip button.future .wd,.strip button.future .ring span{color:var(--muted);opacity:.75}
+.strip button.future .ring{background:var(--sunk)}
+.strip button.future[aria-pressed="true"] .ring span,.strip button.future[aria-pressed="true"] .wd{opacity:1;color:var(--ink2)}
 .strip button:disabled{opacity:.35}
 
 /* check rows */
@@ -523,6 +527,10 @@ body.landing .top,body.landing #statusline{display:none}
 .pfix{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border-radius:10px;padding:6px 10px;background:repeating-linear-gradient(135deg,var(--sunk) 0 6px,transparent 6px 12px),var(--surface);border:1px solid var(--line);font-size:13px;color:var(--ink2)}
 .pfix .t{font:500 12px var(--mono);color:var(--muted)}
 .pblk.clash{box-shadow:inset 0 0 0 1.5px var(--warn)}.pblk.clash .dur{color:var(--warn)}
+/* plan numbers in the text face (the monospace face spreads "2 h 10 min" apart); digits stay tabular so they line up */
+.psum b,.pleft,.pmin,.pchip span,.pblk .t,.pfix .t,.pslot .t,.psd span,.pstime,.pstime span{font-family:var(--sans);font-variant-numeric:tabular-nums;letter-spacing:0}
+.psum b{font-size:17px;font-weight:600}.pleft{font-size:12.5px;font-weight:600}.pblk .t,.pfix .t,.pslot .t{font-size:12.5px;font-weight:600}.pfix .t,.pslot .t{font-weight:500}
+.pstime{font-size:14px;font-weight:500}.psd span{font-size:12px;font-weight:500}
 .ptraywrap{position:sticky;top:0;z-index:6;background:var(--bg);margin:0 -16px;padding:calc(2px + env(safe-area-inset-top,0px)) 16px 10px;border-bottom:1px solid var(--line)}
 .ptrayhead{display:flex;align-items:center;justify-content:space-between;gap:10px}.ptrayhead h3{margin:14px 0 8px}
 .ptray{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:calc(50% - 4px);gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;scroll-snap-type:x proximity}
@@ -679,6 +687,28 @@ details.fold[open] summary::before{content:"▾ ";}
 .avatar{width:32px;height:32px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:14px;flex:none}
 .avatar img{width:100%;height:100%;object-fit:cover}
 .topright{display:flex;align-items:center;gap:6px}
+.mdatebtn{border:1px dashed var(--line);border-radius:999px;padding:8px 14px;font-size:14px;color:var(--ink2);white-space:nowrap;min-height:38px}
+.mdatebtn.set{border-style:solid;border-color:var(--accent);color:var(--accent);font-weight:600;background:var(--accent-soft)}
+.mcals{display:grid;gap:18px}@media (min-width:640px){.mcals{grid-template-columns:1fr 1fr}}
+.mcal>b{font:600 16px var(--display);display:block;margin-bottom:8px}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.mwd{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding-bottom:2px}
+.mgrid button{position:relative;aspect-ratio:1;max-height:44px;border-radius:50%;font-size:15px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.mgrid button:hover:not(:disabled){background:var(--sunk)}
+.mgrid button.today{box-shadow:inset 0 0 0 1.5px var(--brass);font-weight:600}
+.mgrid button.sel{background:var(--accent);color:var(--on-accent);font-weight:600}
+.mgrid button:disabled{color:var(--muted);opacity:.4}
+.mgrid button i{position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--brass)}
+.calbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.calbtns .btn{flex:1 1 140px}
+/* phones: logo and account on one line, the week switcher gets its own full-width row */
+@media (max-width:560px){
+  .top{display:grid;grid-template-columns:1fr auto;align-items:center;row-gap:12px;padding-block:14px 4px}
+  .topright{display:contents}
+  #acctBtn{grid-column:2;grid-row:1;width:36px;height:36px}
+  .weeknav{grid-column:1/-1;grid-row:2;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 6px}
+  .weeknav[hidden]{display:none}
+  .weeknav .lbl{flex:1}
+}
 .greet{font:500 15px/1.3 var(--sans);color:var(--ink2);margin:4px 0 2px}
 .acct{display:flex;align-items:center;gap:12px}
 .acct .avatar{width:44px;height:44px;font-size:18px}
@@ -714,7 +744,7 @@ details.fold[open] summary::before{content:"▾ ";}
 
 <script src="/firebase-config.js"></script>
 <script type="module">
-import * as FB from "/vendor/firebase.js";
+import * as FB from "/vendor/firebase.js?v=2";
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -921,7 +951,7 @@ function touch(id) {
   clearTimeout(T[id]); T[id] = setTimeout(() => { T[id] = null; flush(id); }, 600); updSync();
 }
 async function flush(id) {
-  if (S.mode !== "db" || !S.docs[id]) return;
+  if (S.mode !== "db" || !S.docs[id] || S.deleting) return;
   if (IN[id]) { DIRTY[id] = true; return; }
   IN[id] = true; updSync();
   try {
@@ -1018,24 +1048,68 @@ async function signIn() {
   }
   S.authBusy = false; render();
 }
-async function deleteAccount() {
-  const user = ST.auth && ST.auth.currentUser; if (!user) return;
-  S.delMsg = "Deleting…"; render();
-  try {
-    await flushAll(); Object.keys(ST.subs).forEach(unsubscribe);
-    const snap = await FB.getDocs(FB.collection(ST.fs, "users", ST.uid, "docs"));
-    await Promise.all(snap.docs.map(d => FB.deleteDoc(d.ref)));
-    try { const pre = "compass:" + ST.uid + ":"; Object.keys(localStorage).filter(k => k.startsWith(pre)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
-    try { await FB.deleteUser(user); }
+/* Deleting an account. Google only lets an account be removed shortly after signing in, so confirm with Google
+   first, straight from the tap (a pop-up opened after other waiting gets blocked on phones), falling back to a
+   full-page confirm. Then delete every document in one batch and remove the account, each step with a time limit
+   so it can never hang on "Deleting…". */
+const within = (p, ms, code) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error(code), { code })), ms))]);
+function recentSignIn(user) { const t = Date.parse((user.metadata || {}).lastSignInTime || ""); return t && Date.now() - t < 4 * 60 * 1000; }
+async function deleteAccount(confirmed) {
+  const user = ST.auth && ST.auth.currentUser; if (!user || S.deleting) return;
+  if (navigator.onLine === false) { S.delMsg = "You're offline. Connect to the internet, then try again."; render(); return; }
+  if (!confirmed && !recentSignIn(user)) {
+    S.delMsg = "Confirm with Google to delete your account…"; renderSheet();
+    try { await FB.reauthenticateWithPopup(user, new FB.GoogleAuthProvider()); }
     catch (e) {
-      if (e && e.code === "auth/requires-recent-login") { await FB.reauthenticateWithPopup(user, new FB.GoogleAuthProvider()); await FB.deleteUser(user); }
-      else throw e;
+      const c = e && e.code || "";
+      if (c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request" || c === "auth/user-cancelled") { S.delMsg = "Nothing was deleted. Confirm with Google to delete your account."; renderSheet(); return; }
+      if (c === "auth/user-mismatch") { S.delMsg = "That was a different Google account. Nothing was deleted."; renderSheet(); return; }
+      /* pop-ups blocked or unsupported (for example an app on the home screen): confirm on a full page and come back */
+      try { sessionStorage.setItem("compass-delete", String(Date.now())); } catch (x) {}
+      S.delMsg = "Taking you to Google to confirm…"; renderSheet();
+      try { await FB.reauthenticateWithRedirect(user, new FB.GoogleAuthProvider()); return; }
+      catch (x) { try { sessionStorage.removeItem("compass-delete"); } catch (y) {} S.delMsg = "Couldn't confirm with Google (" + (x && x.code || c || "unknown") + "). Nothing was deleted."; renderSheet(); return; }
     }
-    S.delMsg = ""; S.sheet = null; S.confirm = null;
-  } catch (e) {
-    S.delMsg = e && e.code === "auth/popup-closed-by-user" ? "Your data was deleted. To remove the account itself, confirm with Google and try again." : "Couldn't finish deleting (" + (e && e.code || "unknown error") + "). Try again.";
-    render();
   }
+  S.deleting = true;
+  const step = t => { S.delMsg = t; renderSheet(); };
+  try {
+    /* stop every pending save so nothing is written back after the delete */
+    Object.keys(T).forEach(k => { clearTimeout(T[k]); T[k] = null; }); Object.keys(DIRTY).forEach(k => { DIRTY[k] = false; });
+    Object.keys(ST.subs).forEach(unsubscribe);
+    step("Deleting your data…");
+    let ids = [];
+    try { ids = (await within(FB.getDocs(FB.collection(ST.fs, "users", ST.uid, "docs")), 15000, "timeout")).docs.map(d => d.id); }
+    catch (e) { ids = []; }
+    ids = [...new Set(ids.concat(Object.keys(S.docs), Object.keys(S.hist)))].filter(id => /^[\w-]+$/.test(id));
+    for (let i = 0; i < ids.length; i += 400) {
+      const b = FB.writeBatch(ST.fs);
+      ids.slice(i, i + 400).forEach(id => b.delete(FB.doc(ST.fs, "users", ST.uid, "docs", id)));
+      await within(b.commit(), 20000, "timeout");
+    }
+    try { const pre = "compass:" + ST.uid + ":"; Object.keys(localStorage).filter(k => k.startsWith(pre)).forEach(k => localStorage.removeItem(k)); localStorage.removeItem("compass-was-signed-in"); } catch (e) {}
+    step("Removing your account…");
+    try { await within(FB.deleteUser(user), 20000, "timeout"); }
+    catch (e) {
+      if (e && e.code === "auth/requires-recent-login") { S.deleting = false; try { sessionStorage.setItem("compass-delete", String(Date.now())); } catch (x) {} step("Your data is deleted. Confirming with Google to remove the account…"); await FB.reauthenticateWithRedirect(user, new FB.GoogleAuthProvider()); return; }
+      throw e;
+    }
+    try { await within(FB.terminate(ST.fs).then(() => FB.clearIndexedDbPersistence(ST.fs)), 5000, "timeout"); } catch (e) {}
+    S.deleting = false; S.delMsg = ""; S.sheet = null; S.confirm = null;
+    toast("Your account and all your data are deleted");
+    setTimeout(() => location.replace("/"), 1200);
+  } catch (e) {
+    S.deleting = false;
+    step(e && e.code === "timeout" ? "Google's servers didn't answer in time. Check your connection and tap Delete everything again; anything already deleted stays deleted." : "Couldn't finish deleting (" + (e && e.code || "unknown error") + "). Try again.");
+  }
+}
+function resumeDeleteIfAsked() {
+  let t = 0; try { t = +sessionStorage.getItem("compass-delete") || 0; } catch (e) {}
+  if (!t || Date.now() - t > 10 * 60 * 1000) return;
+  try { sessionStorage.removeItem("compass-delete"); } catch (e) {}
+  const user = ST.auth && ST.auth.currentUser; if (!user) return;
+  S.sheet = { type: "account" }; S.confirm = "delacct"; render();
+  deleteAccount(true);
 }
 async function signOutNow() {
   if ([T, IN, DIRTY].some(m => Object.values(m).some(Boolean))) toast("Saving your changes…");
@@ -1099,9 +1173,17 @@ async function init() {
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     loadHistory(); render();
     if (!onboarded()) msResume();
+    resumeDeleteIfAsked();
   });
 }
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
+/* coming back to the app (a new day, or after a while away) lands on today again */
+let HIDDEN_AT = 0, SEEN_DAY = todayKey();
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") { HIDDEN_AT = Date.now(); return; }
+  const tk = todayKey(), away = HIDDEN_AT && Date.now() - HIDDEN_AT > 30 * 60000;
+  if (tk !== SEEN_DAY || away) { SEEN_DAY = tk; if (!S.sheet && !S.ob && !DRAG.st) { S.viewMon = monday(new Date()); S.selDay = tk; if (S.authState === "in") render(); } }
+});
 addEventListener("pagehide", () => { flushAll(); });
 async function checkForUpdate() {
   try {
@@ -1958,7 +2040,7 @@ function rToday(id) {
     const d = (w.days || {})[k] || {};
     const n = daily.filter(c => c.auto === "journal" ? hasJournal(d) : (d.a || {})[c.id]).length, tot = Math.max(daily.length, 1);
     const p = Math.round(n / tot * 100);
-    return `<button data-act="day" data-k="${k}" aria-pressed="${k === S.selDay}" class="${k === tk ? "today" : ""}" ${k > tk ? "disabled" : ""} aria-label="${WD[i]} ${parse(k).getDate()}, ${n} of ${daily.length} done">
+    return `<button data-act="day" data-k="${k}" aria-pressed="${k === S.selDay}" class="${k === tk ? "today" : ""} ${k > tk ? "future" : ""}" aria-label="${WD[i]} ${parse(k).getDate()}${k > tk ? ", upcoming" : ""}, ${n} of ${daily.length} done">
       <span class="wd">${WD[i]}</span><span class="ring ${p >= 100 ? "full" : ""}" style="--p:${p}"><span>${parse(k).getDate()}</span></span></button>`;
   }).join("");
   const d = (w.days || {})[S.selDay] || {}, a = d.a || {}, j = d.j || {};
@@ -1982,7 +2064,7 @@ function rToday(id) {
   ${S.selDay === tk ? `<p class="greet">Good ${part}${first ? ", " + esc(first) : ""}.</p>` : ""}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
-  <p class="lede">Tap what happened. One miss is noise; two in a row is the pattern to catch.</p>
+  <p class="lede">${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
   ${checks ? `<h3>Daily</h3><div class="card">${checks}</div>` : ""}
   ${todayTasks(id)}
   ${plannedHtml}
@@ -2181,7 +2263,7 @@ function rPlanView(id) {
   const maxD = dkey(new Date(mon.getFullYear(), mon.getMonth() + 2, 0));
   const monthRows = mo.map(c => { const { ym, pl } = mEntry(c.id); const done = compHave(c, anyWeek(id), id) >= c.target;
     return `<div class="task"><span class="vdot" style="background:${valColor(c.value)}"></span><div class="tx"><span>${esc(c.name)}</span><small>${done ? "Done this month ✓" : pl.date ? `${WD[dayIdx(pl.date)]}, ${fmtShort(parse(pl.date))} · ${t12(pl.time)}` : "No date yet"} · ${fmtDur(durOf(c) / 60)}</small></div>
-      <input type="date" class="mdate" data-mplan="${esc(c.id)}" data-ym="${ym}" value="${pl.date || ""}" min="${monthKey(mon)}-01" max="${maxD}" aria-label="Date for ${esc(c.name)}">${pl.date ? `<button class="xbtn" data-act="mClear" data-id="${esc(c.id)}" data-ym="${ym}" aria-label="Clear the date for ${esc(c.name)}" title="Clear the date">✕</button>` : ""}</div>`; }).join("");
+      <button class="mdatebtn ${pl.date ? "set" : ""}" data-act="mPick" data-id="${esc(c.id)}" aria-label="${pl.date ? "Change the date" : "Pick a date"} for ${esc(c.name)}">${pl.date ? `${WD[dayIdx(pl.date)]} ${parse(pl.date).getDate()} ${MONTHS[parse(pl.date).getMonth()].slice(0, 3)}` : "Pick a date"}</button>${pl.date ? `<button class="xbtn" data-act="mClear" data-id="${esc(c.id)}" data-ym="${ym}" aria-label="Clear the date for ${esc(c.name)}" title="Clear the date">✕</button>` : ""}</div>`; }).join("");
   const fixedList = (w.fixed || []);
   const wd = workDaysOf(w);
   return `
@@ -2200,6 +2282,25 @@ function rPlanView(id) {
 }
 function blkHtml(x, di) {
  return `<button class="pblk ${x.alt ? "off" : ""} ${x.clash ? "clash" : ""}" data-act="${x.m ? "mEdit" : "blkEdit"}" ${x.m ? "" : `data-drag="move"`} data-id="${esc(x.c.id)}" data-d="${di}"${x.m ? ` data-ym="${x.ym}"` : ""} style="--c:${valColor(x.c.value)}"><span class="t">${x.t ? tRange(tmins(x.t), tmins(x.t) + x.d) : "Anytime"}</span><span class="nm">${esc(x.c.name)}</span><span class="dur">${fmtDur(x.d / 60)}${x.m ? " · this month" : x.alt ? " · off week" : ""}${x.clash ? ` · clashes with ${esc(x.clash)}` : ""}</span></button>`;
+}
+/* a calendar for monthly one-offs: this month and next, Monday first. Nothing is set until a day is tapped. */
+function monthPickSheet(sh) {
+  const c = compById(sh.id); if (!c) return "";
+  const { pl } = mEntry(c.id), tk = todayKey(), base = S.viewMon;
+  const others = {}; comps().filter(x => x.cadence === "monthly" && x.id !== c.id).forEach(x => { const e = mEntry(x.id); if (e.pl.date) others[e.pl.date] = (others[e.pl.date] || []).concat(x.name); });
+  const month = off => {
+    const first = new Date(base.getFullYear(), base.getMonth() + off, 1), days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate(), lead = (first.getDay() + 6) % 7;
+    const cells = [...Array(lead)].map(() => `<span></span>`).concat([...Array(days)].map((_, i) => {
+      const d = new Date(first.getFullYear(), first.getMonth(), i + 1), k = dkey(d), past = k < tk;
+      return `<button data-act="mSet" data-date="${k}" class="${k === tk ? "today" : ""} ${k === pl.date ? "sel" : ""}" ${past ? "disabled" : ""} aria-label="${WD[(d.getDay() + 6) % 7]} ${i + 1} ${MONTHS[d.getMonth()]}${others[k] ? ", also " + esc(others[k].join(", ")) : ""}" aria-pressed="${k === pl.date}">${i + 1}${others[k] ? "<i></i>" : ""}</button>`;
+    }));
+    return `<div class="mcal"><b>${MONTHS[first.getMonth()]} ${first.getFullYear()}</b><div class="mgrid">${WD.map(w => `<span class="mwd">${w.slice(0, 2)}</span>`).join("")}${cells.join("")}</div></div>`;
+  };
+  return `<div class="in"><div class="grab"></div>
+    <div class="pshead"><i style="background:${valColor(c.value)}"></i><div><h2 style="margin:0">${esc(c.name)}</h2><div class="hint">Once this month · ${fmtDur(durOf(c) / 60)}${pl.date ? ` · now ${WD[dayIdx(pl.date)]} ${parse(pl.date).getDate()} ${MONTHS[parse(pl.date).getMonth()].slice(0, 3)}` : ""}</div></div></div>
+    <div class="mcals">${month(0)}${month(1)}</div>
+    <p class="hint" style="margin:0">A dot means another one-off is already that day. Tap the day on your week afterwards to give it a time.</p>
+    <div class="row">${pl.date ? `<button class="btn quiet danger" data-act="mPickClear">Clear the date</button>` : "<span></span>"}<button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
 }
 function fixedSheet(sh) {
   const f = sh.draft;
@@ -2580,15 +2681,15 @@ function rCompass(id, F, trips, sugg) {
   <h3>If-then rules</h3>
   <textarea id="p-if" data-p="ifthen" rows="5">${esc((p.ifthen || []).join("\n"))}</textarea>
   <p class="hint">One per line. Every lapse writes a new rule. <span class="src">Gollwitzer & Sheeran 2006</span></p>
-  <h3>Calendar · ${withBlocks.filter(c => c.gcal).length} of ${withBlocks.length} added</h3>
-  <p class="hint" style="margin:0 0 8px">Give a component a day and time in its settings, then add it here. ${calLine}</p>
-  ${withBlocks.length ? `<div class="card">${withBlocks.map(c => calRow(c)).join("")}</div>` : `<p class="hint">No component has a time yet.</p>`}
+  <h3>Calendar</h3>
+  ${(() => { const placed = weeklyPlannable().filter(c => planDays(c).length), left = weeklyPlannable().reduce((a, c) => a + sessionsLeft(c), 0);
+    return `<div class="card pad"><div class="impcard"><span class="glyph">${ICON.cal}</span><div style="flex:1"><b>${placed.length ? `${placed.length} floor${placed.length > 1 ? "s" : ""} planned into your week` : "Nothing planned yet"}</b><div class="hint">${left ? `${left} session${left > 1 ? "s" : ""} still to place. ` : ""}Plan days and times in Week → Plan, then export them to Apple or Google Calendar in one file.</div></div></div>
+      <div class="calbtns"><button class="btn" data-act="gotoPlan">Plan my week</button><button class="btn primary" data-act="icsOpen" ${placed.length ? "" : "disabled"}>Export to calendar</button></div></div>`; })()}
   <h3>Colours</h3>
   <div class="card pad">${themePicker()}</div>
   <h3>Your data</h3>
-  <div class="card pad"><div class="row"><div><b>Export or import</b><div class="hint">A .json backup of everything. Import also brings data over from the Claude version of Compass.</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export">Export</button><label class="btn" for="importFile">Import</label><input type="file" id="importFile" accept="application/json,.json" hidden></div></div>
-    ${S.importMsg ? `<p class="hint" style="margin:10px 0 0">${esc(S.importMsg)}</p>` : ""}</div>
+  <div class="card pad"><div class="row"><div><b>Download a backup</b><div class="hint">A .json file of everything you've entered: setup, every week, journal and tasks.</div></div>
+    <button class="btn" data-act="export">Export</button></div></div>
   <h3>Start over</h3>
   <div class="card pad"><div class="row"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div></div>`;
 }
@@ -2626,6 +2727,7 @@ function renderSheetBody() {
     return;
   }
   if (sh.type === "place") { const ex = root.querySelector('.sheet[data-k="place"]'), inner = placeSheet(sh); if (ex) { ex.innerHTML = inner; return; } root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" data-k="place" role="dialog" aria-label="Place a floor">${inner}</div>`; return; }
+  if (sh.type === "mpick") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Pick a date">${monthPickSheet(sh)}</div>`; return; }
   if (sh.type === "fixed") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Fixed time">${fixedSheet(sh)}</div>`; return; }
   if (sh.type === "week") {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Your week"><div class="in"><div class="grab"></div><h2 style="margin:0">Where does your week go?</h2>${weekForm(sh.draft)}
@@ -2644,7 +2746,7 @@ function renderSheetBody() {
       <p class="hint" style="margin:0">Signed in with Google. Your Compass syncs to every device where you sign in with this account.</p>
       <button class="btn" data-act="export">Export my data</button>
       <button class="btn" data-act="signout">Sign out</button>
-      ${S.confirm === "delacct" ? `<div class="banner" style="margin:0"><b>Delete your account and all your data?</b> Your setup, every week and your journal are removed for good. Export first if you want a copy.<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn danger" data-act="delAcctYes">Delete everything</button><button class="btn quiet" data-act="delAcctNo">Keep my account</button></div></div>` : `<button class="btn quiet danger" data-act="delAcct">Delete my account</button>`}
+      ${S.confirm === "delacct" ? `<div class="banner" style="margin:0"><b>Delete your account and all your data?</b> Your setup, every week and your journal are removed for good. Export first if you want a copy.<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn danger" data-act="delAcctYes" ${S.deleting ? "disabled" : ""}>${S.deleting ? "Deleting…" : "Delete everything"}</button><button class="btn quiet" data-act="delAcctNo" ${S.deleting ? "disabled" : ""}>Keep my account</button></div></div>` : `<button class="btn quiet danger" data-act="delAcct">Delete my account</button>`}
       ${S.delMsg ? `<p class="hint" style="margin:0">${esc(S.delMsg)}</p>` : ""}
       <button class="btn quiet" data-act="closeSheet">Close</button></div></div>`;
     return;
@@ -3242,7 +3344,7 @@ document.addEventListener("click", e => {
     case "tProjDone": { const u = undoTaskFn(b.dataset.id); burst(b, "var(--brass)", 12); setTask(b.dataset.id, { s: "done", was: "project", doneAt: tk }); S.stepFor = null; toast("Project finished", u); break; }
     case "delAcct": S.confirm = "delacct"; break;
     case "delAcctNo": S.confirm = null; break;
-    case "delAcctYes": deleteAccount(); return;
+    case "delAcctYes": deleteAccount(false); return;
     case "account": S.sheet = { type: "account" }; if (S.ob) { renderSheet(); return; } break;
     case "export": exportData(); return;
     /* app */
@@ -3325,6 +3427,13 @@ document.addEventListener("click", e => {
       S.sheet = null; break;
     }
     case "blkRemove": { const sh = S.sheet; planBlock(sh.id, bl => { bl.days = bl.days.filter(x => x !== sh.day); if (bl.times) delete bl.times[sh.day]; }); S.sheet = null; break; }
+    case "mPick": S.sheet = { type: "mpick", id: b.dataset.id }; break;
+    case "mSet": { const sh = S.sheet, id = sh && sh.id, v = b.dataset.date; if (!id || !v) return;
+      const old = mEntry(id), keep = old.pl.time || "", newYm = v.slice(0, 7);
+      if (old.pl.date && old.ym !== newYm) setMonthPlan(old.ym, id, () => null);
+      setMonthPlan(newYm, id, cur => Object.assign(cur, { date: v }, keep && !cur.time ? { time: keep } : {}));
+      S.sheet = null; render(); toast(`${compById(id).name} · ${WD[dayIdx(v)]} ${parse(v).getDate()} ${MONTHS[parse(v).getMonth()].slice(0, 3)}`); return; }
+    case "mPickClear": { const id = S.sheet && S.sheet.id; if (!id) return; const e = mEntry(id); setMonthPlan(e.ym, id, () => null); S.sheet = null; render(); toast("Date cleared"); return; }
     case "mClear": { setMonthPlan(b.dataset.ym, b.dataset.id, () => null); render(); toast("Date cleared"); return; }
     case "mRemove": { const sh = S.sheet; setMonthPlan(sh.ym, sh.id, () => null); S.sheet = null; break; }
     case "icsOpen": S.sheet = { type: "ics" }; break;
