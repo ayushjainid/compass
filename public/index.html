@@ -916,7 +916,7 @@ function templateDraft() {
     { id: "sib", value: "rel", name: "Sibling calls", cadence: "weekly", target: 2, hours: 1 / 3, block: { days: [1, 4], time: "21:00", dur: 20 } },
     Object.assign(L("queue"), { name: "Rotation calls", block: { days: [2, 5], time: "12:30", dur: 20 } }),
     { id: "apps", value: "rel", name: "Dating apps", cadence: "daily", target: 5, hours: 0.4, note: "20–30 min on a timer, never in bed" },
-    { id: "dating", value: "rel", name: "Offline dating event", cadence: "weekly", target: 1, hours: 3, alt: "B", block: { days: [5], time: "10:00", dur: 240 } },
+    { id: "dating", value: "rel", name: "Offline dating event", cadence: "weekly", target: 1, hours: 3, every: 2, from: "2026-09-28", block: { days: [5], time: "10:00", dur: 240 } },
     Object.assign(L("deep"), { name: "Career deep work", block: { days: [0, 3], time: "19:30", dur: 90 } }),
     Object.assign(L("creative"), { note: "Painting, writing, DJing, electronic music", block: { days: [2], time: "19:00", dur: 60 } }),
     { id: "guitar", value: "create", name: "Guitar", cadence: "weekly", target: 2, hours: 1 / 3, note: "20 minutes", block: { days: [2, 6], time: "20:15", dur: 20 } },
@@ -926,7 +926,7 @@ function templateDraft() {
     L("sleep"),
     Object.assign(L("sports"), { name: "Sports", note: "Badminton, table tennis, tennis", block: { days: [1], time: "19:00", dur: 90 } }),
     { id: "skin", value: "body", name: "Skincare AM + PM", cadence: "daily", target: 5, hours: 1 / 6 },
-    Object.assign(L("ngo"), { name: "NGO session", alt: "A", note: "Environmental health, kids", block: { days: [5], time: "10:00", dur: 240 } }),
+    Object.assign(L("ngo"), { name: "NGO session", every: 2, from: "2026-09-21", note: "Environmental health, kids", block: { days: [5], time: "10:00", dur: 240 } }),
     Object.assign(L("lifeTax"), { name: "Life Tax: Splitwise + Monarch", block: { days: [6], time: "18:30", dur: 25 } }),
     L("novelty"),
     Object.assign(L("recovery"), { name: "Sunday recovery block", block: { days: [6], time: "14:00", dur: 180 } }),
@@ -1311,6 +1311,20 @@ function tierLabel(ids, i, cores) {
 }
 const valueName = id => { const v = VALUE_LIB.find(x => x.id === id) || ((profile() || {}).customValues || []).find(x => x.id === id); return v ? v.name : "Other"; };
 const isCore = v => ((profile() || {}).cores || []).some(c => c.value === v);
+/* repeats every N weeks, counted from the Monday of its first week (c.from) */
+const everyN = c => (c && c.every > 1 ? Math.min(8, Math.round(c.every)) : 1);
+function onWeek(c, monKey) {
+  const n = everyN(c); if (n === 1) return true;
+  const k = Math.round((parse(monKey) - parse(c.from || monKey)) / (7 * 864e5));
+  return k >= 0 && k % n === 0;
+}
+const everyText = c => everyN(c) > 1 ? `every ${everyN(c)} weeks` : "";
+/* old Week A / Week B components become "every 2 weeks" from the matching week */
+function migrateAlt() {
+  if (!comps().some(c => c.alt)) return;
+  const cur = dkey(monday(new Date())), prev = dkey(addDays(monday(new Date()), -7));
+  editProfile(p => p.components.forEach(c => { if (!c.alt) return; c.every = 2; c.from = weekKind(cur) === c.alt ? cur : prev; delete c.alt; }));
+}
 function weekKind(start) {
   const n = Math.round((parse(start) - parse("2026-09-21")) / (7 * 864e5)) + (settings().parity || 0);
   return ((n % 2) + 2) % 2 === 0 ? "A" : "B";
@@ -1334,8 +1348,8 @@ function compHave(c, w, id) {
   return v + (c.id === "lifeTax" && w && w.r && w.r.lifeTax && !v ? 1 : 0);
 }
 function activeComps(id, w = anyWeek(id)) {
-  const mvw = isMvw(w, id), kind = weekKind(id.slice(2));
-  return comps().filter(c => !c.fun && (!c.alt || c.alt === kind) && (!mvw || c.mvw));
+  const mvw = isMvw(w, id), mon = id.slice(2);
+  return comps().filter(c => !c.fun && onWeek(c, mon) && (!mvw || c.mvw));
 }
 function floorsFor(id) {
   const w = anyWeek(id), mvw = isMvw(w, id);
@@ -1355,10 +1369,10 @@ function valueStatus(v, F, id) {
 function capacity(list) {
   return list.filter(c => !c.fun && c.on !== false).reduce((s, c) => {
     const per = c.cadence === "monthly" ? c.target / 4.3 : c.target;
-    return s + (c.hours || 0) * per * (c.alt ? 0.5 : 1);
+    return s + (c.hours || 0) * per / everyN(c);
   }, 0);
 }
-const weeklyHours = c => c.fun ? 0 : (c.hours || 0) * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? 0.5 : 1);
+const weeklyHours = c => c.fun ? 0 : (c.hours || 0) * (c.cadence === "monthly" ? c.target / 4.3 : c.target) / everyN(c);
 const fmtDur = h => { const m = Math.round((h || 0) * 60); if (m < 60) return m + " min"; return m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`; };
 const hFmt = h => { const r = Math.round(h * 100) / 100; return (r % 1 === 0 ? r.toFixed(0) : String(r)).replace(/^0\./, "0."); };
 const SERIES = i => `var(--s${(i % 8) + 1})`;
@@ -1392,7 +1406,7 @@ function stepDur(c, dir) {
 function loadFormula(c) {
   const h = fmtDur(c.hours || 0);
   const base = c.cadence === "daily" ? `${h} × ${c.target} days` : c.cadence === "monthly" ? `${h} × ${c.target}/month ÷ 4.3` : `${h} × ${c.target}${c.unit ? "" : "/week"}`;
-  return base + (c.alt ? " ÷ 2 (every other week)" : "");
+  return base + (everyN(c) > 1 ? ` ÷ ${everyN(c)} (${everyText(c)})` : "");
 }
 const cadenceText = c => c.fun ? "Fun menu · never scored" : c.cadence === "daily" ? `${c.target} of 7 days` : c.cadence === "monthly" ? `${c.target}× a month` : `${c.target}${c.unit || ""}${c.unit ? "" : "×"} a week`;
 
@@ -1401,7 +1415,7 @@ function compHistory(c) {
   const cur = monday(new Date()), out = [];
   for (let i = 1; i <= 6; i++) {
     const id = wid(addDays(cur, -7 * i)), w = anyWeek(id);
-    if (!w || isMvw(w, id) || (c.alt && c.alt !== weekKind(id.slice(2))) || c.cadence === "monthly") continue;
+    if (!w || isMvw(w, id) || !onWeek(c, id.slice(2)) || c.cadence === "monthly") continue;
     out.push(compHave(c, w, id) >= c.target);
   }
   return out;
@@ -2087,12 +2101,12 @@ function render() {
   const F = floorsFor(id), vals = valueList();
   const st = vals.map(v => valueStatus(v.id, F, id));
   const cleared = st.filter(s => s.s === "clear").length, scoredN = st.filter(s => s.s !== "rest").length;
-  const mvw = isMvw(anyWeek(id), id), hasAlt = comps().some(c => c.alt);
-  $("#heading").textContent = (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared" + (hasAlt ? " · Week " + weekKind(dkey(mon)) : "");
+  const mvw = isMvw(anyWeek(id), id);
+  $("#heading").textContent = (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared";
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
   $("#tabs").innerHTML = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
-  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); }
+  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); migrateAlt(); }
   $("#tabs").innerHTML = $("#tabs").innerHTML.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
   $("#main").innerHTML = ({ today: rToday, week: rWeek, tasks: rTasks, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
   $("#fab").hidden = false;
@@ -2217,7 +2231,7 @@ function dayBudget(di, w = myWeek()) {
 const dailyMinsPerDay = () => comps().filter(c => !c.fun && c.cadence === "daily").reduce((a, c) => a + weeklyHours(c) * 60, 0) / 7;
 function dayItems(di, mon = S.viewMon) {
   const date = addDays(mon, di), dk = dkey(date), mpd = monthPlan(monthKey(date));
-  const wk = weeklyPlannable().filter(c => plannedOn(c, di)).map(c => ({ c, t: timeOn(c, di), d: durOf(c), alt: c.alt && weekKind(dkey(mon)) !== c.alt }));
+  const wk = weeklyPlannable().filter(c => plannedOn(c, di)).map(c => ({ c, t: timeOn(c, di), d: durOf(c), alt: !onWeek(c, dkey(mon)) }));
   const mo = comps().filter(c => !c.fun && c.cadence === "monthly" && mpd[c.id] && mpd[c.id].date === dk).map(c => ({ c, t: mpd[c.id].time || "", d: durOf(c), m: true, ym: monthKey(date) }));
   return wk.concat(mo);
 }
@@ -2371,7 +2385,7 @@ function rPlanView(id) {
   <div class="card pad" style="margin-top:18px"><div class="row"><div><b>Add your plan to a calendar</b><div class="hint">One file with every weekly block as a repeating event, plus one-offs dated this month or next. Works with Apple and Google Calendar.</div></div><button class="btn primary" data-act="icsOpen">Export</button></div></div>`;
 }
 function blkHtml(x, di) {
- return `<button class="pblk ${x.alt ? "off" : ""} ${x.clash ? "clash" : ""}" data-act="${x.m ? "mEdit" : "blkEdit"}" ${x.m ? "" : `data-drag="move"`} data-id="${esc(x.c.id)}" data-d="${di}"${x.m ? ` data-ym="${x.ym}"` : ""} style="--c:${valColor(x.c.value)}"><span class="t">${x.t ? tRange(tmins(x.t), tmins(x.t) + x.d) : "Anytime"}</span><span class="nm">${esc(x.c.name)}</span><span class="dur">${fmtDur(x.d / 60)}${x.m ? " · this month" : x.alt ? " · off week" : ""}${x.clash ? ` · clashes with ${esc(x.clash)}` : ""}</span></button>`;
+ return `<button class="pblk ${x.alt ? "off" : ""} ${x.clash ? "clash" : ""}" data-act="${x.m ? "mEdit" : "blkEdit"}" ${x.m ? "" : `data-drag="move"`} data-id="${esc(x.c.id)}" data-d="${di}"${x.m ? ` data-ym="${x.ym}"` : ""} style="--c:${valColor(x.c.value)}"><span class="t">${x.t ? tRange(tmins(x.t), tmins(x.t) + x.d) : "Anytime"}</span><span class="nm">${esc(x.c.name)}</span><span class="dur">${fmtDur(x.d / 60)}${x.m ? " · this month" : x.alt ? " · not this week" : ""}${x.clash ? ` · clashes with ${esc(x.clash)}` : ""}</span></button>`;
 }
 /* a calendar for monthly one-offs: this month and next, Monday first. Nothing is set until a day is tapped. */
 function monthPickSheet(sh) {
@@ -2528,9 +2542,9 @@ function buildIcs() {
     const groups = {}; days.forEach(d => { const t = timeOn(c, d); (groups[t] = groups[t] || []).push(d); });
     Object.entries(groups).forEach(([t, ds]) => {
       let first = null;
-      for (let i = 0; i < 21 && !first; i++) { const d = addDays(start, i); if (ds.includes((d.getDay() + 6) % 7) && (!c.alt || weekKind(dkey(monday(d))) === c.alt)) first = d; }
+      for (let i = 0; i < 7 * 9 + 400 && !first; i++) { const d = addDays(start, i); if (ds.includes((d.getDay() + 6) % 7) && onWeek(c, dkey(monday(d)))) first = d; }
       if (!first) return;
-      const rule = "RRULE:FREQ=WEEKLY;" + (c.alt ? "INTERVAL=2;" : "") + "BYDAY=" + ds.slice().sort().map(d => RR[d]).join(",");
+      const rule = "RRULE:FREQ=WEEKLY;" + (everyN(c) > 1 ? `INTERVAL=${everyN(c)};` : "") + "BYDAY=" + ds.slice().sort().map(d => RR[d]).join(",");
       push("BEGIN:VEVENT", `UID:compass-${c.id}-${t.replace(":", "") || "any"}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now));
       if (t) { const [h, m] = t.split(":").map(Number); const s0 = new Date(first); s0.setHours(h, m, 0, 0); const e0 = new Date(s0.getTime() + durOf(c) * 60000); push(`DTSTART${zone ? ";TZID=" + zone : ""}:${icsLocal(s0)}`, `DTEND${zone ? ";TZID=" + zone : ""}:${icsLocal(e0)}`); }
       else push("DTSTART;VALUE=DATE:" + icsDay(first), "DTEND;VALUE=DATE:" + icsDay(addDays(first, 1)), "TRANSP:TRANSPARENT");
@@ -2573,14 +2587,14 @@ function rWeek(id, F, trips, sugg) {
   return seg + (S.weekView === "plan" ? rPlanView(id) : rWeekFloors(id, F, trips, sugg));
 }
 function rWeekFloors(id, F, trips, sugg) {
-  const w = anyWeek(id) || { c: {} }, kind = weekKind(id.slice(2)), mvw = isMvw(w, id);
+  const w = anyWeek(id) || { c: {} }, mvw = isMvw(w, id);
   const vals = valueList().map(v => {
     const st = valueStatus(v.id, F, id), key = id + ":" + v.id;
     const stamp = st.s === "clear" && S.prevClear[key] === false; S.prevClear[key] = st.s === "clear";
     const fl = st.it.map(f => `<li class="${f.have >= f.need ? "ok" : ""}"><span>${esc(f.c.name)}${f.c.cadence === "daily" ? " · days" : f.c.cadence === "monthly" ? " · month" : ""}</span><span class="f">${f.have}${f.c.unit || ""}/${f.need}${f.c.unit || ""}${f.have >= f.need ? " ✓" : ""}</span></li>`).join("");
     return `<div class="val"><div class="vhead"><b>${esc(v.name)}${isCore(v.id) ? '<span class="core">Core</span>' : ""}</b><span class="pill ${st.s}${stamp ? " stamp" : ""}">${esc(st.t)}</span></div>${fl ? `<ul class="floors">${fl}</ul>` : `<p class="hint" style="margin:6px 0 0">${mvw ? "Paused during a Minimum Viable Week." : "Nothing scored this week."}</p>`}</div>`;
   }).join("");
-  const alts = comps().filter(c => c.alt);
+  const offs = comps().filter(c => !c.fun && everyN(c) > 1 && !onWeek(c, id.slice(2)));
   const ctrs = activeComps(id, w).filter(c => c.cadence !== "daily").map(c => {
     const v = compHave(c, w, id);
     return `<div class="ctr"><div class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}</small></div>
@@ -2594,7 +2608,7 @@ function rWeekFloors(id, F, trips, sugg) {
   <h3>Mode</h3>
   <div class="card pad"><div class="row"><div><b>Minimum Viable Week</b><div class="hint">For illness, travel, crunch or a hard stretch. Only your safety-net components count.</div></div>
     <button class="switch" role="switch" aria-checked="${mvw}" data-act="mvw" aria-label="Minimum Viable Week"></button></div></div>
-  ${alts.length ? `<div class="card pad"><div class="row"><div><b>Week ${kind}</b><div class="hint">Alternating: ${alts.map(c => esc(c.name) + " (" + c.alt + ")").join(", ")}.</div></div><button class="btn" data-act="swapKind">Swap</button></div></div>` : ""}
+  ${offs.length ? `<p class="hint" style="margin:8px 0 0">Resting this week: ${offs.map(c => `${esc(c.name)} (${everyText(c)})`).join(", ")}.</p>` : ""}
   ${id === thisWk() && (titems().length) ? `<h3>Open loops</h3><div class="card pad"><ul class="floors" style="margin:0">
     <li class="${weekErrands().length === 0 && doneErrandsThisWeek().length ? "ok" : ""}"><span>Errands this week</span><span class="f">${doneErrandsThisWeek().length}/${weekErrands().length + doneErrandsThisWeek().length}</span></li>
     <li class="${inboxItems().length ? "" : "ok"}"><span>Unsorted in inbox</span><span class="f">${inboxItems().length}</span></li>
@@ -2699,8 +2713,8 @@ function rReview(id, F, trips, sugg) {
 
 /* ============ COMPASS (design) ============ */
 function compRow(c) {
-  const tags = [c.mvw && !c.fun ? '<span class="tag mvw">Safety net</span>' : "", c.alt ? `<span class="tag">Week ${c.alt}</span>` : "", c.people ? '<span class="tag">People</span>' : "", c.block ? `<span class="tag">${c.gcal ? "On calendar" : "Has a time"}</span>` : "", c.ai ? '<span class="tag ai">Tailored</span>' : ""].join("");
-  return `<button class="comp" data-act="editComp" data-id="${esc(c.id)}"><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}${c.hours && !c.fun ? " · ~" + hrs(c.hours * (c.cadence === "monthly" ? c.target / 4.3 : c.target) * (c.alt ? .5 : 1)) + " h/wk" : ""}</small>${tags ? `<span class="tags" style="margin-top:4px">${tags}</span>` : ""}</span><span class="chev">›</span></button>`;
+  const tags = [c.mvw && !c.fun ? '<span class="tag mvw">Safety net</span>' : "", everyN(c) > 1 ? `<span class="tag">Every ${everyN(c)} weeks</span>` : "", c.people ? '<span class="tag">People</span>' : "", c.block ? `<span class="tag">${c.gcal ? "On calendar" : "Has a time"}</span>` : "", c.ai ? '<span class="tag ai">Tailored</span>' : ""].join("");
+  return `<button class="comp" data-act="editComp" data-id="${esc(c.id)}"><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}${c.hours && !c.fun ? " · ~" + hrs(c.hours * (c.cadence === "monthly" ? c.target / 4.3 : c.target) / everyN(c)) + " h/wk" : ""}</small>${tags ? `<span class="tags" style="margin-top:4px">${tags}</span>` : ""}</span><span class="chev">›</span></button>`;
 }
 function meterStatus(cap, avail) {
   if (cap > avail * 1.05) return `Over by ${fmtDur(cap - avail)}`;
@@ -2798,7 +2812,7 @@ function rCompass(id, F, trips, sugg) {
 }
 function calRow(c) {
   const b = c.block, msg = S.calMsg[c.id];
-  const when = `${b.days.map(d => WD[d]).join(", ")} · ${b.time} · ${b.dur >= 60 ? b.dur / 60 + " h" : b.dur + " min"}${c.alt ? " · every other week" : ""}`;
+  const when = `${b.days.map(d => WD[d]).join(", ")} · ${b.time} · ${b.dur >= 60 ? b.dur / 60 + " h" : b.dur + " min"}${everyN(c) > 1 ? " · " + everyText(c) : ""}`;
   const action = S.mcp
     ? (c.gcal ? `<span class="pill clear">Added</span>` : msg === "adding" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn small primary" data-act="calAdd" data-id="${esc(c.id)}">Add</button>`)
     : `<a class="linkbtn" href="${gcalLink(c)}" target="_blank" rel="noopener">Open in Google Calendar ↗</a>`;
@@ -2885,7 +2899,8 @@ function renderSheetBody() {
     </div>
     <div class="row"><div><b>Safety net</b><div class="hint">Stays on during a Minimum Viable Week.</div></div><button class="switch" role="switch" aria-checked="${!!c.mvw}" data-act="cToggle" data-f="mvw" aria-label="Safety net"></button></div>
     ${c.cadence === "weekly" ? `<div class="row"><div><b>People rotation</b><div class="hint">Logging a call in Compass → People counts here.</div></div><button class="switch" role="switch" aria-checked="${!!c.people}" data-act="cToggle" data-f="people" aria-label="People rotation"></button></div>
-    <div class="fl"><span class="flabel">Alternating weeks</span><div class="seg">${[["", "Every week"], ["A", "Week A"], ["B", "Week B"]].map(([k, l]) => `<button data-act="cAlt" data-v="${k}" aria-pressed="${(c.alt || "") === k}">${l}</button>`).join("")}</div></div>` : ""}
+    <div class="fl"><span class="flabel">Repeats <span class="opt">Optional</span></span><div class="seg">${[1, 2, 3, 4].map(n => `<button data-act="cEvery" data-v="${n}" aria-pressed="${everyN(c) === n}">${n === 1 ? "Every week" : `Every ${n}`}</button>`).join("")}</div></div>
+    ${everyN(c) > 1 ? everyStart(c) : ""}` : ""}
     <div class="row"><div><b>Give it a time</b><div class="hint">Puts it on your calendar as a repeating block.</div></div><button class="switch" role="switch" aria-checked="${!!c.block}" data-act="cBlock" aria-label="Give it a time"></button></div>
     ${c.block ? `<div class="daypick">${WD.map((d, i) => `<button data-act="cDay" data-v="${i}" aria-pressed="${c.block.days.includes(i)}">${d}</button>`).join("")}</div>
       <div class="two"><div class="fl"><label class="flabel" for="c-time">Starts</label><input type="time" id="c-time" data-cb="time" value="${c.block.time}"></div>
@@ -2894,6 +2909,15 @@ function renderSheetBody() {
       ${sh.isNew ? "" : `<button class="btn quiet" data-act="dupComp" style="margin-left:auto">Duplicate</button>`}
       ${sh.isNew ? `<button class="btn quiet" data-act="closeSheet">Cancel</button>` : S.confirm === "del:" + c.id ? `<button class="btn danger" data-act="delCompYes">Delete it</button>` : `<button class="btn quiet danger" data-act="delComp">Delete</button>`}</div>
     ${!sh.isNew && !c.fun ? `<p class="hint">Deleting keeps past logs but stops counting it.</p>` : ""}</div></div>`;
+}
+/* the start-week picker shows one choice per phase: this week, next week, … up to N−1 weeks ahead */
+const everyPhases = n => Array.from({ length: n }, (_, i) => dkey(addDays(monday(new Date()), 7 * i)));
+function nextOn(c, count = 1) { const out = []; let m = monday(new Date()); for (let i = 0; i < 60 && out.length < count; i++, m = addDays(m, 7)) if (onWeek(c, dkey(m))) out.push(dkey(m)); return count === 1 ? out[0] : out; }
+function everyStart(c) {
+  const n = everyN(c), opts = everyPhases(n), sel = nextOn(c) || opts[0];
+  const lbl = (m, i) => i === 0 ? `This week (${fmtShort(parse(m))})` : i === 1 ? `Next week (${fmtShort(parse(m))})` : `Week of ${fmtShort(parse(m))}`;
+  return `<div class="fl"><label class="flabel" for="c-from">Starting</label><select id="c-from" data-cfrom="1">${opts.map((m, i) => `<option value="${m}" ${m === sel ? "selected" : ""}>${lbl(m, i)}</option>`).join("")}</select>
+    <div class="hint">Next: ${nextOn(c, 3).map(m => "week of " + fmtShort(parse(m))).join(", ")}.</div></div>`;
 }
 function openComp(c, isNew) { S.sheet = { type: "comp", isNew, draft: clone(c) }; S.confirm = null; }
 
@@ -2904,12 +2928,12 @@ function firstOcc(c) {
   for (let i = 0; i < 21; i++) {
     const d = addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), i); d.setHours(h, m, 0, 0);
     if (d <= now || !b.days.includes((d.getDay() + 6) % 7)) continue;
-    if (c.alt && weekKind(dkey(monday(d))) !== c.alt) continue;
+    if (!onWeek(c, dkey(monday(d)))) continue;
     return d;
   }
   return addDays(now, 1);
 }
-const rrule = c => "RRULE:FREQ=WEEKLY;" + (c.alt ? "INTERVAL=2;" : "") + "BYDAY=" + c.block.days.slice().sort().map(d => RR[d]).join(",");
+const rrule = c => "RRULE:FREQ=WEEKLY;" + (everyN(c) > 1 ? `INTERVAL=${everyN(c)};` : "") + "BYDAY=" + c.block.days.slice().sort().map(d => RR[d]).join(",");
 function isoOff(d) {
   const o = -d.getTimezoneOffset(), s = o >= 0 ? "+" : "-", a = Math.abs(o);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00${s}${pad(Math.floor(a / 60))}:${pad(a % 60)}`;
@@ -3476,7 +3500,7 @@ document.addEventListener("click", e => {
     case "weekSave": { const w = S.sheet.draft, f = weekCalc(w).floors; editProfile(p => { p.week = w; p.capacity = f; if (p.pending) p.pending.week = false; }); S.sheet = null; toast(`Budget set to ${f} h a week`); break; }
     case "obEdit": S.obFrozen = byTime(S.ob.d.comps).map(c => c.id); S.obEdit = b.dataset.id; S.obRemoved = null; updateOb(); if (matchMedia("(pointer: fine)").matches) { const f = $("#obe-name"); if (f) f.focus({ preventScroll: true }); } return;
     case "obEditDone": { S.obFrozen = null; const c = S.ob && S.ob.d.comps.find(x => x.id === S.obEdit); if (c && !(c.name || "").trim()) { toast("Give it a name first."); return; } if (c) c.name = c.name.trim(); S.obEdit = null; updateOb(); return; }
-    case "obCad": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; delete c.unit; delete c.step; } c.touched = true; updateOb(); return; }
+    case "obCad": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.every; delete c.from; c.people = false; delete c.unit; delete c.step; } c.touched = true; updateOb(); return; }
     case "obDel": { const d = S.ob && S.ob.d; if (!d) return; const i = d.comps.findIndex(x => x.id === b.dataset.id); if (i < 0) return; const c = d.comps[i]; d.comps.splice(i, 1); if (!d.seen.includes(c.id)) d.seen.push(c.id); S.obRemoved = { c, i }; if (S.obEdit === c.id) S.obEdit = null; updateOb(); return; }
     case "obUndo": { const d = S.ob && S.ob.d, r = S.obRemoved; if (!d || !r) return; d.comps.splice(Math.min(r.i, d.comps.length), 0, r.c); S.obRemoved = null; updateOb(); return; }
     case "obTgt": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; setFreq(c, (c.target || 1) + (+b.dataset.d) * (c.step || 1)); updateOb(); return; }
@@ -3640,7 +3664,6 @@ document.addEventListener("click", e => {
       return;
     }
     case "mvw": editWeek(w => { w.mvw = !isMvw(w, curWid()); }); break;
-    case "swapKind": editSettings(s => { s.parity = ((s.parity || 0) + 1) % 2; }); break;
     case "felt": editWeek(w => { const v = +b.dataset.v; w.r.felt = w.r.felt === v ? null : v; }); break;
     case "starve": editWeek(w => { const a = w.r.starved || [], v = b.dataset.v; w.r.starved = a.includes(v) ? a.filter(x => x !== v) : a.concat(v); }); break;
     case "reviewDone": { let done; editWeek(w => { w.r.done = !w.r.done; w.r.doneAt = tk; done = w.r.done; }); render(); if (done) { burst($("#reviewDoneBtn"), "var(--good)", 14); toast("Week reviewed. See you next Sunday."); } return; }
@@ -3692,9 +3715,9 @@ document.addEventListener("click", e => {
     case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
     case "closeSheet": { const back = S.sheet && S.sheet.fromTask && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
     case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
-    case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; } break; }
+    case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.every; delete c.from; c.people = false; } break; }
     case "cTarget": { const c = S.sheet.draft, max = c.cadence === "monthly" ? 4 : c.cadence === "daily" ? 7 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, (c.target || 0) + (+b.dataset.d) * st)); break; }
-    case "cAlt": { const c = S.sheet.draft; if (b.dataset.v) c.alt = b.dataset.v; else delete c.alt; break; }
+    case "cEvery": { const c = S.sheet.draft, n = +b.dataset.v; if (n > 1) { c.every = n; const cur = dkey(monday(new Date())); if (!c.from || !everyPhases(n).some(m => m === nextOn({ every: n, from: c.from }))) c.from = cur; } else { delete c.every; delete c.from; } c.gcal = false; break; }
     case "cBlock": { const c = S.sheet.draft; if (c.block) delete c.block; else c.block = { days: c.cadence === "daily" ? [0, 1, 2, 3, 4, 5, 6] : [0], time: "19:00", dur: Math.max(15, Math.round((c.hours || 0.5) * 60 / 5) * 5) }; c.gcal = false; break; }
     case "cDay": { const c = S.sheet.draft, v = +b.dataset.v; c.block.days = c.block.days.includes(v) ? c.block.days.filter(x => x !== v) : c.block.days.concat(v).sort(); if (!c.block.days.length) c.block.days = [v]; c.gcal = false; break; }
     case "saveComp": {
@@ -3786,6 +3809,7 @@ document.addEventListener("change", e => {
   if (ds.impu !== undefined && S.imp && S.imp.sel) { S.imp.sel.unplaced[+ds.impu] = t.value; return; }
   if (t.id === "importFile" && t.files && t.files[0]) { importData(t.files[0]); t.value = ""; return; }
   if (ds.c === "value" && S.sheet && S.sheet.draft) S.sheet.draft.value = t.value;
+  else if (ds.cfrom && S.sheet && S.sheet.draft) { S.sheet.draft.from = t.value; S.sheet.draft.gcal = false; renderSheet(); }
   else if (ds.j || ds.cap) scheduleRender();
 });
 document.addEventListener("keydown", e => {
