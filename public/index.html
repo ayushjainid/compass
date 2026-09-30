@@ -2871,7 +2871,8 @@ function renderSheetBody() {
   const c = sh.draft;
   const vals = valueList();
   root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Edit component"><div class="in"><div class="grab"></div>
-    <h2 style="margin:0">${sh.isNew ? "New component" : "Edit component"}</h2>
+    <h2 style="margin:0">${sh.dup ? "Copy of component" : sh.isNew ? "New component" : "Edit component"}</h2>
+    ${sh.dup ? `<p class="hint" style="margin:-4px 0 0">A fresh copy with its own history. Change what differs, then add it.</p>` : ""}
     <div class="fl"><label class="flabel" for="c-name">Name</label><input type="text" id="c-name" data-c="name" value="${esc(c.name)}" maxlength="60"></div>
     <div class="fl"><label class="flabel" for="c-note">Note</label><input type="text" id="c-note" data-c="note" value="${esc(c.note)}" maxlength="90" placeholder="Optional, e.g. 20 minutes counts"></div>
     <div class="row"><div><b>Fun menu</b><div class="hint">Never scored, never scheduled. Just logged for joy.</div></div><button class="switch" role="switch" aria-checked="${!!c.fun}" data-act="cToggle" data-f="fun" aria-label="Fun menu"></button></div>
@@ -2890,6 +2891,7 @@ function renderSheetBody() {
       <div class="two"><div class="fl"><label class="flabel" for="c-time">Starts</label><input type="time" id="c-time" data-cb="time" value="${c.block.time}"></div>
       <div class="fl"><label class="flabel" for="c-dur">Minutes</label><input type="number" id="c-dur" data-cb="dur" min="5" max="600" step="5" value="${c.block.dur}"></div></div>` : ""}`}
     <div class="row" style="margin-top:6px"><button class="btn primary" data-act="saveComp">${sh.isNew ? "Add component" : "Save"}</button>
+      ${sh.isNew ? "" : `<button class="btn quiet" data-act="dupComp" style="margin-left:auto">Duplicate</button>`}
       ${sh.isNew ? `<button class="btn quiet" data-act="closeSheet">Cancel</button>` : S.confirm === "del:" + c.id ? `<button class="btn danger" data-act="delCompYes">Delete it</button>` : `<button class="btn quiet danger" data-act="delComp">Delete</button>`}</div>
     ${!sh.isNew && !c.fun ? `<p class="hint">Deleting keeps past logs but stops counting it.</p>` : ""}</div></div>`;
 }
@@ -3681,6 +3683,12 @@ document.addEventListener("click", e => {
     case "addValue": S.sheet = { type: "value" }; break;
     case "addValueId": editProfile(p => { if (!p.values.includes(b.dataset.v)) p.values.push(b.dataset.v); }); S.sheet = { type: "pick", value: b.dataset.v }; break;
     case "pickLib": { const x = S.sheet.lib[+b.dataset.i]; if (!x) return; const c = x.fun ? { id: "fun-" + uidGen(), fun: true, name: x.name, cadence: "weekly", target: 0, hours: 0 } : clone(x); openComp(c, true); break; }
+    case "dupComp": {
+      const src = S.sheet && S.sheet.draft; if (!src) return;
+      const c = clone(src); c.id = (c.fun ? "fun-" : "c-") + uidGen(); c.name = ((src.name || "").trim() || "Component") + " (copy)";
+      ["gcal", "auto", "imp", "ai", "starter", "people"].forEach(k => delete c[k]);
+      openComp(c, true); S.sheet.dup = true; S.shType = null; break;
+    }
     case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
     case "closeSheet": { const back = S.sheet && S.sheet.fromTask && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
     case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
