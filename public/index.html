@@ -552,6 +552,11 @@ body.landing .top,body.landing #statusline{display:none}
 .pslot .t{font:500 12px var(--mono);color:var(--muted)}.pslot .nm{font-weight:600;color:var(--ink)}
 .pslot.over,.pday.over{background:color-mix(in srgb,var(--good) 14%,var(--surface));border-color:var(--good)}
 .pslot:hover{border-style:solid}
+/* while dragging, the week stays compact: free slots show only in the day being hovered */
+.pweek.dragging .pslot{display:none}
+.pweek.dragging .pday.hot .pslot{display:grid}
+@media (min-width:900px){.pweek.dragging .pday.hot .pslot{display:flex}}
+.pweek.dragging .pday.hot{border-color:var(--good);background:color-mix(in srgb,var(--good) 6%,var(--surface))}
 [data-drag]{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
 html.dragging{scroll-behavior:auto!important}
 /* anything scrolled into view on the plan stops below the pinned tray */
@@ -2185,7 +2190,7 @@ function rPlanView(id) {
   ${!hasWeek ? `<p class="hint" style="margin:6px 0 0">These hours are estimates. <button class="linkish" data-act="weekEdit">Set up Your week</button> for your real ones.</p>` : ""}
   ${left.length ? tray : `<h3>To place</h3>${tray}`}
   <div class="ptrayhead"><h3>Your week</h3>${wk.some(c => planDays(c).length) ? (S.confirm === "clearPlan" ? `<span><button class="btn small danger" data-act="clearPlanYes">Clear all days</button> <button class="btn small quiet" data-act="clearPlanNo">Keep</button></span>` : `<button class="linkish" data-act="clearPlan">Start over</button>`) : ""}</div>
-  <div class="pweek ${pick ? "picking" : ""}">${days}</div>
+  <div class="pweek ${pick ? "picking" : ""} ${S.dragging ? "dragging" : ""}">${days}</div>
   <h3>Fixed time</h3>
   <div class="card">${wd.length ? `<div class="task"><span class="vdot" style="background:var(--muted)"></span><div class="tx"><span>Work or study</span><small>${wd.map(d => WD[d]).join(", ")} · ${tRange(tmins(w.workStart) ?? 540, (tmins(w.workStart) ?? 540) + Math.round(w.work / wd.length * 60))}</small></div><button class="btn small quiet" data-act="weekEdit">Edit</button></div>` : ""}
     ${fixedList.map(f => `<div class="task"><span class="vdot" style="background:var(--muted)"></span><div class="tx"><span>${esc(f.name)}</span><small>${(f.days || []).map(d => WD[d]).join(", ") || "No days"} · ${f.start ? tRange(tmins(f.start), tmins(f.start) + (f.dur || 60)) : "no time"}</small></div><button class="btn small quiet" data-act="fixEdit" data-id="${esc(f.id)}">Edit</button></div>`).join("")}
@@ -2243,7 +2248,21 @@ function dragTarget(x, y) {
 function dragMove(x, y) {
   const st = DRAG.st; st.cx = x; st.cy = y;
   st.ghost.style.transform = `translate(${x - st.dx}px, ${y - st.dy}px)`;
-  const t = dragTarget(x, y);
+  let t = dragTarget(x, y);
+  /* only the day under the finger opens to show its free slots */
+  const day = t ? t.closest(".pday") : null;
+  if (day && day !== st.hot) {
+    const old = st.hot;
+    if (old) {
+      /* closing a day above the finger would pull the next day up from under it; hold the page still */
+      const above = old.getBoundingClientRect().top < day.getBoundingClientRect().top, h0 = old.offsetHeight;
+      old.classList.remove("hot");
+      const dh = h0 - old.offsetHeight;
+      if (above && dh > 0 && !matchMedia("(min-width:900px)").matches) window.scrollBy({ top: -dh, left: 0, behavior: "instant" });
+    }
+    day.classList.add("hot"); st.hot = day;
+    t = dragTarget(x, y);
+  }
   if (t !== st.over) { if (st.over) st.over.classList.remove("over"); if (t) t.classList.add("over"); st.over = t; }
 }
 function dragEnd(drop) {
