@@ -278,6 +278,19 @@ html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
 .vt{display:flex;flex-direction:column;gap:3px;min-width:0}.vt b{font-weight:600}.vt small{color:var(--ink2);font-size:13px;line-height:1.4}.vt .src{display:inline;margin:0}
 .vstar{flex:none;width:52px;font-size:22px;color:var(--brass);border-left:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 .vstar[aria-pressed="false"]{color:var(--muted)}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.vtile{position:relative;display:flex;align-items:stretch;min-height:60px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);transition:border-color .15s,background .15s}
+.vtile .vmain{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:left;padding:12px 14px}
+.vtile .vmain b{font-weight:600;font-size:15px;line-height:1.25}
+.vtile .vmain small{font-size:12px;color:var(--muted);margin:0}
+.vtile.on{border-color:var(--accent);background:var(--accent-soft)}
+.vtile.starred{border-color:var(--brass);background:var(--brass-soft)}
+.vtile .vstar{flex:none;width:40px;margin-left:-8px;font-size:19px;color:var(--brass);border:0}
+.vtile .vstar[aria-pressed="false"]{color:var(--muted)}
+.vlinks{display:flex;justify-content:space-between;gap:12px;margin-top:14px}
+.vlinks .linkish{padding:8px 0;font-size:14px}
+.vwhy{margin-top:8px;padding:14px;border-radius:var(--r);background:var(--sunk);display:grid;gap:10px}
+.vwhy p{margin:0;font-size:13.5px;line-height:1.45;color:var(--ink2)}.vwhy b{color:var(--ink);font-weight:600}.vwhy .src{font-style:italic;color:var(--muted)}
 .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .preset{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:3px;min-height:68px}
 .preset b{font-weight:600}.preset small{color:var(--muted);font-size:12.5px}
@@ -3158,7 +3171,7 @@ function startOnboarding(fromExisting) {
   if (fromExisting && p) {
     d = { goal: p.goal || "", feel: p.feel || [], values: (p.values || []).slice(), custom: clone(p.customValues || []), comps: clone(p.components || []).map(c => Object.assign(c, { on: true, touched: true })), seen: COMP_LIB.map(c => c.id), capacity: p.capacity || 20, week: clone(p.week || null) || presetWeek("office"), cores: clone(p.cores || []), ifthen: (p.ifthen || []).slice() };
   } else { const week = presetWeek("office"); d = { goal: "", feel: [], values: [], custom: [], comps: [], seen: [], capacity: weekCalc(week).floors, week, cores: [], ifthen: DEFAULT_IFTHEN.slice() }; }
-  S.ob = { step: fromExisting ? 1 : 0, d }; S.tailor = null; S.coach = null; S.obMore = {}; S.obWeekAdv = false;
+  S.ob = { step: fromExisting ? 1 : 0, d }; S.tailor = null; S.coach = null; S.obMore = {}; S.obWeekAdv = false; S.obAddV = false; S.obWhy = false;
 }
 function ensureCandidates(d) {
   const cores = d.cores.map(c => c.value);
@@ -3228,12 +3241,13 @@ function renderOnboarding() {
     html = `<h1>What matters to you?</h1>
       <p class="lede">Pick 3 to 5. Star up to 2 that matter most right now.</p>
       <label class="flabel" for="ob-goal" style="margin-top:6px">Where are you heading this year? <span class="opt">Optional</span></label>
-      <textarea id="ob-goal" data-ob="goal" rows="2" placeholder="e.g. Calmer, fitter, and closer to family">${esc(d.goal)}</textarea>
+      <textarea id="ob-goal" data-ob="goal" rows="2" placeholder="e.g. Calmer, fitter, closer to family">${esc(d.goal)}</textarea>
       ${d.imp && d.imp.goalHint && !d.goal.trim() ? `<p class="hint" style="margin:6px 0 0"><button class="linkish" data-act="impGoal">Start from your apps</button>: “${esc(d.imp.goalHint)}”</p>` : ""}
-      <div class="vpicks">${order.map(v => { const on = d.values.includes(v.id), core = cores.includes(v.id);
-        return `<div class="vpick ${on ? "on" : ""} ${core ? "starred" : ""}"><button class="vmain" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${on}"><span class="tick"></span><span class="vt"><b>${esc(v.name)}</b>${d.imp && d.imp.ev[v.id] ? `<span class="fromapps">In your apps: ${esc(d.imp.ev[v.id])}</span>` : ""}${on && v.why ? `<small>${esc(v.why)} <span class="src">${esc(v.src)}</span></small>` : ""}</span></button>${on ? `<button class="vstar" data-act="obCore" data-v="${esc(v.id)}" aria-pressed="${core}" aria-label="${core ? "Unstar" : "Star"} ${esc(v.name)}">${core ? "★" : "☆"}</button>` : ""}</div>`; }).join("")}</div>
-      <p class="hint" style="margin:10px 0 0">★ Starred values are your Cores for this season: they get twice the time in the suggested split. Nothing starred? Everything gets an equal share, and Compass asks again after your first week.</p>
-      <form class="addrow" id="obCustomValue" style="grid-template-columns:1fr auto;padding:12px 0 0"><input type="text" id="obCv" placeholder="Add your own, e.g. Faith, Craft" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>`;
+      <div class="vgrid">${order.map(v => { const on = d.values.includes(v.id), core = cores.includes(v.id);
+        return `<div class="vtile ${on ? "on" : ""} ${core ? "starred" : ""}"><button class="vmain" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${on}"><b>${esc(v.name)}</b>${d.imp && d.imp.ev[v.id] ? `<small class="fromapps">In your apps</small>` : ""}</button>${on ? `<button class="vstar" data-act="obCore" data-v="${esc(v.id)}" aria-pressed="${core}" aria-label="${core ? "Unstar" : "Star"} ${esc(v.name)}">${core ? "★" : "☆"}</button>` : ""}</div>`; }).join("")}</div>
+      <div class="vlinks"><button class="linkish" data-act="obAddV" aria-expanded="${!!S.obAddV}">+ Add your own</button><button class="linkish" data-act="obWhy" aria-expanded="${!!S.obWhy}">Why these?</button></div>
+      ${S.obAddV ? `<form class="addrow" id="obCustomValue" style="grid-template-columns:1fr auto;padding:4px 0 0"><input type="text" id="obCv" placeholder="e.g. Faith, Craft" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>` : ""}
+      ${S.obWhy ? `<div class="vwhy"><p><b>★ Stars</b> mark your Cores for this season: they get twice the time. Star nothing and everything shares equally; Compass asks again after your first week.</p>${order.filter(v => v.why).map(v => `<p><b>${esc(v.name)}</b> ${esc(v.why)} <span class="src">${esc(v.src)}</span></p>`).join("")}</div>` : ""}`;
     canNext = d.values.length >= 1; next = d.values.length ? `Continue with ${d.values.length}` : "Pick at least one";
   } else if (key === "week") {
     d.week = d.week || presetWeek("office");
@@ -3359,6 +3373,8 @@ document.addEventListener("click", e => {
     case "obFun": { const n = b.dataset.v; const c = ob.comps.find(x => x.fun && x.name === n); if (c) c.on = !c.on; else ob.comps.push({ id: "fun-" + uidGen(), fun: true, name: n, cadence: "weekly", target: 0, hours: 0, on: true }); return updateOb(); }
     case "obCore": { const v = b.dataset.v; if (ob.cores.some(c => c.value === v)) ob.cores = ob.cores.filter(c => c.value !== v); else { if (ob.cores.length >= 2) return toast("Two stars at most. Unstar one first."); ob.cores.push({ value: v, text: "" }); } updateOb(); if (ob.cores.some(c => c.value === v)) burst(document.querySelector(`[data-act="obCore"][data-v="${CSS.escape(v)}"]`), "var(--brass)", 8); return; }
     case "obPreset": { const v = b.dataset.v; if (v === "cal") return; ob.week = presetWeek(v, ob.week); ob.capacity = weekCalc(ob.week).floors; updateOb(); return; }
+    case "obAddV": S.obAddV = !S.obAddV; updateOb(); if (S.obAddV) { const i = $("#obCv"); if (i) i.focus(); } return;
+    case "obWhy": S.obWhy = !S.obWhy; updateOb(); return;
     case "obWeekAdv": S.obWeekAdv = !S.obWeekAdv; updateOb(); return;
     case "obMore": { const v = b.dataset.v; S.obMore = S.obMore || {}; S.obMore[v] = !S.obMore[v]; updateOb(); return; }
     case "obStarter": { const d = starterDraft(b.dataset.v, ob ? ob.goal : ""); if (!d) return; S.ob = { step: 3, d }; S.obMore = {}; S.obEdit = null; window.scrollTo(0, 0); renderOnboarding(); return; }
