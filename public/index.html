@@ -79,11 +79,15 @@ button:disabled{cursor:default}
 .sync{display:inline-flex;align-items:center;gap:6px}
 .sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
 .sync.ok i{background:var(--good)} .sync.busy i{background:var(--brass)}
-.island{background:color-mix(in srgb,var(--accent) 5%,var(--surface));border:1px solid var(--line);border-radius:20px;padding:4px 16px 12px;margin:6px 0 22px;box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 6%,transparent)}
-.island .statusline{padding-block:2px 0}
+.island{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:2px 14px 10px;margin:6px 0 14px}
+.island .statusline{padding-block:8px 0}
+.island .statusline:has(#heading:empty){display:none}
+.bname{display:flex;flex-direction:column;gap:3px}
+.bname .sync{font:400 11.5px/1.2 var(--sans);letter-spacing:0;color:var(--muted)}
+.bname .sync[hidden]{display:none}
 .island .statusline[hidden]{display:none}
 .islandx:empty{display:none}
-.islandx{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.islandx{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
 .islandx .obprog{margin:0}
 body.landing .island{display:none}
 .banner{background:var(--warn-soft);color:var(--ink);border-radius:var(--r);padding:10px 12px;font-size:13.5px;margin-block:0 12px}
@@ -268,7 +272,8 @@ html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
 .daypick button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 
 /* onboarding */
-.ob{padding-block:8px 20px}
+.ob{padding-block:0 20px}
+.ob .stepin > h1:first-child{margin-top:4px}
 .ob .stepin{animation:rise .4s cubic-bezier(.2,.8,.2,1)}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .progress{display:flex;gap:6px;margin:6px 0 8px}
@@ -783,7 +788,7 @@ details.fold[open] summary::before{content:"▾ ";}
       <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.6"/>
         <g class="hneedle" id="hneedle"><path d="M16 4.5l3.2 11.5H12.8z" fill="var(--brass)"/><path d="M16 27.5l-3.2-11.5h6.4z" fill="var(--muted)"/></g>
         <circle cx="16" cy="16" r="1.8" fill="var(--surface)" stroke="currentColor" stroke-width="1"/></svg>
-      Compass
+      <div class="bname">Compass<span class="sync" id="sync"><i></i><span>Connecting…</span></span></div>
     </div>
     <div class="topright">
     <div class="weeknav" id="weeknav">
@@ -794,7 +799,7 @@ details.fold[open] summary::before{content:"▾ ";}
     <button class="avatar" id="acctBtn" data-act="account" aria-label="Account" hidden></button>
     </div>
   </header>
-  <div class="statusline" id="statusline"><span class="sync" id="sync"><i></i><span>Connecting…</span></span><span id="heading"></span></div>
+  <div class="statusline" id="statusline"><span id="heading"></span></div>
   <div class="islandx" id="islandx"></div>
   </div>
   <div class="banner" id="banner" hidden></div>
@@ -3285,13 +3290,13 @@ function renderOnboarding() {
     ensureCandidates(d);
     const cs = d.cores.map(c => c.value), ids = coresFirst(d.values, cs);
     const wkName = d.week && d.week.preset ? (WEEK_PRESETS.find(p => p.id === d.week.preset) || {}).name : d.imp ? "From your calendar" : "";
-    html = `${d.skipped ? `<div class="card pad obsum"><div class="row" style="align-items:flex-start"><div><span class="flabel">Starting from</span><b style="display:block;font:600 18px var(--display)">${esc(d.starter ? d.starter.name : "your setup")}</b></div></div>
+    html = `<h1>Your floors</h1>
+      <p class="lede">The minimum that already counts as a good week. ${d.skipped ? "Untick anything that doesn't fit." : "We picked one or two for each value."} Tap ✎ to change how often or how long.</p>
+      ${d.skipped ? `<div class="card pad obsum"><div class="row" style="align-items:flex-start"><div><span class="flabel">Starting from</span><b style="display:block;font:600 18px var(--display)">${esc(d.starter ? d.starter.name : "your setup")}</b></div></div>
         <div class="chips" style="margin-top:8px">${d.values.map(v => `<span class="chip ${cs.includes(v) ? "sel" : ""}">${cs.includes(v) ? "★ " : ""}${esc(vById(d, v).name)}</span>`).join("")}</div>
         <div class="hint" style="margin-top:8px">${wkName ? esc(wkName) + " · " : ""}about ${d.capacity} h a week for floors</div>
         <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small" data-act="obJump" data-step="1">Change values</button><button class="btn small" data-act="obJump" data-step="2">Change week</button></div></div>` : ""}
       <div class="${S.loadOpen ? "" : "stickymeter"}">${meter(obOn(d), d.capacity, "ob")}</div>
-      <h1>Your floors</h1>
-      <p class="lede">The minimum that already counts as a good week. ${d.skipped ? "Untick anything that doesn't fit." : "We picked one or two for each value."} Tap ✎ to change how often or how long.</p>
       ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
       ${ids.map((vid, gi) => {
         const all = byTime(d.comps.filter(c => c.value === vid && !c.fun)), shown = all.filter(obShown), more = all.filter(c => !obShown(c)), open = S.obMore && S.obMore[vid];
