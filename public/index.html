@@ -265,6 +265,35 @@ html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
 .ob .stepin{animation:rise .4s cubic-bezier(.2,.8,.2,1)}
 @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .progress{display:flex;gap:6px;margin:6px 0 8px}
+.obprog{display:flex;align-items:center;gap:12px;margin:4px 0 6px}.obprog span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}.obprog .progress{flex:1;margin:0}
+.opt{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
+.vpicks{display:grid;gap:8px;margin-top:14px}
+.vpick{display:flex;align-items:stretch;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);transition:border-color .15s,background .15s}
+.vpick.on{border-color:var(--accent);background:var(--accent-soft)}.vpick.starred{border-color:var(--brass);background:var(--brass-soft)}
+.vmain{flex:1;min-width:0;display:flex;gap:12px;align-items:flex-start;text-align:left;padding:12px}
+.vmain .tick{flex:none;margin-top:1px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center}
+.vmain[aria-pressed="true"] .tick{background:var(--accent);border-color:var(--accent);animation:pop .3s cubic-bezier(.3,1.7,.5,1)}
+.vmain[aria-pressed="true"] .tick::after{content:"";width:5px;height:9px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.vpick.starred .vmain .tick{background:var(--brass);border-color:var(--brass)}
+.vt{display:flex;flex-direction:column;gap:3px;min-width:0}.vt b{font-weight:600}.vt small{color:var(--ink2);font-size:13px;line-height:1.4}.vt .src{display:inline;margin:0}
+.vstar{flex:none;width:52px;font-size:22px;color:var(--brass);border-left:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.vstar[aria-pressed="false"]{color:var(--muted)}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.preset{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:3px;min-height:68px}
+.preset b{font-weight:600}.preset small{color:var(--muted);font-size:12.5px}
+.preset[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.weekres{margin-top:12px}.weekres b{font-size:16px}
+.starters{display:grid;gap:8px}
+.starter{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 14px}
+.starter span:first-child{flex:1;display:flex;flex-direction:column;gap:2px}.starter b{font-weight:600}.starter small{color:var(--muted);font-size:13px}
+.starter .chev{color:var(--muted);font-size:20px}
+.starter:hover,.preset:hover{border-color:var(--accent)}
+.obpen{flex:none;width:44px;height:44px;border-radius:50%;color:var(--ink2);font-size:16px}
+.obpen:hover{background:var(--sunk)}
+.obmore{display:block;width:100%;text-align:left;padding:12px 14px;font-size:14px;color:var(--accent);font-weight:500;border-top:1px solid var(--line)}
+.obsum{margin:8px 0 12px}
+.intro{margin:8px 0 14px;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.intro ul{margin:8px 0 12px;padding-left:18px;display:grid;gap:6px;color:var(--ink2);font-size:14.5px;line-height:1.45}
 .progress i{height:4px;flex:1;border-radius:2px;background:var(--line);transition:background .3s}
 .progress i.on{background:var(--accent)}
 .hero{display:grid;place-items:center;padding-block:12px 4px}
@@ -441,7 +470,7 @@ body.landing .top,body.landing #statusline{display:none}
 .sbar .bmark{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
 .mstat{font-size:13px;color:var(--good);font-weight:500}
 .mstat.bad{color:var(--warn)}
-.meter .nums b{font-family:var(--mono);font-weight:600}
+.meter .nums b{font-family:var(--sans);font-variant-numeric:tabular-nums;font-weight:600}
 .vdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:1px;flex:none}
 .alloc{font-size:13px;white-space:nowrap;margin-left:auto}
 .gh{flex-wrap:wrap;row-gap:2px}
@@ -851,7 +880,7 @@ function templateDraft() {
   ].map(c => Object.assign(c, { on: true }));
   return {
     goal: "", feel: [], values: ["rel", "solve", "create", "mind", "body", "serve", "money", "world", "time"], custom: [],
-    comps, seen: [], capacity: 22, week: Object.assign({}, WEEK_DEFAULT), template: true,
+    comps, seen: [], capacity: 22, week: Object.assign({}, WEEK_DEFAULT, { workDays: [0, 1, 2, 3, 4], workStart: "09:00", preset: "office" }), template: true,
     cores: [{ value: "solve", text: "Move to a better-paid, more technically challenging role" }, { value: "rel", text: "Partner search, and where to live near my parents" }],
     ifthen: ["If work travel → MVW + parents call + journal line", "If sick → sleep only; nothing else counts against me", "If work crunch → drop satellites, then one gym session; never sleep or therapy", "If a rejection streak → app-free reset week; bring it to therapy", "If a parent's health event → everything drops except parents, therapy, sleep", "If motivation collapse → 2-minute versions of anchors only"],
   };
@@ -2065,7 +2094,7 @@ function rToday(id) {
   const jc = daily.find(c => c.auto === "journal");
   const hr = new Date().getHours(), part = hr < 5 ? "evening" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
   const first = ((S.user && S.user.name) || "").split(" ")[0];
-  return `
+  return `${introCard()}
   ${S.selDay === tk ? `<p class="greet">Good ${part}${first ? ", " + esc(first) : ""}.</p>` : ""}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
@@ -2273,6 +2302,7 @@ function rPlanView(id) {
   const wd = workDaysOf(w);
   return `
   <p class="lede" style="margin-top:14px">Give each weekly floor a day. The plan repeats every week until you change it, and shows up on Today with its time.</p>
+  ${weekCheckCard()}
   <div class="psum"><div><b>${hrs(budgetW)} h</b><span>for floors a week</span></div><div><b>${hrs(dailyM * 7 / 60)} h</b><span>daily habits</span></div><div><b>${hrs(placedH)} h</b><span>placed</span></div><div class="${toPlaceH ? "warm" : ""}"><b>${hrs(toPlaceH)} h</b><span>to place</span></div></div>
   ${!hasWeek ? `<p class="hint" style="margin:6px 0 0">These hours are estimates. <button class="linkish" data-act="weekEdit">Set up Your week</button> for your real ones.</p>` : ""}
   ${left.length ? tray : `<h3>To place</h3>${tray}`}
@@ -2582,6 +2612,7 @@ function rReview(id, F, trips, sugg) {
   ${trips.length ? `<h2>Tripwires</h2><p class="lede">These trigger a review, not blame.</p>${trips.map(t => `<div class="trip">${esc(t)}</div>`).join("")}` : ""}
   <h2>Sunday review</h2>
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
+  ${reviewSetupCards()}
   <h3>1 · Floors</h3>
   <div class="card pad"><ul class="floors" style="margin:0">${vals.map(v => { const st = valueStatus(v.id, F, id); return `<li class="${st.s === "clear" ? "ok" : ""}"><span>${esc(v.name)}</span><span class="f">${st.s === "clear" ? "✓" : st.s === "rest" ? "–" : st.s === "open" && st.t === "This month" ? "…" : "✗"}</span></li>`; }).join("")}</ul></div>
   ${open.length ? `<p class="hint" style="margin:10px 0 6px">Forgot to log something?</p><div class="chips">${open.map(f => countChip(f.c, f.have)).join("")}</div>` : ""}
@@ -3073,11 +3104,43 @@ function impView() {
   const nOn = Object.values(sel.values).filter(Boolean).length;
   return { html, back: "impBack", next: nOn ? "Use this and continue" : "Continue without it", nextAct: nOn ? "impUse" : "impClose", canNext: true };
 }
-/* ============ ONBOARDING ============ */
-const OB_STEPS = ["welcome", "goal", "values", "season", "week", "comps", "safety", "plan"];
+/* ============ ONBOARDING: welcome, then three short screens ============ */
+const OB_STEPS = ["welcome", "values", "week", "comps"];
+/* most-chosen values first, so most people finish picking without scrolling */
+const POPULAR = ["rel", "body", "mind", "solve", "learn", "money", "create", "time", "world", "serve"];
+/* which suggestions start ticked: two for a starred value, one for the rest */
+const PICKS = { rel: ["reach", "quality"], body: ["gym", "sleep"], mind: ["journal", "med"], solve: ["deep", "win"], create: ["creative", "practice"], serve: ["kind", "ngo"], money: ["lifeTax", "autosave"], world: ["novelty", "trip"], learn: ["read", "course"], time: ["recovery"] };
+const WEEK_PRESETS = [
+  { id: "office", name: "Office 9–5", sub: "Weekdays, 9 am to 5 pm", w: { work: 40, workDays: [0, 1, 2, 3, 4], workStart: "09:00", commute: 0.5 } },
+  { id: "long", name: "Long hours", sub: "Weekdays, about 10 hours", w: { work: 50, workDays: [0, 1, 2, 3, 4], workStart: "08:30", commute: 0.5 } },
+  { id: "part", name: "Part-time", sub: "About 4 hours on weekdays", w: { work: 20, workDays: [0, 1, 2, 3, 4], workStart: "09:00", commute: 0.5 } },
+  { id: "student", name: "Student", sub: "Classes and study on weekdays", w: { work: 30, workDays: [0, 1, 2, 3, 4], workStart: "09:00", commute: 0.25 } },
+  { id: "shift", name: "Shift work", sub: "Four longer days a week", w: { work: 40, workDays: [0, 1, 3, 4], workStart: "07:00", commute: 0.5 } },
+  { id: "flex", name: "Flexible or not working", sub: "No fixed hours", w: { work: 0, workDays: [], commute: 0 } },
+];
+const presetWeek = (id, base) => { const p = WEEK_PRESETS.find(x => x.id === id) || WEEK_PRESETS[0]; const w = Object.assign({}, WEEK_DEFAULT, base || {}, clone(p.w), { preset: p.id }); delete w.adjusted; return w; };
+/* starter templates: one tap fills values, Cores and floors, then a single review screen */
+const STARTERS = [
+  { id: "balanced", name: "Balanced", blurb: "A little of everything that keeps life good", values: ["rel", "body", "mind", "learn", "time"], cores: [], week: "office",
+    comps: [["reach", { target: 5 }], ["quality", { target: 1 }], ["gym", { target: 2 }], ["sleep"], ["journal"], ["read", { target: 3 }], ["recovery"]] },
+  { id: "career", name: "Career push", blurb: "Grow at work without losing health or people", values: ["solve", "learn", "body", "rel", "time"], cores: ["solve", "learn"], week: "long",
+    comps: [["deep", { target: 3 }], ["win"], ["course", { target: 2 }], ["read", { target: 4 }], ["gym", { target: 2 }], ["reach", { target: 4 }], ["recovery"]] },
+  { id: "health", name: "Health reset", blurb: "Sleep, move, and steady your mind", values: ["body", "mind", "rel", "time"], cores: ["body", "mind"], week: "office",
+    comps: [["gym", { target: 3 }], ["walk", { target: 4 }], ["sleep"], ["med", { target: 5 }], ["journal"], ["reach", { target: 4 }], ["recovery"]] },
+  { id: "family", name: "Family first", blurb: "Show up for the people who matter", values: ["rel", "body", "mind", "money", "time"], cores: ["rel"], week: "office",
+    comps: [["reach", { target: 6 }], ["quality", { target: 2 }], ["milestone"], ["gym", { target: 2 }], ["journal"], ["lifeTax"], ["recovery"]] },
+  { id: "student", name: "Student", blurb: "Study well, stay healthy, keep friends close", values: ["learn", "solve", "body", "rel", "mind"], cores: ["learn"], week: "student",
+    comps: [["course", { name: "Focused study session", target: 4 }], ["read", { target: 4 }], ["deep", { name: "Project work", target: 2 }], ["gym", { target: 2 }], ["sleep"], ["reach", { target: 4 }], ["social"]] },
+];
+function starterDraft(id, goal) {
+  const s = STARTERS.find(x => x.id === id); if (!s) return null;
+  const comps = s.comps.map(([lid, o]) => Object.assign({}, COMP_LIB.find(c => c.id === lid), o || {}, { on: true, starter: true }));
+  const week = presetWeek(s.week);
+  return { goal: goal || "", feel: [], values: s.values.slice(), custom: [], comps, seen: comps.map(c => c.id), capacity: weekCalc(week).floors, week, cores: s.cores.map(v => ({ value: v, text: "" })), ifthen: DEFAULT_IFTHEN.slice(), starter: { id: s.id, name: s.name }, skipped: true };
+}
 function saveDraft() {
   if (!S.ob || S.ob.step < 1 || S.authState !== "in") return;
-  S.docs.obdraft = { step: S.ob.step, d: clone(S.ob.d), at: Date.now() };
+  S.docs.obdraft = { step: S.ob.step, d: clone(S.ob.d), at: Date.now(), flow: 3 };
   touch("obdraft");
 }
 function clearDraft() { S.docs.obdraft = { cleared: true, at: Date.now() }; touch("obdraft"); }
@@ -3085,25 +3148,36 @@ function resumeDraft() {
   const dr = S.docs.obdraft || LS.get("obdraft");
   if (dr && dr.cleared) return null;
   if (!dr || !dr.d || !Array.isArray(dr.d.comps) || Date.now() - (dr.at || 0) > 30 * 864e5) return null;
-  return { step: Math.min(dr.step || 1, OB_STEPS.length - 1), d: dr.d, resumed: true };
+  /* drafts from the older, longer setup resume at the values screen */
+  const step = dr.flow === 3 ? Math.min(dr.step || 1, OB_STEPS.length - 1) : 1;
+  return { step, d: dr.d, resumed: true };
 }
 function startOnboarding(fromExisting) {
   const p = profile();
   let d;
   if (fromExisting && p) {
-    d = { goal: p.goal || "", feel: p.feel || [], values: (p.values || []).slice(), custom: clone(p.customValues || []), comps: clone(p.components || []).map(c => Object.assign(c, { on: true, touched: true })), seen: COMP_LIB.map(c => c.id), capacity: p.capacity || 20, week: clone(p.week || null), cores: clone(p.cores || []), ifthen: (p.ifthen || []).slice() };
-  } else d = { goal: "", feel: [], values: [], custom: [], comps: [], seen: [], capacity: weekCalc(null).floors, week: Object.assign({}, WEEK_DEFAULT), cores: [], ifthen: DEFAULT_IFTHEN.slice() };
-  S.ob = { step: fromExisting ? 1 : 0, d }; S.tailor = null; S.coach = null;
+    d = { goal: p.goal || "", feel: p.feel || [], values: (p.values || []).slice(), custom: clone(p.customValues || []), comps: clone(p.components || []).map(c => Object.assign(c, { on: true, touched: true })), seen: COMP_LIB.map(c => c.id), capacity: p.capacity || 20, week: clone(p.week || null) || presetWeek("office"), cores: clone(p.cores || []), ifthen: (p.ifthen || []).slice() };
+  } else { const week = presetWeek("office"); d = { goal: "", feel: [], values: [], custom: [], comps: [], seen: [], capacity: weekCalc(week).floors, week, cores: [], ifthen: DEFAULT_IFTHEN.slice() }; }
+  S.ob = { step: fromExisting ? 1 : 0, d }; S.tailor = null; S.coach = null; S.obMore = {}; S.obWeekAdv = false;
 }
 function ensureCandidates(d) {
+  const cores = d.cores.map(c => c.value);
   d.values.forEach(v => {
     let n = d.comps.filter(c => c.value === v && c.on).length;
+    const hasImp = d.comps.some(x => x.imp && x.value === v);
     COMP_LIB.filter(c => c.value === v && !d.seen.includes(c.id)).forEach(c => {
       d.seen.push(c.id);
       if (d.comps.some(x => x.id === c.id)) return;
-      d.comps.push(Object.assign({}, c, { on: d.template ? n === 0 : n < 2 && !d.comps.some(x => x.imp && x.value === v) }));
-      n++;
+      const on = d.template ? n === 0 : d.starter ? n === 0 && !hasImp : false;
+      d.comps.push(Object.assign({}, c, { on, sugg: !d.template && !d.starter, extra: true }));
+      if (on) n++;
     });
+    /* untouched suggestions follow the stars: two ticked for a Core, one for the rest (none if your own routines cover it) */
+    if (!d.template && !d.starter) {
+      const want = hasImp ? [] : (PICKS[v] || []).slice(0, cores.includes(v) ? 2 : 1);
+      d.comps.filter(c => c.value === v && c.sugg && !c.touched).forEach(c => { c.on = want.includes(c.id); });
+      if (!d.comps.some(c => c.value === v && c.on) && !hasImp) { const first = d.comps.find(c => c.value === v && c.sugg && !c.touched); if (first) first.on = true; }
+    }
   });
 }
 const obOn = d => d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value)));
@@ -3111,10 +3185,13 @@ function byTime(list) {
   if (S.obFrozen) { const idx = id => { const i = S.obFrozen.indexOf(id); return i < 0 ? 1e6 : i; }; return list.slice().sort((a, b) => idx(a.id) - idx(b.id)); }
   return list.slice().sort((a, b) => ((b.on !== false) - (a.on !== false)) || (weeklyHours(b) - weeklyHours(a)));
 }
+/* extra library ideas stay behind "More ideas" until ticked; everything you chose, imported or tailored stays in view */
+const obShown = c => c.on || c.touched || c.imp || c.ai || !c.extra;
 function obRow(c) {
-  const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}${c.imp ? ` <span class="tag imp">${esc(c.imp)}</span>` : ""}</span>${c.note ? `<small>${esc(c.note)}</small>` : c.on ? "" : `<small>${esc(cadenceText(c))}</small>`}</span></button><button class="xbtn" data-act="obDel" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.name)}" title="Remove">✕</button></div>`;
-  if (!c.on) return `<div class="obrow" data-rid="${esc(c.id)}">${top}</div>`;
-  if (S.obEdit !== c.id) return `<div class="obrow" data-rid="${esc(c.id)}">${top}<button class="sumpill" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}"><span>${esc(freqWords(c))}${c.unit ? "" : ` · ${c.hours ? fmtDur(c.hours) : "no time"} each`}</span><b>= ${fmtDur(weeklyHours(c))}/wk</b><span class="pen">✎</span></button></div>`;
+  const tags = `${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}${c.imp ? ` <span class="tag imp">${esc(c.imp)}</span>` : ""}`;
+  const sub = c.on ? `${freqWords(c)}${c.unit || !c.hours ? "" : ` · ${fmtDur(c.hours)}`}` : (c.note || cadenceText(c));
+  const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${tags}</span><small>${esc(sub)}</small></span></button>${c.on && S.obEdit !== c.id ? `<button class="obpen" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}">✎</button>` : ""}</div>`;
+  if (!c.on || S.obEdit !== c.id) return `<div class="obrow" data-rid="${esc(c.id)}">${top}</div>`;
   return `<div class="obrow" data-rid="${esc(c.id)}">${top}<div class="obedit">
     ${c.unit ? "" : `<div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="obCad" data-id="${esc(c.id)}" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>`}
     <div class="tunegrid">
@@ -3124,96 +3201,74 @@ function obRow(c) {
     <div class="eqline">= ${fmtDur(weeklyHours(c))} a week</div>
     <label class="flabel" for="obe-name">Name</label><input type="text" id="obe-name" data-obe="name" value="${esc(c.name)}" maxlength="60">
     <label class="flabel" for="obe-note">Note</label><input type="text" id="obe-note" data-obe="note" value="${esc(c.note)}" maxlength="90" placeholder="Optional, e.g. 20 minutes counts">
-    <div><button class="btn small primary" data-act="obEditDone">Done</button></div></div></div>`;
+    <div class="row"><button class="btn small quiet danger" data-act="obDel" data-id="${esc(c.id)}">Remove</button><button class="btn small primary" data-act="obEditDone">Done</button></div></div></div>`;
 }
 function hasOldLogs() { return Object.keys(S.hist).length > 0 || Object.keys(S.docs).some(k => k.startsWith("w-") && Object.keys((S.docs[k] || {}).days || {}).length); }
+const vById = (d, id) => VALUE_LIB.find(x => x.id === id) || d.custom.find(x => x.id === id) || { name: "Other" };
 function renderOnboarding() {
   applyTheme();
   const { step, d } = S.ob, key = OB_STEPS[step];
-  const prog = `<div class="progress" aria-label="Step ${step + 1} of ${OB_STEPS.length}">${OB_STEPS.map((_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
+  const prog = step ? `<div class="obprog"><span>Step ${step} of 3</span><div class="progress" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div></div>` : "";
   let html = "", next = "Continue", canNext = true, back = step > 0, backAct = "obBack", nextAct = "obNext";
   if (key === "welcome" && S.imp) {
     const v = impView(); html = v.html; next = v.next; canNext = v.canNext; back = true; backAct = v.back; nextAct = v.nextAct;
   } else if (key === "welcome") {
     html = `<div class="hero">${bigCompass()}</div>
       <h1>Know where your life is heading.</h1>
-      <p class="lede">Compass turns what matters to you into a few small floors, checks them once a week, and tells you when you're drifting. Relaxed because you know the direction, not because you're doing nothing.</p>
+      <p class="lede">Pick what matters, keep a few small floors for each, and check in once a week. About a minute to set up.</p>
       ${d.imp ? `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Imported from ${esc(d.imp.from.join(", "))}</b><div class="hint">Setup is pre-filled with ${d.imp.comps} routine${d.imp.comps === 1 ? "" : "s"} and your values. Tap Continue to review.</div></div><button class="btn small quiet" data-act="impOpen">Redo</button></div></div>`
-        : `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Already use Todoist, TickTick, Microsoft To Do, Sunsama or a calendar?</b><div class="hint">Bring it in and Compass fills in most of setup from what you already do. Read on this device, never uploaded.</div></div></div><div style="margin-top:10px"><button class="btn" data-act="impOpen">Import from my apps</button></div></div>`}
-      <div class="card pad" style="margin-top:10px"><b>Pick your colours</b><div style="margin-top:10px">${themePicker()}</div></div>
-      <div class="card pad" style="margin-top:10px"><b>What setup covers</b><div class="hint" style="margin-top:4px">Your goal · the values that matter · small components for each · up to two Cores for this season · a safety net for hard weeks. About five minutes.</div></div>
-      ${hasOldLogs() || (profile() && !profile().onboarded) ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>You have earlier logs</b><div class="hint">Start from the original Compass setup to keep them counting.</div></div><button class="btn" data-act="obTemplate">Use it</button></div></div>` : `<p style="margin-top:12px"><button class="btn quiet" data-act="obTemplate">Or start from the full Compass template</button></p>`}`;
-    next = d.imp ? "Continue" : "Set my compass";
-  } else if (key === "goal") {
-    html = `<h1>Picture a good year from now.</h1>
-      <p class="lede">How do you want it to feel, and what are you moving toward? A direction, not a destination.</p>
-      <textarea id="ob-goal" data-ob="goal" rows="5" placeholder="e.g. I want to feel calm and proud: learning and growing in tech, doing good for my community, and staying close to family and friends.">${esc(d.goal)}</textarea>
-      ${d.imp && d.imp.insights.length ? `<div class="card insights" style="margin-top:10px">${d.imp.insights.slice(0, 2).map(t => `<div class="ins"><span class="glyph">${ICON.compass}</span><span>${esc(t)}</span></div>`).join("")}${d.imp.goalHint && !d.goal.trim() ? `<div style="padding:4px 0 12px"><button class="btn small" data-act="impGoal">Start from this</button><div class="hint" style="margin-top:6px">“${esc(d.imp.goalHint)}” Then make it yours.</div></div>` : ""}</div>` : ""}
-      <h3>It should feel</h3>
-      <div class="feel">${FEELINGS.map(f => `<button class="chip ${d.feel.includes(f) ? "sel" : ""}" data-act="obFeel" data-v="${f}">${f}</button>`).join("")}</div>
-      <p class="src" style="margin-top:14px">Values as directions: Acceptance and Commitment Therapy (Hayes)</p>`;
-    canNext = d.goal.trim().length > 3 || d.feel.length > 0;
+        : `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Already use Todoist, TickTick, Microsoft To Do, Sunsama or a calendar?</b><div class="hint">Bring it in and Compass fills in setup from what you already do.</div></div></div><div style="margin-top:10px"><button class="btn" data-act="impOpen">Import from my apps</button></div></div>`}
+      <h3>Or start from a template</h3>
+      <div class="starters">${STARTERS.map(s => `<button class="starter" data-act="obStarter" data-v="${s.id}"><span><b>${esc(s.name)}</b><small>${esc(s.blurb)}</small></span><span class="chev" aria-hidden="true">›</span></button>`).join("")}</div>
+      ${hasOldLogs() || (profile() && !profile().onboarded) ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>You have earlier logs</b><div class="hint">Start from the original Compass setup to keep them counting.</div></div><button class="btn" data-act="obTemplate">Use it</button></div></div>` : ""}`;
+    next = d.imp ? "Continue" : "Start";
   } else if (key === "values") {
+    const order = POPULAR.filter(id => VALUE_LIB.some(v => v.id === id)).map(id => VALUE_LIB.find(v => v.id === id)).concat(VALUE_LIB.filter(v => !POPULAR.includes(v.id)), d.custom);
+    const cores = d.cores.map(c => c.value);
     html = `<h1>What matters to you?</h1>
-      <p class="lede">Pick 3 to 7. Each one is backed by research on what makes life feel good and meaningful.</p>
-      <div class="vcards">${VALUE_LIB.concat(d.custom).map(v => `<button class="vcard" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${d.values.includes(v.id)}"><span class="tick"></span><b>${esc(v.name)}</b>${d.imp && d.imp.ev[v.id] ? `<span class="fromapps">In your apps: ${esc(d.imp.ev[v.id])}</span>` : ""}${v.why ? `<small>${esc(v.why)}</small><span class="src">${esc(v.src)}</span>` : `<small>Your own value</small>`}</button>`).join("")}</div>
-      <form class="addrow" id="obCustomValue" style="grid-template-columns:1fr auto;padding:12px 0 0"><input type="text" id="obCv" placeholder="Add your own, e.g. Faith, Family, Craft" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>`;
+      <p class="lede">Pick 3 to 5. Star up to 2 that matter most right now.</p>
+      <label class="flabel" for="ob-goal" style="margin-top:6px">Where are you heading this year? <span class="opt">Optional</span></label>
+      <textarea id="ob-goal" data-ob="goal" rows="2" placeholder="e.g. Calmer, fitter, and closer to family">${esc(d.goal)}</textarea>
+      ${d.imp && d.imp.goalHint && !d.goal.trim() ? `<p class="hint" style="margin:6px 0 0"><button class="linkish" data-act="impGoal">Start from your apps</button>: “${esc(d.imp.goalHint)}”</p>` : ""}
+      <div class="vpicks">${order.map(v => { const on = d.values.includes(v.id), core = cores.includes(v.id);
+        return `<div class="vpick ${on ? "on" : ""} ${core ? "starred" : ""}"><button class="vmain" data-act="obValue" data-v="${esc(v.id)}" aria-pressed="${on}"><span class="tick"></span><span class="vt"><b>${esc(v.name)}</b>${d.imp && d.imp.ev[v.id] ? `<span class="fromapps">In your apps: ${esc(d.imp.ev[v.id])}</span>` : ""}${on && v.why ? `<small>${esc(v.why)} <span class="src">${esc(v.src)}</span></small>` : ""}</span></button>${on ? `<button class="vstar" data-act="obCore" data-v="${esc(v.id)}" aria-pressed="${core}" aria-label="${core ? "Unstar" : "Star"} ${esc(v.name)}">${core ? "★" : "☆"}</button>` : ""}</div>`; }).join("")}</div>
+      <p class="hint" style="margin:10px 0 0">★ Starred values are your Cores for this season: they get twice the time in the suggested split. Nothing starred? Everything gets an equal share, and Compass asks again after your first week.</p>
+      <form class="addrow" id="obCustomValue" style="grid-template-columns:1fr auto;padding:12px 0 0"><input type="text" id="obCv" placeholder="Add your own, e.g. Faith, Craft" maxlength="40" aria-label="Your own value"><button class="btn" type="submit">Add</button></form>`;
     canNext = d.values.length >= 1; next = d.values.length ? `Continue with ${d.values.length}` : "Pick at least one";
   } else if (key === "week") {
-    d.week = d.week || Object.assign({}, WEEK_DEFAULT);
-    html = `<h1>Where does your week go?</h1>
-      <p class="lede">Before choosing floors, see how much time you really have. Six quick taps; rough answers are fine, and you can change them later in the Compass tab.</p>
-      ${d.imp && d.imp.weekWhy && d.imp.weekWhy.length ? `<div class="card insights" style="margin-bottom:12px">${d.imp.weekWhy.map(t => `<div class="ins"><span class="glyph">${ICON.cal}</span><span>${esc(t)}. Filled in from your calendar; adjust if it only shows part of your week.</span></div>`).join("")}</div>` : ""}
-      ${weekForm(d.week)}`;
-    next = `Continue with ${weekCalc(d.week).floors} h a week`;
+    d.week = d.week || presetWeek("office");
+    const c = weekCalc(d.week), fromCal = d.imp && d.imp.weekWhy && d.imp.weekWhy.length && !d.week.preset;
+    html = `<h1>What does a normal weekday look like?</h1>
+      <p class="lede">One tap. Compass uses it to work out how much time your floors can have.</p>
+      ${fromCal ? `<div class="card insights" style="margin-bottom:10px">${d.imp.weekWhy.map(t => `<div class="ins"><span class="glyph">${ICON.cal}</span><span>${esc(t)}.</span></div>`).join("")}</div>` : ""}
+      <div class="presets">${fromCal ? `<button class="preset" aria-pressed="true" data-act="obPreset" data-v="cal"><b>From your calendar</b><small>As your apps show it</small></button>` : ""}${WEEK_PRESETS.map(p => `<button class="preset" data-act="obPreset" data-v="${p.id}" aria-pressed="${d.week.preset === p.id}"><b>${esc(p.name)}</b><small>${esc(p.sub)}</small></button>`).join("")}</div>
+      <div class="card pad weekres"><b>About ${c.floors} h a week for your floors</b><div class="hint">Out of roughly ${hrs(c.free)} free hours after sleep, ${c.w.work ? "work, " : ""}and home life. Change it any time in the Compass tab.</div></div>
+      <button class="linkish" data-act="obWeekAdv" style="margin-top:8px">${S.obWeekAdv ? "Hide the details ▴" : "Adjust sleep, commute and more ▾"}</button>
+      ${S.obWeekAdv ? `<div style="margin-top:10px">${weekForm(d.week)}</div>` : ""}`;
+    next = "Continue";
   } else if (key === "comps") {
     ensureCandidates(d);
-    html = `<div class="${S.loadOpen ? "" : "stickymeter"}">${meter(obOn(d), d.capacity, "ob")}</div>
-      <h1>Small pieces, each a floor.</h1>
-      <p class="lede">These are your components. Keep what fits, and set how often and how long each takes <i>you</i>; the times are starting guesses. A floor is the minimum that already counts as a good week.</p>
+    const cs = d.cores.map(c => c.value), ids = coresFirst(d.values, cs);
+    const wkName = d.week && d.week.preset ? (WEEK_PRESETS.find(p => p.id === d.week.preset) || {}).name : d.imp ? "From your calendar" : "";
+    html = `${d.skipped ? `<div class="card pad obsum"><div class="row" style="align-items:flex-start"><div><span class="flabel">Starting from</span><b style="display:block;font:600 18px var(--display)">${esc(d.starter ? d.starter.name : "your setup")}</b></div></div>
+        <div class="chips" style="margin-top:8px">${d.values.map(v => `<span class="chip ${cs.includes(v) ? "sel" : ""}">${cs.includes(v) ? "★ " : ""}${esc(vById(d, v).name)}</span>`).join("")}</div>
+        <div class="hint" style="margin-top:8px">${wkName ? esc(wkName) + " · " : ""}about ${d.capacity} h a week for floors</div>
+        <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small" data-act="obJump" data-step="1">Change values</button><button class="btn small" data-act="obJump" data-step="2">Change week</button></div></div>` : ""}
+      <div class="${S.loadOpen ? "" : "stickymeter"}">${meter(obOn(d), d.capacity, "ob")}</div>
+      <h1>Your floors</h1>
+      <p class="lede">The minimum that already counts as a good week. ${d.skipped ? "Untick anything that doesn't fit." : "We picked one or two for each value."} Tap ✎ to change how often or how long.</p>
       ${S.sample ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>Tailor these to my goal</b><div class="hint">${S.tailor === "done" ? "Tailored suggestions added and switched on." : S.tailor === "empty" ? "No tailored suggestions came back. Try again." : S.tailor === "limit" ? "Usage limit reached. Try again later." : S.tailor === "error" ? "That didn't work. Try again." : "Claude reads your goal and proposes components that fit your hours. Uses your Claude usage."}</div></div>${S.tailor === "busy" ? `<span class="thinking"><i></i><i></i><i></i></span>` : `<button class="btn primary" data-act="obTailor">${S.tailor === "done" ? "Again" : "Tailor"}</button>`}</div></div>` : ""}
-      ${(() => { const cs = d.cores.map(c => c.value), ids = coresFirst(d.values, cs); return ids.map((vid, gi) => {
-        const list = byTime(d.comps.filter(c => c.value === vid && !c.fun));
-        return `${tierLabel(ids, gi, cs)}<div class="vgroup">${groupHead(vid, list, d.capacity)}<div class="card">
-          ${S.obRemoved && S.obRemoved.c.value === vid ? `<div class="undo"><span>Removed “${esc(S.obRemoved.c.name)}”.</span><button class="btn small" data-act="obUndo">Undo</button></div>` : ""}
-          ${list.map(obRow).join("")}
-          <form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a component to ${esc(valName(vid))}"><button class="btn small" type="submit">Add</button></form></div></div>`;
-      }).join(""); })()}
-      <div class="vgroup"><div class="gh"><b>Fun menu</b><span class="hint">never scored</span></div>
+      ${ids.map((vid, gi) => {
+        const all = byTime(d.comps.filter(c => c.value === vid && !c.fun)), shown = all.filter(obShown), more = all.filter(c => !obShown(c)), open = S.obMore && S.obMore[vid];
+        return `${tierLabel(ids, gi, cs)}<div class="vgroup">${groupHead(vid, shown, d.capacity)}<div class="card">
+          ${shown.map(obRow).join("") || `<p class="hint pad" style="margin:0">Nothing ticked for this value yet.</p>`}
+          ${open ? more.map(obRow).join("") + `<form class="addrow obAdd" data-value="${esc(vid)}" style="grid-template-columns:1fr auto"><input type="text" placeholder="Add your own" maxlength="60" aria-label="Add a floor to ${esc(valName(vid))}"><button class="btn small" type="submit">Add</button></form>` : ""}
+          <button class="obmore" data-act="obMore" data-v="${esc(vid)}" aria-expanded="${!!open}">${open ? "Fewer ideas ▴" : `+ More ideas${more.length ? ` (${more.length})` : ""} or add your own`}</button></div></div>`;
+      }).join("")}
+      <details class="fold" ${d.comps.some(c => c.fun && c.on) ? "open" : ""}><summary>Fun menu · optional, never scored</summary>
         <div class="chips">${FUN_LIB.concat(d.comps.filter(c => c.fun && !FUN_LIB.includes(c.name)).map(c => c.name)).map(n => { const on = d.comps.some(c => c.fun && c.name === n && c.on); return `<button class="chip ${on ? "sel" : ""}" data-act="obFun" data-v="${esc(n)}">${esc(n)}</button>`; }).join("")}</div>
-        <form class="addrow" id="obFunAdd" style="grid-template-columns:1fr auto;padding:10px 0 0"><input type="text" id="obFunText" placeholder="Something you do just for joy" maxlength="50" aria-label="Add a fun thing"><button class="btn small" type="submit">Add</button></form></div>`;
-    canNext = obOn(d).some(c => !c.fun);
-  } else if (key === "season") {
-    html = `<h1>Pick up to two Cores.</h1>
-      <p class="lede">For the next 12 to 18 months, two values get most of your energy. The rest become satellites, still tracked, explored without guilt. Chasing everything at once is how goals start fighting each other. Cores get a double share of time in the suggested split.</p>
-      ${d.imp && Object.keys(d.imp.coreHints || {}).length ? `<p class="hint" style="margin:0 0 10px">${d.cores.length ? "Pre-selected from where your time has gone lately." : "Your apps point to " + Object.keys(d.imp.coreHints).map(valName).join(" and ") + "."} If this season should look different, swap them.</p>` : ""}
-      <div class="vcards">${d.values.map(vid => { const v = VALUE_LIB.find(x => x.id === vid) || d.custom.find(x => x.id === vid); const on = d.cores.some(c => c.value === vid); return `<button class="vcard corecard" data-act="obCore" data-v="${esc(vid)}" aria-pressed="${on}"><span class="tick"></span><b>${esc(v.name)}</b><small>${on ? "Core" : "Satellite"}</small></button>`; }).join("")}</div>
-      ${d.cores.length ? `<div class="card" style="margin-top:12px">${d.cores.map((c, i) => `<div class="field"><label for="ob-core-${i}">What does ${esc((VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name)} mean this season?</label><input type="text" id="ob-core-${i}" data-obcore="${i}" value="${esc(c.text)}" placeholder="${esc((d.imp && d.imp.coreHints && d.imp.coreHints[c.value]) || "e.g. Land a more challenging role by summer")}"></div>`).join("")}</div>` : ""}
-      <p class="src" style="margin-top:14px">Emmons & King 1988; Riediger & Freund 2004</p>`;
-  } else if (key === "safety") {
-    const csf = d.cores.map(c => c.value), on = obOn(d).filter(c => !c.fun).sort((a, b) => (csf.includes(b.value) - csf.includes(a.value)));
-    html = `<h1>Build a safety net.</h1>
-      <p class="lede">When you're sick, travelling or swamped, flip on a Minimum Viable Week. Only these stay on; everything else pauses with no guilt.</p>
-      <div class="card">${on.map(c => `<button class="check" data-act="obMvw" data-id="${esc(c.id)}" aria-pressed="${!!c.mvw}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}</small></span></button>`).join("")}</div>
-      <h3>If-then rules</h3>
-      <p class="hint" style="margin:0 0 8px">Deciding in advance makes follow-through much more likely. One per line.</p>
-      <textarea id="ob-if" data-ob="ifthen" rows="5">${esc(d.ifthen.join("\n"))}</textarea>
-      <p class="src" style="margin-top:8px">Gollwitzer & Sheeran 2006</p>`;
-  } else if (key === "plan") {
-    const on = obOn(d).filter(c => !c.fun), fun = obOn(d).filter(c => c.fun), cap = capacity(on);
-    const coreNames = d.cores.map(c => (VALUE_LIB.find(x => x.id === c.value) || d.custom.find(x => x.id === c.value) || {}).name);
-    const steps = [
-      ["Floors, not ceilings", `${on.length} small floors${d.imp ? ` (${on.filter(c => c.imp).length} from what you already do)` : ""}, about ${hrs(cap)} hours a week${cap > d.capacity * 1.05 ? `, more than your ${d.capacity}-hour budget. Consider trimming.` : `, inside your ${d.capacity}-hour budget`}${d.week ? `, out of about ${hrs(weekCalc(d.week).free)} free hours` : ""}. Clearing a floor counts as a good week.`, "Schwartz et al. 2002"],
-      ["A season with a direction", coreNames.length ? `${coreNames.join(" and ")} ${coreNames.length === 1 ? "gets" : "get"} most of your energy until next year. Everything else is a satellite.` : "No Cores yet. Everything is weighted equally, which is fine to start; pick Cores at your first monthly check.", "Emmons & King 1988"],
-      ["A safety net", `${on.filter(c => c.mvw).length} things survive a hard week, and ${d.ifthen.filter(Boolean).length} if-then rules decide ahead of time.`, "Gollwitzer & Sheeran 2006"],
-      ["Joy stays loose", fun.length ? `${fun.length} fun things on a menu, never scored.` : "Add a fun menu later. Scheduling joy precisely makes it feel like work.", "Tonietto & Malkoc 2016"],
-      ["A loop that shows you the trend", "Three journal lines at night. A 25-minute Sunday review with one question: am I at peace with where this is trending?", "Amabile & Kramer 2011; Seligman et al. 2005"],
-    ];
-    html = `<div class="hero">${bigCompass()}</div>
-      <h1>Here's how you'll get there.</h1>
-      ${d.goal ? `<p class="lede">“${esc(d.goal.slice(0, 220))}${d.goal.length > 220 ? "…" : ""}”</p>` : ""}
-      <div class="route">${steps.map((s, i) => `<div class="card" style="animation-delay:${.15 + i * .12}s"><div class="step"><span class="num">${i + 1}</span><div><b>${esc(s[0])}</b><span>${esc(s[1])}</span><div class="src">${esc(s[2])}</div></div></div></div>`).join("")}</div>`;
-    next = "Start using Compass";
+        <form class="addrow" id="obFunAdd" style="grid-template-columns:1fr auto;padding:10px 0 0"><input type="text" id="obFunText" placeholder="Something you do just for joy" maxlength="50" aria-label="Add a fun thing"><button class="btn small" type="submit">Add</button></form></details>`;
+    canNext = obOn(d).some(c => !c.fun); next = canNext ? "Start using Compass" : "Tick at least one floor";
   }
   $("#main").innerHTML = `<div class="ob">${prog}<div class="stepin" id="obStep">${html}</div></div>`;
   $("#obbar").innerHTML = `<div class="obbar"><div class="in">${back ? `<button class="btn quiet" data-act="${backAct}">Back</button>` : (onboarded() ? `<button class="btn quiet" data-act="obCancel">Cancel</button>` : "<span></span>")}<button class="btn primary" data-act="${nextAct}" ${canNext ? "" : "disabled"}>${esc(next)}</button></div></div>`;
@@ -3223,12 +3278,17 @@ function renderOnboarding() {
 }
 function finishOnboarding() {
   const d = S.ob.d; clearDraft();
-  const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; return x; });
+  const cores = d.cores.filter(c => d.values.includes(c.value)), coreV = cores.map(c => c.value);
+  const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; delete x.sugg; delete x.starter; delete x.extra; return x; });
+  /* safety net defaults until the first Sunday review asks: sleep and the journal, plus one floor per Core */
+  components.forEach(c => { if (c.id === "sleep" || c.id === "journal") c.mvw = true; });
+  coreV.forEach(v => { const f = components.find(c => c.value === v && !c.fun); if (f && !components.some(c => c.value === v && c.mvw)) f.mvw = true; });
+  const redo = onboarded();
   S.docs.profile = Object.assign({}, profile() || {}, {
-    v: 2, onboarded: true, goal: d.goal.trim(), feel: d.feel, values: d.values, customValues: d.custom,
-    components, capacity: d.capacity, week: d.week || null, cores: d.cores.filter(c => d.values.includes(c.value)), ifthen: d.ifthen.map(s => s.trim()).filter(Boolean),
+    v: 2, onboarded: true, goal: d.goal.trim(), feel: d.feel || [], values: d.values, customValues: d.custom,
+    components, capacity: d.capacity, week: d.week || null, cores, ifthen: d.ifthen.map(s => s.trim()).filter(Boolean),
     updatedAt: new Date().toISOString(),
-  });
+  }, redo ? {} : { onboardedAt: todayKey(), pending: { intro: true, week: !(d.week && d.week.adjusted) && !(d.imp && d.imp.weekWhy && d.imp.weekWhy.length), cores: true, safety: true } });
   touch("profile"); clearTimeout(T.profile); T.profile = null; flush("profile");
   if (d.impPeople && d.impPeople.length) editPeople(p => { d.impPeople.forEach(x => { if (!p.list.some(y => y.name.toLowerCase() === x.name.toLowerCase())) p.list.push({ id: uidGen(), name: x.name, tier: x.tier, last: null }); }); });
   const it = d.impTasks || {}, nT = (it.inbox || []).length + (it.someday || []).length;
@@ -3236,6 +3296,36 @@ function finishOnboarding() {
   S.ob = null; S.tab = nT && (it.inbox || []).length ? "tasks" : "today"; render();
   toast(nT && (it.inbox || []).length ? `Your compass is set. ${it.inbox.length} imported tasks are waiting to be sorted.` : "Your compass is set");
   const btn = $("#hneedle"); if (btn) burst(btn.closest("svg"), "var(--brass)", 14);
+}
+/* ---- the parts of setup that now happen later, when they're useful ---- */
+const pending = () => (profile() || {}).pending || {};
+function clearPending(k) { editProfile(p => { p.pending = Object.assign({}, p.pending || {}, { [k]: false }); }); }
+function daysSinceSetup() { const t = (profile() || {}).onboardedAt; return t ? Math.round((parse(todayKey()) - parse(t)) / 864e5) : 99; }
+function introCard() {
+  if (!pending().intro) return "";
+  return `<div class="card pad intro"><b>How Compass works</b>
+    <ul><li><b>Floors, not ceilings.</b> Clearing the minimum already counts as a good week.</li>
+    <li><b>Tick things as they happen.</b> Today shows what's due and what you planned.</li>
+    <li><b>Sunday, a short review</b> shows the trend, and asks the few questions setup skipped.</li></ul>
+    <div class="row" style="justify-content:flex-start;gap:8px"><button class="btn small primary" data-act="introDone">Got it</button><button class="btn small quiet" data-act="gotoPlan">Plan my week</button></div></div>`;
+}
+function weekCheckCard() {
+  const w = (profile() || {}).week; if (!pending().week || !w) return "";
+  const pn = (WEEK_PRESETS.find(p => p.id === w.preset) || {}).name;
+  return `<div class="card pad intro"><b>Check your week</b><div class="hint" style="margin-top:4px">Each day's free time comes from ${pn ? `“${esc(pn)}”` : "a typical week"}. Add your real hours and anything fixed, like classes or school runs, so the plan fits.</div>
+    <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small primary" data-act="weekEdit">Check details</button><button class="btn small quiet" data-act="weekOk">Looks right</button></div></div>`;
+}
+function reviewSetupCards() {
+  const pd = pending(); if (!(pd.cores || pd.safety) || daysSinceSetup() < 5) return "";
+  const p = profile() || {}, cores = (p.cores || []).map(c => c.value), on = comps().filter(c => !c.fun);
+  return `<h3>0 · Finish setting up</h3>
+    ${pd.cores ? `<div class="card pad"><b>Which one or two deserve more energy this season?</b><div class="hint" style="margin:4px 0 10px">Your Cores get twice the time in the suggested split. ${cores.length ? "Keep them, or swap." : "Pick up to two, or leave everything equal."}</div>
+      <div class="chips">${valueList().map(v => `<button class="chip ${cores.includes(v.id) ? "sel" : ""}" data-act="toggleCore" data-v="${esc(v.id)}">${cores.includes(v.id) ? "★ " : ""}${esc(v.name)}</button>`).join("")}</div>
+      <div style="margin-top:12px"><button class="btn small primary" data-act="coresDone">Done</button></div></div>` : ""}
+    ${pd.safety ? `<div class="card pad" style="margin-top:10px"><b>Build a safety net for hard weeks</b><div class="hint" style="margin:4px 0 8px">When you're sick, travelling or swamped, a Minimum Viable Week keeps only these on and pauses the rest, guilt-free.</div>
+      <div class="card" style="box-shadow:none">${on.map(c => `<button class="check" data-act="mvwToggle" data-id="${esc(c.id)}" aria-pressed="${!!c.mvw}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span><small>${esc(cadenceText(c))}</small></span></button>`).join("")}</div>
+      <p class="hint" style="margin:8px 0 0">Four if-then rules are already on for predictable disruptions; change them in the Compass tab.</p>
+      <div style="margin-top:10px"><button class="btn small primary" data-act="safetyDone">Done</button></div></div>` : ""}`;
 }
 
 /* ============ events ============ */
@@ -3264,10 +3354,20 @@ document.addEventListener("click", e => {
     case "obCancel": S.ob = null; clearDraft(); return render();
     case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
     case "obFeel": { const v = b.dataset.v; ob.feel = ob.feel.includes(v) ? ob.feel.filter(x => x !== v) : ob.feel.concat(v); const was = ob.feel.includes(v); updateOb(); if (was) burst(document.querySelector(`[data-act="obFeel"][data-v="${CSS.escape(v)}"]`), "var(--accent)", 6); return; }
-    case "obValue": { const v = b.dataset.v; if (ob.values.includes(v)) { ob.values = ob.values.filter(x => x !== v); ob.cores = ob.cores.filter(c => c.value !== v); } else { if (ob.values.length >= 9) return toast("Nine is plenty. Fewer values, clearer direction."); ob.values.push(v); } updateOb(); if (ob.values.includes(v)) burst(document.querySelector(`[data-act="obValue"][data-v="${CSS.escape(v)}"] .tick`), "var(--accent)"); return; }
+    case "obValue": { const v = b.dataset.v; if (ob.values.includes(v)) { ob.values = ob.values.filter(x => x !== v); ob.cores = ob.cores.filter(c => c.value !== v); } else { if (ob.values.length >= 7) return toast("Seven is plenty. Fewer values, clearer direction."); ob.values.push(v); } updateOb(); if (ob.values.includes(v)) burst(document.querySelector(`[data-act="obValue"][data-v="${CSS.escape(v)}"] .tick`), "var(--accent)"); return; }
     case "obComp": { S.obRemoved = null; const c = ob.comps.find(x => x.id === b.dataset.id); if (c) { c.on = !c.on; c.touched = true; } updateOb(); if (c && c.on) burst(document.querySelector(`[data-act="obComp"][data-id="${CSS.escape(c.id)}"] .box`)); return; }
     case "obFun": { const n = b.dataset.v; const c = ob.comps.find(x => x.fun && x.name === n); if (c) c.on = !c.on; else ob.comps.push({ id: "fun-" + uidGen(), fun: true, name: n, cadence: "weekly", target: 0, hours: 0, on: true }); return updateOb(); }
-    case "obCore": { const v = b.dataset.v; if (ob.cores.some(c => c.value === v)) ob.cores = ob.cores.filter(c => c.value !== v); else { if (ob.cores.length >= 2) return toast("Two Cores at most. Make one a satellite first."); ob.cores.push({ value: v, text: "" }); } updateOb(); if (ob.cores.some(c => c.value === v)) burst(document.querySelector(`[data-act="obCore"][data-v="${CSS.escape(v)}"] .tick`), "var(--brass)"); return; }
+    case "obCore": { const v = b.dataset.v; if (ob.cores.some(c => c.value === v)) ob.cores = ob.cores.filter(c => c.value !== v); else { if (ob.cores.length >= 2) return toast("Two stars at most. Unstar one first."); ob.cores.push({ value: v, text: "" }); } updateOb(); if (ob.cores.some(c => c.value === v)) burst(document.querySelector(`[data-act="obCore"][data-v="${CSS.escape(v)}"]`), "var(--brass)", 8); return; }
+    case "obPreset": { const v = b.dataset.v; if (v === "cal") return; ob.week = presetWeek(v, ob.week); ob.capacity = weekCalc(ob.week).floors; updateOb(); return; }
+    case "obWeekAdv": S.obWeekAdv = !S.obWeekAdv; updateOb(); return;
+    case "obMore": { const v = b.dataset.v; S.obMore = S.obMore || {}; S.obMore[v] = !S.obMore[v]; updateOb(); return; }
+    case "obStarter": { const d = starterDraft(b.dataset.v, ob ? ob.goal : ""); if (!d) return; S.ob = { step: 3, d }; S.obMore = {}; S.obEdit = null; window.scrollTo(0, 0); renderOnboarding(); return; }
+    case "obJump": { S.obEdit = null; S.obFrozen = null; S.ob.step = +b.dataset.step; window.scrollTo(0, 0); renderOnboarding(); return; }
+    case "introDone": clearPending("intro"); break;
+    case "weekOk": clearPending("week"); toast("Week confirmed"); break;
+    case "coresDone": clearPending("cores"); toast(coreIds().length ? "Season set" : "Everything stays equal for now"); break;
+    case "safetyDone": clearPending("safety"); toast("Safety net ready"); break;
+    case "mvwToggle": editProfile(p => { const c = p.components.find(x => x.id === b.dataset.id); if (c) c.mvw = !c.mvw; }); break;
     case "obMvw": { const c = ob.comps.find(x => x.id === b.dataset.id); if (c) c.mvw = !c.mvw; return updateOb(); }
     case "obTailor": return runTailor();
     case "palette": case "themeMode": {
@@ -3286,13 +3386,14 @@ document.addEventListener("click", e => {
       const tgt = S.ob && !S.sheet ? (S.ob.d.week = S.ob.d.week || Object.assign({}, WEEK_DEFAULT)) : S.sheet && S.sheet.type === "week" ? S.sheet.draft : null;
       if (!tgt) return;
       const k = b.dataset.k;
+      tgt.adjusted = true;
       if (act === "wk") tgt[k] = +b.dataset.v;
       else { const lim = { sleep: [5, 10], work: [0, 80], other: [0, 40] }[k] || [0, 100]; tgt[k] = Math.max(lim[0], Math.min(lim[1], Math.round(((Object.assign({}, WEEK_DEFAULT, tgt))[k] + (+b.dataset.d)) * 2) / 2)); }
       if (S.ob && !S.sheet) { S.ob.d.capacity = weekCalc(tgt).floors; updateOb(); return; }
       renderSheet(); return;
     }
     case "weekEdit": S.sheet = { type: "week", draft: Object.assign({}, WEEK_DEFAULT, (profile() || {}).week || {}) }; break;
-    case "weekSave": { const w = S.sheet.draft, f = weekCalc(w).floors; editProfile(p => { p.week = w; p.capacity = f; }); S.sheet = null; toast(`Budget set to ${f} h a week`); break; }
+    case "weekSave": { const w = S.sheet.draft, f = weekCalc(w).floors; editProfile(p => { p.week = w; p.capacity = f; if (p.pending) p.pending.week = false; }); S.sheet = null; toast(`Budget set to ${f} h a week`); break; }
     case "obEdit": S.obFrozen = byTime(S.ob.d.comps).map(c => c.id); S.obEdit = b.dataset.id; S.obRemoved = null; updateOb(); { const f = $("#obe-name"); if (f) f.focus(); } return;
     case "obEditDone": { S.obFrozen = null; const c = S.ob && S.ob.d.comps.find(x => x.id === S.obEdit); if (c && !(c.name || "").trim()) { toast("Give it a name first."); return; } if (c) c.name = c.name.trim(); S.obEdit = null; updateOb(); return; }
     case "obCad": { const c = S.ob && S.ob.d.comps.find(x => x.id === b.dataset.id); if (!c) return; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.alt; c.people = false; delete c.unit; delete c.step; } c.touched = true; updateOb(); return; }
@@ -3563,7 +3664,7 @@ document.addEventListener("input", e => {
   else if (ds.p === "goal") editProfile(p => { p.goal = t.value; });
   else if (ds.p === "ifthen") editProfile(p => { p.ifthen = t.value.split("\n"); });
   else if (ds.core !== undefined) editProfile(p => { if (p.cores[+ds.core]) p.cores[+ds.core].text = t.value; });
-  else if (ds.ob === "goal") { S.ob.d.goal = t.value; saveDraft(); const nb = document.querySelector('[data-act="obNext"]'); if (nb) nb.disabled = !(t.value.trim().length > 3 || S.ob.d.feel.length); }
+  else if (ds.ob === "goal") { S.ob.d.goal = t.value; saveDraft(); }
   else if (ds.ob === "ifthen") { S.ob.d.ifthen = t.value.split("\n"); saveDraft(); }
   else if (ds.obe && S.ob) { const c = S.ob.d.comps.find(x => x.id === S.obEdit); if (c) c[ds.obe] = t.value;  saveDraft(); }
   else if (ds.fx && S.sheet && S.sheet.type === "fixed" && ds.fx !== "dur") { S.sheet.draft[ds.fx] = t.value; }
