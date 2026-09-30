@@ -90,6 +90,20 @@ button:disabled{cursor:default}
 .islandx{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
 .islandx .obprog{margin:0}
 body.landing .island{display:none}
+.csecs{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.csec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);scroll-margin-top:12px}
+.csh{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;min-height:60px}
+.cst{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.cst b{font:600 17px/1.2 var(--display);display:flex;align-items:center;gap:8px}
+.cst small{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cdot{width:7px;height:7px;border-radius:50%;background:var(--brass);flex:none}
+.chev{flex:none;width:9px;height:9px;border:solid var(--muted);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s}
+.csec.open .chev{transform:rotate(-135deg) translate(-2px,-2px)}
+.csb{padding:0 16px 16px;border-top:1px solid var(--line);padding-top:14px;animation:rise .25s cubic-bezier(.2,.8,.2,1)}
+.csb > .card:first-child,.csb .meter:first-child{margin-top:0}
+.csb h3{margin-top:14px}
+.csb .field{padding:10px 0}.csb .field:first-child{padding-top:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .banner{background:var(--warn-soft);color:var(--ink);border-radius:var(--r);padding:10px 12px;font-size:13.5px;margin-block:0 12px}
 
 /* type */
@@ -2061,8 +2075,7 @@ function render() {
     renderOnboarding(); renderSheet(); updSync(); return;
   }
   $("#obbar").innerHTML = "";
-  const hasPeople = comps().some(c => c.people);
-  if (S.tab === "people" && !hasPeople) S.tab = "today";
+  if (S.tab === "people") { S.tab = "compass"; cOpen().add("people"); }
   const id = curWid(), mon = S.viewMon, sun = addDays(mon, 6);
   const isCur = dkey(mon) === dkey(monday(new Date()));
   $("#wkLabel").innerHTML = esc(fmtShort(mon) + " – " + (mon.getMonth() === sun.getMonth() ? sun.getDate() : fmtShort(sun))) + "<small>" + (isCur ? "This week" : (mon > new Date() ? "Upcoming" : "Past week")) + "</small>";
@@ -2073,7 +2086,7 @@ function render() {
   $("#heading").textContent = (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared" + (hasAlt ? " · Week " + weekKind(dkey(mon)) : "");
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
-  $("#tabs").innerHTML = TABS.filter(t => t.t !== "people" || hasPeople).map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
+  $("#tabs").innerHTML = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
   if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); }
   $("#tabs").innerHTML = $("#tabs").innerHTML.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
   $("#main").innerHTML = ({ today: rToday, week: rWeek, tasks: rTasks, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
@@ -2588,7 +2601,7 @@ function rWeekFloors(id, F, trips, sugg) {
 }
 
 /* ============ PEOPLE ============ */
-function rPeople(id) {
+function rPeople(id, inner) {
   const list = people().list, tk = todayKey();
   const pc = comps().find(c => c.people);
   const scored = list.map(p => { const every = TIERS[p.tier] ? TIERS[p.tier].every : 14, since = p.last ? daysBetween(p.last, tk) : null; return { p, since, left: since === null ? -999 : every - since }; }).sort((a, b) => a.left - b.left);
@@ -2597,8 +2610,8 @@ function rPeople(id) {
     ${S.confirm === x.p.id ? `<button class="btn danger small" data-act="pDelYes" data-id="${x.p.id}">Remove</button><button class="btn quiet small" data-act="pDelNo">Keep</button>` : `${x.p.last === todayKey() && x.p.prevLast !== undefined ? `<button class="btn small" data-act="pUncall" data-id="${x.p.id}" aria-pressed="true" title="Tap to take it back">Called ✓</button>` : `<button class="btn primary small" data-act="pCalled" data-id="${x.p.id}">Called</button>`}<button class="btn quiet small" data-act="pDel" data-id="${x.p.id}" aria-label="Remove ${esc(x.p.name)}">✕</button>`}</div>`;
   const have = pc ? compHave(pc, anyWeek(id), id) : 0;
   return `
-  <h2>Rotation</h2>
-  <p class="lede">Tap <b>Called</b> and the list reorders itself, so you never track who's next.${pc ? ` This week: <b>${have} of ${pc.target}</b> ${esc(pc.name.toLowerCase())}.` : ""}</p>
+  ${inner ? "" : "<h2>Rotation</h2>"}
+  <p class="${inner ? "hint" : "lede"}" style="${inner ? "margin:0 0 4px" : ""}">Tap <b>Called</b> and the list reorders itself, so you never track who's next.${pc ? ` This week: <b>${have} of ${pc.target}</b> ${esc(pc.name.toLowerCase())}.` : ""}</p>
   ${list.length ? `<h3>Up next</h3><div class="card">${scored.slice(0, 3).map(row).join("")}</div>` : ""}
   <h3>Add someone</h3>
   <form class="card addrow three" id="pForm"><input type="text" id="pName" placeholder="Name" aria-label="Name" required maxlength="60">
@@ -2722,49 +2735,61 @@ function groupHead(vid, list, budget, opts = {}) {
       <span class="alloc"><b>${fmtDur(h)}</b><span class="hint"> / ~${hFmt(sg)} h suggested</span>${opts.extra || ""}</span></div>
     <div class="gbar ${far ? "far" : ""}"><i style="width:${pct.toFixed(1)}%;background:${valColor(vid)}"></i></div>`;
 }
+/* Compass tab: every section folds away; open ones are remembered on this device */
+const CSEC_KEY = "compass-open";
+function cOpen() { if (!S.cOpen) { let a = []; try { a = JSON.parse(localStorage.getItem(CSEC_KEY) || "[]"); } catch (e) {} S.cOpen = new Set(Array.isArray(a) ? a : []); } return S.cOpen; }
+function cSec(key, title, summary, body, opts = {}) {
+  const open = cOpen().has(key);
+  return `<section class="csec${open ? " open" : ""}" id="csec-${key}"><button class="csh" data-act="cSec" data-k="${key}" aria-expanded="${open}"><span class="cst"><b>${title}${opts.dot ? '<span class="cdot" aria-hidden="true"></span>' : ""}</b>${summary ? `<small>${summary}</small>` : ""}</span><span class="chev" aria-hidden="true"></span></button>${open ? `<div class="csb">${body}</div>` : ""}</section>`;
+}
 function rCompass(id, F, trips, sugg) {
   const p = profile(), vals = valueList(), all = comps();
-  const withBlocks = all.filter(c => c.block && c.block.time && planDays(c).length);
-  const calLine = S.mcp ? "Adds each block to your Google Calendar as a repeating event." : "Opens Google Calendar with the event filled in.";
+  const plist = people().list, tk = todayKey();
+  const dueN = plist.filter(x => { const every = TIERS[x.tier] ? TIERS[x.tier].every : 14; return !x.last || daysBetween(x.last, tk) >= every; }).length;
+  const loadH = all.filter(c => !c.fun && c.on !== false).reduce((a, c) => a + weeklyHours(c), 0);
+  const rules = (p.ifthen || []).filter(x => x.trim()).length;
+  const placed = weeklyPlannable().filter(c => planDays(c).length), left = weeklyPlannable().reduce((a, c) => a + sessionsLeft(c), 0);
+  const cores = (p.cores || []).map(c => valueName(c.value));
+  const goalSum = (p.goal || "").trim() ? esc((p.goal.trim().length > 70 ? p.goal.trim().slice(0, 68) + "…" : p.goal.trim())) : "Not written yet";
   return `
   <h2>Your compass</h2>
-  <div class="card">
-    <div class="field"><label for="p-goal">Where I'm heading</label><textarea id="p-goal" data-p="goal" rows="3" placeholder="How you want a good year to feel, and what you want to be moving toward">${esc(p.goal)}</textarea></div>
-    ${(p.feel || []).length ? `<div class="field"><span class="flabel">How I want it to feel</span><div class="chips">${p.feel.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div></div>` : ""}
-  </div>
-  <h3>Your week</h3>
-  <div class="card pad"><div class="row"><div><b>${p.week ? `${hrs(weekCalc(p.week).free)} free hours a week` : "Not set up yet"}</b><div class="hint">${p.week ? `Sleep, work, commute, caring and home life take the rest. Suggested budget for floors: ${weekCalc(p.week).floors} h.` : "Answer six quick questions to get a realistic budget for your floors."}</div></div><button class="btn" data-act="weekEdit">${p.week ? "Update" : "Set up"}</button></div></div>
-  <h3>Load</h3>
-  ${meter(all, p.capacity || 20)}
-  ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
-  <h3>Values and components</h3>
-  <p class="hint" style="margin:0 0 4px">Components are the small, trackable pieces. Each one flows into Today, the weekly floors, the review, the safety net and your calendar. Tap one to change it.</p>
-  ${vals.map((v, gi) => {
-    const list = all.filter(c => c.value === v.id && !c.fun).sort((a, b) => weeklyHours(b) - weeklyHours(a));
-    return `${tierLabel(vals.map(x => x.id), gi, coreIds())}<div class="vgroup">${groupHead(v.id, list, p.capacity || 20, { extra: ` <button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button>` })}
-      ${list.length ? `<div class="card">${list.map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Nothing yet. Add one small floor.</p>`}</div>`;
-  }).join("")}
-  <div class="vgroup"><div class="gh"><b>Fun menu</b><button class="btn quiet small" data-act="addComp" data-value="__fun">+ Add</button></div>
-    ${all.some(c => c.fun) ? `<div class="card">${all.filter(c => c.fun).map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Things you do purely for joy. Never scored.</p>`}</div>
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="addValue">+ Add a value</button></div>
-  <h3>Season</h3>
-  <p class="hint" style="margin:0 0 8px">Up to two Cores get most of your energy for 12 to 18 months. Everything else is a satellite, explored without guilt. Tap a value to make it a Core.</p>
-  <div class="chips">${vals.map(v => `<button class="chip ${isCore(v.id) ? "sel" : ""}" data-act="toggleCore" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div>
-  ${(p.cores || []).length ? `<div class="card" style="margin-top:10px">${p.cores.map((c, i) => `<div class="field"><label for="core-${i}">Core ${i + 1} · ${esc(valueName(c.value))}</label><input type="text" id="core-${i}" data-core="${i}" value="${esc(c.text)}" placeholder="What this Core means this season"></div>`).join("")}</div>` : ""}
-  <h3>If-then rules</h3>
-  <textarea id="p-if" data-p="ifthen" rows="5">${esc((p.ifthen || []).join("\n"))}</textarea>
-  <p class="hint">One per line. Every lapse writes a new rule. <span class="src">Gollwitzer & Sheeran 2006</span></p>
-  <h3>Calendar</h3>
-  ${(() => { const placed = weeklyPlannable().filter(c => planDays(c).length), left = weeklyPlannable().reduce((a, c) => a + sessionsLeft(c), 0);
-    return `<div class="card pad"><div class="impcard"><span class="glyph">${ICON.cal}</span><div style="flex:1"><b>${placed.length ? `${placed.length} floor${placed.length > 1 ? "s" : ""} planned into your week` : "Nothing planned yet"}</b><div class="hint">${left ? `${left} session${left > 1 ? "s" : ""} still to place. ` : ""}Plan days and times in Week → Plan, then export them to Apple or Google Calendar in one file.</div></div></div>
-      <div class="calbtns"><button class="btn" data-act="gotoPlan">Plan my week</button><button class="btn primary" data-act="icsOpen" ${placed.length ? "" : "disabled"}>Export to calendar</button></div></div>`; })()}
-  <h3>Colours</h3>
-  <div class="card pad">${themePicker()}</div>
-  <h3>Your data</h3>
-  <div class="card pad"><div class="row"><div><b>Download a backup</b><div class="hint">A .json file of everything you've entered: setup, every week, journal and tasks.</div></div>
-    <button class="btn" data-act="export">Export</button></div></div>
-  <h3>Start over</h3>
-  <div class="card pad"><div class="row"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div></div>`;
+  <p class="lede" style="margin-bottom:14px">Everything that shapes your week. Tap a section to open it.</p>
+  <div class="csecs">
+  ${cSec("goal", "Where I'm heading", goalSum, `
+    <div class="field"><label for="p-goal" class="sr">Where I'm heading</label><textarea id="p-goal" data-p="goal" rows="3" placeholder="How you want a good year to feel, and what you want to be moving toward">${esc(p.goal)}</textarea></div>
+    ${(p.feel || []).length ? `<div class="field"><span class="flabel">How I want it to feel</span><div class="chips">${p.feel.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div></div>` : ""}`)}
+  ${cSec("week", "Your week", p.week ? `${hrs(weekCalc(p.week).free)} free hours · ${p.capacity || weekCalc(p.week).floors} h for floors` : "Not set up yet", `
+    <div class="row"><div class="hint" style="flex:1">${p.week ? `Sleep, work, commute, caring and home life take the rest. Suggested budget for floors: ${weekCalc(p.week).floors} h.` : "Answer six quick questions to get a realistic budget for your floors."}</div><button class="btn" data-act="weekEdit">${p.week ? "Update" : "Set up"}</button></div>`)}
+  ${cSec("load", "Load", `${fmtDur(loadH)} of ${p.capacity || 20} h a week`, meter(all, p.capacity || 20))}
+  ${sugg.length ? cSec("sugg", "Compass suggests", `${sugg.length} idea${sugg.length > 1 ? "s" : ""} for this week`, suggCard(sugg), { dot: true }) : ""}
+  ${cSec("values", "Values and floors", `${vals.length} value${vals.length === 1 ? "" : "s"} · ${all.filter(c => !c.fun).length} floors`, `
+    <p class="hint" style="margin:0 0 4px">The small, trackable pieces. Each one flows into Today, the weekly floors, the review, the safety net and your calendar. Tap one to change it.</p>
+    ${vals.map((v, gi) => {
+      const list = all.filter(c => c.value === v.id && !c.fun).sort((a, b) => weeklyHours(b) - weeklyHours(a));
+      return `${tierLabel(vals.map(x => x.id), gi, coreIds())}<div class="vgroup">${groupHead(v.id, list, p.capacity || 20, { extra: ` <button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button>` })}
+        ${list.length ? `<div class="card">${list.map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Nothing yet. Add one small floor.</p>`}</div>`;
+    }).join("")}
+    <div class="vgroup"><div class="gh"><b>Fun menu</b><button class="btn quiet small" data-act="addComp" data-value="__fun">+ Add</button></div>
+      ${all.some(c => c.fun) ? `<div class="card">${all.filter(c => c.fun).map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Things you do purely for joy. Never scored.</p>`}</div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="addValue">+ Add a value</button></div>`)}
+  ${cSec("season", "Season", cores.length ? "Cores: " + cores.map(esc).join(" and ") : "No Cores yet · everything shares equally", `
+    <p class="hint" style="margin:0 0 8px">Up to two Cores get most of your energy for 12 to 18 months. Everything else is a satellite, explored without guilt. Tap a value to make it a Core.</p>
+    <div class="chips">${vals.map(v => `<button class="chip ${isCore(v.id) ? "sel" : ""}" data-act="toggleCore" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div>
+    ${(p.cores || []).length ? `<div style="margin-top:10px">${p.cores.map((c, i) => `<div class="field"><label for="core-${i}">Core ${i + 1} · ${esc(valueName(c.value))}</label><input type="text" id="core-${i}" data-core="${i}" value="${esc(c.text)}" placeholder="What this Core means this season"></div>`).join("")}</div>` : ""}`)}
+  ${cSec("people", "People", plist.length ? `${plist.length} ${plist.length === 1 ? "person" : "people"}${dueN ? ` · ${dueN} due` : " · all caught up"}` : "Keep in touch with the people who matter", rPeople(id, true), { dot: dueN > 0 })}
+  ${cSec("ifthen", "If-then rules", rules ? `${rules} rule${rules > 1 ? "s" : ""}` : "None yet", `
+    <textarea id="p-if" data-p="ifthen" rows="5" aria-label="If-then rules">${esc((p.ifthen || []).join("\n"))}</textarea>
+    <p class="hint">One per line. Every lapse writes a new rule. <span class="src">Gollwitzer & Sheeran 2006</span></p>`)}
+  ${cSec("cal", "Calendar", placed.length ? `${placed.length} floor${placed.length > 1 ? "s" : ""} planned${left ? ` · ${left} to place` : ""}` : "Nothing planned yet", `
+    <div class="impcard"><span class="glyph">${ICON.cal}</span><div style="flex:1"><div class="hint" style="margin:0">${left ? `${left} session${left > 1 ? "s" : ""} still to place. ` : ""}Plan days and times in Week → Plan, then export them to Apple or Google Calendar in one file.</div></div></div>
+    <div class="calbtns"><button class="btn" data-act="gotoPlan">Plan my week</button><button class="btn primary" data-act="icsOpen" ${placed.length ? "" : "disabled"}>Export to calendar</button></div>`)}
+  ${cSec("app", "Settings", "Colours, backup, run setup again", `
+    <span class="flabel">Colours</span>
+    <div style="margin:6px 0 16px">${themePicker()}</div>
+    <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Download a backup</b><div class="hint">A .json file of everything you've entered: setup, every week, journal and tasks.</div></div>
+      <button class="btn" data-act="export">Export</button></div>
+    <div class="row" style="padding:12px 0 0;border-top:1px solid var(--line)"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div>`)}
+  </div>`;
 }
 function calRow(c) {
   const b = c.block, msg = S.calMsg[c.id];
@@ -2849,7 +2874,7 @@ function renderSheetBody() {
       <div class="fl"><label class="flabel" for="c-hours">Hours each time</label><input type="number" id="c-hours" data-c="hours" min="0" max="12" step="0.25" value="${c.hours || 0}"></div>
     </div>
     <div class="row"><div><b>Safety net</b><div class="hint">Stays on during a Minimum Viable Week.</div></div><button class="switch" role="switch" aria-checked="${!!c.mvw}" data-act="cToggle" data-f="mvw" aria-label="Safety net"></button></div>
-    ${c.cadence === "weekly" ? `<div class="row"><div><b>People rotation</b><div class="hint">Logging a call on People counts here.</div></div><button class="switch" role="switch" aria-checked="${!!c.people}" data-act="cToggle" data-f="people" aria-label="People rotation"></button></div>
+    ${c.cadence === "weekly" ? `<div class="row"><div><b>People rotation</b><div class="hint">Logging a call in Compass → People counts here.</div></div><button class="switch" role="switch" aria-checked="${!!c.people}" data-act="cToggle" data-f="people" aria-label="People rotation"></button></div>
     <div class="fl"><span class="flabel">Alternating weeks</span><div class="seg">${[["", "Every week"], ["A", "Week A"], ["B", "Week B"]].map(([k, l]) => `<button data-act="cAlt" data-v="${k}" aria-pressed="${(c.alt || "") === k}">${l}</button>`).join("")}</div></div>` : ""}
     <div class="row"><div><b>Give it a time</b><div class="hint">Puts it on your calendar as a repeating block.</div></div><button class="switch" role="switch" aria-checked="${!!c.block}" data-act="cBlock" aria-label="Give it a time"></button></div>
     ${c.block ? `<div class="daypick">${WD.map((d, i) => `<button data-act="cDay" data-v="${i}" aria-pressed="${c.block.days.includes(i)}">${d}</button>`).join("")}</div>
@@ -3632,7 +3657,7 @@ document.addEventListener("click", e => {
     case "sugg": {
       const s = suggestions()[+b.dataset.i]; if (!s || !s.act) return;
       const a = s.act;
-      if (a.do === "gotoCompass") { S.tab = "compass"; window.scrollTo(0, 0); }
+      if (a.do === "gotoCompass") { S.tab = "compass"; cOpen().add("values"); try { localStorage.setItem(CSEC_KEY, JSON.stringify([...cOpen()])); } catch (e) {} setTimeout(() => { const e = document.getElementById("csec-values"); if (e) e.scrollIntoView({ block: "start" }); }, 0); }
       else if (a.do === "addLib") { const lib = COMP_LIB.find(c => c.id === a.id); if (lib) { editProfile(p => { if (!p.values.includes(lib.value)) p.values.push(lib.value); p.components.push(clone(lib)); }); toast(`Added “${lib.name}”`); } }
       else if (a.do === "addComp") { S.sheet = { type: "pick", value: a.value }; }
       else if (a.do === "sort") { startSort(); }
@@ -3641,6 +3666,7 @@ document.addEventListener("click", e => {
       break;
     }
     /* compass tab */
+    case "cSec": { const k = b.dataset.k, o = cOpen(); o.has(k) ? o.delete(k) : o.add(k); try { localStorage.setItem(CSEC_KEY, JSON.stringify([...o])); } catch (e) {} render(); const sec = document.getElementById("csec-" + k); if (sec && o.has(k) && sec.getBoundingClientRect().top < 70) sec.scrollIntoView({ block: "start" }); return; }
     case "editComp": { const c = compById(b.dataset.id); if (c) openComp(c, false); break; }
     case "addComp": S.sheet = { type: "pick", value: b.dataset.value }; break;
     case "addValue": S.sheet = { type: "value" }; break;
