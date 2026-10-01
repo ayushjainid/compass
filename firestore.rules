@@ -1,14 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Each person can read and write only their own Compass data.
-    match /users/{uid}/docs/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    function signedIn(uid) {
+      return request.auth != null && request.auth.uid == uid;
     }
+
+    // Each person can read and write only their own Compass data, and only the documents
+    // the app actually uses: profile, settings, people, tasks, the setup draft and one per week.
+    match /users/{uid}/docs/{docId} {
+      allow read, delete: if signedIn(uid);
+      allow create, update: if signedIn(uid)
+        && docId.matches('^(profile|settings|people|tasks|obdraft|w-[0-9]{4}-[0-9]{2}-[0-9]{2})$');
+    }
+
     // Reminder settings and this device's push address; the reminders Worker reads them with a service account.
     match /notify/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if signedIn(uid);
+      allow create, update: if signedIn(uid)
+        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'last', 'ign', 'revDone', 'sentDay', 'sentRev'])
+        && (!('sub' in request.resource.data) || request.resource.data.sub == null
+            || (request.resource.data.sub is map && request.resource.data.sub.endpoint is string && request.resource.data.sub.endpoint.size() < 1000))
+        && (!('tz' in request.resource.data) || (request.resource.data.tz is string && request.resource.data.tz.size() < 64))
+        && (!('eve' in request.resource.data) || (request.resource.data.eve is string && request.resource.data.eve.size() <= 5))
+        && (!('rev' in request.resource.data) || (request.resource.data.rev is string && request.resource.data.rev.size() <= 5));
     }
+
+    // "Send feedback": anyone signed in can leave a note; only they can see or remove it later.
+    match /feedback/{id} {
+      allow create: if request.auth != null
+        && id.matches(request.auth.uid + '-[0-9]+')
+        && request.resource.data.keys().hasOnly(['uid', 'text', 'at', 'ua', 'screen'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
+        && (!('ua' in request.resource.data) || (request.resource.data.ua is string && request.resource.data.ua.size() <= 300))
+        && (!('screen' in request.resource.data) || (request.resource.data.screen is string && request.resource.data.screen.size() <= 40));
+      allow read, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // A short, private list of recent error messages from your devices (never your entries), so problems can be fixed.
+    match /errors/{uid} {
+      allow read, delete: if signedIn(uid);
+      allow create, update: if signedIn(uid)
+        && request.resource.data.keys().hasOnly(['items', 'updated'])
+        && request.resource.data.items is list && request.resource.data.items.size() <= 20;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

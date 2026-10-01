@@ -130,6 +130,22 @@ Open Compass → **Compass** tab → **Reminders** → **Turn on reminders**. On
 
 **How far the free plan goes.** Each run may use 10 ms of CPU, which is about 8 reminders a minute, or roughly 11,000 a day. People who pick the same minute are served over the following minutes, so a few hundred people sharing one time still get theirs within about a minute or two each. The other ceiling is Firestore's free quota (50,000 reads and 20,000 writes a day), which the app itself already uses: reminders add only about 2 reads and 2 writes per person per day, so the app's own use will run out first. Beyond either limit, Workers Paid ($5/month) lets you set `PER_RUN = "200"` in `wrangler.toml`, and extra Firestore use costs cents per 100,000 operations.
 
+## 9. Protect your free quota (recommended once others use it)
+
+Anyone who signs in could, in theory, write data in a loop and use up the free daily quota for everyone. Two layers stop that:
+
+1. **Database rules** (already in `firestore.rules`): each account can only write the few documents Compass uses, reminder and feedback entries are size-checked, and nobody can read anyone else's data. They go live with `npx firebase-tools deploy`; if a rule has a typo the deploy is refused and the old rules stay.
+2. **App Check** proves requests come from your copy of Compass:
+   - Google Cloud console → **reCAPTCHA** → **Create key** (type: Website, add `life-compass.web.app` and `localhost`). Copy the key id.
+   - Firebase console → **App Check** → your web app → **reCAPTCHA Enterprise** → paste the key → Save.
+   - Put the same key in `public/firebase-config.js` as `window.COMPASS_APPCHECK_SITE_KEY` and deploy.
+   - Watch App Check → **Metrics** for a day or two. When almost all requests show as verified, press **Enforce** for Cloud Firestore. (The reminders Worker uses a service account, so it is unaffected.)
+
+## 10. Reading feedback and errors
+
+- **Feedback** (Compass tab → Settings → Send feedback) lands in Firestore under the `feedback` collection, one document per note.
+- **Errors** from people's devices land under `errors/{uid}`: the last 20 messages per account, never their entries. A handful a day is normal; the same message from many accounts is a bug worth fixing.
+
 ## Troubleshooting
 
 - **"This address isn't allowed to sign in yet"**: add the domain under Authentication → Settings → Authorized domains. Only your project's own `PROJECT-ID.web.app` and `PROJECT-ID.firebaseapp.com` are allowed automatically; extra sites like `life-compass.web.app` must be added.

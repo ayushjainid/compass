@@ -1253,6 +1253,9 @@ async function deleteAccount(confirmed) {
     step("Deleting your data…");
     try { const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
     try { await within(FB.deleteDoc(FB.doc(ST.fs, "notify", ST.uid)), 10000, "timeout"); } catch (e) {}
+    try { await within(FB.deleteDoc(FB.doc(ST.fs, "errors", ST.uid)), 10000, "timeout"); } catch (e) {}
+    try { const fbs = await within(FB.getDocs(FB.query(FB.collection(ST.fs, "feedback"), FB.where("uid", "==", ST.uid))), 10000, "timeout"); for (const d of fbs.docs) await within(FB.deleteDoc(FB.doc(ST.fs, "feedback", d.id)), 10000, "timeout"); } catch (e) {}
+    try { localStorage.removeItem("compass-errlist"); localStorage.removeItem("compass-errs"); } catch (e) {}
     let ids = [];
     try { ids = (await within(FB.getDocs(FB.collection(ST.fs, "users", ST.uid, "docs")), 15000, "timeout")).docs.map(d => d.id); }
     catch (e) { ids = []; }
@@ -1359,6 +1362,9 @@ async function init() {
   // so Google's screen never shows the internal project name. The project's own default domains use themselves.
   if (cfg.projectId && (location.hostname === cfg.projectId + ".web.app" || location.hostname === cfg.projectId + ".firebaseapp.com")) cfg.authDomain = location.hostname;
   const app = FB.initializeApp(cfg);
+  /* App Check (optional): proves requests come from this app, so a script can't burn your free quota */
+  const acKey = String(window.COMPASS_APPCHECK_SITE_KEY || "").trim();
+  if (acKey) { try { FB.initializeAppCheck(app, { provider: new FB.ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true }); } catch (e) { console.warn("App Check", e); } }
   ST.auth = FB.getAuth(app);
   try { ST.fs = FB.initializeFirestore(app, { localCache: FB.persistentLocalCache({ tabManager: FB.persistentMultipleTabManager() }) }); }
   catch (e) { ST.fs = FB.initializeFirestore(app, {}); }
@@ -1381,6 +1387,44 @@ async function init() {
     resumeDeleteIfAsked();
   });
 }
+/* ============ feedback and a private error log ============ */
+function feedbackSheet() {
+  const sh = S.sheet;
+  if (sh.sent) return `<div class="in"><div class="grab"></div><h2 style="margin:0">Thank you</h2><p class="lede" style="margin:0">Your note is in. Every one gets read.</p><button class="btn primary" data-act="closeSheet">Done</button></div>`;
+  return `<div class="in"><div class="grab"></div><h2 style="margin:0">Send feedback</h2>
+    <p class="hint" style="margin:0">A bug, an idea, something confusing: anything helps. It goes straight to the person who makes Compass, along with your browser type so bugs can be reproduced. Nothing from your entries is attached.</p>
+    <label class="flabel" for="fb-text">Your note</label><textarea id="fb-text" data-fb="1" rows="5" maxlength="2000" placeholder="What happened, or what would make Compass better?">${esc(sh.text || "")}</textarea>
+    <div class="hint" style="margin:-6px 0 0;text-align:right">${(sh.text || "").length}/2000</div>
+    ${sh.err ? `<p class="hint" style="margin:0;color:var(--warn)">${esc(sh.err)}</p>` : ""}
+    <div class="row"><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="fbSend" ${(sh.text || "").trim() && !sh.busy ? "" : "disabled"}>${sh.busy ? "Sending…" : "Send"}</button></div></div>`;
+}
+async function sendFeedback() {
+  const sh = S.sheet; if (!sh || !(sh.text || "").trim() || !ST.uid) return;
+  sh.busy = true; sh.err = ""; renderSheet();
+  try {
+    await within(FB.setDoc(FB.doc(ST.fs, "feedback", ST.uid + "-" + Date.now()), { uid: ST.uid, text: sh.text.trim().slice(0, 2000), at: new Date(), ua: navigator.userAgent.slice(0, 300), screen: String(S.tab).slice(0, 40) }), 15000, "timeout");
+    S.sheet = { type: "feedback", sent: true };
+  } catch (e) { sh.busy = false; sh.err = navigator.onLine === false ? "You're offline. Your note is still here; send it when you're back online." : "Couldn't send it just now. Your note is still here; try again in a moment."; }
+  renderSheet();
+}
+/* errors: deduped, at most 5 new ones a day per device, last 20 kept, never your entries */
+const ERR_SKIP = /ResizeObserver loop|Script error\.?$|extension|Non-Error promise rejection/i;
+function logError(msg, where) {
+  try {
+    msg = String(msg || "").slice(0, 300); where = String(where || "").split("\n").slice(0, 2).join(" | ").slice(0, 300);
+    if (!msg || ERR_SKIP.test(msg) || !ST.uid || !ST.fs) return;
+    const day = todayKey(), seen = JSON.parse(localStorage.getItem("compass-errs") || "{}");
+    if (seen.day !== day) { seen.day = day; seen.n = 0; seen.m = []; }
+    if (seen.n >= 5 || seen.m.includes(msg)) return;
+    seen.n++; seen.m.push(msg); localStorage.setItem("compass-errs", JSON.stringify(seen));
+    const items = (JSON.parse(localStorage.getItem("compass-errlist") || "[]")).concat({ at: new Date().toISOString(), msg, where, ua: navigator.userAgent.slice(0, 120), tab: String(S.tab) }).slice(-20);
+    localStorage.setItem("compass-errlist", JSON.stringify(items));
+    FB.setDoc(FB.doc(ST.fs, "errors", ST.uid), { items, updated: new Date() }).catch(() => {});
+  } catch (e) {}
+}
+window.addEventListener("error", e => { if (e && e.filename && !e.filename.startsWith(location.origin)) return; logError(e && e.message, e && e.error && e.error.stack || (e && e.filename + ":" + e.lineno)); });
+window.addEventListener("unhandledrejection", e => { const r = e && e.reason; logError(r && (r.message || r.code) || String(r), r && r.stack); });
+
 /* ============ check-in reminders: at most one evening nudge + a Sunday review, sent by the Cloudflare Worker ============ */
 const VAPID = () => String(window.COMPASS_VAPID_PUBLIC || "").trim();
 const pushCapable = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -3057,6 +3101,7 @@ function rCompass(id, F, trips, sugg) {
     <div style="margin:6px 0 16px">${themePicker()}</div>
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Download a backup</b><div class="hint">A .json file of everything you've entered: setup, every week, journal and tasks.</div></div>
       <button class="btn" data-act="export">Export</button></div>
+    <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Send feedback</b><div class="hint">Found a bug or have an idea? It goes straight to the maker.</div></div><button class="btn" data-act="fbOpen">Write</button></div>
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Restore from a backup</b><div class="hint">Choose a file you downloaded here. You'll see what's in it before anything changes.</div></div>
       <label class="btn" for="restoreFile">Choose file</label><input type="file" id="restoreFile" accept=".json,application/json" class="sr"></div>
     <div class="row" style="padding:12px 0 0;border-top:1px solid var(--line)"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div>`)}
@@ -3095,6 +3140,7 @@ function renderSheetBody() {
       <button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
     S.sheet.lib = lib; return;
   }
+  if (sh.type === "feedback") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Send feedback">${feedbackSheet()}</div>`; return; }
   if (sh.type === "restore") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="alertdialog" aria-label="Restore a backup">${restoreSheet()}</div>`; return; }
   if (sh.type === "clearPlan") {
     const placed = weeklyPlannable().filter(c => planDays(c).length), n = placed.reduce((a, c) => a + planDays(c).length, 0);
@@ -3820,6 +3866,8 @@ document.addEventListener("click", e => {
     case "account": S.sheet = { type: "account" }; if (S.ob) { renderSheet(); return; } break;
     case "export": exportData(); return;
     case "restoreYes": doRestore(); return;
+    case "fbOpen": S.sheet = { type: "feedback", text: "" }; break;
+    case "fbSend": sendFeedback(); return;
     /* app */
     case "tab": S.tab = b.dataset.t; S.confirm = null; if (S.tab === "review") loadHistory(); window.scrollTo(0, 0); break;
     case "prevWk": case "nextWk": {
@@ -4056,6 +4104,7 @@ document.addEventListener("input", e => {
   else if (ds.fx && S.sheet && S.sheet.type === "fixed" && ds.fx !== "dur") { S.sheet.draft[ds.fx] = t.value; }
   else if (ds.fx === "dur" && S.sheet && S.sheet.type === "fixed") { const h = parseDur(t.value); if (h !== null) S.sheet.draft.dur = Math.max(15, Math.round(h * 60)); }
   else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value;  saveDraft(); }
+  else if (ds.fb && S.sheet && S.sheet.type === "feedback") { S.sheet.text = t.value; const n = t.nextElementSibling; if (n) n.textContent = t.value.length + "/2000"; const btn = document.querySelector('[data-act="fbSend"]'); if (btn) btn.disabled = !t.value.trim(); }
   else if (ds.c === "mins" && S.sheet && S.sheet.draft) { S.sheet.draft.hours = Math.min(720, Math.max(0, Number(t.value) || 0)) / 60; }
   else if (ds.c && S.sheet && S.sheet.draft) { S.sheet.draft[ds.c] = ds.c === "hours" ? Math.max(0, Number(t.value) || 0) : t.value; }
   else if (ds.cb && S.sheet && S.sheet.draft && S.sheet.draft.block) { S.sheet.draft.block[ds.cb] = ds.cb === "dur" ? Math.max(5, Number(t.value) || 30) : t.value; S.sheet.draft.gcal = false; }
