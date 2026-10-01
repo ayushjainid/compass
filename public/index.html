@@ -2507,7 +2507,7 @@ function rPlanView(id) {
   <div class="psum"><div><b>${hrs(budgetW)} h</b><span>for floors a week</span></div><div><b>${hrs(dailyM * 7 / 60)} h</b><span>daily habits</span></div><div><b>${hrs(placedH)} h</b><span>placed</span></div><div class="${toPlaceH ? "warm" : ""}"><b>${hrs(toPlaceH)} h</b><span>to place</span></div></div>
   ${!hasWeek ? `<p class="hint" style="margin:6px 0 0">These hours are estimates. <button class="linkish" data-act="weekEdit">Set up Your week</button> for your real ones.</p>` : ""}
   ${left.length ? tray : `<h3>To place</h3>${tray}`}
-  <div class="ptrayhead"><h3>Your week</h3>${wk.some(c => planDays(c).length) ? (S.confirm === "clearPlan" ? `<span><button class="btn small danger" data-act="clearPlanYes">Clear all days</button> <button class="btn small quiet" data-act="clearPlanNo">Keep</button></span>` : `<button class="linkish" data-act="clearPlan">Start over</button>`) : ""}</div>
+  <div class="ptrayhead"><h3>Your week</h3>${wk.some(c => planDays(c).length) ? `<button class="linkish" data-act="clearPlan">Start over</button>` : ""}</div>
   <div class="pweek ${pick ? "picking" : ""} ${S.dragging ? "dragging" : ""}">${days}</div>
   <h3>Fixed time</h3>
   <div class="card">${wd.length ? `<div class="task"><span class="vdot" style="background:var(--muted)"></span><div class="tx"><span>Work or study</span><small>${wd.map(d => WD[d]).join(", ")} · ${tRange(tmins(w.workStart) ?? 540, (tmins(w.workStart) ?? 540) + Math.round(w.work / wd.length * 60))}</small></div><button class="btn small quiet" data-act="weekEdit">Edit</button></div>` : ""}
@@ -2986,6 +2986,15 @@ function renderSheetBody() {
       <button class="btn" data-act="customComp">Write my own</button>
       <button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
     S.sheet.lib = lib; return;
+  }
+  if (sh.type === "clearPlan") {
+    const placed = weeklyPlannable().filter(c => planDays(c).length), n = placed.reduce((a, c) => a + planDays(c).length, 0);
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="alertdialog" aria-label="Start the plan over?"><div class="in"><div class="grab"></div>
+      <h2 style="margin:0">Start your week plan over?</h2>
+      <p class="lede" style="margin:0">This takes ${placed.length} floor${placed.length === 1 ? "" : "s"} (${n} session${n === 1 ? "" : "s"}) off their days and times, so you can place them again from scratch.</p>
+      <p class="hint" style="margin:0">Your ticks, history and monthly one-offs stay. If you've exported to a calendar, import the new file afterwards.</p>
+      <div class="row" style="margin-top:6px"><button class="btn quiet" data-act="clearPlanNo">Keep my plan</button><button class="btn danger" data-act="clearPlanYes">Clear all days</button></div></div></div>`;
+    return;
   }
   if (sh.type === "block" || sh.type === "mblock" || sh.type === "ics") {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${sh.type === "ics" ? "Export to calendar" : "Plan block"}">${sh.type === "ics" ? icsSheet() : blockSheet(sh)}</div>`;
@@ -3754,9 +3763,14 @@ document.addEventListener("click", e => {
       return; }
     case "psRemove": { const sh = S.sheet, d = +b.dataset.d; planBlock(sh.id, bl => { bl.days = bl.days.filter(x => x !== d); if (bl.times) delete bl.times[d]; }); render(); return; }
     case "autoPlan": { const r = autoPlan(); render(); toast(r.n ? `Placed ${r.n} session${r.n > 1 ? "s" : ""}${r.skipped ? `; ${r.skipped} didn't fit anywhere` : ""}. Tap any block to adjust.` : "No free slot fits what's left. Try shorter sessions or fewer."); return; }
-    case "clearPlan": S.confirm = "clearPlan"; break;
-    case "clearPlanNo": S.confirm = null; break;
-    case "clearPlanYes": S.confirm = null; editProfile(p => p.components.forEach(c => { if (c.cadence === "weekly" && c.block) { c.block.days = []; c.block.times = {}; c.block.time = ""; c.gcal = false; } })); toast("Every day is clear again"); break;
+    case "clearPlan": S.sheet = { type: "clearPlan" }; break;
+    case "clearPlanNo": S.sheet = null; break;
+    case "clearPlanYes": {
+      S.sheet = null;
+      editProfile(p => p.components.forEach(c => { if (c.cadence === "weekly" && c.block) { c.block.days = []; c.block.times = {}; c.block.time = ""; c.gcal = false; } }));
+      toast("Every day is clear again");
+      break;
+    }
     case "blkMove": { const sh = S.sheet, nd = +b.dataset.d; if (!sh || nd === sh.day) return; const c = compById(sh.id); if (!c) return;
       const t = bestSlot(nd, durOf(c), dayItems(nd), timeOn(c, sh.day));
       if (placeFloor(sh.id, nd, t, sh.day, true)) { S.sheet = { type: "block", id: sh.id, day: nd }; render(); toast(`Moved to ${WD[nd]}${t ? ", " + t12(t) : ""}`); } return; }
