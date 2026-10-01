@@ -1142,7 +1142,10 @@ function applyRemote(id, data) {
   S.loaded[id] = true;
   /* the echo of our own save: it becomes the new base; flush() layers any newer local edits on top */
   if (remote !== undefined && S.inflight[id] && same(remote, S.inflight[id])) { setBase(id, remote); return; }
-  if (remote !== undefined && same(remote, getBase(id)) && S.docs[id] !== undefined) return;   // nothing new (often our own save)
+  if (remote !== undefined && same(remote, getBase(id)) && S.docs[id] !== undefined) {   // nothing new on the server (often our own save)
+    if (!same(S.docs[id], remote) && !T[id] && !IN[id]) touch(id);   // …but this device has edits it hasn't sent yet (e.g. made offline before a restart)
+    return;
+  }
   if (remote === undefined && S.docs[id] && Object.keys(S.docs[id]).length && getBase(id) === undefined) { touch(id); return; }
   const before = S.docs[id];
   const pending = absorb(id, remote);
@@ -1338,12 +1341,18 @@ async function loadCore(uid) {
       if (ST.uid !== uid) return false;
       snaps.forEach((sn, k) => { const id = ids[k]; S.loaded[id] = true; if (absorb(id, sn.exists ? sn.data() : undefined)) setTimeout(() => touch(id), 0); });
       S.loadErr = false; return true;
-    } catch (e) { await new Promise(r => setTimeout(r, 800 * (attempt + 1))); if (ST.uid !== uid) return false; }
+    } catch (e) {
+      /* offline with a copy on this device: open with it now; the server copy merges in once back online */
+      if (navigator.onLine === false && S.docs.profile) { S.loadErr = false; window.addEventListener("online", () => { if (ST.uid === uid) ids.forEach(id => { unsubscribe(id); subscribe(id); }); }, { once: true }); return true; }
+      await new Promise(r => setTimeout(r, 800 * (attempt + 1))); if (ST.uid !== uid) return false;
+    }
   }
   S.loadErr = true; render(); return false;
 }
 async function init() {
   render();
+  /* keep a copy of the app on this device so it opens offline (and receives reminders) */
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) { try { navigator.serviceWorker.register("/sw.js").catch(() => {}); } catch (e) {} }
   const cfg = Object.assign({}, window.COMPASS_FIREBASE_CONFIG || {});
   if (!cfg.apiKey || /PASTE/i.test(cfg.apiKey)) { S.authState = "noconfig"; render(); return; }
   // Sign-in runs through the address people see (life-compass.web.app, set in firebase-config.js),
