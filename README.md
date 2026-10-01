@@ -171,5 +171,7 @@ You don't need to redeploy, or clear cookies, to see a change.
 
 - Rebuild the bundled SDK after changing `src/firebase.js`: `npm install && npm run build:sdk`.
 - Data lives at `users/{uid}/docs/{docId}`, with docs `profile`, `settings`, `people` and one per week (`w-YYYY-MM-DD`, Monday of that week). Reminder settings live at `notify/{uid}` (top level, so the Worker can find due ones with one indexed query on `nextEve` / `nextRev`).
+- Sync: each doc keeps a *base* (the last version this device and the server agreed on, saved locally). Saves run in a Firestore transaction that merges base, this device and the server three ways; counters (any map named `c`) add up; offline edits wait on the device and go out when it's back online. Every save carries a `_w` marker so a save whose reply was lost is never applied twice.
+- The app shell is cached by `public/sw.js` (network-first for pages), so Compass opens offline.
 - The reminders Worker is in `worker/`: `src/plan.js` decides, `src/push.js` encrypts (RFC 8291) and signs (VAPID) with WebCrypto only, `src/firestore.js` talks to Firestore's REST API.
 - Firebase SDK 12.19.0, bundled with esbuild.
