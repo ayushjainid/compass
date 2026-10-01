@@ -32,9 +32,9 @@ body{margin:0;overflow-x:clip}
 @media (pointer:coarse){input,select,textarea{font-size:16px!important}}
 img{max-width:100%}
 :root{
-  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#E9EDEA; --ink:#17201E; --ink2:#46524E; --muted:#6F7B77; --line:#D9DFDB;
-  --accent:#23466F; --accent-soft:#E2E9F3; --on-accent:#FFFFFF; --brass:#A36F1C; --brass-soft:#F4EAD8;
-  --good:#2C7552; --good-soft:#DFEFE5; --warn:#A8620E; --warn-soft:#F6E9D6; --scrim:rgba(18,26,24,.38);
+  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#E9EDEA; --ink:#17201E; --ink2:#46524E; --muted:#5E6865; --line:#D9DFDB;
+  --accent:#23466F; --accent-soft:#E2E9F3; --on-accent:#FFFFFF; --brass:#895D18; --brass-soft:#F4EAD8;
+  --good:#2B714F; --good-soft:#DFEFE5; --warn:#95570C; --warn-soft:#F6E9D6; --scrim:rgba(18,26,24,.38);
   --display:"Newsreader", Georgia, "Times New Roman", serif;
   --sans:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -44,14 +44,14 @@ img{max-width:100%}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#88938F; --line:#2D3533;
+    --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#8B9592; --line:#2D3533;
     --accent:#93B3DC; --accent-soft:#1E2A39; --on-accent:#0D1623; --brass:#D8A75C; --brass-soft:#33291A;
     --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#88938F; --line:#2D3533;
+  --bg:#101514; --surface:#191F1E; --sunk:#232B29; --ink:#E7ECEA; --ink2:#B4BEBA; --muted:#8B9592; --line:#2D3533;
   --accent:#93B3DC; --accent-soft:#1E2A39; --on-accent:#0D1623; --brass:#D8A75C; --brass-soft:#33291A;
   --good:#72C69D; --good-soft:#16302A; --warn:#E3A65C; --warn-soft:#33281A; --scrim:rgba(0,0,0,.55);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;
 }
@@ -108,6 +108,7 @@ body.landing .island{display:none}
 .csb > .card:first-child,.csb .meter:first-child{margin-top:0}
 .csb h3{margin-top:14px}
 .csb .field{padding:10px 0}.csb .field:first-child{padding-top:0}
+h2.h3{font:600 12px/1.3 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .banner{background:var(--warn-soft);color:var(--ink);border-radius:var(--r);padding:10px 12px;font-size:13.5px;margin-block:0 12px}
 
@@ -132,7 +133,7 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 .strip button[aria-pressed="true"]{background:var(--surface);box-shadow:0 0 0 1px var(--line)}
 .strip button.today .wd{color:var(--brass);font-weight:600}
 /* days still ahead stay grey but can be opened */
-.strip button.future .wd,.strip button.future .ring span{color:var(--muted);opacity:.75}
+.strip button.future .wd,.strip button.future .ring span{color:var(--muted)}
 .strip button.future .ring{background:var(--sunk)}
 .strip button.future[aria-pressed="true"] .ring span,.strip button.future[aria-pressed="true"] .wd{opacity:1;color:var(--ink2)}
 .strip button:disabled{opacity:.35}
@@ -164,6 +165,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 12px 8px 10px;font-size:14px;min-height:40px;transition:transform .12s}
 .chip b{font-weight:600;color:var(--accent)}
 .chip .n{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.chip.sel .n,.chip[aria-pressed="true"] .n{color:inherit}
 .chip.done{background:var(--good-soft);border-color:transparent}
 .chip.done .n{color:var(--good)}
 .chip.fun{background:var(--brass-soft);border-color:transparent}
@@ -825,7 +827,8 @@ details.fold[open] summary::before{content:"▾ ";}
 .donehead .dtx small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .donefold.open .chev{transform:rotate(-135deg) translate(-2px,-2px)}
 .donelist{border-top:1px dashed var(--line)}
-.dayrow.isdone{opacity:.62}.dayrow.isdone .nm{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ink) 40%,transparent)}
+.dayrow.isdone .nm{color:var(--ink2);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ink) 40%,transparent)}
+.dayrow.isdone .box{opacity:.75}
 .alldone{color:var(--ink2);text-align:center}
 .acct{display:flex;align-items:center;gap:12px}
 .acct .avatar{width:44px;height:44px;font-size:18px}
@@ -976,18 +979,18 @@ function templateDraft() {
 
 /* ============ colour themes ============ */
 const SEM = {
-  light: { good: "#2C7552", "good-soft": "#DFEFE5", warn: "#A8620E", "warn-soft": "#F6E9D6", scrim: "rgba(18,26,24,.38)", "s1": "#2a78d6", "s2": "#eb6834", "s3": "#1baf7a", "s4": "#eda100", "s5": "#e87ba4", "s6": "#008300", "s7": "#4a3aa7", "s8": "#e34948" },
+  light: { good: "#2B714F", "good-soft": "#DFEFE5", warn: "#95570C", "warn-soft": "#F6E9D6", scrim: "rgba(18,26,24,.38)", "s1": "#2a78d6", "s2": "#eb6834", "s3": "#1baf7a", "s4": "#eda100", "s5": "#e87ba4", "s6": "#008300", "s7": "#4a3aa7", "s8": "#e34948" },
   dark:  { good: "#72C69D", "good-soft": "#16302A", warn: "#E3A65C", "warn-soft": "#33281A", scrim: "rgba(0,0,0,.55)", "s1": "#3987e5", "s2": "#d95926", "s3": "#199e70", "s4": "#c98500", "s5": "#d55181", "s6": "#008300", "s7": "#9085e9", "s8": "#e66767" },
 };
 const K = ["bg","surface","sunk","ink","ink2","muted","line","accent","accent-soft","on-accent","brass","brass-soft"];
 const P = (a, b) => ({ light: Object.fromEntries(K.map((k, i) => [k, a[i]])), dark: Object.fromEntries(K.map((k, i) => [k, b[i]])) });
 const PALETTES = [
-  { id: "harbor", name: "Harbor", ...P(["#F3F5F2","#FFFFFF","#E9EDEA","#17201E","#46524E","#6F7B77","#D9DFDB","#23466F","#E2E9F3","#FFFFFF","#A36F1C","#F4EAD8"], ["#101514","#191F1E","#232B29","#E7ECEA","#B4BEBA","#88938F","#2D3533","#93B3DC","#1E2A39","#0D1623","#D8A75C","#33291A"]) },
-  { id: "sage",   name: "Sage",   ...P(["#F2F4EF","#FFFFFF","#E6EBE3","#1A221C","#4A564D","#717D74","#D6DDD3","#3E6B4E","#E1EDE4","#FFFFFF","#A86E30","#F5E9DA"], ["#0F1411","#18201A","#212B24","#E6ECE7","#B2BDB5","#86928A","#2A342D","#8CC5A0","#1A2E21","#0C1A11","#DDA46A","#34281B"]) },
-  { id: "ocean",  name: "Ocean",  ...P(["#F1F5F6","#FFFFFF","#E3ECEE","#142024","#445A60","#6D8288","#D3DFE2","#0F6A7A","#DCEEF1","#FFFFFF","#B8731A","#F7EBD7"], ["#0D1416","#151E21","#1E292C","#E3EDEF","#AFC0C4","#82969B","#283437","#6CC7D6","#15303A","#06191D","#E6AA55","#33281A"]) },
-  { id: "dusk",   name: "Dusk",   ...P(["#F5F3F6","#FFFFFF","#EBE7EE","#1F1A24","#524A5A","#7A7282","#DDD7E2","#5B3F7A","#ECE5F3","#FFFFFF","#AE4E64","#F6E3E7"], ["#131016","#1C1820","#26212B","#ECE8F0","#BDB5C5","#8F8798","#312B37","#BFA2E0","#2A2136","#1A1024","#E68CA0","#3A2129"]) },
-  { id: "canyon", name: "Canyon", ...P(["#F6F3EF","#FFFFFF","#ECE6DF","#231B16","#5A4D44","#82756B","#E0D8CF","#9A4A2A","#F5E4DA","#FFFFFF","#2B7472","#DCEEEC"], ["#15110E","#1F1915","#2A221D","#F0E9E3","#C4B8AE","#968A80","#362C25","#E59A74","#3A2519","#22120A","#6CC3BF","#183231"]) },
-  { id: "graphite", name: "Graphite", ...P(["#F4F4F3","#FFFFFF","#E8E8E6","#171717","#4A4A48","#737370","#DADAD7","#262626","#E6E6E4","#FFFFFF","#8A6D3B","#EFE8DC"], ["#111111","#1B1B1B","#252525","#EDEDEC","#BBBBB8","#8C8C89","#2F2F2E","#E8E8E6","#2B2B2B","#141414","#D2B27A","#302A1F"]) },
+  { id: "harbor", name: "Harbor", ...P(["#F3F5F2","#FFFFFF","#E9EDEA","#17201E","#46524E","#5E6865","#D9DFDB","#23466F","#E2E9F3","#FFFFFF","#895D18","#F4EAD8"], ["#101514","#191F1E","#232B29","#E7ECEA","#B4BEBA","#8B9592","#2D3533","#93B3DC","#1E2A39","#0D1623","#D8A75C","#33291A"]) },
+  { id: "sage",   name: "Sage",   ...P(["#F2F4EF","#FFFFFF","#E6EBE3","#1A221C","#4A564D","#606A63","#D6DDD3","#3E6B4E","#E1EDE4","#FFFFFF","#8C5C28","#F5E9DA"], ["#0F1411","#18201A","#212B24","#E6ECE7","#B2BDB5","#8B978F","#2A342D","#8CC5A0","#1A2E21","#0C1A11","#DDA46A","#34281B"]) },
+  { id: "ocean",  name: "Ocean",  ...P(["#F1F5F6","#FFFFFF","#E3ECEE","#142024","#445A60","#596A6F","#D3DFE2","#0F6A7A","#DCEEF1","#FFFFFF","#905A14","#F7EBD7"], ["#0D1416","#151E21","#1E292C","#E3EDEF","#AFC0C4","#85989D","#283437","#6CC7D6","#15303A","#06191D","#E6AA55","#33281A"]) },
+  { id: "dusk",   name: "Dusk",   ...P(["#F5F3F6","#FFFFFF","#EBE7EE","#1F1A24","#524A5A","#6B6472","#DDD7E2","#5B3F7A","#ECE5F3","#FFFFFF","#A3495E","#F6E3E7"], ["#131016","#1C1820","#26212B","#ECE8F0","#BDB5C5","#928A9A","#312B37","#BFA2E0","#2A2136","#1A1024","#E68CA0","#3A2129"]) },
+  { id: "canyon", name: "Canyon", ...P(["#F6F3EF","#FFFFFF","#ECE6DF","#231B16","#5A4D44","#6E635B","#E0D8CF","#9A4A2A","#F5E4DA","#FFFFFF","#2A706E","#DCEEEC"], ["#15110E","#1F1915","#2A221D","#F0E9E3","#C4B8AE","#9D9288","#362C25","#E59A74","#3A2519","#22120A","#6CC3BF","#183231"]) },
+  { id: "graphite", name: "Graphite", ...P(["#F4F4F3","#FFFFFF","#E8E8E6","#171717","#4A4A48","#666663","#DADAD7","#262626","#E6E6E4","#FFFFFF","#785F33","#EFE8DC"], ["#111111","#1B1B1B","#252525","#EDEDEC","#BBBBB8","#949491","#2F2F2E","#E8E8E6","#2B2B2B","#141414","#D2B27A","#302A1F"]) },
 ];
 let themeKey = "";
 function themePref() { let g = null; try { g = JSON.parse(localStorage.getItem("compass-theme") || "null"); } catch (e) {} const t = (S.docs.settings || {}).theme || g || {}; return { palette: t.palette || "harbor", mode: t.mode || "system" }; }
@@ -2401,7 +2404,8 @@ function render() {
   tabsHtml = tabsHtml.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
   /* only touch the tab bar when it changes: replacing it mid-tap swallowed the tap */
   if (S.tabsHtml !== tabsHtml) { $("#tabs").innerHTML = tabsHtml; S.tabsHtml = tabsHtml; }
-  $("#main").innerHTML = ({ today: rToday, week: rWeek, tasks: rTasks, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
+  const TAB_TITLE = { today: "Today", week: "Week", tasks: "Tasks", review: "Review", compass: "Compass settings" };
+  $("#main").innerHTML = `<h1 class="sr">${TAB_TITLE[S.tab] || "Compass"}</h1>` + ({ today: rToday, week: rWeek, tasks: rTasks, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
   $("#fab").hidden = false;
   renderSheet(); updSync();
 }
@@ -2904,8 +2908,8 @@ function icsSheet() {
     <button class="btn quiet" data-act="closeSheet">Close</button></div>`;
 }
 function rWeek(id, F, trips, sugg) {
-  const seg = `<div class="seg" role="tablist" style="margin-top:10px"><button role="tab" data-act="weekView" data-v="floors" aria-pressed="${S.weekView !== "plan"}">Floors</button><button role="tab" data-act="weekView" data-v="plan" aria-pressed="${S.weekView === "plan"}">Plan${weeklyPlannable().some(c => sessionsLeft(c) > 0) ? ` <span class="pdot"></span>` : ""}</button></div>`;
-  return seg + (S.weekView === "plan" ? rPlanView(id) : rWeekFloors(id, F, trips, sugg));
+  const seg = `<div class="seg" role="group" aria-label="Week view" style="margin-top:10px"><button data-act="weekView" data-v="floors" aria-pressed="${S.weekView !== "plan"}">Floors</button><button data-act="weekView" data-v="plan" aria-pressed="${S.weekView === "plan"}">Plan${weeklyPlannable().some(c => sessionsLeft(c) > 0) ? ` <span class="pdot"></span>` : ""}</button></div>`;
+  return seg + `<h2 class="sr">${S.weekView === "plan" ? "Plan" : "Floors"}</h2>` + (S.weekView === "plan" ? rPlanView(id) : rWeekFloors(id, F, trips, sugg));
 }
 function rWeekFloors(id, F, trips, sugg) {
   const w = anyWeek(id) || { c: {} }, mvw = isMvw(w, id);
@@ -3676,7 +3680,7 @@ function renderOnboarding() {
       <p class="lede">Pick what matters, keep a few small floors for each, and check in once a week. About a minute to set up.</p>
       ${d.imp ? `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Imported from ${esc(d.imp.from.join(", "))}</b><div class="hint">Setup is pre-filled with ${d.imp.comps} routine${d.imp.comps === 1 ? "" : "s"} and your values. Tap Continue to review.</div></div><button class="btn small quiet" data-act="impOpen">Redo</button></div></div>`
         : `<div class="card pad" style="margin-top:14px"><div class="impcard"><span class="glyph">${ICON.upload}</span><div style="flex:1"><b>Already use Todoist, TickTick, Microsoft To Do, Sunsama or a calendar?</b><div class="hint">Bring it in and Compass fills in setup from what you already do.</div></div></div><div style="margin-top:10px"><button class="btn" data-act="impOpen">Import from my apps</button></div></div>`}
-      <h3>Or start from a template</h3>
+      <h2 class="h3">Or start from a template</h2>
       <div class="starters">${STARTERS.map(s => `<button class="starter" data-act="obStarter" data-v="${s.id}"><span><b>${esc(s.name)}</b><small>${esc(s.blurb)}</small></span><span class="chev" aria-hidden="true">›</span></button>`).join("")}</div>
       ${hasOldLogs() || (profile() && !profile().onboarded) ? `<div class="card pad" style="margin-top:10px"><div class="row"><div><b>You have earlier logs</b><div class="hint">Start from the original Compass setup to keep them counting.</div></div><button class="btn" data-act="obTemplate">Use it</button></div></div>` : ""}`;
     next = d.imp ? "Continue" : "Start";
