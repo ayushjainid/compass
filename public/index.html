@@ -93,6 +93,7 @@ body.landing .island{display:none}
 .ntrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .ntime{display:flex;align-items:center;gap:12px;padding:0 0 10px}.ntime .flabel{margin:0;flex:1}.ntime input{max-width:150px}
 .ntios{margin-top:4px}
+.ntask{margin:8px 0 14px;border-color:var(--accent)}
 .csecs{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .csec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);scroll-margin-top:12px}
 .csh{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;min-height:60px}
@@ -1308,6 +1309,7 @@ async function ntSave(patch) { if (!ST.uid) return; S.nt = Object.assign(S.nt ||
 async function loadNotify() {
   if (!VAPID() || !ST.uid) return;
   try { const sn = await FB.getDoc(ntRef()); S.nt = sn.exists() ? sn.data() : {}; } catch (e) { S.nt = {}; }
+  if (!S.nt.on && !S.nt.optOut && ntCanAsk() && Notification.permission === "granted") { await ntEnable(); return; }
   if (S.nt.on && pushCapable() && Notification.permission === "granted") {
     try { const reg = await navigator.serviceWorker.register("/sw.js"); const sub = await reg.pushManager.getSubscription();
       if (!sub) await ntSubscribe(reg); else if (!S.nt.sub || S.nt.sub.endpoint !== sub.endpoint) await ntSave({ sub: sub.toJSON() }); } catch (e) {}
@@ -1327,23 +1329,33 @@ async function ntSubscribe(reg) {
   await ntSave({ sub: sub.toJSON() });
   return sub;
 }
+/* reminders are on by default: the browser still has to be asked once, so we ask at a moment the person chose to act */
+const ntCanAsk = () => !!VAPID() && pushCapable() && !(isIOS() && !isStandalone()) && Notification.permission !== "denied";
+const ntAskHidden = () => { try { return Date.now() - (+localStorage.getItem("compass-ntask") || 0) < 14 * 864e5; } catch (e) { return false; } };
+function ntAskCard() {
+  const n = S.nt; if (!VAPID() || !n || n.on || n.optOut || ntAskHidden() || pending().intro) return "";
+  if (isIOS() && !isStandalone()) return `<div class="card pad ntask"><b>Get your evening check-in</b><div class="hint">On iPhone, reminders need Compass on your Home Screen: in Safari tap Share, then <b>Add to Home Screen</b>, and open it from there.</div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small quiet" data-act="ntLater">Not now</button></div></div>`;
+  if (!ntCanAsk() || Notification.permission !== "default") return "";
+  return `<div class="card pad ntask"><b>Your evening check-in is on</b><div class="hint">Allow notifications so a gentle nudge can reach you at ${t12(n.eve || defaultEve())}, plus one on Sunday for your review. Change or turn them off any time in Compass → Reminders.</div>
+    <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small primary" data-act="ntOn">Allow notifications</button><button class="btn small quiet" data-act="ntLater">Not now</button><button class="btn small quiet" data-act="ntOptOut">Turn off</button></div></div>`;
+}
 async function ntEnable() {
   if (!pushCapable()) return;
   const perm = await Notification.requestPermission();
-  if (perm !== "granted") { S.ntBlocked = perm === "denied"; render(); if (perm !== "denied") toast("Reminders stay off."); return; }
+  if (perm !== "granted") { S.ntBlocked = perm === "denied"; render(); return; }
   S.ntBusy = true; render();
   try {
     const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
     const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
     const n = S.nt || {}, eve = n.eve === undefined ? defaultEve() : n.eve || defaultEve(), rev = n.rev === undefined ? "18:00" : n.rev || "18:00";
-    await ntSave({ on: true, sub: sub.toJSON(), tz: myTz(), eve, rev, nextEve: nextLocal(eve), nextRev: nextLocal(rev, Date.now(), 6), last: todayKey(), ign: 0, revDone: reviewedMonday() });
+    await ntSave({ on: true, optOut: false, sub: sub.toJSON(), tz: myTz(), eve, rev, nextEve: nextLocal(eve), nextRev: nextLocal(rev, Date.now(), 6), last: todayKey(), ign: 0, revDone: reviewedMonday() });
     toast("Reminders on");
   } catch (e) { console.warn(e); toast("Couldn't turn reminders on. Try again in a moment."); }
   S.ntBusy = false; render();
 }
 async function ntDisable() {
   try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
-  await ntSave({ on: false, sub: null, nextEve: null, nextRev: null }); toast("Reminders off"); render();
+  await ntSave({ on: false, optOut: true, sub: null, nextEve: null, nextRev: null }); toast("Reminders off"); render();
 }
 function ntSet(kind, value) {
   const n = S.nt || {}; if (!n.on) return;
@@ -1358,7 +1370,7 @@ async function ntTest() {
 function remindersSection() {
   if (!VAPID()) return "";
   const n = S.nt || {}, on = !!n.on && !!n.sub;
-  const sum = on ? [n.eve ? "Check-in " + t12(n.eve) : "", n.rev ? "Sunday review " + t12(n.rev) : ""].filter(Boolean).join(" · ") || "On, both nudges paused" : "Off · two gentle nudges at most";
+  const sum = on ? [n.eve ? "Check-in " + t12(n.eve) : "", n.rev ? "Sunday review " + t12(n.rev) : ""].filter(Boolean).join(" · ") || "On, both nudges paused" : n.optOut ? "Off" : "On · needs your OK to notify";
   const why = `<p class="hint" style="margin:0 0 10px">At most one evening check-in, skipped on days you've already opened Compass, plus a Sunday nudge for your review. If a few go unanswered they ease off on their own. Alerts for individual floors come from your calendar export.</p>`;
   let body;
   if (on) body = `${why}
@@ -1370,7 +1382,7 @@ function remindersSection() {
   else if (isIOS() && !isStandalone()) body = `${why}<div class="card pad ntios"><b>On iPhone, add Compass to your Home Screen first</b><div class="hint">In Safari tap Share, then <b>Add to Home Screen</b>. Open Compass from that icon and turn reminders on there.</div></div>`;
   else if (!pushCapable()) body = `${why}<p class="hint" style="margin:0">This browser can't show reminders. Try Chrome, Edge, Firefox or Safari on a recent device.</p>`;
   else if (S.ntBlocked || Notification.permission === "denied") body = `${why}<p class="hint" style="margin:0 0 10px">Notifications are blocked for Compass. Allow them in your browser's site settings (or your phone's settings for the Home Screen app), then try again.</p><button class="btn" data-act="ntOn">Try again</button>`;
-  else body = `${why}<button class="btn primary" data-act="ntOn" ${S.ntBusy ? "disabled" : ""}>${S.ntBusy ? "Turning on…" : "Turn on reminders"}</button>`;
+  else body = `${why}<div class="row" style="justify-content:flex-start;gap:8px"><button class="btn primary" data-act="ntOn" ${S.ntBusy ? "disabled" : ""}>${S.ntBusy ? "Turning on…" : n.optOut ? "Turn on reminders" : "Allow notifications"}</button>${n.optOut ? "" : `<button class="btn quiet" data-act="ntOptOut">Turn off</button>`}</div>`;
   return cSec("remind", "Reminders", esc(sum), body);
 }
 /* opened from a reminder: jump to the right tab */
@@ -2297,7 +2309,7 @@ function rToday(id) {
   const jc = daily.find(c => c.auto === "journal");
   const hr = new Date().getHours(), part = hr < 5 ? "evening" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
   const first = ((S.user && S.user.name) || "").split(" ")[0];
-  return `${introCard()}
+  return `${introCard()}${ntAskCard()}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
   <p class="lede">${S.selDay === tk ? `<span class="greetin">Good ${part}${first ? ", " + esc(first) : ""}.</span> ` : ""}${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
@@ -3590,7 +3602,7 @@ document.addEventListener("click", e => {
   const ob = S.ob && S.ob.d;
   switch (act) {
     /* onboarding */
-    case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) return finishOnboarding(); S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
+    case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) { if (ntCanAsk() && Notification.permission === "default" && !(S.nt && S.nt.optOut)) ntEnable(); return finishOnboarding(); } S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
     case "impOpen": return impOpen();
     case "msConnect": return msConnect();
     case "impClose": S.imp = null; renderOnboarding(); window.scrollTo(0, 0); return;
@@ -3861,6 +3873,8 @@ document.addEventListener("click", e => {
     }
     /* compass tab */
     case "ntOn": ntEnable(); return;
+    case "ntLater": try { localStorage.setItem("compass-ntask", String(Date.now())); } catch (e) {} render(); return;
+    case "ntOptOut": ntSave({ optOut: true, on: false }); toast("Reminders off. Turn them on any time in Compass → Reminders."); render(); return;
     case "ntOff": ntDisable(); return;
     case "ntTest": ntTest(); return;
     case "ntToggle": { const k = b.dataset.k, n = S.nt || {}; ntSet(k, n[k] ? "" : (k === "eve" ? defaultEve() : "18:00")); return; }
