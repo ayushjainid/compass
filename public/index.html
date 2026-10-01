@@ -797,6 +797,21 @@ details.fold[open] summary::before{content:"▾ ";}
 .greet{font:500 15px/1.3 var(--sans);color:var(--ink2);margin:4px 0 2px}
 .greetin{color:var(--ink);font-weight:500}
 .dtime{color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
+.h3n{font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--muted);margin-left:6px}
+.dayrow .lbl small{display:block}.dayrow .sep{opacity:.7}
+.dayrow.weekly,.dayrow.monthly{box-shadow:inset 3px 0 0 var(--vc)}
+.ktag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--vc) 18%,transparent);color:var(--ink2);vertical-align:1px}
+.dayrow.going{animation:rowout .38s ease forwards}
+@keyframes rowout{0%{opacity:1}60%{opacity:.5}100%{opacity:0;transform:translateY(6px)}}
+.donefold{margin-top:8px;border:1px dashed var(--line);border-radius:var(--r)}
+.donehead{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 14px;min-height:48px}
+.donehead .dck{flex:none;width:24px;height:24px;border-radius:7px;background:color-mix(in srgb,var(--good) 22%,transparent);color:var(--good);display:grid;place-items:center;font-size:13px;font-weight:700}
+.donehead .dtx{flex:1;min-width:0;display:flex;flex-direction:column}.donehead .dtx b{font-weight:500;font-size:14px;color:var(--ink2)}
+.donehead .dtx small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.donefold.open .chev{transform:rotate(-135deg) translate(-2px,-2px)}
+.donelist{border-top:1px dashed var(--line)}
+.dayrow.isdone{opacity:.62}.dayrow.isdone .nm{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ink) 40%,transparent)}
+.alldone{color:var(--ink2);text-align:center}
 .acct{display:flex;align-items:center;gap:12px}
 .acct .avatar{width:44px;height:44px;font-size:18px}
 </style>
@@ -2135,6 +2150,13 @@ function todayTasks(id) {
       ${n ? `<button class="comp" data-act="sortStart"><span class="lbl"><span>${n} thought${n > 1 ? "s" : ""} in your inbox</span><small>Sort them so they stop circling</small></span><span class="chev">›</span></button>` : ""}
       ${!wk.length && !steps.length && !n && doneWk.length ? `<p class="hint pad" style="margin:0">All of this week's errands are done.</p>` : ""}</div>`;
 }
+/* ticking a row: show the check, let it fold down into "done", then redraw */
+function settleRow(b, on) {
+  const row = b && b.closest(".dayrow");
+  if (!on || !row || row.classList.contains("isdone")) { render(); return; }
+  row.setAttribute("aria-pressed", "true"); row.classList.add("going"); burst(row.querySelector(".box"));
+  clearTimeout(S.settleT); S.settleT = setTimeout(render, 380);
+}
 function rToday(id) {
   const w = anyWeek(id) || { days: {}, c: {} }, mon = S.viewMon, tk = todayKey();
   const keys = [...Array(7)].map((_, i) => dkey(addDays(mon, i)));
@@ -2152,8 +2174,6 @@ function rToday(id) {
   const selDate = parse(S.selDay);
   const title = S.selDay === tk ? "Today" : WD[(selDate.getDay() + 6) % 7] + ", " + fmtShort(selDate);
   const dIdx = dayIdx(S.selDay), dTime = c => plannedOn(c, dIdx) ? timeOn(c, dIdx) : "";
-  const dailyRows = daily.filter(c => c.auto !== "journal").map((c, i) => ({ c, i, t: dTime(c) })).sort((x, y) => (x.t ? 0 : 1) - (y.t ? 0 : 1) || (x.t < y.t ? -1 : x.t > y.t ? 1 : x.i - y.i));
-  const checks = dailyRows.map(({ c, t }) => `<button class="check" data-act="anchor" data-k="${esc(c.id)}" aria-pressed="${!!a[c.id]}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span>${t || c.note ? `<small>${t ? `<span class="dtime">${t12(t)}</span>${c.note ? " · " : ""}` : ""}${esc(c.note || "")}</small>` : ""}</span><span class="tail">${compHave(c, w, id)}/${c.target}</span></button>`).join("");
   const chip = c => countChip(c, compHave(c, w, id));
   const weekly = act.filter(c => c.cadence === "weekly"), monthly = act.filter(c => c.cadence === "monthly");
   const di = dayIdx(S.selDay), mpToday = monthPlan(monthKey(parse(S.selDay)));
@@ -2161,7 +2181,18 @@ function rToday(id) {
   const pm = monthly.filter(c => mpToday[c.id] && mpToday[c.id].date === S.selDay).map(c => ({ c, t: mpToday[c.id].time || "" }));
   const plannedList = pw.concat(pm).sort((a, b) => (a.t || "99") < (b.t || "99") ? -1 : 1);
   const pd = (d.p || {});
-  const plannedHtml = plannedList.length ? `<h3>Planned ${S.selDay === tk ? "today" : "for " + WD[di]}</h3><div class="card">${plannedList.map(x => `<div class="task"><button class="tick ${pd[x.c.id] ? "on" : ""}" data-act="planDone" data-k="${esc(x.c.id)}" aria-label="${pd[x.c.id] ? "Not done" : "Done"}: ${esc(x.c.name)}"></button><span class="vdot" style="background:${valColor(x.c.value)}"></span><div class="tx"><span>${esc(x.c.name)}</span><small>${t12(x.t)} · ${fmtDur(durOf(x.c) / 60)} · ${hFmt(compHave(x.c, w, id))}${x.c.unit || ""}/${x.c.target}${x.c.unit || ""} ${x.c.cadence === "monthly" ? "this month" : "this week"}</small></div></div>`).join("")}</div>` : "";
+  /* one list for the day: daily floors + weekly/monthly floors planned on this day, in time order; done ones fold away at the bottom */
+  const KORD = { daily: 0, weekly: 1, monthly: 2 };
+  const items = daily.filter(c => c.auto !== "journal").map((c, i) => ({ c, i, kind: "daily", t: dTime(c), done: !!a[c.id], act: "anchor" }))
+    .concat(plannedList.map((x, i) => ({ c: x.c, i, kind: x.c.cadence, t: x.t || "", done: !!pd[x.c.id], act: "planDone" })))
+    .sort((x, y) => (x.t ? 0 : 1) - (y.t ? 0 : 1) || (x.t < y.t ? -1 : x.t > y.t ? 1 : 0) || KORD[x.kind] - KORD[y.kind] || x.i - y.i);
+  const pending = items.filter(x => !x.done), doneL = items.filter(x => x.done);
+  const dayRow = x => { const c = x.c, have = compHave(c, w, id), u = c.unit || "";
+    const sub = [x.t ? `<span class="dtime">${t12(x.t)}</span>` : "", x.kind !== "daily" ? `<span class="ktag ${x.kind}">${x.kind === "weekly" ? (everyN(c) > 1 ? everyText(c) : "Weekly") : "Monthly"}</span>` : "", x.kind !== "daily" ? fmtDur(durOf(c) / 60) : "", esc(c.note || "")].filter(Boolean).join('<span class="sep"> · </span>');
+    return `<button class="check dayrow ${x.kind}${x.done ? " isdone" : ""}" data-act="${x.act}" data-k="${esc(c.id)}" aria-pressed="${x.done}" style="--vc:${valColor(c.value)}"><span class="box"></span><span class="lbl"><span class="nm">${esc(c.name)}</span>${sub ? `<small>${sub}</small>` : ""}</span><span class="tail">${hFmt(have)}${u}/${c.target}${u}</span></button>`; };
+  const dayHtml = items.length ? `<h3>${S.selDay === tk ? "Your day" : WD[di] + "'s list"} <span class="h3n">${doneL.length} of ${items.length} done</span></h3>
+    ${pending.length ? `<div class="card daylist">${pending.map(dayRow).join("")}</div>` : `<div class="card pad alldone">All done for ${S.selDay === tk ? "today" : WD[di]}. Nicely held.</div>`}
+    ${doneL.length ? `<div class="donefold${S.doneOpen ? " open" : ""}"><button class="donehead" data-act="doneFold" aria-expanded="${!!S.doneOpen}"><span class="dck">✓</span><span class="dtx"><b>${doneL.length} done</b>${S.doneOpen ? "" : `<small>${doneL.map(x => esc(x.c.name)).join(", ")}</small>`}</span><span class="chev" aria-hidden="true"></span></button>${S.doneOpen ? `<div class="donelist">${doneL.map(dayRow).join("")}</div>` : ""}</div>` : ""}` : "";
   const fun = comps().filter(c => c.fun);
   const funCount = fun.reduce((s, c) => s + ((w.c || {})[c.id] || 0), 0);
   const jc = daily.find(c => c.auto === "journal");
@@ -2171,9 +2202,8 @@ function rToday(id) {
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
   <p class="lede">${S.selDay === tk ? `<span class="greetin">Good ${part}${first ? ", " + esc(first) : ""}.</span> ` : ""}${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
-  ${checks ? `<h3>Daily</h3><div class="card">${checks}</div>` : ""}
+  ${dayHtml}
   ${todayTasks(id)}
-  ${plannedHtml}
   ${weekly.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="chips">${weekly.map(chip).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
   ${monthly.length ? `<h3>This month</h3><div class="chips">${monthly.map(chip).join("")}</div>` : ""}
   ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => funChip(c, (w.c || {})[c.id] || 0)).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it, − to take one back.</p>` : ""}
@@ -3576,7 +3606,8 @@ document.addEventListener("click", e => {
       subscribe(nid); break;
     }
     case "day": S.selDay = k; break;
-    case "anchor": { let on; editWeek(w => { const d = dayObj(w, S.selDay); d.a[k] = !d.a[k]; on = d.a[k]; }); render(); if (on) burst(document.querySelector(`.check[data-k="${CSS.escape(k)}"] .box`)); return; }
+    case "anchor": { let on; editWeek(w => { const d = dayObj(w, S.selDay); d.a[k] = !d.a[k]; on = d.a[k]; }); settleRow(b, on); return; }
+    case "doneFold": S.doneOpen = !S.doneOpen; break;
     case "cp": editWeek(w => { const d = dayObj(w, S.selDay); d.cp = d.cp === b.dataset.v ? null : b.dataset.v; }); break;
     case "inc": case "dec": {
       const c = compById(k); if (!c) return;
@@ -3662,8 +3693,7 @@ document.addEventListener("click", e => {
     case "planDone": {
       const c = compById(k); if (!c) return; let on;
       editWeek(w => { const dd = dayObj(w, S.selDay); dd.p = dd.p || {}; dd.p[k] = !dd.p[k]; on = dd.p[k]; });
-      bump(c, on ? 1 : -1); render();
-      if (on) burst(document.querySelector(`[data-act="planDone"][data-k="${CSS.escape(k)}"]`), "var(--good)", 10);
+      bump(c, on ? 1 : -1); settleRow(b, on);
       return;
     }
     case "funDec": editWeek(w => { w.c[k] = Math.max(0, (w.c[k] || 0) - 1); }); break;
