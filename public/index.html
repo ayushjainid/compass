@@ -853,7 +853,7 @@ details.fold[open] summary::before{content:"▾ ";}
 
 <script src="/firebase-config.js"></script>
 <script type="module">
-import * as FB from "/vendor/firebase.js?v=2";
+import * as FB from "/vendor/firebase.js?v=3";
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1006,7 +1006,7 @@ function themePicker() {
 /* ============ state ============ */
 const S = {
   weekView: "floors", planPick: null,
-  loaded: {}, loadErr: false,
+  loaded: {}, loadErr: false, base: {}, waiting: {}, inflight: {},
   sortSkip: new Set(), sortCount: 0, sortTotal: 0, sortTally: {}, sortProj: null, stepFor: null, capMsg: "", migrated: false, noFocus: false,
   authState: "loading", user: null, authBusy: false, authErr: "", importMsg: "",
   tab: "today", viewMon: monday(new Date()), selDay: todayKey(),
@@ -1054,6 +1054,50 @@ function deepMerge(base, over) {
   if (isObj(base) && isObj(over)) { const out = clone(base); Object.keys(over).forEach(k => { out[k] = k in base ? deepMerge(base[k], over[k]) : clone(over[k]); }); return out; }
   return over === undefined ? clone(base) : clone(over);
 }
+/* ---- safe sync across devices ----
+   Each doc remembers its "base": the last version both this device and the server agreed on.
+   Saving reads the server copy in a transaction and merges three ways (base, this device, server),
+   so edits made elsewhere, even offline on both sides, are kept instead of overwritten. */
+const cpU = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
+/* key order doesn't matter (Firestore hands maps back in its own order) */
+const stable = x => Array.isArray(x) ? "[" + x.map(stable).join(",") + "]" : x && typeof x === "object" ? "{" + Object.keys(x).sort().filter(k => x[k] !== undefined).map(k => JSON.stringify(k) + ":" + stable(x[k])).join(",") + "}" : JSON.stringify(x === undefined ? null : x);
+const same = (a, b) => (a === undefined) === (b === undefined) && stable(a) === stable(b);
+function getBase(id) { if (!(id in S.base)) { const v = LS.get("base:" + id); S.base[id] = v === null ? undefined : v; } return S.base[id]; }
+function setBase(id, data) { S.base[id] = cpU(data); if (data === undefined) { try { localStorage.removeItem(LS.key("base:" + id)); } catch (e) {} } else LS.set("base:" + id, data); }
+const keyedArr = a => Array.isArray(a) && a.length > 0 && a.every(x => isObj(x) && x.id !== undefined);
+/* counters (a week's "c" map) add up: +1 here and +1 there is 2, not 1 */
+function merge3(b, l, r, path = "") {
+  if (same(l, b)) return cpU(r);
+  const counter = /(^|\/)c(\/[^/]+)?$/.test(path);
+  if (same(r, b)) return cpU(l);
+  if (same(l, r) && !counter && !(isObj(l) && isObj(r)) && !Array.isArray(l)) return cpU(l);   // maps are walked key by key so counters inside still add up
+  if (isObj(l) && isObj(r)) {
+    const bb = isObj(b) ? b : {}, out = {};
+    new Set([...Object.keys(r), ...Object.keys(l)]).forEach(k => { const v = merge3(bb[k], l[k], r[k], path + "/" + k); if (v !== undefined) out[k] = v; });
+    return out;
+  }
+  if ((keyedArr(l) || keyedArr(r)) && Array.isArray(l) && Array.isArray(r)) {
+    const bb = Array.isArray(b) ? b : [], byId = (a, id) => a.find(x => isObj(x) && x.id === id);
+    const ids = r.map(x => x.id); l.forEach(x => { if (!ids.includes(x.id)) ids.push(x.id); });
+    const out = [];
+    ids.forEach(id => { const v = merge3(byId(bb, id), byId(l, id), byId(r, id), path + "/" + id); if (v !== undefined) out.push(v); });
+    return out;
+  }
+  if (counter && typeof l === "number" && typeof r === "number") return Math.max(0, r + (l - (typeof b === "number" ? b : 0)));
+  return cpU(l === undefined && b !== undefined ? r : l);   // a true clash on one value: this device's edit wins, but never a deletion over an edit
+}
+/* bring a server version into this device's copy */
+function absorb(id, remote) {
+  const local = S.docs[id], base = getBase(id);
+  let next;
+  if (local === undefined) next = cpU(remote);
+  else if (base !== undefined) next = merge3(base, local, remote);
+  else next = remote === undefined ? local : (S.last[id] ? deepMerge(remote, local) : cpU(remote));
+  if (remote !== undefined) setBase(id, remote);
+  if (next !== undefined) { S.docs[id] = next; if (id.startsWith("w-")) S.hist[id] = clone(next); LS.set(id, next); }
+  return next !== undefined && !same(next, remote);   // true: this device still has something to send
+}
+window.addEventListener("online", () => { Object.keys(S.waiting || {}).forEach(id => { delete S.waiting[id]; touch(id); }); updSync(); });
 function touch(id) {
   S.last[id] = Date.now(); LS.set(id, S.docs[id]);
   if (S.mode !== "db") return;
@@ -1062,33 +1106,49 @@ function touch(id) {
 async function flush(id) {
   if (S.mode !== "db" || !S.docs[id] || S.deleting) return;
   if (IN[id]) { DIRTY[id] = true; return; }
+  if (navigator.onLine === false) { S.waiting = S.waiting || {}; S.waiting[id] = true; updSync(); return; }   // kept on this device; sent when back online
   IN[id] = true; updSync();
   try {
-    if (!S.loaded[id]) {
-      const snap = await ref(id).get();
-      S.loaded[id] = true;
-      if (snap.exists) { S.docs[id] = deepMerge(snap.data(), S.docs[id]); if (id.startsWith("w-")) S.hist[id] = clone(S.docs[id]); LS.set(id, S.docs[id]); scheduleRender(); }
-    }
-    await ref(id).set(clone(S.docs[id]));
+    const sent = cpU(S.docs[id]);
+    const merged = await FB.runTransaction(ST.fs, async tx => {
+      const sn = await tx.get(FB.doc(ST.fs, "users", ST.uid, "docs", id));
+      const remote = sn.exists() ? sn.data() : undefined, base = getBase(id);
+      const m = base !== undefined ? merge3(base, sent, remote) : remote === undefined ? sent : deepMerge(remote, sent);
+      tx.set(FB.doc(ST.fs, "users", ST.uid, "docs", id), m);
+      S.inflight[id] = m;
+      return m;
+    });
+    setBase(id, merged); delete S.inflight[id];
+    /* edits made while we were saving are layered on top and go out next */
+    const now = S.docs[id];
+    const next = same(now, sent) ? merged : merge3(sent, now, merged);
+    S.docs[id] = next; if (id.startsWith("w-")) S.hist[id] = clone(next); LS.set(id, next); S.loaded[id] = true;
+    if (!same(next, now)) scheduleRender();
+    if (!same(next, merged)) DIRTY[id] = true;
   }
   catch (e) {
     const code = fsCode(e);
-    if (code === "unavailable" || code === "resource_exhausted" || code === "deadline_exceeded" || code === "aborted") setTimeout(() => touch(id), 2000 + Math.random() * 1500);
+    if (code === "unavailable" || code === "resource_exhausted" || code === "deadline_exceeded" || code === "aborted" || code === "failed_precondition") setTimeout(() => touch(id), 2000 + Math.random() * 1500);
     else if (code === "permission_denied") showBanner("Your database is refusing saves. Deploy firestore.rules from the project (see the README), then reload.");
     else showBanner("Couldn't save a change (" + (e && e.code || "unknown error") + "). It's kept on this device.");
   }
+  delete S.inflight[id];
   IN[id] = false;
   if (DIRTY[id]) { DIRTY[id] = false; flush(id); }
   updSync();
 }
 function applyRemote(id, data) {
-  if (!S.loaded[id]) {
-    S.loaded[id] = true;
-    if (data && S.docs[id] && S.last[id]) { S.docs[id] = deepMerge(data, S.docs[id]); LS.set(id, S.docs[id]); touch(id); scheduleRender(); return; }
-  }
-  if (T[id] || IN[id] || Date.now() - (S.last[id] || 0) < 2500) return;
-  if (data) { S.docs[id] = clone(data); LS.set(id, S.docs[id]); if (id === "profile" && data.onboarded && S.ob && S.ob.auto && S.ob.step === 0) S.ob = null; scheduleRender(); }
-  else if (S.docs[id] && Object.keys(S.docs[id]).length) touch(id);
+  const remote = data === null ? undefined : data;
+  S.loaded[id] = true;
+  /* the echo of our own save: it becomes the new base; flush() layers any newer local edits on top */
+  if (remote !== undefined && S.inflight[id] && same(remote, S.inflight[id])) { setBase(id, remote); return; }
+  if (remote !== undefined && same(remote, getBase(id)) && S.docs[id] !== undefined) return;   // nothing new (often our own save)
+  if (remote === undefined && S.docs[id] && Object.keys(S.docs[id]).length && getBase(id) === undefined) { touch(id); return; }
+  const before = S.docs[id];
+  const pending = absorb(id, remote);
+  if (id === "profile" && remote && remote.onboarded && S.ob && S.ob.auto && S.ob.step === 0) S.ob = null;
+  if (!same(before, S.docs[id])) scheduleRender();
+  if (pending && !T[id] && !IN[id]) touch(id);
 }
 function subscribe(id) {
   if (S.mode !== "db" || ST.subs[id]) return;
@@ -1103,7 +1163,7 @@ async function loadHistory() {
   if (S.mode !== "db") return;
   try {
     const snap = await FB.getDocs(FB.query(FB.collection(ST.fs, "users", ST.uid, "docs"), FB.where("kind", "==", "week")));
-    snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => (a.data.start < b.data.start ? 1 : -1)).slice(0, 80).forEach(d => { S.hist[d.id] = d.data; });
+    snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => (a.data.start < b.data.start ? 1 : -1)).slice(0, 80).forEach(d => { if (S.docs[d.id] && d.id !== curWid()) return; if (!S.docs[d.id]) { S.hist[d.id] = d.data; if (getBase(d.id) === undefined) setBase(d.id, d.data); } });
     scheduleRender();
   } catch (e) {}
 }
@@ -1116,7 +1176,7 @@ function loadLocalAll() {
 function showBanner(t) { const b = $("#banner"); b.textContent = t; b.hidden = false; }
 function hideBanner() { const b = $("#banner"); b.hidden = true; }
 function updSync() {
-  const el = $("#sync"); const busy = Object.values(T).some(Boolean) || Object.values(IN).some(Boolean);
+  const el = $("#sync"); const busy = Object.values(T).some(Boolean) || Object.values(IN).some(Boolean) || Object.keys(S.waiting || {}).length > 0;
   el.className = "sync " + (S.mode === "db" ? (busy ? "busy" : "ok") : "");
   el.querySelector("span").textContent = S.authState !== "in" ? "" : S.mode === "db" ? (busy ? (navigator.onLine === false ? "Offline · saved on this device" : "Saving…") : "Synced to your Google account") : "Connecting…";
   el.hidden = S.authState !== "in";
@@ -1135,6 +1195,7 @@ async function flushAll() {
 function teardown() {
   Object.keys(ST.subs).forEach(unsubscribe);
   S.docs = {}; S.hist = {}; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
+  S.base = {}; S.waiting = {}; S.inflight = {};
   ST.uid = null; S.mode = "connecting"; profileReady = false; S.loaded = {}; S.loadErr = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
 }
 function authMessage(e) {
@@ -1253,7 +1314,7 @@ async function loadCore(uid) {
     try {
       const snaps = await Promise.all(ids.map(id => ref(id).get()));
       if (ST.uid !== uid) return false;
-      snaps.forEach((sn, k) => { const id = ids[k]; S.loaded[id] = true; if (sn.exists) { S.docs[id] = S.docs[id] && S.last[id] ? deepMerge(sn.data(), S.docs[id]) : clone(sn.data()); LS.set(id, S.docs[id]); } });
+      snaps.forEach((sn, k) => { const id = ids[k]; S.loaded[id] = true; if (absorb(id, sn.exists ? sn.data() : undefined)) setTimeout(() => touch(id), 0); });
       S.loadErr = false; return true;
     } catch (e) { await new Promise(r => setTimeout(r, 800 * (attempt + 1))); if (ST.uid !== uid) return false; }
   }
@@ -1284,7 +1345,7 @@ async function init() {
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     if (START_URL) openFromUrl(START_URL);
     loadHistory(); render();
-    loadNotify().then(() => { if (S.tab === "compass") render(); });
+    loadNotify().then(() => scheduleRender());
     if (!onboarded()) msResume();
     resumeDeleteIfAsked();
   });
@@ -2232,9 +2293,11 @@ function render() {
   $("#heading").textContent = (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared";
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
-  $("#tabs").innerHTML = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
+  let tabsHtml = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
   if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); migrateAlt(); }
-  $("#tabs").innerHTML = $("#tabs").innerHTML.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
+  tabsHtml = tabsHtml.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
+  /* only touch the tab bar when it changes: replacing it mid-tap swallowed the tap */
+  if (S.tabsHtml !== tabsHtml) { $("#tabs").innerHTML = tabsHtml; S.tabsHtml = tabsHtml; }
   $("#main").innerHTML = ({ today: rToday, week: rWeek, tasks: rTasks, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
   $("#fab").hidden = false;
   renderSheet(); updSync();
