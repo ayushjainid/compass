@@ -90,6 +90,9 @@ button:disabled{cursor:default}
 .islandx{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
 .islandx .obprog{margin:0}
 body.landing .island{display:none}
+.ntrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.ntime{display:flex;align-items:center;gap:12px;padding:0 0 10px}.ntime .flabel{margin:0;flex:1}.ntime input{max-width:150px}
+.ntios{margin-top:4px}
 .csecs{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .csec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);scroll-margin-top:12px}
 .csh{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;min-height:60px}
@@ -1183,6 +1186,8 @@ async function deleteAccount(confirmed) {
     Object.keys(T).forEach(k => { clearTimeout(T[k]); T[k] = null; }); Object.keys(DIRTY).forEach(k => { DIRTY[k] = false; });
     Object.keys(ST.subs).forEach(unsubscribe);
     step("Deleting your data…");
+    try { const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+    try { await within(FB.deleteDoc(FB.doc(ST.fs, "notify", ST.uid)), 10000, "timeout"); } catch (e) {}
     let ids = [];
     try { ids = (await within(FB.getDocs(FB.collection(ST.fs, "users", ST.uid, "docs")), 15000, "timeout")).docs.map(d => d.id); }
     catch (e) { ids = []; }
@@ -1276,11 +1281,105 @@ async function init() {
     if (!(await loadCore(u.uid))) return;
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
+    if (START_URL) openFromUrl(START_URL);
     loadHistory(); render();
+    loadNotify().then(() => { if (S.tab === "compass") render(); });
     if (!onboarded()) msResume();
     resumeDeleteIfAsked();
   });
 }
+/* ============ check-in reminders: at most one evening nudge + a Sunday review, sent by the Cloudflare Worker ============ */
+const VAPID = () => String(window.COMPASS_VAPID_PUBLIC || "").trim();
+const pushCapable = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const myTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (e) { return "UTC"; } };
+const ntRef = () => FB.doc(ST.fs, "notify", ST.uid);
+const defaultEve = () => tstr(Math.max(18 * 60, wakeBed(myWeek()).bed - 90));
+/* the same rule the Worker uses: the next moment after `after` when this device's clock reads hhmm (dow 0 = Mon … 6 = Sun) */
+function nextLocal(hhmm, after = Date.now(), dow = null) {
+  if (!/^\d{1,2}:\d{2}$/.test(hhmm || "")) return null;
+  const [h, m] = hhmm.split(":").map(Number);
+  for (let i = 0; i < 9; i++) { const d = new Date(after); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i); if (dow !== null && (d.getDay() + 6) % 7 !== dow) continue; d.setHours(h, m, 0, 0); if (d.getTime() > after) return d; }
+  return null;
+}
+function b64uBytes(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; const b = atob(s), o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; }
+async function ntSave(patch) { if (!ST.uid) return; S.nt = Object.assign(S.nt || {}, patch); try { await FB.setDoc(ntRef(), patch, { merge: true }); } catch (e) { console.warn("reminders", e); } }
+async function loadNotify() {
+  if (!VAPID() || !ST.uid) return;
+  try { const sn = await FB.getDoc(ntRef()); S.nt = sn.exists() ? sn.data() : {}; } catch (e) { S.nt = {}; }
+  if (S.nt.on && pushCapable() && Notification.permission === "granted") {
+    try { const reg = await navigator.serviceWorker.register("/sw.js"); const sub = await reg.pushManager.getSubscription();
+      if (!sub) await ntSubscribe(reg); else if (!S.nt.sub || S.nt.sub.endpoint !== sub.endpoint) await ntSave({ sub: sub.toJSON() }); } catch (e) {}
+  }
+  touchNotify();
+}
+/* opening Compass counts as checking in: tonight's nudge is skipped, and a run of ignored nudges resets */
+function touchNotify() {
+  const n = S.nt; if (!n || !n.on || !ST.uid) return;
+  const patch = {}, tz = myTz();
+  if (n.last !== todayKey()) { patch.last = todayKey(); patch.ign = 0; }
+  if (n.tz !== tz) { patch.tz = tz; patch.nextEve = n.eve ? nextLocal(n.eve) : null; patch.nextRev = n.rev ? nextLocal(n.rev, Date.now(), 6) : null; }
+  if (Object.keys(patch).length) ntSave(patch);
+}
+async function ntSubscribe(reg) {
+  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
+  await ntSave({ sub: sub.toJSON() });
+  return sub;
+}
+async function ntEnable() {
+  if (!pushCapable()) return;
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") { S.ntBlocked = perm === "denied"; render(); if (perm !== "denied") toast("Reminders stay off."); return; }
+  S.ntBusy = true; render();
+  try {
+    const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
+    const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
+    const n = S.nt || {}, eve = n.eve === undefined ? defaultEve() : n.eve || defaultEve(), rev = n.rev === undefined ? "18:00" : n.rev || "18:00";
+    await ntSave({ on: true, sub: sub.toJSON(), tz: myTz(), eve, rev, nextEve: nextLocal(eve), nextRev: nextLocal(rev, Date.now(), 6), last: todayKey(), ign: 0, revDone: reviewedMonday() });
+    toast("Reminders on");
+  } catch (e) { console.warn(e); toast("Couldn't turn reminders on. Try again in a moment."); }
+  S.ntBusy = false; render();
+}
+async function ntDisable() {
+  try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+  await ntSave({ on: false, sub: null, nextEve: null, nextRev: null }); toast("Reminders off"); render();
+}
+function ntSet(kind, value) {
+  const n = S.nt || {}; if (!n.on) return;
+  if (kind === "eve") ntSave({ eve: value, nextEve: value ? nextLocal(value) : null });
+  else ntSave({ rev: value, nextRev: value ? nextLocal(value, Date.now(), 6) : null });
+  render();
+}
+function reviewedMonday() { const id = thisWk(), w = anyWeek(id); return w && w.r && w.r.done ? id.slice(2) : ""; }
+async function ntTest() {
+  try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.showNotification("How did today go?", { body: "This is how your evening check-in will look.", tag: "compass-test", icon: "/icons/icon-192.png" }); else toast("Turn reminders on first."); } catch (e) { toast("Your browser blocked the test."); }
+}
+function remindersSection() {
+  if (!VAPID()) return "";
+  const n = S.nt || {}, on = !!n.on && !!n.sub;
+  const sum = on ? [n.eve ? "Check-in " + t12(n.eve) : "", n.rev ? "Sunday review " + t12(n.rev) : ""].filter(Boolean).join(" · ") || "On, both nudges paused" : "Off · two gentle nudges at most";
+  const why = `<p class="hint" style="margin:0 0 10px">At most one evening check-in, skipped on days you've already opened Compass, plus a Sunday nudge for your review. If a few go unanswered they ease off on their own. Alerts for individual floors come from your calendar export.</p>`;
+  let body;
+  if (on) body = `${why}
+    <div class="ntrow"><div><b>Evening check-in</b><div class="hint">Only if you haven't opened Compass that day.</div></div><button class="switch" role="switch" aria-checked="${!!n.eve}" data-act="ntToggle" data-k="eve" aria-label="Evening check-in"></button></div>
+    ${n.eve ? `<div class="ntime"><label class="flabel" for="nt-eve">Time</label><input type="time" id="nt-eve" data-nt="eve" value="${esc(n.eve)}"></div>` : ""}
+    <div class="ntrow"><div><b>Sunday review</b><div class="hint">Skipped once the week is reviewed.</div></div><button class="switch" role="switch" aria-checked="${!!n.rev}" data-act="ntToggle" data-k="rev" aria-label="Sunday review"></button></div>
+    ${n.rev ? `<div class="ntime"><label class="flabel" for="nt-rev">Time on Sunday</label><input type="time" id="nt-rev" data-nt="rev" value="${esc(n.rev)}"></div>` : ""}
+    <div class="row" style="margin-top:12px"><button class="btn" data-act="ntTest">Show a test</button><button class="btn quiet danger" data-act="ntOff">Turn off</button></div>`;
+  else if (isIOS() && !isStandalone()) body = `${why}<div class="card pad ntios"><b>On iPhone, add Compass to your Home Screen first</b><div class="hint">In Safari tap Share, then <b>Add to Home Screen</b>. Open Compass from that icon and turn reminders on there.</div></div>`;
+  else if (!pushCapable()) body = `${why}<p class="hint" style="margin:0">This browser can't show reminders. Try Chrome, Edge, Firefox or Safari on a recent device.</p>`;
+  else if (S.ntBlocked || Notification.permission === "denied") body = `${why}<p class="hint" style="margin:0 0 10px">Notifications are blocked for Compass. Allow them in your browser's site settings (or your phone's settings for the Home Screen app), then try again.</p><button class="btn" data-act="ntOn">Try again</button>`;
+  else body = `${why}<button class="btn primary" data-act="ntOn" ${S.ntBusy ? "disabled" : ""}>${S.ntBusy ? "Turning on…" : "Turn on reminders"}</button>`;
+  return cSec("remind", "Reminders", esc(sum), body);
+}
+/* opened from a reminder: jump to the right tab */
+function openFromUrl(u) {
+  try { const q = new URL(u, location.origin).searchParams, tab = q.get("tab"); if (tab && ["today", "week", "tasks", "review", "compass"].includes(tab)) { S.tab = tab; window.scrollTo(0, 0); } } catch (e) {}
+}
+if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => { if (e.data && e.data.type === "open") { openFromUrl(e.data.url); render(); } });
+const START_URL = location.href;
+if (/[?&](tab|from)=/.test(location.search)) history.replaceState(null, "", location.pathname);
 /* no pinch zoom on phones and tablets: iOS ignores user-scalable=no, so cancel its gesture events */
 if (matchMedia("(pointer:coarse)").matches) ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
@@ -1305,7 +1404,7 @@ async function checkForUpdate() {
   } catch (e) {}
 }
 setTimeout(checkForUpdate, 3000); setInterval(checkForUpdate, 30 * 60 * 1000);
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForUpdate(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { checkForUpdate(); touchNotify(); } });
 if (/[?&]v=\d+/.test(location.search)) history.replaceState(null, "", location.pathname + location.hash);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushAll(); });
 
@@ -2846,6 +2945,7 @@ function rCompass(id, F, trips, sugg) {
   ${cSec("cal", "Calendar", placed.length ? `${placed.length} floor${placed.length > 1 ? "s" : ""} planned${left ? ` · ${left} to place` : ""}` : "Nothing planned yet", `
     <div class="impcard"><span class="glyph">${ICON.cal}</span><div style="flex:1"><div class="hint" style="margin:0">${left ? `${left} session${left > 1 ? "s" : ""} still to place. ` : ""}Plan days and times in Week → Plan, then export them to Apple or Google Calendar in one file.</div></div></div>
     <div class="calbtns"><button class="btn" data-act="gotoPlan">Plan my week</button><button class="btn primary" data-act="icsOpen" ${placed.length || buildIcs().n ? "" : "disabled"}>Export to calendar</button></div>`)}
+  ${remindersSection()}
   ${cSec("app", "Settings", "Colours, backup, run setup again", `
     <span class="flabel">Colours</span>
     <div style="margin:6px 0 16px">${themePicker()}</div>
@@ -3712,7 +3812,7 @@ document.addEventListener("click", e => {
     case "mvw": editWeek(w => { w.mvw = !isMvw(w, curWid()); }); break;
     case "felt": editWeek(w => { const v = +b.dataset.v; w.r.felt = w.r.felt === v ? null : v; }); break;
     case "starve": editWeek(w => { const a = w.r.starved || [], v = b.dataset.v; w.r.starved = a.includes(v) ? a.filter(x => x !== v) : a.concat(v); }); break;
-    case "reviewDone": { let done; editWeek(w => { w.r.done = !w.r.done; w.r.doneAt = tk; done = w.r.done; }); render(); if (done) { burst($("#reviewDoneBtn"), "var(--good)", 14); toast("Week reviewed. See you next Sunday."); } return; }
+    case "reviewDone": { let done; editWeek(w => { w.r.done = !w.r.done; w.r.doneAt = tk; done = w.r.done; }); if (S.nt && S.nt.on && curWid() === thisWk()) ntSave({ revDone: done ? thisWk().slice(2) : "" }); render(); if (done) { burst($("#reviewDoneBtn"), "var(--good)", 14); toast("Week reviewed. See you next Sunday."); } return; }
     case "preMvw": editSettings(s => { s.preMvw = s.preMvw || {}; const n = wid(addDays(S.viewMon, 7)); if (s.preMvw[n]) delete s.preMvw[n]; else s.preMvw[n] = true; }); break;
     case "inboxDel": editSettings(s => { s.inbox = (s.inbox || []).filter(x => x.id !== b.dataset.id); }); break;
     case "pCalled": {
@@ -3746,6 +3846,10 @@ document.addEventListener("click", e => {
       break;
     }
     /* compass tab */
+    case "ntOn": ntEnable(); return;
+    case "ntOff": ntDisable(); return;
+    case "ntTest": ntTest(); return;
+    case "ntToggle": { const k = b.dataset.k, n = S.nt || {}; ntSet(k, n[k] ? "" : (k === "eve" ? defaultEve() : "18:00")); return; }
     case "cSec": { const k = b.dataset.k, o = cOpen(); o.has(k) ? o.delete(k) : o.add(k); try { localStorage.setItem(CSEC_KEY, JSON.stringify([...o])); } catch (e) {} render(); const sec = document.getElementById("csec-" + k); if (sec && o.has(k) && sec.getBoundingClientRect().top < 70) sec.scrollIntoView({ block: "start" }); return; }
     case "editComp": { const c = compById(b.dataset.id); if (c) openComp(c, false); break; }
     case "addComp": S.sheet = { type: "pick", value: b.dataset.value }; break;
@@ -3836,6 +3940,7 @@ document.addEventListener("input", e => {
   }
 });
 document.addEventListener("change", e => {
+  if (e.target && e.target.dataset && e.target.dataset.nt) { ntSet(e.target.dataset.nt, e.target.value); return; }
   const t = e.target, ds = t.dataset;
   if (ds.mplan) {
     const cid = ds.mplan, v = t.value, oldYm = ds.ym, newYm = v ? v.slice(0, 7) : oldYm;

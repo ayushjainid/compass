@@ -36,7 +36,7 @@
         ]
       },
       {
-        "source": "/@(firebase-config.js|import.js|ms-auth.html|manifest.webmanifest|privacy.html|terms.html|legal.css)",
+        "source": "/@(firebase-config.js|import.js|ms-auth.html|manifest.webmanifest|privacy.html|terms.html|legal.css|sw.js)",
         "headers": [
           {
             "key": "Cache-Control",

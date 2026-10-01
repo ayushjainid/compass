@@ -101,6 +101,35 @@ Your setup, weeks, people and theme come across.
 | Google Calendar | Adds events directly (once the connector works) | Opens Google Calendar with each block pre-filled as a repeating event |
 | Works offline | No | Yes |
 
+## 8. Check-in reminders (optional, free)
+
+Compass can send **at most one evening check-in a day** (skipped on days you've already opened it) and a **Sunday review** nudge. They're sent by a tiny scheduler on Cloudflare Workers' free plan; alerts for individual floors come from the calendar export instead. Until you do this, the Reminders section stays hidden.
+
+You need a free Cloudflare account. From the repo folder:
+
+```bash
+cd worker
+npm install
+npm run keys                       # makes the push keys; prints a PRIVATE key once
+npx wrangler login                 # opens the browser to sign in to Cloudflare
+npx wrangler secret put VAPID_PRIVATE   # paste the private key it printed
+```
+
+Then give the Worker read/write access to the `notify` collection with a Firebase service account:
+
+1. Firebase console → ⚙ **Project settings** → **Service accounts** → **Generate new private key**. A `.json` file downloads. Keep it private; don't commit it.
+2. `npx wrangler secret put FIREBASE_SA < path/to/that-file.json`
+3. In `worker/wrangler.toml`, set `VAPID_SUBJECT` to `mailto:` plus your email (push services use it if something goes wrong).
+4. Deploy both parts:
+   ```bash
+   npx wrangler deploy                # the scheduler, runs every minute
+   cd .. && npx firebase-tools deploy # the app (it now knows the public key) and the database rules
+   ```
+
+Open Compass → **Compass** tab → **Reminders** → **Turn on reminders**. On iPhone, add Compass to your Home Screen first (Safari → Share → Add to Home Screen) and turn reminders on from that icon; iPhone only allows notifications for web apps opened that way. Watch the scheduler with `cd worker && npm run tail`.
+
+**How far the free plan goes.** Each run may use 10 ms of CPU, which is about 8 reminders a minute, or roughly 11,000 a day. People who pick the same minute are served over the following minutes, so a few hundred people sharing one time still get theirs within about a minute or two each. The other ceiling is Firestore's free quota (50,000 reads and 20,000 writes a day), which the app itself already uses: reminders add only about 2 reads and 2 writes per person per day, so the app's own use will run out first. Beyond either limit, Workers Paid ($5/month) lets you set `PER_RUN = "200"` in `wrangler.toml`, and extra Firestore use costs cents per 100,000 operations.
+
 ## Troubleshooting
 
 - **"This address isn't allowed to sign in yet"**: add the domain under Authentication → Settings → Authorized domains. Only your project's own `PROJECT-ID.web.app` and `PROJECT-ID.firebaseapp.com` are allowed automatically; extra sites like `life-compass.web.app` must be added.
@@ -125,5 +154,6 @@ You don't need to redeploy, or clear cookies, to see a change.
 ## For developers
 
 - Rebuild the bundled SDK after changing `src/firebase.js`: `npm install && npm run build:sdk`.
-- Data lives at `users/{uid}/docs/{docId}`, with docs `profile`, `settings`, `people` and one per week (`w-YYYY-MM-DD`, Monday of that week).
+- Data lives at `users/{uid}/docs/{docId}`, with docs `profile`, `settings`, `people` and one per week (`w-YYYY-MM-DD`, Monday of that week). Reminder settings live at `notify/{uid}` (top level, so the Worker can find due ones with one indexed query on `nextEve` / `nextRev`).
+- The reminders Worker is in `worker/`: `src/plan.js` decides, `src/push.js` encrypts (RFC 8291) and signs (VAPID) with WebCrypto only, `src/firestore.js` talks to Firestore's REST API.
 - Firebase SDK 12.19.0, bundled with esbuild.

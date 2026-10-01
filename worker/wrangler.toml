@@ -1,0 +1,17 @@
+# Compass check-in reminders (Cloudflare Workers, free plan)
+name = "compass-reminders"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]   # every minute
+
+[vars]
+FIREBASE_PROJECT = "compass-ayush"              # your Firebase project id
+VAPID_PUBLIC = ""                           # filled in by `npm run keys`
+VAPID_SUBJECT = "mailto:you@example.com"    # a contact address push services can reach
+
+# Secrets (never committed), set with:
+#   npx wrangler secret put VAPID_PRIVATE
+#   npx wrangler secret put FIREBASE_SA     (paste the service-account JSON)

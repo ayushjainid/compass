@@ -14,3 +14,6 @@ window.COMPASS_FIREBASE_CONFIG = {
 // Microsoft To Do import (optional): the Application (client) ID of a free Microsoft app registration.
 // Leave empty to hide the Connect button; the Outlook CSV route still works. It is public by design (no secret).
 window.COMPASS_MS_CLIENT_ID = "";
+
+// Check-in reminders (optional): the public VAPID key from `cd worker && npm run keys`. Empty hides Reminders.
+window.COMPASS_VAPID_PUBLIC = "";

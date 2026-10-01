@@ -5,6 +5,10 @@ service cloud.firestore {
     match /users/{uid}/docs/{docId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    // Reminder settings and this device's push address; the reminders Worker reads them with a service account.
+    match /notify/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

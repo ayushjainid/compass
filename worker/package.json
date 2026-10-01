@@ -1,0 +1,15 @@
+{
+  "name": "compass-reminders",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "keys": "node gen-vapid.mjs",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "test": "node test/unit.mjs && node test/run.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4",
+    "http_ece": "^1.2.0"
+  }
+}
