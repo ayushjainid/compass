@@ -1285,7 +1285,8 @@ function resumeDeleteIfAsked() {
 }
 async function signOutNow() {
   if ([T, IN, DIRTY].some(m => Object.values(m).some(Boolean))) toast("Saving your changes…");
-  if (!(await flushAll()) && navigator.onLine === false) { toast("You're offline. Your latest changes will sync next time you sign in on this device."); }
+  const flushed = await flushAll();
+  if (Object.keys(S.waiting || {}).length || (!flushed && navigator.onLine === false)) { toast("You're offline with changes that haven't synced yet. Reconnect, then sign out, so nothing is lost."); return; }
   try { const pre = "compass:" + ST.uid + ":"; Object.keys(localStorage).filter(k => k.startsWith(pre)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   teardown(); S.authState = "loading"; render();
   try { await FB.signOut(ST.auth); } catch (e) {}
@@ -1298,15 +1299,36 @@ function exportData() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "compass-" + todayKey() + ".json";
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
-async function importData(file) {
+/* restore from a backup file made by "Download a backup": checked first, then confirmed, then written */
+const RESTORE_IDS = /^(profile|settings|people|tasks|w-\d{4}-\d{2}-\d{2})$/;
+async function readBackup(file) {
   try {
+    if (file.size > 20 * 1024 * 1024) throw new Error("too big");
     const j = JSON.parse(await file.text());
-    if (!j || j.app !== "compass" || typeof j.docs !== "object") throw new Error("not a Compass export");
-    const ids = Object.keys(j.docs).filter(k => /^(profile|settings|people|tasks|w-\d{4}-\d{2}-\d{2})$/.test(k));
-    ids.forEach(id => { S.docs[id] = clone(j.docs[id]); if (id.startsWith("w-")) S.hist[id] = clone(j.docs[id]); touch(id); });
-    S.ob = null; S.importMsg = `Imported ${ids.filter(i => i.startsWith("w-")).length} weeks and your setup.`;
-  } catch (e) { S.importMsg = "That file isn't a Compass export. Choose the .json file Compass saved."; }
+    if (!j || j.app !== "compass" || !isObj(j.docs)) throw new Error("not a Compass export");
+    const ids = Object.keys(j.docs).filter(k => RESTORE_IDS.test(k) && isObj(j.docs[k]));
+    if (!ids.length) throw new Error("empty");
+    const weeks = ids.filter(i => i.startsWith("w-")).sort();
+    S.sheet = { type: "restore", name: file.name, at: j.exportedAt || "", ids, docs: j.docs, weeks };
+  } catch (e) { S.sheet = { type: "restore", error: e.message === "too big" ? "That file is too large to be a Compass backup." : "That file isn't a Compass backup. Choose the .json file Compass saved when you tapped Download a backup." }; }
   render();
+}
+function doRestore() {
+  const sh = S.sheet; if (!sh || !sh.docs) return;
+  sh.ids.forEach(id => { S.docs[id] = clone(sh.docs[id]); if (id.startsWith("w-")) S.hist[id] = clone(sh.docs[id]); touch(id); });
+  S.ob = null; S.sheet = null; S.selDay = todayKey(); S.viewMon = monday(new Date());
+  toast(`Restored ${sh.weeks.length ? sh.weeks.length + " week" + (sh.weeks.length === 1 ? "" : "s") + " and " : ""}your setup`);
+  render();
+}
+function restoreSheet() {
+  const sh = S.sheet;
+  if (sh.error) return `<div class="in"><div class="grab"></div><h2 style="margin:0">Can't restore that file</h2><p class="lede" style="margin:0">${esc(sh.error)}</p><button class="btn" data-act="closeSheet">OK</button></div>`;
+  const when = sh.at ? new Date(sh.at) : null, has = k => sh.ids.includes(k);
+  const parts = [has("profile") ? "your values, floors and week setup" : "", has("tasks") ? "tasks" : "", has("people") ? "people" : "", has("settings") ? "settings and monthly plans" : ""].filter(Boolean);
+  return `<div class="in"><div class="grab"></div><h2 style="margin:0">Restore this backup?</h2>
+    <div class="card pad"><b>${esc(sh.name || "Backup")}</b><div class="hint">${when && !isNaN(when) ? "Saved " + esc(when.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })) + " · " : ""}${sh.weeks.length} week${sh.weeks.length === 1 ? "" : "s"}${sh.weeks.length === 1 ? ` (week of ${esc(fmtShort(parse(sh.weeks[0].slice(2))))})` : sh.weeks.length ? ` (weeks of ${esc(fmtShort(parse(sh.weeks[0].slice(2))))} to ${esc(fmtShort(parse(sh.weeks[sh.weeks.length - 1].slice(2))))})` : ""}${parts.length ? " · " + esc(parts.join(", ")) : ""}</div></div>
+    <p class="hint" style="margin:0">This replaces what's in Compass now with the backup's version of each of these. Weeks that aren't in the file stay as they are. On your other devices it shows up the next time they open.</p>
+    <div class="row" style="margin-top:6px"><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn danger" data-act="restoreYes">Restore</button></div></div>`;
 }
 async function loadCore(uid) {
   const ids = ["profile", "settings", "people", "tasks", "obdraft", curWid()];
@@ -3026,6 +3048,8 @@ function rCompass(id, F, trips, sugg) {
     <div style="margin:6px 0 16px">${themePicker()}</div>
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Download a backup</b><div class="hint">A .json file of everything you've entered: setup, every week, journal and tasks.</div></div>
       <button class="btn" data-act="export">Export</button></div>
+    <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Restore from a backup</b><div class="hint">Choose a file you downloaded here. You'll see what's in it before anything changes.</div></div>
+      <label class="btn" for="restoreFile">Choose file</label><input type="file" id="restoreFile" accept=".json,application/json" class="sr"></div>
     <div class="row" style="padding:12px 0 0;border-top:1px solid var(--line)"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div>`)}
   </div>`;
 }
@@ -3062,6 +3086,7 @@ function renderSheetBody() {
       <button class="btn quiet" data-act="closeSheet">Cancel</button></div></div>`;
     S.sheet.lib = lib; return;
   }
+  if (sh.type === "restore") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="alertdialog" aria-label="Restore a backup">${restoreSheet()}</div>`; return; }
   if (sh.type === "clearPlan") {
     const placed = weeklyPlannable().filter(c => planDays(c).length), n = placed.reduce((a, c) => a + planDays(c).length, 0);
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="alertdialog" aria-label="Start the plan over?"><div class="in"><div class="grab"></div>
@@ -3785,6 +3810,7 @@ document.addEventListener("click", e => {
     case "delAcctYes": deleteAccount(false); return;
     case "account": S.sheet = { type: "account" }; if (S.ob) { renderSheet(); return; } break;
     case "export": exportData(); return;
+    case "restoreYes": doRestore(); return;
     /* app */
     case "tab": S.tab = b.dataset.t; S.confirm = null; if (S.tab === "review") loadHistory(); window.scrollTo(0, 0); break;
     case "prevWk": case "nextWk": {
@@ -4050,7 +4076,7 @@ document.addEventListener("change", e => {
   if (t.id === "impFiles" && t.files && t.files.length) { impAddFiles([...t.files]); t.value = ""; return; }
   if (ds.wkt) { const tgt = S.ob && !S.sheet ? (S.ob.d.week = S.ob.d.week || Object.assign({}, WEEK_DEFAULT)) : S.sheet && S.sheet.type === "week" ? S.sheet.draft : null; if (tgt && t.value) { tgt[ds.wkt] = t.value; if (S.ob && !S.sheet) updateOb(); else renderSheet(); } return; }
   if (ds.impu !== undefined && S.imp && S.imp.sel) { S.imp.sel.unplaced[+ds.impu] = t.value; return; }
-  if (t.id === "importFile" && t.files && t.files[0]) { importData(t.files[0]); t.value = ""; return; }
+  if (t.id === "restoreFile" && t.files && t.files[0]) { readBackup(t.files[0]); t.value = ""; return; }
   if (ds.c === "value" && S.sheet && S.sheet.draft) S.sheet.draft.value = t.value;
   else if (ds.cfrom && S.sheet && S.sheet.draft) { S.sheet.draft.from = t.value; S.sheet.draft.gcal = false; renderSheet(); }
   else if (ds.j || ds.cap) scheduleRender();
