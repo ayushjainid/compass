@@ -2565,6 +2565,8 @@ function icsFold(line) { const out = []; let l = line; while (l.length > 74) { o
 const icsStamp = d => d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + "T" + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + "Z";
 const icsLocal = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "T" + pad(d.getHours()) + pad(d.getMinutes()) + "00";
 const icsDay = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
+/* timed events carry an alert at their start; all-day ones stay silent so nothing pings at midnight */
+function icsAlarm(push, name) { const m = S.icsAlert ?? 0; if (m < 0) return; push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(name), `TRIGGER:-PT${m}M`, "END:VALARM"); }
 function buildIcs() {
   const zone = tz(), now = new Date(), start = monday(new Date()), L = [];
   const push = (...xs) => xs.forEach(x => L.push(icsFold(x)));
@@ -2582,7 +2584,7 @@ function buildIcs() {
       push("BEGIN:VEVENT", `UID:compass-${c.id}-${t.replace(":", "") || "any"}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now));
       if (t) { const [h, m] = t.split(":").map(Number); const s0 = new Date(first); s0.setHours(h, m, 0, 0); const e0 = new Date(s0.getTime() + durOf(c) * 60000); push(`DTSTART${zone ? ";TZID=" + zone : ""}:${icsLocal(s0)}`, `DTEND${zone ? ";TZID=" + zone : ""}:${icsLocal(e0)}`); }
       else push("DTSTART;VALUE=DATE:" + icsDay(first), "DTEND;VALUE=DATE:" + icsDay(addDays(first, 1)), "TRANSP:TRANSPARENT");
-      push(rule, "SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. ${freqWords(c)}. Hold it loosely.`), "END:VEVENT"); n++;
+      push(rule, "SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. ${freqWords(c)}. Hold it loosely.`)); if (t) icsAlarm(push, c.name); push("END:VEVENT"); n++;
     });
   });
   /* daily floors with no days set: all-day events every day, one each or combined (export sheet choice) */
@@ -2598,7 +2600,7 @@ function buildIcs() {
       push("BEGIN:VEVENT", `UID:compass-${cid}-${pl.date}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now));
       if (pl.time) { const [h, m] = pl.time.split(":").map(Number); d.setHours(h, m, 0, 0); push(`DTSTART${zone ? ";TZID=" + zone : ""}:${icsLocal(d)}`, `DTEND${zone ? ";TZID=" + zone : ""}:${icsLocal(new Date(d.getTime() + durOf(c) * 60000))}`); }
       else push("DTSTART;VALUE=DATE:" + icsDay(d), "DTEND;VALUE=DATE:" + icsDay(addDays(d, 1)), "TRANSP:TRANSPARENT");
-      push("SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. Monthly floor.`), "END:VEVENT"); n++;
+      push("SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. Monthly floor.`)); if (pl.time) icsAlarm(push, c.name); push("END:VEVENT"); n++;
     });
   });
   push("END:VCALENDAR");
@@ -2615,6 +2617,8 @@ function icsSheet() {
   const { n } = buildIcs();
   return `<div class="in"><div class="grab"></div><h2 style="margin:0">Add your plan to a calendar</h2>
     <p class="lede" style="margin:0">${n ? `${n} repeating block${n > 1 ? "s" : ""} and one-offs in one file.` : "Nothing planned yet. Place a floor on a day first."}</p>
+    <div class="fl"><span class="flabel">Alerts for timed blocks</span><div class="seg">${[[0, "At start"], [10, "10 min before"], [-1, "None"]].map(([k, l]) => `<button data-act="icsAlert" data-v="${k}" aria-pressed="${(S.icsAlert ?? 0) === k}">${l}</button>`).join("")}</div>
+      <div class="hint">Apple Calendar keeps these. Google Calendar drops alerts from imported files: set default notifications on your Compass calendar in Google Calendar's settings instead.</div></div>
     ${comps().some(c => !c.fun && c.cadence === "daily" && c.auto !== "journal" && !planDays(c).length) ? `<div class="fl"><span class="flabel">Daily floors without a time</span><div class="seg">${[["each", "All-day, one each"], ["one", "One all-day list"], ["none", "Leave out"]].map(([k, l]) => `<button data-act="icsDaily" data-v="${k}" aria-pressed="${(S.icsDaily || "each") === k}">${l}</button>`).join("")}</div></div>` : ""}
     <button class="btn primary" data-act="icsDownload" ${n ? "" : "disabled"}>Download calendar file (.ics)</button>
     <div class="card"><div class="field"><span class="flabel">Apple Calendar · iPhone or Mac</span><span>Open the downloaded file and choose <b>Add All</b>. On iPhone, tap it from the download bar or the Files app.</span></div>
@@ -3690,6 +3694,7 @@ document.addEventListener("click", e => {
     case "icsOpen": S.sheet = { type: "ics" }; break;
     case "icsDownload": downloadIcs(); return;
     case "icsDaily": S.icsDaily = b.dataset.v; renderSheet(); return;
+    case "icsAlert": S.icsAlert = +b.dataset.v; renderSheet(); return;
     case "planDone": {
       const c = compById(k); if (!c) return; let on;
       editWeek(w => { const dd = dayObj(w, S.selDay); dd.p = dd.p || {}; dd.p[k] = !dd.p[k]; on = dd.p[k]; });
