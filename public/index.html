@@ -1353,7 +1353,7 @@ function ntSet(kind, value) {
 }
 function reviewedMonday() { const id = thisWk(), w = anyWeek(id); return w && w.r && w.r.done ? id.slice(2) : ""; }
 async function ntTest() {
-  try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.showNotification("How did today go?", { body: "This is how your evening check-in will look.", tag: "compass-test", icon: "/icons/icon-192.png" }); else toast("Turn reminders on first."); } catch (e) { toast("Your browser blocked the test."); }
+  try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.showNotification("Psst, it's your compass", { body: "I can't point north if you don't tell me where you went today. (Just a test.)", tag: "compass-test", icon: "/icons/icon-192.png" }); else toast("Turn reminders on first."); } catch (e) { toast("Your browser blocked the test."); }
 }
 function remindersSection() {
   if (!VAPID()) return "";

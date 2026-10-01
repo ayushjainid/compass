@@ -5,18 +5,33 @@ export const STALE_MS = 2 * 3600e3;   // a reminder more than 2 h late is skippe
 export const SLOW_AFTER = 3;           // ignored evening nudges before dropping to every other day
 export const STOP_AFTER = 6;           // ignored evening nudges before evenings pause (Sunday review stays)
 
+// Light and warm, never guilt-trippy. Rotated so the same line never shows two evenings running.
 const EVENING = [
-  ["How did today go?", "Tick what happened. It takes ten seconds."],
-  ["Close the day", "Log what moved and let the rest go."],
-  ["Quick check-in", "What held today? Compass keeps the tally."],
-  ["Today, in a few taps", "Floors cleared count. Misses are just data."],
-  ["Before you wind down", "Two minutes to mark today, then rest."],
-  ["One look at today", "Tick the floors you held. One miss is noise."],
+  ["Your floors are waiting", "Not judging. Just waiting. Ten seconds to tick today."],
+  ["Psst, it's your compass", "I can't point north if you don't tell me where you went today."],
+  ["Day's almost done", "Tick what happened before it turns into \"what even happened\"."],
+  ["Quick one", "Did today count? Spoiler: probably more than you think."],
+  ["Your needle is spinning", "Two taps and it settles. Promise."],
+  ["Tiny check-in, big vibes", "Log today faster than you can pick a show."],
+  ["Knock knock", "Who's there? Today. Today who? Today, waiting to be ticked."],
+  ["Floors, not ceilings", "Even one cleared floor is a win. Come claim it."],
+  ["Before the couch wins", "A quick tick now, guilt-free scrolling after."],
+  ["Hey, you did stuff today", "Probably. Let's find out together."],
+  ["Compass here 🧭", "Recalibrating needs data. You are the data."],
+  ["Evening, legend", "Ten seconds of ticking, then the night is all yours."],
+];
+// after a few ignored nights: softer, zero pressure
+const COMEBACK = [
+  ["No streak police here", "Missed a few days? Happens. Today's a clean page."],
+  ["Still rooting for you", "One tap and you're back on the map."],
+  ["The compass missed you", "No catching up needed. Just today."],
 ];
 const REVIEW = [
-  ["Your week in review", "About 25 minutes to see the trend and set next week."],
-  ["Sunday review", "See which floors held and adjust one thing for next week."],
-  ["Look back, then plan", "Your weekly review is ready when you are."],
+  ["Sunday review o'clock", "Grab a tea. Let's see what the week actually looked like."],
+  ["Your week: the director's cut", "25 minutes to watch the plot and plan the sequel."],
+  ["Weekly debrief, captain", "What held, what slipped, one thing to tweak. That's it."],
+  ["The week called", "It wants a quick review before it leaves forever."],
+  ["Plot twist: you did more than you think", "Your Sunday review is ready to prove it."],
 ];
 
 function dayNumber(day) { return Math.floor(Date.parse(day + "T00:00:00Z") / 864e5); }
@@ -45,7 +60,7 @@ export function decide(kind, uid, d, now) {
     if (ign >= STOP_AFTER) return skip("paused after being ignored");
     if (ign >= SLOW_AFTER && d.sentDay === localDay(tz, now - 864e5)) return skip("every other day");
     fields.sentDay = today; fields.ign = ign + 1;
-    const [title, body] = pick(EVENING, uid, dayNumber(today));
+    const [title, body] = pick(ign >= SLOW_AFTER ? COMEBACK : EVENING, uid, dayNumber(today));
     return { send: { title, body, url: "/?from=checkin", tag: "compass-checkin" }, fields, why: "send" };
   }
   if (!d.rev) return skip("off");
