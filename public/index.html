@@ -800,6 +800,16 @@ details.fold[open] summary::before{content:"▾ ";}
 }
 .greet{font:500 15px/1.3 var(--sans);color:var(--ink2);margin:4px 0 2px}
 .greetin{color:var(--ink);font-weight:500}
+.fhist{display:grid;gap:10px}
+.fh{display:grid;grid-template-columns:minmax(0,1fr) auto 34px;align-items:center;gap:10px}
+.fh .nm{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fh .bars{display:flex;align-items:flex-end;gap:3px;height:22px}
+.fh .bars i{display:block;width:9px;height:var(--h,8%);border-radius:2px;background:var(--line)}
+.fh .bars i.ok{background:var(--good)}.fh .bars i.part{background:color-mix(in srgb,var(--brass) 75%,transparent)}
+.fh .bars i.none{background:color-mix(in srgb,var(--muted) 35%,transparent);height:8%}
+.fh .bars i.rest,.fh .bars i.pre{background:none;border-bottom:2px dotted var(--line);height:2px;border-radius:0}
+.fh .bars i.now{outline:1.5px solid var(--ink2);outline-offset:1px}
+.fh .sum{font:500 12.5px/1 var(--sans);font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
 .dtime{color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
 .h3n{font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--muted);margin-left:6px}
 .dayrow .lbl small{display:block}.dayrow .sep{opacity:.7}
@@ -2958,6 +2968,29 @@ function coachCard() {
     ${c && c.err ? `<p class="hint" style="margin:8px 0 0">${esc(c.err)}</p>` : ""}
     <div class="acts" style="margin-top:10px;display:flex;gap:8px">${c && c.busy ? `<button class="btn small" data-act="coachStop">Stop</button>` : `<button class="btn small primary" data-act="coach">${c && c.text ? "Ask again" : "Get a coaching note"}</button>`}</div></div>`;
 }
+/* each floor over the last 8 weeks: one bar per week, filled by how much of the floor was met */
+function floorHistory() {
+  const cur = monday(new Date()), weeks = [7, 6, 5, 4, 3, 2, 1, 0].map(i => wid(addDays(cur, -7 * i)));
+  const since = (profile() || {}).onboardedAt || "";
+  const vals = valueList().map(v => v.id), list = comps().filter(c => !c.fun && c.cadence !== "monthly").sort((a, b) => vals.indexOf(a.value) - vals.indexOf(b.value));
+  if (!list.length) return "";
+  const rows = list.map(c => {
+    let held = 0, counted = 0;
+    const bars = weeks.map((wi, k) => {
+      const end = dkey(addDays(parse(wi.slice(2)), 6)), current = k === weeks.length - 1;
+      if (since && end < since) return `<i class="pre" title="Before you started"></i>`;
+      const w = anyWeek(wi);
+      const f = w ? floorsFor(wi).find(x => x.c.id === c.id) : null;
+      if (w && !f) return `<i class="rest" title="Week of ${esc(fmtShort(parse(wi.slice(2))))}: resting"></i>`;
+      const have = f ? f.have : 0, need = f ? f.need : c.target || 1, pct = Math.max(0, Math.min(1, need ? have / need : 0));
+      if (!current) { counted++; if (have >= need) held++; }
+      return `<i class="${have >= need ? "ok" : pct > 0 ? "part" : "none"}${current ? " now" : ""}" style="--h:${Math.round(8 + pct * 92)}%" title="Week of ${esc(fmtShort(parse(wi.slice(2))))}: ${hFmt(have)}/${hFmt(need)}"></i>`;
+    }).join("");
+    const label = counted ? `${held}/${counted}` : "new";
+    return `<div class="fh" role="img" aria-label="${esc(c.name)}: ${counted ? `held ${held} of the last ${counted} weeks` : "started this week"}"><span class="nm">${esc(c.name)}</span><span class="bars" aria-hidden="true">${bars}</span><span class="sum" aria-hidden="true">${label}</span></div>`;
+  }).join("");
+  return `<h3>Floors, last 8 weeks</h3><div class="card pad fhist">${rows}<p class="hint" style="margin:8px 0 0">Each bar is a week, filled by how much of the floor you met; this week is the outlined one. The number counts finished weeks held.</p></div>`;
+}
 function rReview(id, F, trips, sugg) {
   const w = anyWeek(id) || { r: {} }, r = w.r || {};
   const nextId = wid(addDays(S.viewMon, 7)), pre = !!(settings().preMvw || {})[nextId];
@@ -2997,6 +3030,7 @@ function rReview(id, F, trips, sugg) {
   ${coachCard()}
   <h3>Felt-sense, last 12 weeks</h3>
   <div class="card pad">${spark()}</div>
+  ${floorHistory()}
   <h3>${esc(MONTHS[new Date().getMonth()])}${firstSunday ? " · monthly check today" : ""}</h3>
   <div class="card">
     <div class="field"><span class="flabel">Last four weeks, per value</span><ul class="floors" style="margin:2px 0 0">${trend}</ul><span class="hint">● cleared or resting · ○ missed · dot if not tracked</span></div>
