@@ -17,7 +17,7 @@ service cloud.firestore {
     match /notify/{uid} {
       allow read, delete: if signedIn(uid);
       allow create, update: if signedIn(uid)
-        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'last', 'ign', 'revDone', 'sentDay', 'sentRev'])
+        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk'])
         && (!('sub' in request.resource.data) || request.resource.data.sub == null
             || (request.resource.data.sub is map && request.resource.data.sub.endpoint is string && request.resource.data.sub.endpoint.size() < 1000))
         && (!('tz' in request.resource.data) || (request.resource.data.tz is string && request.resource.data.tz.size() < 64))

@@ -94,6 +94,7 @@ body.landing .island{display:none}
 .ntime{display:flex;align-items:center;gap:12px;padding:0 0 10px}.ntime .flabel{margin:0;flex:1}.ntime input{max-width:150px}
 .ntios{margin-top:4px}
 .ntask{margin:8px 0 14px;border-color:var(--accent)}
+.fade{margin:8px 0 14px;border-color:var(--good)}
 .csecs{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 .csec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);scroll-margin-top:12px}
 .csh{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;min-height:60px}
@@ -1512,6 +1513,23 @@ function ntSet(kind, value) {
 function reviewedMonday() { const id = thisWk(), w = anyWeek(id); return w && w.r && w.r.done ? id.slice(2) : ""; }
 async function ntTest() {
   try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.showNotification("Psst, it's your compass", { body: "I can't point north if you don't tell me where you went today. (Just a test.)", tag: "compass-test", icon: "/icons/icon-192.png" }); else toast("Turn reminders on first."); } catch (e) { toast("Your browser blocked the test."); }
+}
+/* habit fade: once checking in is steady, offer to drop the evening nudge (reminders help repetition, not habits) */
+function activeDays(n = 28) {
+  let act = 0; const t = parse(todayKey());
+  for (let i = 1; i <= n; i++) {
+    const d = addDays(t, -i), w = anyWeek(wid(monday(d))), day = w && w.days && w.days[dkey(d)];
+    if (day && (Object.values(day.a || {}).some(Boolean) || Object.values(day.p || {}).some(Boolean) || Object.values(day.j || {}).some(x => String(x || "").trim()))) act++;
+  }
+  return act;
+}
+function fadeCard() {
+  const n = S.nt, since = (profile() || {}).onboardedAt;
+  if (!n || !n.on || !n.eve || !since || daysBetween(since, todayKey()) < 28) return "";
+  if (n.fadeAsk && daysBetween(n.fadeAsk, todayKey()) < 56) return "";
+  const a = activeDays(28); if (a < 24) return "";
+  return `<div class="card pad fade"><b>You've checked in ${a} of the last 28 days</b><div class="hint">That's a habit carrying itself. Reminders help you repeat something, but the habit sticks better without them. Drop the evening nudge and keep Sunday's?</div>
+    <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small primary" data-act="fadeYes">Sunday only</button><button class="btn small quiet" data-act="fadeNo">Keep both</button></div></div>`;
 }
 function remindersSection() {
   if (!VAPID()) return "";
@@ -3008,6 +3026,7 @@ function rReview(id, F, trips, sugg) {
   <h2>Sunday review</h2>
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
   ${reviewSetupCards()}
+  ${fadeCard()}
   <h3>1 · Floors</h3>
   <div class="card pad"><ul class="floors" style="margin:0">${vals.map(v => { const st = valueStatus(v.id, F, id); return `<li class="${st.s === "clear" ? "ok" : ""}"><span>${esc(v.name)}</span><span class="f">${st.s === "clear" ? "✓" : st.s === "rest" ? "–" : st.s === "open" && st.t === "This month" ? "…" : "✗"}</span></li>`; }).join("")}</ul></div>
   ${open.length ? `<p class="hint" style="margin:10px 0 6px">Forgot to log something?</p><div class="chips">${open.map(f => countChip(f.c, f.have)).join("")}</div>` : ""}
@@ -4053,6 +4072,8 @@ document.addEventListener("click", e => {
     }
     /* compass tab */
     case "ntOn": ntEnable(); return;
+    case "fadeYes": ntSet("eve", ""); toast("Evening nudge off. Sunday's stays. Turn it back on any time in Compass → Reminders."); return;
+    case "fadeNo": ntSave({ fadeAsk: todayKey() }); render(); return;
     case "ntLater": try { localStorage.setItem("compass-ntask", String(Date.now())); } catch (e) {} render(); return;
     case "ntOptOut": ntSave({ optOut: true, on: false }); toast("Reminders off. Turn them on any time in Compass → Reminders."); render(); return;
     case "ntOff": ntDisable(); return;
