@@ -796,6 +796,7 @@ details.fold[open] summary::before{content:"▾ ";}
 }
 .greet{font:500 15px/1.3 var(--sans);color:var(--ink2);margin:4px 0 2px}
 .greetin{color:var(--ink);font-weight:500}
+.dtime{color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
 .acct{display:flex;align-items:center;gap:12px}
 .acct .avatar{width:44px;height:44px;font-size:18px}
 </style>
@@ -2150,7 +2151,9 @@ function rToday(id) {
   const d = (w.days || {})[S.selDay] || {}, a = d.a || {}, j = d.j || {};
   const selDate = parse(S.selDay);
   const title = S.selDay === tk ? "Today" : WD[(selDate.getDay() + 6) % 7] + ", " + fmtShort(selDate);
-  const checks = daily.filter(c => c.auto !== "journal").map(c => `<button class="check" data-act="anchor" data-k="${esc(c.id)}" aria-pressed="${!!a[c.id]}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span>${c.note ? `<small>${esc(c.note)}</small>` : ""}</span><span class="tail">${compHave(c, w, id)}/${c.target}</span></button>`).join("");
+  const dIdx = dayIdx(S.selDay), dTime = c => plannedOn(c, dIdx) ? timeOn(c, dIdx) : "";
+  const dailyRows = daily.filter(c => c.auto !== "journal").map((c, i) => ({ c, i, t: dTime(c) })).sort((x, y) => (x.t ? 0 : 1) - (y.t ? 0 : 1) || (x.t < y.t ? -1 : x.t > y.t ? 1 : x.i - y.i));
+  const checks = dailyRows.map(({ c, t }) => `<button class="check" data-act="anchor" data-k="${esc(c.id)}" aria-pressed="${!!a[c.id]}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}</span>${t || c.note ? `<small>${t ? `<span class="dtime">${t12(t)}</span>${c.note ? " · " : ""}` : ""}${esc(c.note || "")}</small>` : ""}</span><span class="tail">${compHave(c, w, id)}/${c.target}</span></button>`).join("");
   const chip = c => countChip(c, compHave(c, w, id));
   const weekly = act.filter(c => c.cadence === "weekly"), monthly = act.filter(c => c.cadence === "monthly");
   const di = dayIdx(S.selDay), mpToday = monthPlan(monthKey(parse(S.selDay)));
@@ -2537,7 +2540,8 @@ function buildIcs() {
   const push = (...xs) => xs.forEach(x => L.push(icsFold(x)));
   push("BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Compass//life-compass.web.app//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Compass", zone ? "X-WR-TIMEZONE:" + zone : "");
   let n = 0;
-  weeklyPlannable().forEach(c => {
+  const dailyAll = comps().filter(c => !c.fun && c.cadence === "daily" && c.auto !== "journal");
+  dailyAll.concat(weeklyPlannable()).forEach(c => {
     const days = planDays(c); if (!days.length) return;
     const groups = {}; days.forEach(d => { const t = timeOn(c, d); (groups[t] = groups[t] || []).push(d); });
     Object.entries(groups).forEach(([t, ds]) => {
@@ -2551,6 +2555,11 @@ function buildIcs() {
       push(rule, "SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. ${freqWords(c)}. Hold it loosely.`), "END:VEVENT"); n++;
     });
   });
+  /* daily floors with no days set: all-day events every day, one each or combined (export sheet choice) */
+  const loose = dailyAll.filter(c => !planDays(c).length), mode = S.icsDaily || "each", d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const allDay = (uid, name, desc) => { push("BEGIN:VEVENT", `UID:${uid}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now), "DTSTART;VALUE=DATE:" + icsDay(d0), "DTEND;VALUE=DATE:" + icsDay(addDays(d0, 1)), "TRANSP:TRANSPARENT", "RRULE:FREQ=DAILY", "SUMMARY:" + icsEsc(name), "DESCRIPTION:" + icsEsc(desc), "END:VEVENT"); n++; };
+  if (loose.length && mode === "each") loose.forEach(c => allDay(`compass-${c.id}-daily`, c.name, `Compass · ${valName(c.value)}. ${freqWords(c)}, any time of day.${c.note ? " " + c.note : ""}`));
+  else if (loose.length && mode === "one") allDay("compass-daily-floors", "Daily floors", "Compass · any time today: " + loose.map(c => c.name).join(", ") + ".");
   [monthKey(new Date()), monthKey(new Date(now.getFullYear(), now.getMonth() + 1, 1))].forEach(ym => {
     const mp = ((settings().months || {})[ym] || {}).plan || {};
     Object.entries(mp).forEach(([cid, pl]) => {
@@ -2576,6 +2585,7 @@ function icsSheet() {
   const { n } = buildIcs();
   return `<div class="in"><div class="grab"></div><h2 style="margin:0">Add your plan to a calendar</h2>
     <p class="lede" style="margin:0">${n ? `${n} repeating block${n > 1 ? "s" : ""} and one-offs in one file.` : "Nothing planned yet. Place a floor on a day first."}</p>
+    ${comps().some(c => !c.fun && c.cadence === "daily" && c.auto !== "journal" && !planDays(c).length) ? `<div class="fl"><span class="flabel">Daily floors without a time</span><div class="seg">${[["each", "All-day, one each"], ["one", "One all-day list"], ["none", "Leave out"]].map(([k, l]) => `<button data-act="icsDaily" data-v="${k}" aria-pressed="${(S.icsDaily || "each") === k}">${l}</button>`).join("")}</div></div>` : ""}
     <button class="btn primary" data-act="icsDownload" ${n ? "" : "disabled"}>Download calendar file (.ics)</button>
     <div class="card"><div class="field"><span class="flabel">Apple Calendar · iPhone or Mac</span><span>Open the downloaded file and choose <b>Add All</b>. On iPhone, tap it from the download bar or the Files app.</span></div>
       <div class="field"><span class="flabel">Google Calendar · on a computer</span><span>Go to <a class="linkbtn" href="https://calendar.google.com/calendar/r/settings/export" target="_blank" rel="noopener">calendar.google.com → Settings → Import</a>, choose the file and click <b>Import</b>. It then shows on your phone too.</span></div></div>
@@ -2801,7 +2811,7 @@ function rCompass(id, F, trips, sugg) {
     <p class="hint">One per line. Every lapse writes a new rule. <span class="src">Gollwitzer & Sheeran 2006</span></p>`)}
   ${cSec("cal", "Calendar", placed.length ? `${placed.length} floor${placed.length > 1 ? "s" : ""} planned${left ? ` · ${left} to place` : ""}` : "Nothing planned yet", `
     <div class="impcard"><span class="glyph">${ICON.cal}</span><div style="flex:1"><div class="hint" style="margin:0">${left ? `${left} session${left > 1 ? "s" : ""} still to place. ` : ""}Plan days and times in Week → Plan, then export them to Apple or Google Calendar in one file.</div></div></div>
-    <div class="calbtns"><button class="btn" data-act="gotoPlan">Plan my week</button><button class="btn primary" data-act="icsOpen" ${placed.length ? "" : "disabled"}>Export to calendar</button></div>`)}
+    <div class="calbtns"><button class="btn" data-act="gotoPlan">Plan my week</button><button class="btn primary" data-act="icsOpen" ${placed.length || buildIcs().n ? "" : "disabled"}>Export to calendar</button></div>`)}
   ${cSec("app", "Settings", "Colours, backup, run setup again", `
     <span class="flabel">Colours</span>
     <div style="margin:6px 0 16px">${themePicker()}</div>
@@ -3648,6 +3658,7 @@ document.addEventListener("click", e => {
     case "mRemove": { const sh = S.sheet; setMonthPlan(sh.ym, sh.id, () => null); S.sheet = null; break; }
     case "icsOpen": S.sheet = { type: "ics" }; break;
     case "icsDownload": downloadIcs(); return;
+    case "icsDaily": S.icsDaily = b.dataset.v; renderSheet(); return;
     case "planDone": {
       const c = compById(k); if (!c) return; let on;
       editWeek(w => { const dd = dayObj(w, S.selDay); dd.p = dd.p || {}; dd.p[k] = !dd.p[k]; on = dd.p[k]; });
