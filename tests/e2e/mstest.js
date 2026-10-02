@@ -4,7 +4,7 @@ const root = path.join(__dirname, '../../public'), S = process.env.S;
 const results = []; const ok = (name, cond, info) => results.push({ name, pass: !!cond, info: cond ? undefined : info });
 const FX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/') + 'mstodo-graph.json', 'utf8'));
 (async () => {
-  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, args: ['--ignore-certificate-errors'] });
+  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium', args: ['--ignore-certificate-errors'] });
   const run = async (mode) => {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: mode !== 'desktop', isMobile: mode !== 'desktop' });
     const seen = { challenge: null, verifierOk: null, redirect: null, scope: null, pages: 0, auth: 0 };

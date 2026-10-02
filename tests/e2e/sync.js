@@ -36,7 +36,7 @@ const settle = ms => new Promise(r => setTimeout(r, ms));
 const wk = () => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return 'users/u1/docs/w-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const tk = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 (async () => {
-  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   const A = await device(b, 'A'), B = await device(b, 'B');
   // A sets up; B signs in to the same account
   await A.p.goto('http://compass.test/'); await A.p.waitForTimeout(500); await A.tap('.lhero [data-act=signin]'); await A.p.waitForTimeout(600);

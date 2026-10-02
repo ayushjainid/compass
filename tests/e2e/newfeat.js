@@ -4,7 +4,7 @@ const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0', dark = process.env.D === '1';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
 let VERSION = null;   // what /version.json returns
-(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: dark ? 'dark' : 'light', deviceScaleFactor: 2 });
   await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
     if (u.pathname === '/index.html' && VERSION) { let h = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace('const DATA_V = 1;', `const DATA_V = ${VERSION.min}; /* ${VERSION.build} */`); return route.fulfill({ status: 200, body: h, contentType: 'text/html' }); }

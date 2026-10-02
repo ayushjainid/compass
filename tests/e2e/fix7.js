@@ -24,7 +24,7 @@ async function setup(b, init) {
   return { ctx, p, errs, tap };
 }
 (async () => {
-  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   const tag = `${W}${dark ? 'd' : ''}`;
   { const { ctx, p, errs, tap } = await setup(b);
     const shot = n => p.screenshot({ path: `${S}/f7-${n}-${tag}.png` });

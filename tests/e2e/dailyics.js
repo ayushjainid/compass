@@ -3,7 +3,7 @@ const { chromium } = require('playwright'); const fs = require('fs'), path = req
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
-(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: 'dark', deviceScaleFactor: 2, acceptDownloads: true });
   await ctx.addInitScript(() => { const o = URL.createObjectURL; URL.createObjectURL = blob => { blob.text().then(t => { window.__ics = t; }); return o.call(URL, blob); }; });
   await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;

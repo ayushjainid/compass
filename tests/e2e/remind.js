@@ -28,7 +28,7 @@ async function setup(b, { perm = 'granted', ua, vapid = VAPID, url = 'http://com
   return { ctx, p, errs, tap };
 }
 const nt = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') || '{}')['notify/u1']);
-(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   { const { ctx, p, errs, tap } = await setup(b);
     let d = await nt(p);
     ok('finishing setup asks once and turns reminders on by default', d && d.on && d.optOut === false && await p.evaluate(() => window.__subs) === 1, d);

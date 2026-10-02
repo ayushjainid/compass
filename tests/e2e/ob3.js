@@ -23,7 +23,7 @@ async function open(b, init) {
 const store = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') || '{}'));
 const prof = async p => (await store(p))['users/u1/docs/profile'] || {};
 (async () => {
-  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+  const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   /* A. the plain path */
   { const { ctx, p, errs, tap } = await open(b); const shot = n => p.screenshot({ path: `${S}/o3-${n}-${tag}.png`, fullPage: true });
     ok('A welcome offers Start, Import and 5 templates', await p.locator('[data-act=obNext]').innerText() === 'Start' && await p.locator('[data-act=impOpen]').count() === 1 && await p.locator('[data-act=obStarter]').count() === 5);
