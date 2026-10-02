@@ -15,7 +15,7 @@ const project = "demo-compass", env = { ...process.env, FIREBASE_PROJECT: projec
 const db = F.getFirestore(initializeApp({ projectId: project }));
 const ts = F.Timestamp.fromMillis(Date.parse("2026-10-02T16:00:00.123Z"));
 const seed = {
-  "users/alice/docs/profile": { goal: "Grow", components: [{ id: "gym", block: { days: [0, 2, 4], time: "07:00" }, paused: "2026-09-28", pauses: [["2026-08-03", "2026-08-17"]] }] },
+  "users/alice/docs/profile": { goal: "Grow", components: [{ id: "gym", block: { days: [0, 2, 4], time: "07:00" }, paused: "2026-09-28", pauses: [{ from: "2026-08-03", to: "2026-08-17" }] }] },
   "users/alice/docs/w-2026-09-28": { days: { "2026-09-28": { a: { gym: true }, j: { win: "é ✓ 😀" } } }, c: { gym: 2 }, _w: "dev:3:1" },
   "users/bob/docs/settings": { theme: "dark", seen: { d: "2026-10-02", de: { active: 1 } } },
   "notify/alice": { on: true, nextEve: ts, sub: { endpoint: "https://push.example/x", keys: { p256dh: "k", auth: "a" } } },

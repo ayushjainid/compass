@@ -138,7 +138,8 @@ const tk = () => { const d = new Date(); return d.getFullYear() + '-' + String(d
   await B.tap('[data-act=inc][data-k=gym]'); await B.p.waitForTimeout(300); await B.tap('[data-act=inc][data-k=gym]');
   await settle(9000); await A.p.evaluate(() => { window.__txDelay = 0; }); await settle(3000);
   ok('snapshot arriving mid-save: 1 (A) + 2 (B) = +3 exactly', (server.get(wk()).c || {}).gym === g0 + 3, { before: g0, after: (server.get(wk()).c || {}).gym });
-  const shownA = await A.p.locator('[data-act=inc][data-k=gym] .n').innerText(), shownB = await B.p.locator('[data-act=inc][data-k=gym] .n').innerText();
+  let shownA = '', shownB = '';   // screens redraw a moment after the save settles; give a busy machine up to 6 s
+  for (let t = 0; t < 30; t++) { shownA = await A.p.locator('[data-act=inc][data-k=gym] .n').innerText(); shownB = await B.p.locator('[data-act=inc][data-k=gym] .n').innerText(); if (shownA === shownB && shownA.startsWith(String(g0 + 3) + '/')) break; await A.p.waitForTimeout(200); }
   ok('…and both screens show the same count', shownA === shownB && shownA.startsWith(String(g0 + 3) + '/'), { shownA, shownB });
   /* 10. an old copy of a past week on a device that upgraded doesn't overwrite newer work */
   const past = (() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7); return 'w-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })();

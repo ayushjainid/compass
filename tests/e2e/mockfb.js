@@ -18,8 +18,10 @@ export const doc = (fs, ...segs) => ({ path: segs.join("/") });
 export const collection = (fs, ...segs) => ({ path: segs.join("/") });
 export const where = (f, op, v) => ({ f, op, v });
 export const query = (c, w) => ({ c, w });
+const nestedArr = (v, inArr) => Array.isArray(v) ? (inArr || v.some(x => nestedArr(x, true))) : (v && typeof v === "object" ? Object.values(v).some(x => nestedArr(x, false)) : false);
+const refuseNested = d => { if (nestedArr(d, false)) { const e = new Error("Property array contains an invalid nested entity"); e.code = "invalid-argument"; window.__nestedRefused = (window.__nestedRefused || 0) + 1; throw e; } };
 const snap = path => ({ id: path.split("/").pop(), exists: () => path in store, data: () => store[path] && JSON.parse(JSON.stringify(store[path])) });
-export const setDoc = async (r, data, opt) => { const uid = current && current.uid; if (!(r.path.startsWith("users/" + uid + "/") || r.path === "notify/" + uid || r.path === "errors/" + uid || r.path.startsWith("feedback/" + uid + "-") || (uid && /^stats\/[dw]-\d{4}-\d{2}-\d{2}$/.test(r.path) && Object.keys(data).length === 1 && data[Object.keys(data)[0]] && data[Object.keys(data)[0]].__inc === 1))) { const e = new Error("denied"); e.code = "permission-denied"; throw e; } const clean = JSON.parse(JSON.stringify(data)); for (const k in clean) if (clean[k] && clean[k].__inc) { clean[k] = ((store[r.path] || {})[k] || 0) + clean[k].__inc; window.__statWrites = (window.__statWrites || []).concat(r.path + ":" + k); } store[r.path] = opt && opt.merge ? Object.assign(store[r.path] || {}, clean) : clean; save(); (listeners[r.path] || []).forEach(cb => cb(snap(r.path))); };
+export const setDoc = async (r, data, opt) => { refuseNested(data); const uid = current && current.uid; if (!(r.path.startsWith("users/" + uid + "/") || r.path === "notify/" + uid || r.path === "errors/" + uid || r.path.startsWith("feedback/" + uid + "-") || (uid && /^stats\/[dw]-\d{4}-\d{2}-\d{2}$/.test(r.path) && Object.keys(data).length === 1 && data[Object.keys(data)[0]] && data[Object.keys(data)[0]].__inc === 1))) { const e = new Error("denied"); e.code = "permission-denied"; throw e; } const clean = JSON.parse(JSON.stringify(data)); for (const k in clean) if (clean[k] && clean[k].__inc) { clean[k] = ((store[r.path] || {})[k] || 0) + clean[k].__inc; window.__statWrites = (window.__statWrites || []).concat(r.path + ":" + k); } store[r.path] = opt && opt.merge ? Object.assign(store[r.path] || {}, clean) : clean; save(); (listeners[r.path] || []).forEach(cb => cb(snap(r.path))); };
 export const getDoc = async r => { if (navigator.onLine === false && localStorage.getItem("__failOffline")) { const e = new Error("offline"); e.code = "unavailable"; throw e; } return snap(r.path); };
 export const onSnapshot = (r, next) => { (listeners[r.path] = listeners[r.path] || []).push(next); setTimeout(() => next(snap(r.path)), 20); return () => { listeners[r.path] = (listeners[r.path] || []).filter(x => x !== next); }; };
 export const getDocs = async q => { const base = q.c ? q.c.path : q.path; return { docs: Object.keys(store).filter(k => k.startsWith(base + "/") && (!q.w || store[k][q.w.f] === q.w.v)).map(k => ({ id: k.split("/").pop(), ref: { path: k }, data: () => store[k] })) }; };
@@ -35,7 +37,7 @@ export const reauthenticateWithRedirect = async () => { window.__reauthRedirect 
 export const runTransaction = async (fs, fn) => { window.__tx = (window.__tx || 0) + 1;
   if (window.__offline) { const e = new Error("offline"); e.code = "unavailable"; throw e; }
   const writes = [];
-  const tx = { get: async r => snap(r.path), set: (r, d) => { writes.push([r.path, JSON.parse(JSON.stringify(d))]); return tx; } };
+  const tx = { get: async r => snap(r.path), set: (r, d) => { refuseNested(d); writes.push([r.path, JSON.parse(JSON.stringify(d))]); return tx; } };
   const out = await fn(tx);
   writes.forEach(([p, d]) => { store[p] = d; }); save(); writes.forEach(([p]) => (listeners[p] || []).forEach(cb => cb(snap(p))));
   return out;

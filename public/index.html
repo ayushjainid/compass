@@ -1835,6 +1835,12 @@ function onWeek(c, monKey) {
 }
 const everyText = c => everyN(c) > 1 ? `every ${everyN(c)} weeks` : "";
 /* old Week A / Week B components become "every 2 weeks" from the matching week */
+/* an early build saved pause spans as [from, to] pairs, which Firestore refuses (no lists inside lists) and which
+   then blocked the whole profile from syncing; turn any still on this device into { from, to } */
+function migratePauses() {
+  const bad = comps().some(c => (c.pauses || []).some(Array.isArray));
+  if (bad) editProfile(p => p.components.forEach(c => { if (c.pauses) c.pauses = c.pauses.map(span); }));
+}
 function migrateAlt() {
   if (!comps().some(c => c.alt)) return;
   const cur = dkey(monday(new Date())), prev = dkey(addDays(monday(new Date()), -7));
@@ -1863,8 +1869,9 @@ function compHave(c, w, id) {
   return v + (c.id === "lifeTax" && w && w.r && w.r.lifeTax && !v ? 1 : 0);
 }
 /* a paused floor stops counting from the week it was paused; earlier weeks keep it.
-   c.paused = the Monday it paused from (while paused); c.pauses = finished [from, to) spans */
-const pausedIn = (c, mon) => (!!c.paused && mon >= c.paused) || (c.pauses || []).some(([f, t]) => mon >= f && mon < t);
+   c.paused = the Monday it paused from (while paused); c.pauses = finished spans [{ from, to }) (Firestore can't hold lists inside lists) */
+const span = p => Array.isArray(p) ? { from: p[0], to: p[1] } : p || {};
+const pausedIn = (c, mon) => (!!c.paused && mon >= c.paused) || (c.pauses || []).some(p => { const x = span(p); return mon >= x.from && mon < x.to; });
 function activeComps(id, w = anyWeek(id)) {
   const mvw = isMvw(w, id), mon = id.slice(2);
   return comps().filter(c => !c.fun && onWeek(c, mon) && !pausedIn(c, mon) && (!mvw || c.mvw));
@@ -2670,7 +2677,7 @@ function render() {
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
   let tabsHtml = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
-  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); migrateAlt(); }
+  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); migrateAlt(); migratePauses(); }
   tabsHtml = tabsHtml.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
   /* only touch the tab bar when it changes: replacing it mid-tap swallowed the tap */
   if (S.tabsHtml !== tabsHtml) { $("#tabs").innerHTML = tabsHtml; S.tabsHtml = tabsHtml; }
@@ -4464,7 +4471,7 @@ document.addEventListener("click", e => {
       if (!before) return;
       const c = clone(before);
       if (pause) { c.paused = mon; stat("paused"); }
-      else { if (c.paused && c.paused < mon) c.pauses = (c.pauses || []).concat([[c.paused, mon]]).slice(-20); delete c.paused; }
+      else { if (c.paused && c.paused < mon) c.pauses = (c.pauses || []).map(span).concat({ from: c.paused, to: mon }).slice(-20); delete c.paused; }
       editProfile(p => { const i = p.components.findIndex(x => x.id === id); if (i >= 0) p.components[i] = c; });
       S.sheet = null; S.confirm = null;
       toast(pause ? `Paused “${c.name}”. Resume it from Compass any time.` : `“${c.name}” is back and counts from this week.`);
