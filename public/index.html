@@ -2498,15 +2498,19 @@ function rToday(id) {
   const keys = [...Array(7)].map((_, i) => dkey(addDays(mon, i)));
   if (!keys.includes(S.selDay)) S.selDay = keys.includes(tk) ? tk : keys[0];
   const act = activeComps(id, w);
-  const daily = act.filter(c => c.cadence === "daily");
+  const allDaily = act.filter(c => c.cadence === "daily");
+  const isDone = (c, d) => c.auto === "journal" ? hasJournal(d) : !!(d.a || {})[c.id];
   const strip = keys.map((k, i) => {
     const d = (w.days || {})[k] || {};
-    const n = daily.filter(c => c.auto === "journal" ? hasJournal(d) : (d.a || {})[c.id]).length, tot = Math.max(daily.length, 1);
+    const due = allDaily.filter(c => dailyOn(c, i) || isDone(c, d));
+    const n = due.filter(c => isDone(c, d)).length, tot = Math.max(due.length, 1);
     const p = Math.round(n / tot * 100);
-    return `<button data-act="day" data-k="${k}" aria-pressed="${k === S.selDay}" class="${k === tk ? "today" : ""} ${k > tk ? "future" : ""}" aria-label="${WD[i]} ${parse(k).getDate()}${k > tk ? ", upcoming" : ""}, ${n} of ${daily.length} done">
+    return `<button data-act="day" data-k="${k}" aria-pressed="${k === S.selDay}" class="${k === tk ? "today" : ""} ${k > tk ? "future" : ""}" aria-label="${WD[i]} ${parse(k).getDate()}${k > tk ? ", upcoming" : ""}, ${n} of ${due.length} done">
       <span class="wd">${WD[i]}</span><span class="ring ${p >= 100 ? "full" : ""}" style="--p:${p}"><span>${parse(k).getDate()}</span></span></button>`;
   }).join("");
   const d = (w.days || {})[S.selDay] || {}, a = d.a || {}, j = d.j || {};
+  /* a daily floor with picked days only shows on those days (or if it was already ticked here) */
+  const daily = allDaily.filter(c => dailyOn(c, dayIdx(S.selDay)) || isDone(c, d));
   const selDate = parse(S.selDay);
   const title = S.selDay === tk ? "Today" : WD[(selDate.getDay() + 6) % 7] + ", " + fmtShort(selDate);
   const dIdx = dayIdx(S.selDay), dTime = c => plannedOn(c, dIdx) ? timeOn(c, dIdx) : "";
@@ -2563,6 +2567,7 @@ function suggCard(list, limit) {
 const dayIdx = key => (parse(key).getDay() + 6) % 7;
 const planDays = c => (c.block && Array.isArray(c.block.days)) ? c.block.days : [];
 const plannedOn = (c, di) => planDays(c).includes(di);
+const dailyOn = (c, di) => !planDays(c).length || plannedOn(c, di);
 const timeOn = (c, di) => (c.block && ((c.block.times || {})[di] ?? c.block.time)) || "";
 const durOf = c => (c.block && c.block.dur) || Math.max(15, Math.round((c.hours || 0.5) * 60));
 const sessionsNeeded = c => c.unit ? Math.max(1, Math.ceil(c.target * 60 / durOf(c))) : Math.max(1, Math.round(c.target));
@@ -3323,6 +3328,7 @@ function renderSheetBody() {
     ${everyN(c) > 1 ? everyStart(c) : ""}` : ""}
     <div class="row"><div><b>Give it a time</b><div class="hint">Puts it on your calendar as a repeating block.</div></div><button class="switch" role="switch" aria-checked="${!!c.block}" data-act="cBlock" aria-label="Give it a time"></button></div>
     ${c.block ? `<div class="daypick">${WD.map((d, i) => `<button data-act="cDay" data-v="${i}" aria-pressed="${c.block.days.includes(i)}">${d}</button>`).join("")}</div>
+      ${c.cadence === "daily" && c.block.days.length < 7 ? `<div class="hint daysnote">Shows on Today only on ${c.block.days.map(i => WD[i]).join(", ")}.${c.block.days.length < c.target ? ` That's fewer days than your floor of ${c.target}.` : ""}</div>` : ""}
       <div class="two"><div class="fl"><label class="flabel" for="c-time">Starts</label><input type="time" id="c-time" data-cb="time" value="${c.block.time}"></div>
       <div class="fl"><label class="flabel" for="c-dur">Minutes</label><input type="number" id="c-dur" data-cb="dur" min="5" max="600" step="5" value="${c.block.dur}"></div></div>` : ""}`}
     <div class="row" style="margin-top:6px"><button class="btn primary" data-act="saveComp">${sh.isNew ? "Add component" : "Save"}</button>
