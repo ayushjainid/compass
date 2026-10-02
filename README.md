@@ -141,10 +141,34 @@ Anyone who signs in could, in theory, write data in a loop and use up the free d
    - Put the same key in `public/firebase-config.js` as `window.COMPASS_APPCHECK_SITE_KEY` and deploy.
    - Watch App Check → **Metrics** for a day or two. When almost all requests show as verified, press **Enforce** for Cloud Firestore. (The reminders Worker uses a service account, so it is unaffected.)
 
-## 10. Reading feedback and errors
+## 10. Your dashboard: usage, reminders health, feedback, errors
 
-- **Feedback** (Compass tab → Settings → Send feedback) lands in Firestore under the `feedback` collection, one document per note.
-- **Errors** from people's devices land under `errors/{uid}`: the last 20 messages per account, never their entries. A handful a day is normal; the same message from many accounts is a bug worth fixing.
+Open **life-compass.web.app/stats** for one page with:
+
+- **Usage**: daily and weekly active accounts, new sign-ups, how many finish setup, which features people use, and how many weeks people have been using Compass. These are anonymous tallies: each account adds 1 the first time something happens in a day or week, and the tallies hold numbers only (no ids, names or entries).
+- **Reminders health**: whether the Cloudflare Worker checked in recently, how many reminders went out or failed, and its last error. The Worker writes this every 10 minutes.
+- **Errors** from people's devices, grouped by message, and **feedback** notes, newest first.
+
+It's readable only by you. One-time setup:
+
+1. Open the page and sign in. It shows your user id.
+2. Firebase console → **Firestore** → **Start collection** → name it `admins` → document id: that user id → add any field (e.g. `at` = `1`) → Save.
+3. Refresh the page.
+
+Nobody can create an `admins` document from the app; only you, in the console.
+
+## 11. Automatic tests and deploys (GitHub)
+
+Every push to GitHub runs all the tests in `.github/workflows/ci.yml`: the app in a real browser at phone, small-phone, dark-mode and desktop sizes, the database rules against Google's Firestore emulator, and the reminders Worker. A push to `main` that passes is then **deployed automatically** (app + rules), so a broken change never goes live. You can watch runs under the repo's **Actions** tab, and a red ✗ appears next to the commit if anything fails.
+
+To turn on the automatic deploy (until then, tests still run and you deploy by hand):
+
+1. Google Cloud console → **IAM & Admin** → **Service accounts** (project `compass-ayush`) → **Create service account**, name it `github-deploy`, and give it the roles **Firebase Admin** and **Service Usage Consumer**. Then open it → **Keys** → **Add key** → **JSON**. A file downloads.
+2. GitHub → your repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**. Name: `FIREBASE_SERVICE_ACCOUNT`. Value: paste the whole JSON file. Save, then delete the downloaded file.
+   If a deploy ever fails with a permission error, the Actions log names the missing role; add it to the same service account.
+3. From then on just `git push`. You no longer need to run `npx firebase-tools deploy` yourself.
+
+Run the tests on your computer: `npm install && npx playwright install chromium && npm test` (the browser suites), `npm run test:rules` (needs Java), `npm run test:worker`.
 
 ## Troubleshooting
 
@@ -165,7 +189,7 @@ You don't need to redeploy, or clear cookies, to see a change.
   npx live-server public --port=5173
   ```
   This opens http://localhost:5173 and reloads the page by itself whenever the files change, including right after a `git pull`. Google sign-in works on `localhost`. If it says the address isn't allowed, add `localhost` under Firebase → Security → Authentication → Settings → Authorized domains. It uses your real account and data.
-- **Deploy only when you're happy:** `npx firebase-tools deploy`.
+- **Deploy only when you're happy:** push to GitHub; it deploys once the tests pass (section 11). By hand: `npx firebase-tools deploy`.
 
 ## For developers
 
@@ -173,5 +197,9 @@ You don't need to redeploy, or clear cookies, to see a change.
 - Data lives at `users/{uid}/docs/{docId}`, with docs `profile`, `settings`, `people` and one per week (`w-YYYY-MM-DD`, Monday of that week). Reminder settings live at `notify/{uid}` (top level, so the Worker can find due ones with one indexed query on `nextEve` / `nextRev`).
 - Sync: each doc keeps a *base* (the last version this device and the server agreed on, saved locally). Saves run in a Firestore transaction that merges base, this device and the server three ways; counters (any map named `c`) add up; offline edits wait on the device and go out when it's back online. Every save carries a `_w` marker so a save whose reply was lost is never applied twice.
 - The app shell is cached by `public/sw.js` (network-first for pages), so Compass opens offline.
+- Updates: an open copy of Compass checks every 30 minutes (and when it comes back to the foreground) whether the deployed page differs, and offers **Reload**. `DATA_V` in `index.html` is the shape of saved data: **raise it when a change makes old code unsafe to save with** (renamed or restructured fields). Copies running older code then stop saving, keep edits on the device, and ask to reload; after the reload the kept edits sync.
+- Pausing a floor stores `paused` (the Monday it paused from) and, after resuming, `pauses: [[from, to), …]`, so past weeks still count it and paused weeks don't.
+- Anonymous tallies: `stats/d-YYYY-MM-DD` and `stats/w-<Monday>`, one field per event; rules allow only +1 to one known field per write. Which tallies an account already counted is kept in its own `settings.seen`.
+- Tests live in `tests/`: `tests/e2e/*.js` drive the app with a stand-in Firebase (`mockfb.js`, `mockfb2.js` for two devices), `tests/rules/` checks `firestore.rules`, `worker/test/` checks the Worker.
 - The reminders Worker is in `worker/`: `src/plan.js` decides, `src/push.js` encrypts (RFC 8291) and signs (VAPID) with WebCrypto only, `src/firestore.js` talks to Firestore's REST API.
 - Firebase SDK 12.19.0, bundled with esbuild.

@@ -75,6 +75,14 @@ export function client(env, fetchFn = fetch) {
       } });
       return rows.filter(r => r.document).map(r => ({ name: r.document.name, id: r.document.name.split("/").pop(), data: fromFields(r.document.fields || {}) }));
     },
+    /** Set fields on one document (creating it if needed), adding `inc` amounts to number fields. */
+    async upsert(path, fields, inc = {}) {
+      const name = `projects/${project}/databases/(default)/documents/${path}`;
+      const write = { update: { name, fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, toValue(v)])) }, updateMask: { fieldPaths: Object.keys(fields) } };
+      const t = Object.entries(inc).filter(([, n]) => n).map(([k, n]) => ({ fieldPath: k, increment: { integerValue: String(n) } }));
+      if (t.length) write.updateTransforms = t;
+      await call(":commit", { writes: [write] });
+    },
     /** Patch fields on several documents in one atomic commit. */
     async patch(updates) {
       if (!updates.length) return;

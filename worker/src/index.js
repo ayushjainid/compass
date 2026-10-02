@@ -13,12 +13,35 @@ import { importVapid, pushRequest } from "./push.js";
 // On Workers Paid ($5/month) set PER_RUN to e.g. 200 in wrangler.toml.
 export const PER_RUN = 8;
 
+// Health: the Worker notes how it's doing in `status/reminders` (read by the owner's dashboard, stats.html):
+// every 10 minutes when idle, after any run that sent something, and on every error.
+export const BEAT_EVERY = 10;
+const day = ms => new Date(ms).toISOString().slice(0, 10);
+export async function heartbeat(db, now, r, err) {
+  const busy = r && (r.sent || r.checked), tick = new Date(now).getUTCMinutes() % BEAT_EVERY === 0;
+  if (!err && !busy && !tick) return false;
+  const f = { at: new Date(now), ok: !err };
+  if (err) { f.lastError = String(err.message || err).slice(0, 300); f.lastErrorAt = new Date(now); }
+  if (r && r.sent) f.lastSendAt = new Date(now);
+  const d = day(now).replace(/-/g, "");
+  await db.upsert("status/reminders", f, { [`sent.d${d}`]: (r && r.sent) || 0, [`failed.d${d}`]: (r && r.failed) || 0, [`errors.d${d}`]: err ? 1 : 0 });
+  return true;
+}
+
 export async function runOnce(env, now = Date.now(), fetchFn = fetch, log = console.log) {
   const db = client(env, fetchFn);
+  let r;
+  try { r = await work(env, db, now, fetchFn, log); }
+  catch (e) { try { await heartbeat(db, now, null, e); } catch (e2) { log("heartbeat failed: " + e2.message); } throw e; }
+  try { await heartbeat(db, now, r); } catch (e) { log("heartbeat failed: " + e.message); }
+  return r;
+}
+
+async function work(env, db, now, fetchFn, log) {
   const cap = Math.max(2, Math.min(400, +env.PER_RUN || PER_RUN)), revCap = Math.max(1, Math.round(cap / 5));
   const [eve, rev] = await Promise.all([db.due("notify", "nextEve", now, cap - revCap), db.due("notify", "nextRev", now, revCap)]);
   const jobs = eve.map(x => ({ kind: "eve", ...x })).concat(rev.map(x => ({ kind: "rev", ...x })));
-  if (!jobs.length) return { checked: 0, sent: 0 };
+  if (!jobs.length) return { checked: 0, sent: 0, failed: 0 };
 
   // decide; a person due for both in the same minute gets both updates merged into one write
   const byDoc = new Map(), sends = [];
@@ -42,20 +65,20 @@ export async function runOnce(env, now = Date.now(), fetchFn = fetch, log = cons
   if (!env.VAPID_PUBLIC || !env.VAPID_PRIVATE) throw new Error("VAPID keys are not set");
   const vapid = await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE);
   const dead = [];
-  let sent = 0;
+  let sent = 0, failed = 0;
   await Promise.all(sends.filter(s => claimed.has(s.name)).map(async s => {
     try {
       const [url, init] = await pushRequest(s.data.sub, s.payload, vapid, { subject: env.VAPID_SUBJECT, ttl: s.kind === "eve" ? 3 * 3600 : 12 * 3600, topic: s.payload.tag });
       const r = await fetchFn(url, init);
       if (r.status === 404 || r.status === 410) dead.push(s.name);       // unsubscribed or expired
       else if (r.ok) sent++;
-      else log(`push ${r.status} for ${s.id.slice(0, 6)}…`);
-    } catch (e) { log("push failed: " + e.message); }
+      else { failed++; log(`push ${r.status} for ${s.id.slice(0, 6)}…`); }
+    } catch (e) { failed++; log("push failed: " + e.message); }
   }));
   if (dead.length) {
     try { await db.patch(dead.map(name => ({ name, fields: { on: false, sub: null, nextEve: null, nextRev: null } }))); } catch (e) { log("cleanup failed: " + e.message); }
   }
-  return { checked: jobs.length, sent, dead: dead.length };
+  return { checked: jobs.length, sent, failed, dead: dead.length };
 }
 
 export default {

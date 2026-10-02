@@ -1,0 +1,52 @@
+// Repeat every N weeks + starting week; Week A/B removed and migrated
+const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const root = path.join(__dirname, '../../public'), S = process.env.S;
+const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0';
+const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
+(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+  const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: 'dark', deviceScaleFactor: 2 });
+  await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
+    if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
+    route.fulfill({ status: 200, body, contentType: type }); });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  const tap = async s => { const l = p.locator(s).first(); await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap() : await l.click(); await p.waitForTimeout(200); };
+  const prof = () => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore'))['users/u1/docs/profile']);
+  await p.goto('http://compass.test/'); await p.waitForTimeout(500); await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
+  await tap('[data-act=obNext]'); for (const v of ['rel', 'body']) await tap(`[data-act=obValue][data-v=${v}]`);
+  while (await p.locator('[data-act=obNext]').count()) await tap('[data-act=obNext]');
+  await p.waitForTimeout(400); await tap('[data-act=tab][data-t=compass]'); await tap('[data-act=cSec][data-k=values]');
+  await tap('[data-act=addComp][data-value=body]'); await tap('[data-act=customComp]'); await p.waitForTimeout(300);
+  await p.fill('#c-name', 'Deep clean');
+  ok('no Week A/B control any more', await p.locator('[data-act=cAlt]').count() === 0);
+  ok('Repeats defaults to every week, no start picker', await p.locator('[data-act=cEvery][data-v="1"][aria-pressed=true]').count() === 1 && await p.locator('#c-from').count() === 0);
+  await tap('[data-act=cEvery][data-v="3"]');
+  const opts = await p.locator('#c-from option').allInnerTexts();
+  ok('every 3 weeks offers 3 starting weeks', opts.length === 3 && /This week/.test(opts[0]) && /Next week/.test(opts[1]) && /Week of/.test(opts[2]), opts);
+  await p.selectOption('#c-from', { index: 1 }); await p.waitForTimeout(200);
+  const hint = await p.locator('#c-from + .hint').innerText();
+  ok('shows the next three weeks it lands on', (hint.match(/week of/g) || []).length === 3, hint);
+  const segW = await p.evaluate(() => { const s = document.querySelector('[data-act=cEvery]').parentElement; return s.scrollWidth <= s.clientWidth + 1; });
+  ok('Repeats buttons fit on one line', segW);
+  await p.evaluate(() => { const s = document.querySelector('.sheet'); s.scrollTop = s.scrollHeight; }); await p.screenshot({ path: `${S}/every-${W}.png` });
+  await tap('[data-act=saveComp]'); await p.waitForTimeout(900);
+  let c = (await prof()).components.find(x => x.name === 'Deep clean');
+  const mon = await p.evaluate(() => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); d.setDate(d.getDate() + 7); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
+  ok('saved as every 3 weeks from next week', c && c.every === 3 && c.from === mon && !c.alt, c);
+  { const rt = await p.locator('[data-act=editComp]:has-text("Deep clean")').innerText().catch(e => 'ERR ' + e.message.slice(0, 80)); ok('row says Every 3 weeks', /Every 3 weeks/i.test(rt), rt); }
+  await tap('[data-act=tab][data-t=today]');
+  const todayHas = /Deep clean/.test(await p.locator('#main').innerText());
+  await tap('[data-act=nextWk]'); await p.waitForTimeout(300);
+  const nextHas = /Deep clean/.test(await p.locator('#main').innerText());
+  await tap('[data-act=nextWk]'); await p.waitForTimeout(300);
+  const next2Has = /Deep clean/.test(await p.locator('#main').innerText());
+  ok('resting this week, due next week, resting the week after', !todayHas && nextHas && !next2Has, { todayHas, nextHas, next2Has });
+  await tap('[data-act=prevWk]'); await tap('[data-act=prevWk]');
+  ok('island no longer shows Week A/B', !/Week [AB]\b/.test(await p.locator('#island').innerText()));
+  // migration: an old Week B component becomes every 2 weeks
+  await p.evaluate(() => { const st = JSON.parse(localStorage.getItem('__mockstore')); const pr = st['users/u1/docs/profile']; pr.components.push({ id: 'old1', value: 'body', name: 'Old alt', cadence: 'weekly', target: 1, hours: 1, alt: 'B' }); localStorage.setItem('__mockstore', JSON.stringify(st)); });
+  await p.reload(); await p.waitForTimeout(1500);
+  c = (await prof()).components.find(x => x.id === 'old1');
+  ok('old Week A/B component migrates to every 2 weeks', c && c.every === 2 && c.from && !c.alt, c);
+  ok('no page errors', errs.length === 0, errs);
+  const f = results.filter(r => !r.pass); console.log(`every ${W}: ${results.length - f.length}/${results.length} passed`); f.forEach(x => console.log('  FAIL', x.n, JSON.stringify(x.i || '').slice(0, 300)));
+  await b.close(); })().catch(e => { console.log('CRASH', e.message.split('\n')[0]); results.filter(r => !r.pass).forEach(x => console.log('  FAIL', x.n)); process.exit(1); });

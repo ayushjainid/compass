@@ -1,0 +1,80 @@
+# Every push and pull request runs all the tests. A push to main that passes them is deployed
+# (hosting + Firestore rules) once the FIREBASE_SERVICE_ACCOUNT secret is set — see README → "Automatic tests and deploys".
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    name: App in a browser (phone, small phone, dark, desktop)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/e2e/run.js
+        env: { JOBS: "3" }
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: screenshots, path: tests/e2e/out, retention-days: 7 }
+
+  rules:
+    name: Security rules (Firestore emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm ci
+      - run: npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass "node tests/rules/rules.test.mjs"
+
+  worker:
+    name: Reminders Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults: { run: { working-directory: worker } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-save --no-audit --no-fund http_ece@1
+      - run: node test/unit.mjs && node test/run.mjs
+
+  deploy:
+    name: Deploy to life-compass.web.app
+    needs: [browser, rules, worker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HAS_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Skip (no deploy key yet)
+        if: env.HAS_KEY != 'true'
+        run: echo "::notice::Tests passed. Not deploying — add the FIREBASE_SERVICE_ACCOUNT secret to turn on automatic deploys."
+      - name: Deploy hosting and Firestore rules
+        if: env.HAS_KEY == 'true'
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx -y firebase-tools@15 deploy --only hosting,firestore:rules --project compass-ayush --non-interactive --force
+          rm -f "$RUNNER_TEMP/sa.json"

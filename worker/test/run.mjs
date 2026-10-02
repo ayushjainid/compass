@@ -30,8 +30,17 @@ async function fakeFetch(url, init) {
   if (u.includes(":commit")) {
     calls.commit++;
     const { writes } = JSON.parse(init.body);
-    if (writes.some(w => !store.has(w.update.name))) return new Response("NOT_FOUND", { status: 404 });
-    for (const w of writes) { const cur = store.get(w.update.name); for (const k of w.updateMask.fieldPaths) cur[k] = w.update.fields[k]; }
+    if (writes.some(w => w.currentDocument && w.currentDocument.exists && !store.has(w.update.name))) return new Response("NOT_FOUND", { status: 404 });
+    for (const w of writes) {
+      if (!store.has(w.update.name)) store.set(w.update.name, {});
+      const cur = store.get(w.update.name); for (const k of w.updateMask.fieldPaths) cur[k] = w.update.fields[k];
+      // like Firestore: a dotted path ("sent.d20261006") is a field inside a map
+      for (const t of w.updateTransforms || []) {
+        const parts = t.fieldPath.split("."); let o = cur;
+        for (const k of parts.slice(0, -1)) { o[k] = o[k] && o[k].mapValue ? o[k] : { mapValue: { fields: {} } }; o = o[k].mapValue.fields; }
+        const last = parts[parts.length - 1]; o[last] = { integerValue: String(+((o[last] || {}).integerValue || 0) + +t.increment.integerValue) };
+      }
+    }
     return new Response("{}", { status: 200 });
   }
   if (u.startsWith("https://push.example/")) {
@@ -87,4 +96,19 @@ let minutes = 0; for (; minutes < 10; minutes++) { const x = await runOnce(env, 
 const got = Object.keys(users).filter(k => k.startsWith("L")).map(k => users[k].got.length);
 ok("30 due at once: all served within 5 runs (6 a minute), each exactly once", got.every(n => n === 1) && minutes <= 6, { minutes, got });
 ok("budget per run stays small", true);
-const f = R.filter(x => !x.pass); console.log(`worker: ${R.length - f.length}/${R.length} passed`); f.forEach(x => console.log("  FAIL", x.n, JSON.stringify(x.i).slice(0, 400)));
+// health: status/reminders records sends, idle ticks and errors
+const hb = () => fromFields(store.get(`${P}/status/reminders`) || {});
+let h = hb();
+ok("heartbeat written after a run that sent", h.ok === true && h.lastSendAt && h.sent && h.sent.d20261006 >= 30, h);
+const t0 = Date.parse("2026-10-07T10:03:00Z"); store.delete(`${P}/status/reminders`);
+for (const k of [...store.keys()]) if (k.includes("/notify/")) store.delete(k);   // nobody due: an idle Worker
+const idle = await runOnce(env, t0, fakeFetch, () => {});
+ok("idle run off the 10-minute tick writes nothing", idle.checked === 0 && !store.has(`${P}/status/reminders`), idle);
+await runOnce(env, Date.parse("2026-10-07T10:10:00Z"), fakeFetch, () => {});
+ok("idle run on the tick writes a heartbeat", hb().ok === true && +new Date(hb().at) === Date.parse("2026-10-07T10:10:00Z"), hb());
+addUser("Z", { tz: "Asia/Kolkata", eve: "21:30", nextEve: new Date("2026-10-07T10:00:00Z"), last: "2026-10-01" });
+let threw = false; try { await runOnce({ ...env, VAPID_PRIVATE: "" }, Date.parse("2026-10-07T10:11:00Z"), fakeFetch, () => {}); } catch (e) { threw = true; }
+h = hb();
+ok("an error is recorded with its message", threw && h.ok === false && /VAPID/.test(h.lastError) && h.errors && h.errors.d20261007 === 1, h);
+const f = R.filter(x => !x.pass); console.log(`worker: ${R.length - f.length}/${R.length} passed`); f.forEach(x => console.log("  FAIL", x.n, String(JSON.stringify(x.i)).slice(0, 400)));
+process.exit(f.length ? 1 : 0);

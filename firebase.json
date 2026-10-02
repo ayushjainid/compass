@@ -27,7 +27,7 @@
         ]
       },
       {
-        "source": "/@(privacy|terms)",
+        "source": "/@(privacy|terms|stats)",
         "headers": [
           {
             "key": "Cache-Control",
@@ -36,7 +36,7 @@
         ]
       },
       {
-        "source": "/@(firebase-config.js|import.js|ms-auth.html|manifest.webmanifest|privacy.html|terms.html|legal.css|sw.js)",
+        "source": "/@(firebase-config.js|import.js|ms-auth.html|manifest.webmanifest|privacy.html|terms.html|stats.html|legal.css|sw.js)",
         "headers": [
           {
             "key": "Cache-Control",
@@ -63,10 +63,23 @@
       {
         "source": "/terms",
         "destination": "/terms.html"
+      },
+      {
+        "source": "/stats",
+        "destination": "/stats.html"
       }
     ]
   },
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
   }
 }

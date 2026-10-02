@@ -62,3 +62,4 @@ ok("wording rotates: 6 evenings, 6 different messages", titles.size === 6, [...t
 const t0 = performance.now(); for (let i = 0; i < 40; i++) await pushRequest(sub, { title: "x", body: "y" }, vapid); const per = (performance.now() - t0) / 40;
 console.log(`crypto per push ≈ ${per.toFixed(2)} ms (Node)`);
 const f = R.filter(r => !r.pass); console.log(`unit: ${R.length - f.length}/${R.length} passed`); f.forEach(x => console.log("  FAIL", x.n, JSON.stringify(x.i).slice(0, 300)));
+process.exit(f.length ? 1 : 0);

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<title>Compass usage</title>
+<style>
+:root{
+  --bg:#F3F5F2;--surface:#FFFFFF;--sunk:#E9EDEA;--ink:#17201E;--ink2:#46524E;--muted:#5E6865;--line:#D9DFDB;--grid:#E6EAE7;
+  --accent:#23466F;--accent-soft:#E2E9F3;--on-accent:#FFFFFF;--bar:#2F5B8F;--bar-hi:#1B3A5E;
+  --good:#2B714F;--good-soft:#DFEFE5;--warn:#95570C;--warn-soft:#F6E9D6;--bad:#A33A2E;--bad-soft:#F6E1DD;
+  --display:"Newsreader",Georgia,serif;--sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#101514;--surface:#191F1E;--sunk:#232B29;--ink:#E7ECEA;--ink2:#B4BEBA;--muted:#8B9592;--line:#2D3533;--grid:#262E2C;
+  --accent:#93B3DC;--accent-soft:#1E2A39;--on-accent:#0D1623;--bar:#7FA3D1;--bar-hi:#B4CCEA;
+  --good:#72C69D;--good-soft:#16302A;--warn:#E3A65C;--warn-soft:#33281A;--bad:#EC8A7C;--bad-soft:#3A1F1B}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#101514;--surface:#191F1E;--sunk:#232B29;--ink:#E7ECEA;--ink2:#B4BEBA;--muted:#8B9592;--line:#2D3533;--grid:#262E2C;
+  --accent:#93B3DC;--accent-soft:#1E2A39;--on-accent:#0D1623;--bar:#7FA3D1;--bar-hi:#B4CCEA;
+  --good:#72C69D;--good-soft:#16302A;--warn:#E3A65C;--warn-soft:#33281A;--bad:#EC8A7C;--bad-soft:#3A1F1B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 64px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.brand{display:flex;align-items:center;gap:10px;font:600 22px/1 var(--display);color:var(--ink);text-decoration:none}
+.brand svg{width:28px;height:28px}
+.who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center}
+h1{font:600 30px/1.15 var(--display);margin:18px 0 4px;letter-spacing:-.01em}
+.lede{color:var(--ink2);margin:0 0 18px;max-width:640px}
+h2{font:600 19px/1.25 var(--display);margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
+.seg{display:inline-flex;background:var(--sunk);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--ink2);padding:6px 14px;border-radius:999px;font-size:13.5px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.updated{color:var(--muted);font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.tile .k{font-size:12.5px;color:var(--muted);font-weight:500}
+.tile .v{font:600 30px/1.1 var(--display);margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.tile .d{font-size:12.5px;color:var(--ink2)}
+.grid2{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:16px}.grid2 .card{margin-bottom:0}
+@media(min-width:860px){.grid2{grid-template-columns:1fr 1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 16px 14px;margin-bottom:16px;min-width:0}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .gl{stroke:var(--grid);stroke-width:1}
+.chart .ax{fill:var(--muted);font:11px var(--sans)}
+.chart .b{fill:var(--bar)}
+.chart .hit{fill:transparent}
+.chart g.m:hover .b,.chart g.m:focus .b{fill:var(--bar-hi)}
+.chart g.m:focus{outline:none}
+.chart g.m:focus .hit{stroke:var(--accent);stroke-width:2;fill:transparent}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px;opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.tip b{font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:14px;padding:18px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:500}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.share{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--sunk);vertical-align:middle;margin-left:8px;position:relative;overflow:hidden}
+@media(max-width:480px){.share{display:none}}
+.share i{position:absolute;left:0;top:0;bottom:0;background:var(--bar);border-radius:3px}
+.status{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;margin-bottom:12px}
+.status.ok{background:var(--good-soft)}.status.warn{background:var(--warn-soft)}.status.bad{background:var(--bad-soft)}.status.off{background:var(--sunk)}
+.status .ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--surface)}
+.status.ok .ic{background:var(--good)}.status.warn .ic{background:var(--warn)}.status.bad .ic{background:var(--bad)}.status.off .ic{background:var(--muted)}
+.status b{display:block}.status span{color:var(--ink2);font-size:13.5px}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:14px}
+dl.kv dt{color:var(--muted)}dl.kv dd{margin:0;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.list{list-style:none;margin:0;padding:0}
+.list li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.list li:last-child{border-bottom:0}
+.list .meta{color:var(--muted);font-size:12.5px;margin-top:2px}
+.list .cnt{float:right;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:10px}
+.mono{font-family:var(--mono);font-size:12.5px;overflow-wrap:anywhere}
+.gate{max-width:520px;margin:60px auto;text-align:center}
+.gate p{color:var(--ink2)}
+.gate code{background:var(--sunk);padding:2px 6px;border-radius:6px;font-size:13px}
+.note{color:var(--muted);font-size:12.5px;margin:10px 0 0}
+details.tbl summary{cursor:pointer;color:var(--ink2);font-size:13px;margin-top:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 4.5l3.2 11.5H12.8z" fill="#A36F1C" transform="rotate(28 16 16)"/><path d="M16 27.5l-3.2-11.5h6.4z" fill="#8C9894" transform="rotate(28 16 16)"/></svg>Compass</a>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="main"><p class="empty">Loading…</p></main>
+</div>
+<script src="/firebase-config.js"></script>
+<script type="module">
+import * as FB from "/vendor/firebase.js?v=4";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const pad = n => String(n).padStart(2, "0");
+const dkey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const monday = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const short = d => `${MON[d.getMonth()]} ${d.getDate()}`;
+const ms = x => x ? (x.toMillis ? x.toMillis() : +new Date(x)) : 0;
+const ago = t => { if (!t) return "never"; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`; };
+const n0 = x => (x || 0).toLocaleString();
+const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "–";
+
+const FEATURES = [["logged", "Logged a floor"], ["planned", "Planned the week"], ["reviewed", "Did the Sunday review"], ["tasks", "Added tasks"], ["remindersOn", "Turned on reminders"], ["paused", "Paused a floor"], ["exported", "Exported to calendar"], ["feedback", "Sent feedback"]];
+const st = { range: 30, data: null };
+
+/* ---------- numbers ---------- */
+export function summarize(docs, now = new Date()) {
+  const day = {}, week = {};
+  for (const [id, v] of Object.entries(docs)) { if (id.startsWith("d-")) day[id.slice(2)] = v; else if (id.startsWith("w-")) week[id.slice(2)] = v; }
+  const today = dkey(now), thisW = dkey(monday(now)), lastW = dkey(addDays(monday(now), -7));
+  return { day, week, today, thisW, lastW };
+}
+
+/* ---------- a bar chart: one series, thin rounded bars on a baseline, hover + keyboard tooltip ---------- */
+function bars(id, rows, { label, fmt = n0, unit = "" }) {
+  /* drawn at its real on-screen width so axis text stays 11px on a phone */
+  const wrap = document.querySelector(".wrap").clientWidth - 32, half = innerWidth >= 860;
+  const W = Math.round(Math.max(260, Math.min(640, (half ? (wrap - 16) / 2 : wrap) - 34))), H = 200, L = 30, R = 6, T = 10, B = 26, n = rows.length;
+  const every = Math.max(1, Math.ceil(64 / ((W - L - R) / n)));
+  const max = Math.max(1, ...rows.map(r => r.v)), nice = niceMax(max), step = (W - L - R) / n, bw = Math.max(3, Math.min(28, step * 0.62));
+  const y = v => T + (H - T - B) * (1 - v / nice);
+  const ticks = [0, nice / 2, nice].filter((t, i, a) => a.indexOf(t) === i && Number.isInteger(t));
+  const grid = ticks.map(t => `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="ax" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t}</text>`).join("");
+  const marks = rows.map((r, i) => {
+    const x = L + step * i + (step - bw) / 2, h = Math.max(0, y(0) - y(r.v)), rad = Math.min(4, bw / 2, h);
+    const path = h ? `M${x},${y(0)} V${y(r.v) + rad} Q${x},${y(r.v)} ${x + rad},${y(r.v)} H${x + bw - rad} Q${x + bw},${y(r.v)} ${x + bw},${y(r.v) + rad} V${y(0)} Z` : "";
+    const tick = (i % every === 0 && (n - 1 - i >= every || i === n - 1)) || i === n - 1 ? `<text class="ax" x="${x + bw / 2}" y="${H - 8}" text-anchor="middle">${esc(r.l)}</text>` : "";
+    return `<g class="m" tabindex="0" role="img" aria-label="${esc(r.full || r.l)}: ${fmt(r.v)}${unit}" data-tip="${esc(r.full || r.l)}" data-v="${esc(fmt(r.v) + unit)}"><rect class="hit" x="${L + step * i}" y="${T}" width="${step}" height="${H - T - B}"/>${path ? `<path class="b" d="${path}"/>` : ""}</g>${tick}`;
+  }).join("");
+  const table = `<details class="tbl"><summary>Show as a table</summary><table><thead><tr><th>${esc(label)}</th><th class="n">Count</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r.full || r.l)}</td><td class="n">${fmt(r.v)}</td></tr>`).join("")}</tbody></table></details>`;
+  return `<div class="chart" id="${id}"><svg viewBox="0 0 ${W} ${H}" aria-label="${esc(label)}">${grid}<line class="gl" x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" style="stroke:var(--line)"/>${marks}</svg><div class="tip" aria-hidden="true"></div></div>${table}`;
+}
+function niceMax(m) { if (m <= 4) return 4; const p = Math.pow(10, Math.floor(Math.log10(m))), f = m / p; return (f <= 2 ? 2 : f <= 4 ? 4 : f <= 5 ? 5 : 10) * p; }
+function wireTips() {
+  document.querySelectorAll(".chart").forEach(ch => {
+    const tip = ch.querySelector(".tip"), svg = ch.querySelector("svg");
+    const show = g => { const r = g.getBoundingClientRect(), c = ch.getBoundingClientRect(), b = g.querySelector(".b") || g.querySelector(".hit"), br = b.getBoundingClientRect();
+      tip.innerHTML = `${esc(g.dataset.tip)} · <b>${esc(g.dataset.v)}</b>`; tip.style.left = Math.min(c.width - 60, Math.max(60, r.left - c.left + r.width / 2)) + "px"; tip.style.top = (br.top - c.top) + "px"; tip.classList.add("on"); };
+    const hide = () => tip.classList.remove("on");
+    svg.querySelectorAll("g.m").forEach(g => { g.addEventListener("pointerenter", () => show(g)); g.addEventListener("focus", () => show(g)); g.addEventListener("pointerleave", hide); g.addEventListener("blur", hide); });
+  });
+}
+
+/* ---------- page ---------- */
+function render() {
+  const D = st.data; if (!D) return;
+  const { day, week, today, thisW, lastW } = D.sum;
+  const now = new Date(), days = Array.from({ length: st.range }, (_, i) => addDays(now, i - st.range + 1));
+  const dRows = days.map(d => ({ l: short(d), full: `${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()]} ${short(d)}`, v: (day[dkey(d)] || {}).active || 0 }));
+  const nW = st.range === 30 ? 8 : 13, weeks = Array.from({ length: nW }, (_, i) => addDays(monday(now), -7 * (nW - 1 - i)));
+  const wRows = weeks.map(m => ({ l: short(m), full: `Week of ${short(m)}`, v: (week[dkey(m)] || {}).active || 0 }));
+  const inRange = (o, k) => days.reduce((a, d) => a + ((o[dkey(d)] || {})[k] || 0), 0);
+  const tw = week[thisW] || {}, lw = week[lastW] || {};
+  const obS = inRange(day, "obStart"), obD = inRange(day, "obDone");
+  const ages = Array.from({ length: 13 }, (_, i) => ({ l: i === 12 ? "12+" : String(i), full: i === 0 ? "Set up this week" : i === 12 ? "12+ weeks in" : `${i} week${i > 1 ? "s" : ""} in`, v: tw["a" + i] || 0 }));
+  const avg7 = Math.round(dRows.slice(-7).reduce((a, r) => a + r.v, 0) / 7 * 10) / 10;
+
+  /* reminders health */
+  const R = D.rem, beat = ms(R && R.at), late = beat && Date.now() - beat > 25 * 60 * 1000;
+  /* the Worker keys its daily counts by UTC date */
+  const last7 = Array.from({ length: 7 }, (_, i) => "d" + new Date(Date.now() - i * 864e5).toISOString().slice(0, 10).replace(/-/g, ""));
+  const sum7 = m => last7.reduce((a, k) => a + +(((R || {})[m] || {})[k] || 0), 0);
+  const health = !R ? { c: "off", i: "–", t: "No word from the reminders service yet", s: "It writes here every 10 minutes once it's deployed. See README → Check-in reminders." }
+    : R.ok === false && Date.now() - ms(R.lastErrorAt) < 30 * 60 * 1000 ? { c: "bad", i: "!", t: "Reminders are failing", s: R.lastError || "Unknown error" }
+    : late ? { c: "warn", i: "!", t: "Reminders haven't checked in", s: `Last heard ${ago(beat)}. Check the Worker in Cloudflare (npm run tail in worker/).` }
+    : { c: "ok", i: "✓", t: "Reminders are running", s: `Last heard ${ago(beat)}.` };
+
+  /* errors across accounts, last 7 days: message -> accounts */
+  const since = Date.now() - 7 * 864e5, errMap = new Map();
+  D.errors.forEach(e => { const seen = new Set(); (Array.isArray(e && e.items) ? e.items : []).forEach(it => { if (!it || typeof it !== "object") return; const at = Date.parse(it.at); if (!(at >= since)) return; const k = String(it.msg || "?").slice(0, 300); const x = errMap.get(k) || { msg: k, where: String(it.where || ""), n: 0, last: 0 }; if (!seen.has(k)) { x.n++; seen.add(k); } x.last = Math.max(x.last, at); errMap.set(k, x); }); });
+  const errs = [...errMap.values()].sort((a, b) => b.n - a.n || b.last - a.last).slice(0, 12);
+
+  $("#main").innerHTML = `
+  <h1>How Compass is doing</h1>
+  <p class="lede">Anonymous tallies: each account adds 1 the first time something happens in a day or week. No names, no ids, nothing anyone typed.</p>
+  <div class="bar-row"><div class="seg" role="group" aria-label="Date range">${[30, 90].map(n => `<button data-range="${n}" aria-pressed="${st.range === n}">Last ${n} days</button>`).join("")}</div>
+    <span class="updated">Updated ${ago(D.at)} · <button class="btn" id="reload" style="padding:3px 10px;font-size:13px">Refresh</button></span></div>
+  <div class="tiles">
+    <div class="tile"><div class="k">Active today</div><div class="v">${n0((day[today] || {}).active)}</div><div class="d">7-day average ${avg7}</div></div>
+    <div class="tile"><div class="k">Active this week</div><div class="v">${n0(tw.active)}</div><div class="d">Last week ${n0(lw.active)}</div></div>
+    <div class="tile"><div class="k">New this week</div><div class="v">${n0(tw.obDone)}</div><div class="d">Finished setup · last week ${n0(lw.obDone)}</div></div>
+    <div class="tile"><div class="k">Setup completion</div><div class="v">${pct(obD, obS + obD ? Math.max(obS, obD) : 0)}</div><div class="d">${n0(obD)} of ${n0(Math.max(obS, obD))} who started, last ${st.range} days</div></div>
+  </div>
+  <div class="grid2">
+    <section class="card"><h2>Daily active accounts</h2><p class="sub">Opened Compass that day.</p>${bars("c-daily", dRows, { label: "Day" })}</section>
+    <section class="card"><h2>Weekly active accounts</h2><p class="sub">Opened Compass at least once that week (Mon–Sun).</p>${bars("c-weekly", wRows, { label: "Week" })}</section>
+  </div>
+  <div class="grid2">
+    <section class="card"><h2>This week, by time since setup</h2><p class="sub">Active accounts this week, grouped by how many weeks ago they finished setup. A long tail means people stick with it.</p>${bars("c-age", ages, { label: "Weeks since setup" })}</section>
+    <section class="card"><h2>What people use</h2><p class="sub">Accounts that did each at least once.</p>
+      <table><thead><tr><th>Feature</th><th class="n">This week</th><th class="n">Last week</th><th class="n">Of actives</th></tr></thead><tbody>
+      ${FEATURES.map(([k, l]) => `<tr><td>${esc(l)}</td><td class="n">${n0(tw[k])}</td><td class="n">${n0(lw[k])}</td><td class="n">${pct(tw[k] || 0, tw.active || 0)}<span class="share" aria-hidden="true"><i style="width:${tw.active ? Math.min(100, Math.round((tw[k] || 0) / tw.active * 100)) : 0}%"></i></span></td></tr>`).join("")}
+      </tbody></table></section>
+  </div>
+  <div class="grid2">
+    <section class="card"><h2>Reminders</h2><p class="sub">Health of the Cloudflare Worker that sends check-ins.</p>
+      <div class="status ${health.c}" role="status"><span class="ic" aria-hidden="true">${health.i}</span><div><b>${esc(health.t)}</b><span>${esc(health.s)}</span></div></div>
+      <dl class="kv"><dt>Sent, last 7 days</dt><dd>${n0(sum7("sent"))}</dd><dt>Failed, last 7 days</dt><dd>${n0(sum7("failed"))}</dd><dt>Errors, last 7 days</dt><dd>${n0(sum7("errors"))}</dd>
+      <dt>Last sent</dt><dd>${R ? ago(ms(R.lastSendAt)) : "–"}</dd>${R && R.lastError ? `<dt>Last error</dt><dd><span class="mono">${esc(R.lastError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastErrorAt))}</span></dd>` : ""}</dl></section>
+    <section class="card"><h2>Errors, last 7 days</h2><p class="sub">From people's devices, grouped by message. Count is accounts affected.</p>
+      ${errs.length ? `<ul class="list">${errs.map(e => `<li><span class="cnt">${e.n}</span><span class="mono">${esc(e.msg)}</span><div class="meta">${esc((e.where || "").slice(0, 120))} · ${ago(e.last)}</div></li>`).join("")}</ul>` : `<p class="empty">No errors reported. 🎉</p>`}</section>
+  </div>
+  <section class="card"><h2>Feedback</h2><p class="sub">Newest first. Notes are shown without who sent them.</p>
+    ${D.feedback.length ? `<ul class="list">${D.feedback.filter(f => f && f.text).slice(0, 30).map(f => `<li>${esc(String(f.text))}<div class="meta">${f.screen ? esc(String(f.screen)) + " · " : ""}${ago(ms(f.at))}</div></li>`).join("")}</ul>` : `<p class="empty">No feedback yet.</p>`}</section>
+  <p class="note">Only you can see this page: Firestore rules let an account read these tallies only if it has a document in <span class="mono">admins/</span>.</p>`;
+  wireTips();
+}
+
+let rT; addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(render, 150); });
+document.addEventListener("click", e => {
+  const r = e.target.closest("[data-range]"); if (r) { st.range = +r.dataset.range; render(); return; }
+  if (e.target.closest("#reload")) load();
+  if (e.target.closest("#signin")) signIn();
+  if (e.target.closest("#signout")) FB.signOut(ST.auth);
+});
+
+const ST = {};
+function gate(html) { $("#main").innerHTML = `<div class="gate">${html}</div>`; }
+async function signIn() { try { await FB.signInWithPopup(ST.auth, new FB.GoogleAuthProvider()); } catch (e) { if (/popup/i.test(e.code || "")) FB.signInWithRedirect(ST.auth, new FB.GoogleAuthProvider()); } }
+async function load() {
+  try {
+    const [stats, rem, fb, er] = await Promise.all([
+      FB.getDocs(FB.collection(ST.fs, "stats")),
+      FB.getDoc(FB.doc(ST.fs, "status", "reminders")),
+      FB.getDocs(FB.collection(ST.fs, "feedback")).catch(() => ({ docs: [] })),
+      FB.getDocs(FB.collection(ST.fs, "errors")).catch(() => ({ docs: [] })),
+    ]);
+    const docs = {}; stats.docs.forEach(d => docs[d.id] = d.data());
+    st.data = { at: Date.now(), sum: summarize(docs), rem: rem.exists() ? rem.data() : null,
+      feedback: fb.docs.map(d => d.data()).sort((a, b) => ms(b.at) - ms(a.at)), errors: er.docs.map(d => d.data()) };
+    render();
+  } catch (e) { gate(`<h1>Couldn't load</h1><p>${esc(e.message)}</p><button class="btn" id="reload">Try again</button>`); }
+}
+
+const cfg = Object.assign({}, window.COMPASS_FIREBASE_CONFIG || {});
+if (cfg.projectId && (location.hostname === cfg.projectId + ".web.app" || location.hostname === cfg.projectId + ".firebaseapp.com")) cfg.authDomain = location.hostname;
+const app = FB.initializeApp(cfg);
+const acKey = String(window.COMPASS_APPCHECK_SITE_KEY || "").trim();
+if (acKey) { try { FB.initializeAppCheck(app, { provider: new FB.ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true }); } catch (e) {} }
+ST.auth = FB.getAuth(app); ST.fs = FB.initializeFirestore(app, {});
+FB.getRedirectResult(ST.auth).catch(() => {});
+FB.onAuthStateChanged(ST.auth, async u => {
+  $("#who").innerHTML = u ? `${esc(u.email || u.displayName || "")} <button class="btn" id="signout" style="padding:3px 10px;font-size:13px">Sign out</button>` : "";
+  if (!u) return gate(`<h1>Compass usage</h1><p>This page is for the person who runs Compass.</p><button class="btn primary" id="signin">Sign in with Google</button>`);
+  let admin = false; try { admin = (await FB.getDoc(FB.doc(ST.fs, "admins", u.uid))).exists(); } catch (e) {}
+  if (!admin) return gate(`<h1>Not set up for this account</h1><p>To see the dashboard, open the Firebase console → Firestore, create a collection <code>admins</code> with a document whose ID is your user ID:</p><p><code>${esc(u.uid)}</code></p><p>Leave the document empty (or add any field), then refresh.</p>`);
+  load();
+});
+</script>
+</body></html>

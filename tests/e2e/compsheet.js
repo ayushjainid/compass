@@ -1,0 +1,55 @@
+const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const root = path.join(__dirname, '../../public'), S = process.env.S;
+const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0';
+const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
+(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+  const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: 'dark', deviceScaleFactor: 2 });
+  await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
+    if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
+    route.fulfill({ status: 200, body, contentType: type }); });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  const tap = async s => { const l = p.locator(s).first(); await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap() : await l.click(); await p.waitForTimeout(200); };
+  await p.goto('http://compass.test/'); await p.waitForTimeout(500); await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
+  await tap('[data-act=obNext]'); for (const v of ['rel', 'body']) await tap(`[data-act=obValue][data-v=${v}]`);
+  while (await p.locator('[data-act=obNext]').count()) await tap('[data-act=obNext]');
+  await p.waitForTimeout(400); await tap('[data-act=tab][data-t=compass]'); await tap('[data-act=cSec][data-k=values]');
+  await tap('[data-act=addComp][data-value=body]'); await tap('[data-act=customComp]'); await p.waitForTimeout(400);
+  ok('new component sheet open', await p.locator('#c-name').count() === 1);
+  await p.fill('#c-name', 'Skincare (AM + PM)'); await p.fill('#c-note', '20 mins');
+  ok('shows Minutes each time', /Minutes each time/i.test(await p.locator('label[for=c-mins]').innerText()) && await p.inputValue('#c-mins') === '30'); await p.fill('#c-mins', '20');
+  // mark the sheet node, then toggle: a re-render must not replay the slide-in
+  await p.evaluate(() => { const s = document.querySelector('.sheet'); s.scrollTop = s.scrollHeight; });
+  const top0 = await p.evaluate(() => document.querySelector('.sheet').scrollTop);
+  await tap('[data-act=cToggle][data-f=mvw]');
+  const st = await p.evaluate(() => { const s = document.querySelector('.sheet'); return { anim: getComputedStyle(s).animationName, scrim: getComputedStyle(document.querySelector('.scrim')).animationName, top: s.scrollTop, name: document.querySelector('#c-name').value, mvw: document.querySelector('[data-f=mvw]').getAttribute('aria-checked') }; });
+  ok('toggle does not replay the sheet animation', st.anim === 'none' && st.scrim === 'none', st);
+  ok('toggle keeps the scroll position', Math.abs(st.top - top0) < 60, { top0, top: st.top });
+  ok('toggle keeps typed text and flips', st.name === 'Skincare (AM + PM)' && st.mvw === 'true', st);
+  await tap('[data-act=cBlock]');
+  const g = await p.evaluate(() => { const a = document.querySelector('#c-time').getBoundingClientRect(), b = document.querySelector('#c-dur').getBoundingClientRect(); return { aR: a.right, bL: b.left, aW: a.width, bW: b.width }; });
+  ok('Starts and Minutes do not overlap', g.aR <= g.bL + 0.5 && Math.abs(g.aW - g.bW) < 2, g);
+  const fs16 = await p.evaluate(() => getComputedStyle(document.querySelector('#c-name')).fontSize);
+  if (touch) ok('inputs are 16px on phones (no iOS focus zoom)', fs16 === '16px', fs16);
+  const btns = await p.evaluate(() => { const r = [...document.querySelectorAll('.sheet .row:last-of-type .btn, .sheet [data-act=saveComp]')].map(e => e.getBoundingClientRect()); return r.map(x => [Math.round(x.left), Math.round(x.right), Math.round(x.top)]); });
+  await p.evaluate(() => { const s = document.querySelector('.sheet'); s.scrollTop = s.scrollHeight; }); await p.waitForTimeout(100);
+  await p.screenshot({ path: `${S}/compsheet-${W}.png` });
+  await tap('[data-act=saveComp]'); await p.waitForTimeout(300);
+  ok('saved the component', /Skincare \(AM \+ PM\)/.test(await p.locator('#main').innerText()));
+  await p.waitForTimeout(900); { const c = await p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore'))['users/u1/docs/profile'].components.find(x => x.name === 'Skincare (AM + PM)')); ok('20 minutes saved as a third of an hour', c && Math.abs(c.hours - 1 / 3) < 1e-6, c); }
+  await tap('[data-act=editComp]:has-text("Skincare")'); await p.waitForTimeout(400);
+  ok('opening a sheet fresh still animates', await p.evaluate(() => getComputedStyle(document.querySelector('.sheet')).animationName) === 'up');
+  /* duplicate */
+  const before = await p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore'))['users/u1/docs/profile'].components.length);
+  const rowB = await p.evaluate(() => { const r = [...document.querySelectorAll('.sheet .row')].pop(); return [...r.querySelectorAll('.btn')].map(e => { const b = e.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.right), Math.round(b.top)]; }); });
+  ok('Save, Duplicate and Delete sit on one row without overlapping', rowB.length === 3 && rowB.every(x => x[2] === rowB[0][2]) && rowB[0][1] <= rowB[1][0] && rowB[1][1] <= rowB[2][0], rowB);
+  await tap('[data-act=dupComp]'); await p.waitForTimeout(300);
+  ok('duplicate opens a copy to adjust', /Copy of component/.test(await p.locator('.sheet h2').innerText()) && await p.inputValue('#c-name') === 'Skincare (AM + PM) (copy)' && await p.inputValue('#c-note') === '20 mins');
+  await tap('[data-act=closeSheet] >> nth=1'); await p.waitForTimeout(900);
+  ok('cancelling a duplicate adds nothing', await p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore'))['users/u1/docs/profile'].components.length) === before);
+  await tap('[data-act=editComp]:has-text("Skincare")'); await p.waitForTimeout(300); await tap('[data-act=dupComp]'); await p.fill('#c-name', 'Skincare PM'); await tap('[data-act=saveComp]'); await p.waitForTimeout(900);
+  const comps = await p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore'))['users/u1/docs/profile'].components.filter(c => /Skincare/.test(c.name)));
+  ok('saving the copy adds a second component, original untouched', comps.length === 2 && comps[0].id !== comps[1].id && comps.some(c => c.name === 'Skincare (AM + PM)') && comps.some(c => c.name === 'Skincare PM' && c.mvw && c.block), comps);
+  await p.screenshot({ path: `${S}/dup-${W}.png` });
+  ok('no page errors', errs.length === 0, errs);
+  const f = results.filter(r => !r.pass); console.log(`compsheet ${W}: ${results.length - f.length}/${results.length} passed`); f.forEach(x => console.log('  FAIL', x.n, JSON.stringify(x.i || '').slice(0, 300)));
+  await b.close(); })().catch(e => { console.log('CRASH', e.message.split('\n')[0]); process.exit(1); });

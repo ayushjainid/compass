@@ -1,0 +1,62 @@
+// Daily floors with picked days only show on those days
+const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const root = path.join(__dirname, '../../public'), S = process.env.S;
+const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0', dark = process.env.D === '1';
+const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
+(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
+  const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: dark ? 'dark' : 'light', deviceScaleFactor: 2 });
+  await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
+    if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
+    route.fulfill({ status: 200, body, contentType: type }); });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  const tap = async s => { const l = typeof s === 'string' ? p.locator(s).first() : s; await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap() : await l.click(); await p.waitForTimeout(200); };
+  await p.goto('http://compass.test/'); await p.waitForTimeout(500); await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
+  await tap('[data-act=obNext]'); for (const v of ['rel', 'body', 'mind']) await tap(`[data-act=obValue][data-v=${v}]`); await tap('[data-act=obCore][data-v=body]');
+  while (await p.locator('[data-act=obNext]').count()) await tap('[data-act=obNext]');
+  await p.waitForTimeout(1000);
+  const di = await p.evaluate(() => (new Date().getDay() + 6) % 7);
+  const other = [(di + 1) % 7, (di + 3) % 7, (di + 5) % 7].sort((a, b) => a - b);
+  await p.evaluate(other => { const st = JSON.parse(localStorage.getItem('__mockstore')); const pr = st['users/u1/docs/profile'];
+    pr.components.push({ id: 'fbw', value: 'body', name: 'Full body Workout', cadence: 'daily', target: 3, hours: 1, note: 'A 1 hr gym seesh', block: { days: other, time: '07:00', dur: 60 } });
+    pr.components.push({ id: 'skin', value: 'body', name: 'Skincare', cadence: 'daily', target: 7, hours: 1/6 });
+    localStorage.setItem('__mockstore', JSON.stringify(st)); }, other);
+  await p.reload(); await p.waitForTimeout(1500);
+  const ids = () => p.locator('.daylist .dayrow, .donelist .dayrow').evaluateAll(es => es.map(e => e.dataset.k));
+  let r = await ids();
+  ok('not on today when today is not a picked day', !r.includes('fbw'), r);
+  ok('daily with no days picked still shows every day', r.includes('skin'), r);
+  const lab0 = await p.locator('#strip [data-act=day], [data-act=day]').nth(di).getAttribute('aria-label');
+  const keys = await p.locator('[data-act=day]').evaluateAll(es => es.map(e => e.dataset.k));
+  await tap(`[data-act=day][data-k="${keys[other[0]]}"]`); await p.waitForTimeout(400);
+  r = await ids();
+  ok('shows on a picked day', r.includes('fbw'), r);
+  ok('with its time', /7 am/.test(await p.locator('.dayrow[data-k=fbw]').innerText()));
+  const labPick = await p.locator('[data-act=day]').nth(other[0]).getAttribute('aria-label');
+  const labOff = await p.locator('[data-act=day]').nth(di).getAttribute('aria-label');
+  const tot = s => +(/of (\d+) done/.exec(s) || [])[1];
+  ok('day ring counts it only on its days', tot(labPick) === tot(labOff) + 1, [labPick, labOff]);
+  // tick it on today via data, then confirm a ticked item stays visible on an unpicked day
+  await p.evaluate(({ k }) => { const st = JSON.parse(localStorage.getItem('__mockstore')); const wk = Object.keys(st).find(x => /docs\/w-/.test(x)); }, { k: keys[di] });
+  await tap(`[data-act=day][data-k="${keys[di]}"]`);
+  // edit the component: pick today too, check, then unpick
+  await p.evaluate(di => { const st = JSON.parse(localStorage.getItem('__mockstore')); const c = st['users/u1/docs/profile'].components.find(c => c.id === 'fbw'); c.block.days = c.block.days.concat(di).sort(); localStorage.setItem('__mockstore', JSON.stringify(st)); }, di);
+  await p.reload(); await p.waitForTimeout(1500);
+  ok('appears once today is picked', (await ids()).includes('fbw'));
+  await tap('.daylist .dayrow[data-k=fbw]'); await p.waitForTimeout(700);
+  await p.evaluate(di => { const st = JSON.parse(localStorage.getItem('__mockstore')); const c = st['users/u1/docs/profile'].components.find(c => c.id === 'fbw'); c.block.days = c.block.days.filter(x => x !== di); localStorage.setItem('__mockstore', JSON.stringify(st)); }, di);
+  await p.reload(); await p.waitForTimeout(1500);
+  ok('already ticked today stays visible (so it can be unticked)', /fbw/.test((await p.locator('.donehead').innerText().catch(() => '')) + (await ids()).join()) || /Full body/.test(await p.locator('.donehead').innerText().catch(() => '')));
+  // sheet hint
+  await p.evaluate(() => { const st = JSON.parse(localStorage.getItem('__mockstore')); const c = st['users/u1/docs/profile'].components.find(c => c.id === 'fbw'); c.block.days = [0, 2]; localStorage.setItem('__mockstore', JSON.stringify(st)); });
+  await p.reload(); await p.waitForTimeout(1500);
+  await tap('[data-act=tab][data-t=compass]'); await tap('[data-act=cSec][data-k=values]');
+  const ed = p.locator('[data-act=editComp]:has-text("Full body")');
+  if (await ed.count()) { await tap(ed); await p.waitForTimeout(400);
+    const h = await p.locator('.daysnote').innerText().catch(() => '');
+    ok('sheet says which days it shows', /only on Mon, Wed/.test(h), h);
+    ok('and warns when fewer days than the floor', /fewer days than your floor of 3/.test(h), h);
+    await p.screenshot({ path: `${S}/dailydays-sheet-${W}${dark ? 'd' : ''}.png` });
+  } else ok('found edit button', false, await p.locator('[data-act]').evaluateAll(es => [...new Set(es.map(e => e.dataset.act))]));
+  ok('no page errors', !errs.length, errs);
+  console.log(`dailydays ${W}${dark ? 'd' : ''}: ${results.filter(x => x.pass).length}/${results.length} passed`); results.filter(x => !x.pass).forEach(x => console.log('  FAIL', x.n, JSON.stringify(x.i || '').slice(0, 400)));
+  await b.close(); })();
