@@ -748,6 +748,7 @@ html.dragging{scroll-behavior:auto!important}
 .pstep .pnext small{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .pstep.edit{background:transparent;padding:0;gap:8px}
 .pstep.edit input{flex:1;min-width:0}
+.admlink{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}.admlink small{font-weight:400;color:var(--muted);font-size:12px}
 .tmedit{margin:6px 0 14px}
 .tmrow{display:flex;gap:8px}.tmrow input{flex:1;min-width:0}
 .tmacts{display:grid;gap:8px}
@@ -1321,7 +1322,7 @@ async function flushAll() {
 }
 function teardown() {
   Object.keys(ST.subs).forEach(unsubscribe);
-  S.docs = {}; S.hist = {}; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
+  S.docs = {}; S.hist = {}; S.isAdmin = false; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
   S.base = {}; S.waiting = {}; S.late = {}; S.force = {}; S.last = {};
   Object.keys(T).forEach(k => { clearTimeout(T[k]); T[k] = null; });
   ST.uid = null; S.mode = "connecting"; profileReady = false; S.loaded = {}; S.loadErr = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
@@ -1512,6 +1513,8 @@ async function init() {
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     stat(onboarded() ? "active" : "obStart");
+    /* the owner (a document at admins/{uid}, made by hand in the console) gets a link to the usage dashboard */
+    const uidNow = u.uid; FB.getDoc(FB.doc(ST.fs, "admins", uidNow)).then(sn => { if (ST.uid === uidNow && sn.exists()) { S.isAdmin = true; scheduleRender(); } }).catch(() => {});
     if (START_URL) openFromUrl(START_URL);
     loadHistory(); render();
     loadNotify().then(() => scheduleRender());
@@ -3441,6 +3444,7 @@ function renderSheetBody() {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Account"><div class="in"><div class="grab"></div>
       <div class="acct"><span class="avatar">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc((u.name || u.email || "?").charAt(0).toUpperCase())}</span><div><b>${esc(u.name || "Signed in")}</b><div class="hint">${esc(u.email)}</div></div></div>
       <p class="hint" style="margin:0">Signed in with Google. Your Compass syncs to every device where you sign in with this account.</p>
+      ${S.isAdmin ? `<a class="btn admlink" href="/stats"><span>Usage dashboard</span><small>Only you see this</small></a>` : ""}
       <button class="btn" data-act="export">Export my data</button>
       <button class="btn" data-act="signout">Sign out</button>
       ${S.confirm === "delacct" ? `<div class="banner" style="margin:0"><b>Delete your account and all your data?</b> Your setup, every week and your journal are removed for good. Export first if you want a copy.<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn danger" data-act="delAcctYes" ${S.deleting ? "disabled" : ""}>${S.deleting ? "Deleting…" : "Delete everything"}</button><button class="btn quiet" data-act="delAcctNo" ${S.deleting ? "disabled" : ""}>Keep my account</button></div></div>` : `<button class="btn quiet danger" data-act="delAcct">Delete my account</button>`}
