@@ -3,6 +3,7 @@
 import * as F from "firebase-admin/firestore";
 import { seal, open, encode, decode, dump, load } from "../../scripts/backup/lib.mjs";
 const R = []; const ok = (n, c, i) => R.push([n, !!c, i]);
+process.on("unhandledRejection", e => { console.log(`::error title=crash::${String(e && (e.stack || e.message) || e).slice(0, 800).replace(/\r?\n/g, " | ")}`); process.exit(1); });
 const PASS = "correct horse battery staple 42";
 
 // ---- sealing
@@ -50,5 +51,5 @@ ok("restored timestamps are Timestamps", db2.store.get("notify/a").nextEve insta
 ok("documents made after the backup are left alone", db2.store.get("users/a/docs/w-2026-10-05").later === 1);
 ok("prefix match doesn't spill into similar ids (users/a vs users/ab)", (await (async () => { const d3 = memDb({}); await load(d3, F, [{ path: "users/ab/docs/x", data: {} }, { path: "users/a/docs/y", data: {} }], { only: ["users/a/"] }); return [...d3.store.keys()]; })()).join() === "users/a/docs/y");
 
-const f = R.filter(x => !x[1]); f.forEach(x => console.log("  FAIL", x[0], JSON.stringify(x[2] ?? "").slice(0, 300)));
+const f = R.filter(x => !x[1]); f.forEach(x => { console.log("  FAIL", x[0], JSON.stringify(x[2] ?? "").slice(0, 300)); if (process.env.GITHUB_ACTIONS) console.log(`::error title=${x[0].replace(/[,:]/g, " ")}::${JSON.stringify(x[2] ?? "").slice(0, 600).replace(/%/g, "%25")}`); });
 console.log(`backup unit: ${R.length - f.length}/${R.length} passed`); process.exit(f.length ? 1 : 0);

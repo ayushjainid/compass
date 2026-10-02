@@ -8,6 +8,7 @@ import * as F from "firebase-admin/firestore";
 import { dump } from "../../scripts/backup/lib.mjs";
 if (!process.env.FIRESTORE_EMULATOR_HOST) { console.log("Run this inside the Firestore emulator."); process.exit(1); }
 const R = []; const ok = (n, c, i) => R.push([n, !!c, i]);
+process.on("unhandledRejection", e => { console.log(`::error title=crash::${String(e && (e.stack || e.message) || e).slice(0, 800).replace(/\r?\n/g, " | ")}`); process.exit(1); });
 const project = "demo-compass", env = { ...process.env, FIREBASE_PROJECT: project, BACKUP_PASSPHRASE: "a long test passphrase for the emulator" };
 const db = F.getFirestore(initializeApp({ projectId: project }));
 const ts = F.Timestamp.fromMillis(Date.parse("2026-10-02T16:00:00.123Z"));
@@ -41,5 +42,5 @@ ok("everything back exactly, timestamps included", JSON.stringify(after) === JSO
 ok("a timestamp field is a real Timestamp again", (await db.doc("notify/alice").get()).get("nextEve") instanceof F.Timestamp);
 let wrong = ""; try { execFileSync(process.execPath, ["scripts/backup/restore.mjs", file], { env: { ...env, BACKUP_PASSPHRASE: "not the right passphrase at all" }, stdio: "pipe" }); } catch (e) { wrong = String(e.stderr); }
 ok("wrong passphrase stops the restore", /Wrong passphrase/.test(wrong), wrong.slice(0, 200));
-const f = R.filter(x => !x[1]); f.forEach(x => console.log("  FAIL", x[0], JSON.stringify(x[2] ?? "").slice(0, 300)));
+const f = R.filter(x => !x[1]); f.forEach(x => { console.log("  FAIL", x[0], JSON.stringify(x[2] ?? "").slice(0, 300)); if (process.env.GITHUB_ACTIONS) console.log(`::error title=${x[0].replace(/[,:]/g, " ")}::${JSON.stringify(x[2] ?? "").slice(0, 600).replace(/%/g, "%25")}`); });
 console.log(`backup roundtrip: ${R.length - f.length}/${R.length} passed`); process.exit(f.length ? 1 : 0);
