@@ -7,7 +7,7 @@ export const initializeApp = cfg => ({ cfg });
 export const getAuth = () => ({ get currentUser() { return current; } });
 export class GoogleAuthProvider { setCustomParameters() {} }
 export const onAuthStateChanged = (a, cb) => { authCb = cb; setTimeout(() => cb(current), 50); return () => {}; };
-export const signInWithPopup = async () => { current = { uid: "u1", displayName: "Ayush Jain", email: "a@example.com", photoURL: "", metadata: { lastSignInTime: new Date(Date.now() - (window.__staleMin || 0) * 60000).toUTCString() } }; localStorage.setItem("__mockuser", JSON.stringify(current)); setTimeout(() => authCb(current), 30); return { user: current }; };
+export const signInWithPopup = async () => { current = { uid: "u1", displayName: "Ayush Jain", email: "a@example.com", photoURL: "", providerData: [{ providerId: "google.com" }], metadata: { lastSignInTime: new Date(Date.now() - (window.__staleMin || 0) * 60000).toUTCString() } }; localStorage.setItem("__mockuser", JSON.stringify(current)); setTimeout(() => authCb(current), 30); return { user: current }; };
 export const signInWithRedirect = async () => {};
 export const getRedirectResult = async () => null;
 export const signOut = async () => { current = null; localStorage.removeItem("__mockuser"); setTimeout(() => authCb(null), 10); };
@@ -24,7 +24,7 @@ export const getDoc = async r => { if (navigator.onLine === false && localStorag
 export const onSnapshot = (r, next) => { (listeners[r.path] = listeners[r.path] || []).push(next); setTimeout(() => next(snap(r.path)), 20); return () => { listeners[r.path] = (listeners[r.path] || []).filter(x => x !== next); }; };
 export const getDocs = async q => { const base = q.c ? q.c.path : q.path; return { docs: Object.keys(store).filter(k => k.startsWith(base + "/") && (!q.w || store[k][q.w.f] === q.w.v)).map(k => ({ id: k.split("/").pop(), ref: { path: k }, data: () => store[k] })) }; };
 export const deleteDoc = async r => { delete store[r.path]; save(); };
-export const deleteUser = async () => { current = null; localStorage.removeItem("__mockuser"); setTimeout(() => authCb(null), 10); };
+export const deleteUser = async () => { try { const a = JSON.parse(localStorage.getItem("__mockaccounts") || "{}"); if (current && a[current.email]) { delete a[current.email]; localStorage.setItem("__mockaccounts", JSON.stringify(a)); } } catch (e) {} current = null; localStorage.removeItem("__mockuser"); setTimeout(() => authCb(null), 10); };
 export const reauthenticateWithPopup = async () => { window.__reauth = (window.__reauth || 0) + 1; if (window.__popupBlocked) { const e = new Error("blocked"); e.code = "auth/popup-blocked"; throw e; } if (current) current.metadata = { lastSignInTime: new Date().toUTCString() }; };
 
 export const writeBatch = () => { const ops = []; return { delete: r => ops.push(r), commit: () => window.__hangCommit ? new Promise(() => {}) : (ops.forEach(r => { delete store[r.path]; }), save(), Promise.resolve()) }; };
@@ -43,3 +43,29 @@ export const runTransaction = async (fs, fn) => { window.__tx = (window.__tx || 
 export const initializeAppCheck = (app, o) => { window.__ac = o && o.provider && o.provider.k; return {}; };
 export class ReCaptchaEnterpriseProvider { constructor(k) { this.k = k; } }
 export const increment = n => ({ __inc: n });
+
+// ---- email + password (test only): accounts live in localStorage
+const accts = () => JSON.parse(localStorage.getItem("__mockaccounts") || "{}");
+const saveAccts = a => localStorage.setItem("__mockaccounts", JSON.stringify(a));
+const authErr = code => { const e = new Error(code); e.code = code; return e; };
+const asUser = (email, a) => ({ uid: a.uid, displayName: a.name || "", email, photoURL: "", providerData: [{ providerId: "password" }], metadata: { lastSignInTime: new Date(Date.now() - (window.__staleMin || 0) * 60000).toUTCString() } });
+const become = u => { current = u; localStorage.setItem("__mockuser", JSON.stringify(current)); setTimeout(() => authCb(current), 30); return { user: current }; };
+export const createUserWithEmailAndPassword = async (auth, email, pw) => {
+  if (window.__authOff) throw authErr("auth/operation-not-allowed");
+  const a = accts(); email = String(email).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw authErr("auth/invalid-email");
+  if (a[email]) throw authErr("auth/email-already-in-use");
+  if (String(pw).length < 6) throw authErr("auth/weak-password");
+  a[email] = { pw, uid: "e" + Math.random().toString(36).slice(2, 10), name: "" }; saveAccts(a);
+  return become(asUser(email, a[email]));
+};
+export const signInWithEmailAndPassword = async (auth, email, pw) => {
+  const a = accts(), x = a[String(email).toLowerCase()];
+  if (!x || x.pw !== pw) throw authErr("auth/invalid-credential");
+  return become(asUser(String(email).toLowerCase(), x));
+};
+export const sendPasswordResetEmail = async (auth, email) => { window.__resets = (window.__resets || []).concat(email); };
+export const sendEmailVerification = async u => { window.__verifies = (window.__verifies || []).concat(u.email); };
+export const updateProfile = async (u, p) => { const a = accts(); if (a[u.email]) { a[u.email].name = p.displayName; saveAccts(a); } if (current) { current.displayName = p.displayName; localStorage.setItem("__mockuser", JSON.stringify(current)); } };
+export const EmailAuthProvider = { credential: (email, pw) => ({ email, pw }) };
+export const reauthenticateWithCredential = async (u, cred) => { const x = accts()[cred.email]; if (!x || x.pw !== cred.pw) throw authErr("auth/invalid-credential"); window.__reauthPw = (window.__reauthPw || 0) + 1; if (current) current.metadata = { lastSignInTime: new Date().toUTCString() }; };

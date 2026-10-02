@@ -25,13 +25,15 @@ compass-web/
 2. **Create a project** → name it (for example `compass-ayush`) → turn Google Analytics **off** → **Create**.
 3. Note the **Project ID** shown under the name. You'll need it in step 5.
 
-## 2. Turn on Google sign-in
+## 2. Turn on sign-in (Google and email)
 
 1. In the left panel, open **Security → Authentication**. If you see a **Get started** button, click it.
    (Older consoles call this section **Build → Authentication**.)
 2. Open the **Sign-in method** tab → under **Sign-in providers**, click **Google** (or **Add new provider → Google**) → switch **Enable** on.
 3. In the same panel, set **Public-facing name for project** to `Compass` and choose your **Support email for project** → **Save**.
    This name is what people see on Google's "Choose an account" screen. If you don't see the name field, set it later under the gear icon → **Project settings → General → Public-facing name**.
+4. **Email sign-in (for people without Google):** still under **Sign-in method** → **Add new provider → Email/Password** → switch **Email/Password** on (leave *Email link (passwordless sign-in)* off: the free plan only sends 5 of those a day) → **Save**.
+   Optional: **Templates** tab → *Password reset* and *Email address verification* → set the sender name to `Compass`. The free plan sends up to 150 password-reset and 1,000 verification emails a day.
 
 ## 3. Create the database
 
