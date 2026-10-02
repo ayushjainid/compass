@@ -2,3 +2,9 @@ node_modules/
 .firebase/
 *.log
 tests/e2e/out/
+
+# secrets: never commit (service-account keys, etc.)
+key.json
+**/key.json
+*-firebase-adminsdk-*.json
+worker/.dev.vars
