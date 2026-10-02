@@ -174,6 +174,32 @@ To turn on the automatic deploy (until then, tests still run and you deploy by h
 
 Run the tests on your computer: `npm install && npx playwright install chromium && npm test` (the browser suites), `npm run test:rules` (needs Java), `npm run test:worker`.
 
+## 12. Backups (nightly, encrypted)
+
+Every night `.github/workflows/backup.yml` saves the **whole database** (everyone's data, reminders, feedback, tallies) as one encrypted file and keeps the last **30 days** under the repo's **Actions → Backup** runs. Each person can also download their own copy in the app; this one is for you, if something goes wrong for everyone at once.
+
+**Turn it on (once):**
+1. Make a long passphrase (at least 20 characters; a few random words is good) and **store it in your password manager**. Without it the backups can't be opened, by anyone, including you.
+2. GitHub → repo → **Settings → Secrets and variables → Actions → New repository secret**: name `BACKUP_PASSPHRASE`, value: the passphrase. (It reuses `FIREBASE_SERVICE_ACCOUNT` from section 11.)
+3. **Actions → Backup → Run workflow** to make the first one now. A green run with a `compass-backup-…` file under **Artifacts** means it works. GitHub emails you if a nightly run fails.
+
+The repo is public, so anyone signed in to GitHub can download these files. They're encrypted with AES-256 using a key derived from your passphrase, so they're useless without it. A backup reads every document once, a few thousand reads a night at your size, well inside the free quota.
+
+**Restore** (on your computer, from the repo folder):
+1. Download the artifact from the run you want and unzip it to get `compass-YYYY-MM-DD.cbk`.
+2. You need a service-account key: Firebase console → ⚙ **Project settings → Service accounts → Generate new private key**. Keep it outside the repo and delete it when you're done.
+3. Look first; nothing is written without `--yes`:
+   ```bash
+   npm install
+   export GOOGLE_APPLICATION_CREDENTIALS=~/Downloads/compass-key.json
+   export BACKUP_PASSPHRASE='your passphrase'
+   npm run restore -- compass-2026-10-03.cbk                       # what's inside
+   npm run restore -- compass-2026-10-03.cbk --uid THEIR_UID       # one person, dry run
+   npm run restore -- compass-2026-10-03.cbk --uid THEIR_UID --yes # do it
+   npm run restore -- compass-2026-10-03.cbk --all --yes           # everything
+   ```
+   A restore puts back every document in the backup as it was. Documents created after the backup are left alone. A person's user id is shown in Firebase → Authentication → Users.
+
 ## Troubleshooting
 
 - **"This address isn't allowed to sign in yet"**: add the domain under Authentication → Settings → Authorized domains. Only your project's own `PROJECT-ID.web.app` and `PROJECT-ID.firebaseapp.com` are allowed automatically; extra sites like `life-compass.web.app` must be added.

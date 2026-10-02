@@ -1,0 +1,47 @@
+# Nightly encrypted backup of the whole Firestore database, kept 30 days as a workflow artifact.
+# Needs two repository secrets: FIREBASE_SERVICE_ACCOUNT (already used for deploys) and BACKUP_PASSPHRASE.
+# The repo is public, so the file is encrypted (AES-256-GCM, key from the passphrase); without the passphrase
+# it's unreadable. Restore: README → "Backups".
+name: Backup
+
+on:
+  schedule:
+    - cron: "17 21 * * *"   # 02:47 in India, a quiet hour
+  workflow_dispatch:
+
+concurrency: { group: backup, cancel-in-progress: false }
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HAS_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+      HAS_PASS: ${{ secrets.BACKUP_PASSPHRASE != '' }}
+    steps:
+      - name: Check secrets
+        if: env.HAS_SA != 'true' || env.HAS_PASS != 'true'
+        run: |
+          echo "::error::Backups need the FIREBASE_SERVICE_ACCOUNT and BACKUP_PASSPHRASE secrets (README → Backups)."
+          exit 1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Back up Firestore
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          node scripts/backup/backup.mjs "$RUNNER_TEMP/out"
+          rm -f "$RUNNER_TEMP/sa.json"
+          echo "FILE=$(ls "$RUNNER_TEMP"/out/*.cbk)" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compass-backup-${{ github.run_id }}
+          path: ${{ env.FILE }}
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
