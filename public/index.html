@@ -2191,7 +2191,7 @@ function tourScene(i) {
     tAt(500 + seq.length * 1050, () => { q("#tsc").classList.remove("out"); q("#tsc").textContent = "Inbox sorted."; qa(".so").forEach(o => o.classList.remove("pick")); });
   } else if (i === 4) {
     const rows = [["Deep relationships", 5, 6], ["Physical fitness", 2, 3], ["Learning", 3, 4], ["Clear your head", 2, 3]];
-    scr.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><div class="ps">Week of Sep 21</div><div class="pt">Floors this week</div></div>${needle(34)}</div>
+    scr.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><div class="ps">Week of ${esc(fmtShort(monday(new Date())))}</div><div class="pt">Floors this week</div></div>${needle(34)}</div>
       <div class="card">${rows.map(([n, h, t]) => `<div class="mini" style="justify-content:space-between"><span>${n}</span><span class="pill open" data-h="${h}" data-t="${t}">${h} of ${t}</span></div>`).join("")}</div>
       <div class="ps" id="twk">0 of 4 values cleared</div>`;
     qa(".pill").forEach((pl, j) => tAt(700 + j * 900, () => { pl.className = "pill clear stamp"; pl.textContent = "Cleared"; q("#twk").textContent = `${j + 1} of 4 values cleared`; q("#tneedle").style.transform = `rotate(${(34 * (1 - (j + 1) / 4)).toFixed(0)}deg)`; }));
@@ -2278,7 +2278,7 @@ function rLanding() {
     <div class="demo" aria-label="Example week in Compass">
       <div class="halo" aria-hidden="true"></div>
       <div class="dcard" id="demo">
-        <div class="dhead"><div><b>Week of Sep 21</b><small id="demoHead"></small></div>
+        <div class="dhead"><div><b>Week of ${esc(fmtShort(monday(new Date())))}</b><small id="demoHead"></small></div>
           <svg class="dneedle" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="21" fill="none" stroke="var(--line)" stroke-width="1.5"/><g><path d="M23 6l4.2 17h-8.4z" fill="var(--brass)"/><path d="M23 40l-4.2-17h8.4z" fill="var(--muted)"/></g><circle cx="23" cy="23" r="2.4" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.2"/></svg></div>
         ${rows}
         <div class="dfoot">Example week. The needle settles as floors clear.</div>
