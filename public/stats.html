@@ -253,7 +253,7 @@ const cfg = Object.assign({}, window.COMPASS_FIREBASE_CONFIG || {});
 if (cfg.projectId && (location.hostname === cfg.projectId + ".web.app" || location.hostname === cfg.projectId + ".firebaseapp.com")) cfg.authDomain = location.hostname;
 const app = FB.initializeApp(cfg);
 const acKey = String(window.COMPASS_APPCHECK_SITE_KEY || "").trim();
-if (acKey) { try { FB.initializeAppCheck(app, { provider: new FB.ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true }); } catch (e) {} }
+if (acKey) { try { if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) self.FIREBASE_APPCHECK_DEBUG_TOKEN = true; FB.initializeAppCheck(app, { provider: new FB.ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true }); } catch (e) {} }
 ST.auth = FB.getAuth(app); ST.fs = FB.initializeFirestore(app, {});
 FB.getRedirectResult(ST.auth).catch(() => {});
 FB.onAuthStateChanged(ST.auth, async u => {
