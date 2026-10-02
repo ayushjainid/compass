@@ -16,7 +16,7 @@ window.COMPASS_FIREBASE_CONFIG = {
 window.COMPASS_MS_CLIENT_ID = "";
 
 // Check-in reminders (optional): the public VAPID key from `cd worker && npm run keys`. Empty hides Reminders.
-window.COMPASS_VAPID_PUBLIC = "";
+window.COMPASS_VAPID_PUBLIC = "BOcXXvYX3OcbZ5JOXVuoGclRozkO4kdSUbugFrDZ7oFcTcp3iRYYfwX3anMI0UbUJjd7aglcOkX4bAybjTIaLRY";
 
 // App Check (optional, recommended once you have users): a reCAPTCHA Enterprise site key, so only this app
 // can use your database quota. See README → "Protect your free quota". Empty turns it off.
