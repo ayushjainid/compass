@@ -20,4 +20,4 @@ window.COMPASS_VAPID_PUBLIC = "BOcXXvYX3OcbZ5JOXVuoGclRozkO4kdSUbugFrDZ7oFcTcp3i
 
 // App Check (optional, recommended once you have users): a reCAPTCHA Enterprise site key, so only this app
 // can use your database quota. See README → "Protect your free quota". Empty turns it off.
-window.COMPASS_APPCHECK_SITE_KEY = "";
+window.COMPASS_APPCHECK_SITE_KEY = "6LfMu90tAAAAANaiYHolKCpG9UgV-Ml0BL3mCiJ4";
