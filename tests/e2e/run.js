@@ -17,7 +17,7 @@ const JOBS = [
   ["dailydays.js", PHONE], ["dailydays.js", DESK], ["newfeat.js", PHONE], ["newfeat.js", DESK],
   ["statspage.js", PHONE], ["statspage.js", DARK], ["statspage.js", DESK],
   ["tasks2.js", PHONE], ["tasks2.js", SMALL], ["tasks2.js", DARK], ["tasks2.js", DESK],
-  ["admin.js", PHONE], ["admin.js", DESK],
+  ["admin.js", PHONE], ["admin.js", DESK], ["appcheck.js", X],
   ["emailauth.js", PHONE], ["emailauth.js", SMALL], ["emailauth.js", DARK], ["emailauth.js", DESK],
   ["a11y.js", X],
 ];
