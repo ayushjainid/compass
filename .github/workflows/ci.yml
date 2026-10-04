@@ -30,7 +30,7 @@ jobs:
         with: { name: screenshots, path: tests/e2e/out, retention-days: 7 }
 
   rules:
-    name: Security rules (Firestore emulator)
+    name: Security rules and backups (Firestore emulator)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -41,6 +41,8 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - run: npm ci
       - run: npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass "node tests/rules/rules.test.mjs"
+      - run: node tests/backup/unit.mjs
+      - run: npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass "node tests/backup/roundtrip.mjs"
 
   worker:
     name: Reminders Worker

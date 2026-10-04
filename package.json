@@ -8,7 +8,10 @@
     "deploy": "npx firebase-tools deploy",
     "test": "node tests/e2e/run.js",
     "test:rules": "npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass \"node tests/rules/rules.test.mjs\"",
-    "test:worker": "cd worker && node test/unit.mjs && node test/run.mjs"
+    "test:worker": "cd worker && node test/unit.mjs && node test/run.mjs",
+    "backup": "node scripts/backup/backup.mjs",
+    "restore": "node scripts/backup/restore.mjs",
+    "test:backup": "node tests/backup/unit.mjs && npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass \"node tests/backup/roundtrip.mjs\""
   },
   "dependencies": {
     "esbuild": "^0.25.12",
@@ -18,6 +21,7 @@
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",
     "axe-core": "^4.13.0",
+    "firebase-admin": "^14.5.0",
     "playwright": "^1.63.0"
   }
 }

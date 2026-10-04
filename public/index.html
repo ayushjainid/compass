@@ -159,7 +159,7 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 .jf,.field{display:flex;flex-direction:column;gap:4px;padding:12px 14px}
 .jf + .jf,.field + .field{border-top:1px solid var(--line)}
 .jf label,.field label,.flabel{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-textarea,input[type=text],select,input[type=time],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;resize:vertical}
+textarea,input[type=text],input[type=email],input[type=password],select,input[type=time],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;resize:vertical}
 textarea{min-height:44px}
 input[type=range]{width:100%;accent-color:var(--accent)}
 .seg{display:inline-flex;background:var(--sunk);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
@@ -441,6 +441,19 @@ body.landing .top,body.landing #statusline,body.landing .island{display:none}
 .ctas{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:28px}
 .ctas .gbtn{margin-top:0}
 .textlink{color:var(--accent);font-weight:500;text-decoration:none}
+button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weight:500;cursor:pointer}
+.emaillink{font-size:15px}
+.lhero .tourlink{display:inline-block;margin-top:10px}
+.authsheet .gbtn.wide{width:100%;justify-content:center;margin-top:4px}
+.ordiv{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px}
+.ordiv::before,.ordiv::after{content:"";flex:1;height:1px;background:var(--line)}
+.authform{display:grid;gap:12px}
+.authform input{font-size:16px}
+.pwrow{display:flex;gap:8px;align-items:center}.pwrow input{flex:1;min-width:0}
+.pwshow{flex:none;padding:8px 12px;border-radius:999px;background:var(--sunk);color:var(--ink2);font-size:13px;font-weight:500;min-height:40px}
+.okmsg{margin:0;padding:10px 12px;border-radius:var(--r);background:var(--good-soft);font-size:13.5px}
+.authsheet .fine a{color:var(--accent)}
+.authalt{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
 .textlink:hover{text-decoration:underline}
 .meta{margin-top:20px;font-size:13.5px;color:var(--muted);display:flex;gap:6px 16px;flex-wrap:wrap}
 .meta span::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:7px;vertical-align:middle}
@@ -748,6 +761,7 @@ html.dragging{scroll-behavior:auto!important}
 .pstep .pnext small{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .pstep.edit{background:transparent;padding:0;gap:8px}
 .pstep.edit input{flex:1;min-width:0}
+.admlink{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}.admlink small{font-weight:400;color:var(--muted);font-size:12px}
 .tmedit{margin:6px 0 14px}
 .tmrow{display:flex;gap:8px}.tmrow input{flex:1;min-width:0}
 .tmacts{display:grid;gap:8px}
@@ -931,7 +945,7 @@ details.fold[open] summary::before{content:"▾ ";}
 
 <script src="/firebase-config.js"></script>
 <script type="module">
-import * as FB from "/vendor/firebase.js?v=4";
+import * as FB from "/vendor/firebase.js?v=5";
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1305,7 +1319,7 @@ function hideBanner() { const b = $("#banner"); b.hidden = true; }
 function updSync() {
   const el = $("#sync"); const busy = Object.values(T).some(Boolean) || Object.values(IN).some(Boolean) || Object.keys(S.waiting || {}).length > 0;
   el.className = "sync " + (S.mode === "db" ? (busy ? "busy" : "ok") : "");
-  el.querySelector("span").textContent = S.authState !== "in" ? "" : S.tooOld ? "Reload to keep syncing" : S.mode === "db" ? (busy ? (navigator.onLine === false ? "Offline · saved on this device" : "Saving…") : "Synced to your Google account") : "Connecting…";
+  el.querySelector("span").textContent = S.authState !== "in" ? "" : S.tooOld ? "Reload to keep syncing" : S.mode === "db" ? (busy ? (navigator.onLine === false ? "Offline · saved on this device" : "Saving…") : "Synced to your account") : "Connecting…";
   el.hidden = S.authState !== "in";
 }
 let profileReady = false;
@@ -1321,7 +1335,7 @@ async function flushAll() {
 }
 function teardown() {
   Object.keys(ST.subs).forEach(unsubscribe);
-  S.docs = {}; S.hist = {}; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
+  S.docs = {}; S.hist = {}; S.isAdmin = false; S.delPw = false; S.pwResetSent = false; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
   S.base = {}; S.waiting = {}; S.late = {}; S.force = {}; S.last = {};
   Object.keys(T).forEach(k => { clearTimeout(T[k]); T[k] = null; });
   ST.uid = null; S.mode = "connecting"; profileReady = false; S.loaded = {}; S.loadErr = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
@@ -1346,6 +1360,58 @@ async function signIn() {
   }
   S.authBusy = false; render();
 }
+/* ---- email + password: works on the free plan and inside the iPhone home-screen app ---- */
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function emailAuthMessage(e) {
+  const c = e && e.code || "";
+  if (c === "auth/invalid-email") return "That email address doesn't look right.";
+  if (c === "auth/missing-password") return "Type your password.";
+  if (c === "auth/weak-password") return "Choose a longer password: at least 8 characters.";
+  if (c === "auth/email-already-in-use") return "That email already has a Compass account. Sign in instead (or with Google, if that's how you joined). Forgot the password? Use “Forgot password”.";
+  if (c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/user-not-found" || c === "auth/invalid-login-credentials") return "That email and password don't match. Try again, or reset your password.";
+  if (c === "auth/user-disabled") return "This account has been turned off.";
+  if (c === "auth/operation-not-allowed") return "Email sign-in isn't turned on for this Firebase project yet. Enable Email/Password under Authentication → Sign-in method.";
+  if (c === "auth/too-many-requests") return "Too many attempts. Wait a few minutes and try again.";
+  if (c === "auth/network-request-failed") return "You're offline. Connect to the internet and try again.";
+  return "That didn't work (" + (c || "unknown error") + "). Try again.";
+}
+async function emailAuth() {
+  const sh = S.sheet; if (!sh || sh.type !== "auth" || sh.busy || !ST.auth) return;
+  const val = id => (($("#" + id) || {}).value || "");
+  sh.email = val("au-email").trim(); sh.name = val("au-name").trim();
+  const pw = val("au-pw");
+  sh.err = ""; sh.note = "";
+  const again = msg => { sh.err = msg; renderSheet(); const g = $("#au-pw"); if (g) g.value = pw; };   // a typing slip keeps what was typed
+  if (!EMAIL_RX.test(sh.email)) return again("That email address doesn't look right.");
+  if (sh.mode === "reset") {
+    sh.busy = true; renderSheet();
+    try { await FB.sendPasswordResetEmail(ST.auth, sh.email); sh.note = `If ${sh.email} has a Compass account, a link to set a new password is on its way. Check spam too.`; }
+    catch (e) { if (e && e.code === "auth/user-not-found") sh.note = `If ${sh.email} has a Compass account, a link to set a new password is on its way. Check spam too.`; else sh.err = emailAuthMessage(e); }
+    sh.busy = false; return renderSheet();
+  }
+  if (!pw) return again("Type your password.");
+  if (sh.mode === "up" && pw.length < 8) return again("Choose a longer password: at least 8 characters.");
+  sh.busy = true; renderSheet();
+  try {
+    if (sh.mode === "up") {
+      const cred = await FB.createUserWithEmailAndPassword(ST.auth, sh.email, pw);
+      const name = sh.name.slice(0, 60);
+      if (name) { try { await FB.updateProfile(cred.user, { displayName: name }); if (S.user) { S.user.name = name; render(); } } catch (e) {} }
+      /* best effort: confirming the address makes "Forgot password" dependable later */
+      FB.sendEmailVerification(cred.user).catch(() => {});
+    } else await FB.signInWithEmailAndPassword(ST.auth, sh.email, pw);
+    /* onAuthStateChanged takes it from here (and closes this sheet) */
+  } catch (e) { const cur = S.sheet; if (cur && cur.type === "auth") { cur.busy = false; cur.err = emailAuthMessage(e); renderSheet(); } }
+}
+const usesPassword = user => !!(user && (user.providerData || []).some(p => p.providerId === "password"));
+const usesGoogle = user => !!(user && (user.providerData || []).some(p => p.providerId === "google.com"));
+async function confirmPasswordThenDelete() {
+  const user = ST.auth && ST.auth.currentUser, f = $("#del-pw"), pw = f ? f.value : "";
+  if (!user || !pw) { S.delMsg = "Type your password to confirm."; renderSheet(); return; }
+  S.delMsg = "Checking…"; renderSheet();
+  try { await FB.reauthenticateWithCredential(user, FB.EmailAuthProvider.credential(user.email, pw)); S.delPw = false; deleteAccount(true); }
+  catch (e) { const c = e && e.code || ""; S.delMsg = c === "auth/too-many-requests" ? "Too many attempts. Wait a few minutes and try again. Nothing was deleted." : "That password didn't match. Nothing was deleted."; renderSheet(); }
+}
 /* Deleting an account. Google only lets an account be removed shortly after signing in, so confirm with Google
    first, straight from the tap (a pop-up opened after other waiting gets blocked on phones), falling back to a
    full-page confirm. Then delete every document in one batch and remove the account, each step with a time limit
@@ -1355,6 +1421,7 @@ function recentSignIn(user) { const t = Date.parse((user.metadata || {}).lastSig
 async function deleteAccount(confirmed) {
   const user = ST.auth && ST.auth.currentUser; if (!user || S.deleting) return;
   if (navigator.onLine === false) { S.delMsg = "You're offline. Connect to the internet, then try again."; render(); return; }
+  if (!confirmed && !recentSignIn(user) && usesPassword(user) && !usesGoogle(user)) { S.delPw = true; S.confirm = null; S.delMsg = ""; renderSheet(); setTimeout(() => { const f = $("#del-pw"); if (f) f.focus(); }, 60); return; }
   if (!confirmed && !recentSignIn(user)) {
     S.delMsg = "Confirm with Google to delete your account…"; renderSheet();
     try { await FB.reauthenticateWithPopup(user, new FB.GoogleAuthProvider()); }
@@ -1395,11 +1462,12 @@ async function deleteAccount(confirmed) {
     step("Removing your account…");
     try { await within(FB.deleteUser(user), 20000, "timeout"); }
     catch (e) {
+      if (e && e.code === "auth/requires-recent-login" && usesPassword(user) && !usesGoogle(user)) { S.deleting = false; S.delPw = true; step("Your data is deleted. Type your password to remove the account too."); return; }
       if (e && e.code === "auth/requires-recent-login") { S.deleting = false; try { sessionStorage.setItem("compass-delete", String(Date.now())); } catch (x) {} step("Your data is deleted. Confirming with Google to remove the account…"); await FB.reauthenticateWithRedirect(user, new FB.GoogleAuthProvider()); return; }
       throw e;
     }
     try { await within(FB.terminate(ST.fs).then(() => FB.clearIndexedDbPersistence(ST.fs)), 5000, "timeout"); } catch (e) {}
-    S.deleting = false; S.delMsg = ""; S.sheet = null; S.confirm = null;
+    S.deleting = false; S.delMsg = ""; S.sheet = null; S.confirm = null; S.delPw = false;
     toast("Your account and all your data are deleted");
     setTimeout(() => location.replace("/"), 1200);
   } catch (e) {
@@ -1495,7 +1563,7 @@ async function init() {
   const app = FB.initializeApp(cfg);
   /* App Check (optional): proves requests come from this app, so a script can't burn your free quota */
   const acKey = String(window.COMPASS_APPCHECK_SITE_KEY || "").trim();
-  if (acKey) { try { FB.initializeAppCheck(app, { provider: new FB.ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true }); } catch (e) { console.warn("App Check", e); } }
+  if (acKey) { try { if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) self.FIREBASE_APPCHECK_DEBUG_TOKEN = true; FB.initializeAppCheck(app, { provider: new FB.ReCaptchaEnterpriseProvider(acKey), isTokenAutoRefreshEnabled: true }); } catch (e) { console.warn("App Check", e); } }
   ST.auth = FB.getAuth(app);
   try { ST.fs = FB.initializeFirestore(app, { localCache: FB.persistentLocalCache({ tabManager: FB.persistentMultipleTabManager() }) }); }
   catch (e) { ST.fs = FB.initializeFirestore(app, {}); }
@@ -1512,6 +1580,8 @@ async function init() {
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     stat(onboarded() ? "active" : "obStart");
+    /* the owner (a document at admins/{uid}, made by hand in the console) gets a link to the usage dashboard */
+    const uidNow = u.uid; FB.getDoc(FB.doc(ST.fs, "admins", uidNow)).then(sn => { if (ST.uid === uidNow && sn.exists()) { S.isAdmin = true; scheduleRender(); } }).catch(() => {});
     if (START_URL) openFromUrl(START_URL);
     loadHistory(); render();
     loadNotify().then(() => scheduleRender());
@@ -1765,6 +1835,12 @@ function onWeek(c, monKey) {
 }
 const everyText = c => everyN(c) > 1 ? `every ${everyN(c)} weeks` : "";
 /* old Week A / Week B components become "every 2 weeks" from the matching week */
+/* an early build saved pause spans as [from, to] pairs, which Firestore refuses (no lists inside lists) and which
+   then blocked the whole profile from syncing; turn any still on this device into { from, to } */
+function migratePauses() {
+  const bad = comps().some(c => (c.pauses || []).some(Array.isArray));
+  if (bad) editProfile(p => p.components.forEach(c => { if (c.pauses) c.pauses = c.pauses.map(span); }));
+}
 function migrateAlt() {
   if (!comps().some(c => c.alt)) return;
   const cur = dkey(monday(new Date())), prev = dkey(addDays(monday(new Date()), -7));
@@ -1793,8 +1869,9 @@ function compHave(c, w, id) {
   return v + (c.id === "lifeTax" && w && w.r && w.r.lifeTax && !v ? 1 : 0);
 }
 /* a paused floor stops counting from the week it was paused; earlier weeks keep it.
-   c.paused = the Monday it paused from (while paused); c.pauses = finished [from, to) spans */
-const pausedIn = (c, mon) => (!!c.paused && mon >= c.paused) || (c.pauses || []).some(([f, t]) => mon >= f && mon < t);
+   c.paused = the Monday it paused from (while paused); c.pauses = finished spans [{ from, to }) (Firestore can't hold lists inside lists) */
+const span = p => Array.isArray(p) ? { from: p[0], to: p[1] } : p || {};
+const pausedIn = (c, mon) => (!!c.paused && mon >= c.paused) || (c.pauses || []).some(p => { const x = span(p); return mon >= x.from && mon < x.to; });
 function activeComps(id, w = anyWeek(id)) {
   const mvw = isMvw(w, id), mon = id.slice(2);
   return comps().filter(c => !c.fun && onWeek(c, mon) && !pausedIn(c, mon) && (!mvw || c.mvw));
@@ -2412,7 +2489,7 @@ function rLanding() {
   <nav class="lnav" aria-label="Compass">
     <a class="brand" href="#top" style="color:inherit;text-decoration:none">${mark}Compass</a>
     <div class="links"><a href="#tour">Tour</a><a href="#how">How it works</a><a href="#tasks">Clear your head</a><a href="#why">Why it works</a><a href="#faq">FAQ</a></div>
-    <button class="navcta" data-act="signin">${GLOGO}Sign in</button>
+    <button class="navcta" data-act="authOpen" data-v="in">Sign in</button>
   </nav>
 
   <section class="lhero" id="top">
@@ -2420,7 +2497,8 @@ function rLanding() {
       <span class="eyebrow">A weekly compass for your life</span>
       <h1>Know where your life is heading.</h1>
       <p class="big">Compass turns what matters to you into a few small weekly floors. Clear them and the week counts. Miss them and you see the drift early, while it's still easy to correct.</p>
-      <div class="ctas">${btn("Start with Google")}<a class="textlink" href="#tour">Watch the 30-second tour ↓</a></div>
+      <div class="ctas">${btn("Start with Google")}<button class="textlink emaillink" data-act="authOpen" data-v="up">Use email instead</button></div>
+      <a class="textlink tourlink" href="#tour">Watch the 30-second tour ↓</a>
       ${err}
       <div class="meta"><span>Free</span><span>Private to you</span><span>iPhone, Android and laptop</span></div>
     </div>
@@ -2513,7 +2591,7 @@ function rLanding() {
   <section class="lsec" id="install">
     <span class="eyebrow">Install</span>
     <h2>Put it on your home screen.</h2>
-    <p class="big">Compass runs in the browser and installs like an app. Sign in with the same Google account everywhere and it stays in sync.</p>
+    <p class="big">Compass runs in the browser and installs like an app. Sign in with the same account everywhere (Google or email) and it stays in sync.</p>
     <div class="grid3">
       <div class="tile"><h3>iPhone</h3><p>Open this page in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>.</p></div>
       <div class="tile"><h3>Android</h3><p>Open it in Chrome, tap the <b>⋮</b> menu, then <b>Install app</b>.</p></div>
@@ -2526,7 +2604,7 @@ function rLanding() {
     <h2>Good to know.</h2>
     <div class="faq" style="margin-top:28px">
       <details><summary>Is Compass free?</summary><p>Yes. There's no subscription and nothing to buy.</p></details>
-      <details><summary>What do I need to start?</summary><p>A Google account. Setup takes about five minutes and you can change everything later.</p></details>
+      <details><summary>What do I need to start?</summary><p>A Google account or any email address. Setup takes about five minutes and you can change everything later.</p></details>
       <details><summary>Can Compass hold my to-do list?</summary><p>Yes. Capture anything into the inbox, sort it once, and Compass turns errands into a short weekly list, habits into floors and big goals into projects with one next step each.</p></details>
       <details><summary>Can I bring my Todoist, TickTick, Microsoft To Do or Sunsama data?</summary><p>Yes. During setup, sign in to Microsoft To Do, or add an export from Todoist, TickTick, Sunsama, Outlook, Google or Apple Calendar, or paste a list. Compass finds your routines, how often you really do them and where your week goes, then fills in most of setup. Files are read on your device and never uploaded.</p></details>
       <details><summary>Does it work offline?</summary><p>Yes. Changes save on your device and sync when you're back online.</p></details>
@@ -2540,7 +2618,7 @@ function rLanding() {
     <span class="eyebrow">Ready when you are</span>
     <h2>Set your compass.</h2>
     <p class="big" style="margin-inline:auto">Five minutes today. A clearer direction every Sunday after.</p>
-    <div class="ctas">${btn("Start with Google")}</div>
+    <div class="ctas">${btn("Start with Google")}<button class="textlink emaillink" data-act="authOpen" data-v="up">Use email instead</button></div>
     ${err}
   </section>
 
@@ -2560,8 +2638,9 @@ function renderGate() {
       <h1>Know where your life is heading.</h1>
       <p class="lede">Compass turns what matters to you into a few small floors, checks them once a week, and tells you when you're drifting.</p>
       <button class="gbtn" data-act="signin" ${S.authBusy ? "disabled" : ""}>${GLOGO}<span>${S.authBusy ? "Signing in…" : "Sign in with Google"}</span></button>
+      <div><button class="textlink emaillink" data-act="authOpen" data-v="in">Sign in with email instead</button></div>
       ${S.authErr ? `<p class="banner" style="margin-top:14px;text-align:left">${esc(S.authErr)}</p>` : ""}
-      <p class="fine">Your data is private to your Google account and syncs to every device you sign in on. Compass only sees your name, email and profile photo.</p></div>`;
+      <p class="fine">Your data is private to your account and syncs to every device you sign in on.</p></div>`;
   $("#main").innerHTML = body; updSync();
 }
 function renderAvatar() {
@@ -2574,7 +2653,7 @@ function renderAvatar() {
 function render() {
   applyTheme();
   $("#fab").hidden = true;
-  if (S.authState !== "in") return renderGate();
+  if (S.authState !== "in") { renderGate(); renderSheet(); return; }
   document.body.classList.remove("landing"); stopDemo(); S.gateKey = null;
   renderAvatar();
   if (!S.ob && profileReady && onboarded() && !S.obChecked) { S.obChecked = true; const dr = resumeDraft(); if (dr) { S.ob = dr; toast("Picked up setup where you left off"); } }
@@ -2598,7 +2677,7 @@ function render() {
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
   let tabsHtml = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
-  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); migrateAlt(); }
+  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); migrateAlt(); migratePauses(); }
   tabsHtml = tabsHtml.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
   /* only touch the tab bar when it changes: replacing it mid-tap swallowed the tap */
   if (S.tabsHtml !== tabsHtml) { $("#tabs").innerHTML = tabsHtml; S.tabsHtml = tabsHtml; }
@@ -3426,6 +3505,30 @@ function renderSheetBody() {
       <div class="row"><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="weekSave">Use ${weekCalc(sh.draft).floors} h for floors</button></div></div></div>`;
     return;
   }
+  if (sh.type === "auth") {
+    const m = sh.mode || "in", busy = !!sh.busy;
+    const title = m === "up" ? "Create your account" : m === "reset" ? "Reset your password" : "Sign in";
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet authsheet" role="dialog" aria-label="${title}"><div class="in"><div class="grab"></div>
+      <h2 style="margin:0">${title}</h2>
+      ${m !== "reset" ? `<button class="gbtn wide" data-act="signin" ${S.authBusy ? "disabled" : ""}>${GLOGO}<span>${m === "up" ? "Continue with Google" : "Sign in with Google"}</span></button>
+      <div class="ordiv"><span>or with email</span></div>` : `<p class="hint" style="margin:0">We'll email you a link to choose a new password.</p>`}
+      <form id="authForm" class="authform" novalidate>
+        ${m === "up" ? `<div class="fl"><label class="flabel" for="au-name">First name <span class="opt">Optional</span></label><input type="text" id="au-name" autocomplete="given-name" maxlength="60" value="${esc(sh.name || "")}"></div>` : ""}
+        <div class="fl"><label class="flabel" for="au-email">Email</label><input type="email" id="au-email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" value="${esc(sh.email || "")}" required></div>
+        ${m !== "reset" ? `<div class="fl"><label class="flabel" for="au-pw">Password${m === "up" ? ` <span class="opt">8+ characters</span>` : ""}</label><div class="pwrow"><input type="${sh.show ? "text" : "password"}" id="au-pw" autocomplete="${m === "up" ? "new-password" : "current-password"}" minlength="${m === "up" ? 8 : 1}" required><button type="button" class="pwshow" data-act="authShow" aria-pressed="${!!sh.show}">${sh.show ? "Hide" : "Show"}</button></div></div>` : ""}
+        ${sh.err ? `<p class="banner" role="alert" style="margin:0">${esc(sh.err)}</p>` : ""}
+        ${sh.note ? `<p class="okmsg" role="status">${esc(sh.note)}</p>` : ""}
+        <button class="btn primary" type="submit" ${busy ? "disabled" : ""}>${busy ? "One moment…" : m === "up" ? "Create account" : m === "reset" ? "Send reset link" : "Sign in"}</button>
+      </form>
+      <div class="authalt">
+        ${m === "in" ? `<button class="textlink" data-act="authMode" data-v="reset">Forgot password?</button><button class="textlink" data-act="authMode" data-v="up">New here? Create an account</button>` : ""}
+        ${m === "up" ? `<button class="textlink" data-act="authMode" data-v="in">Have an account? Sign in</button>` : ""}
+        ${m === "reset" ? `<button class="textlink" data-act="authMode" data-v="in">Back to sign in</button>` : ""}
+      </div>
+      ${m === "up" ? `<p class="fine" style="margin:0">By continuing you agree to the <a href="/terms" target="_blank" rel="noopener">terms</a> and <a href="/privacy" target="_blank" rel="noopener">privacy policy</a>.</p>` : ""}
+    </div></div>`;
+    return;
+  }
   if (sh.type === "tmenu") {
     const html = rTaskMenu(); if (!html) { root.innerHTML = ""; return; }
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Task">${html}</div>`;
@@ -3440,9 +3543,12 @@ function renderSheetBody() {
     const u = S.user || {};
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Account"><div class="in"><div class="grab"></div>
       <div class="acct"><span class="avatar">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc((u.name || u.email || "?").charAt(0).toUpperCase())}</span><div><b>${esc(u.name || "Signed in")}</b><div class="hint">${esc(u.email)}</div></div></div>
-      <p class="hint" style="margin:0">Signed in with Google. Your Compass syncs to every device where you sign in with this account.</p>
+      <p class="hint" style="margin:0">${usesPassword(ST.auth && ST.auth.currentUser) && !usesGoogle(ST.auth && ST.auth.currentUser) ? "Signed in with your email and password." : "Signed in with Google."} Your Compass syncs to every device where you sign in with this account.</p>
+      ${S.isAdmin ? `<a class="btn admlink" href="/stats"><span>Usage dashboard</span><small>Only you see this</small></a>` : ""}
       <button class="btn" data-act="export">Export my data</button>
+      ${usesPassword(ST.auth && ST.auth.currentUser) ? `<button class="btn" data-act="pwReset">${S.pwResetSent ? "Reset link sent to your email" : "Change password"}</button>` : ""}
       <button class="btn" data-act="signout">Sign out</button>
+      ${S.delPw ? `<div class="banner" style="margin:0"><b>Confirm it's you</b><div class="hint" style="margin:4px 0 8px">Type your Compass password to delete your account and all your data.</div><div class="pwrow"><input type="password" id="del-pw" autocomplete="current-password" aria-label="Your password"><button class="btn danger" data-act="delPwGo">Delete everything</button></div><button class="textlink" data-act="delPwNo" style="margin-top:6px">Keep my account</button></div>` : ""}
       ${S.confirm === "delacct" ? `<div class="banner" style="margin:0"><b>Delete your account and all your data?</b> Your setup, every week and your journal are removed for good. Export first if you want a copy.<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn danger" data-act="delAcctYes" ${S.deleting ? "disabled" : ""}>${S.deleting ? "Deleting…" : "Delete everything"}</button><button class="btn quiet" data-act="delAcctNo" ${S.deleting ? "disabled" : ""}>Keep my account</button></div></div>` : `<button class="btn quiet danger" data-act="delAcct">Delete my account</button>`}
       ${S.delMsg ? `<p class="hint" style="margin:0">${esc(S.delMsg)}</p>` : ""}
       <button class="btn quiet" data-act="closeSheet">Close</button></div></div>`;
@@ -4066,6 +4172,12 @@ document.addEventListener("click", e => {
       return;
     }
     case "signin": signIn(); return;
+    case "authOpen": S.authErr = ""; S.sheet = { type: "auth", mode: b.dataset.v === "up" ? "up" : "in" }; renderSheet(); setTimeout(() => { const f = $(S.sheet && S.sheet.mode === "up" ? "#au-name" : "#au-email"); if (f && !matchMedia("(pointer:coarse)").matches) f.focus(); }, 60); return;
+    case "authMode": { const sh = S.sheet; if (!sh) return; const e = $("#au-email"), n = $("#au-name"); if (e) sh.email = e.value; if (n) sh.name = n.value; sh.mode = b.dataset.v; sh.err = ""; sh.note = ""; renderSheet(); return; }
+    case "authShow": { const sh = S.sheet, f = $("#au-pw"), v = f ? f.value : "", e = $("#au-email"), n = $("#au-name"); if (e) sh.email = e.value; if (n) sh.name = n.value; sh.show = !sh.show; renderSheet(); const g = $("#au-pw"); if (g) { g.value = v; g.focus(); } return; }
+    case "pwReset": { const u = ST.auth && ST.auth.currentUser; if (!u || !u.email) return; FB.sendPasswordResetEmail(ST.auth, u.email).then(() => { S.pwResetSent = true; toast("Check your email for a link to set a new password"); renderSheet(); }, e => toast(emailAuthMessage(e))); return; }
+    case "delPwGo": confirmPasswordThenDelete(); return;
+    case "delPwNo": S.delPw = false; S.delMsg = ""; S.confirm = null; renderSheet(); return;
     case "retryLoad": { const uid = ST.uid; S.loadErr = false; render(); loadCore(uid).then(ok => { if (ok) { profileReady = true; ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe); loadHistory(); render(); } }); return; }
     case "reloadApp": { b.textContent = "Saving…"; b.disabled = true;
       const go = () => location.replace(location.pathname + "?v=" + Date.now());
@@ -4156,7 +4268,7 @@ document.addEventListener("click", e => {
       break;
     }
     case "tProjDone": { const u = undoTaskFn(b.dataset.id); burst(b, "var(--brass)", 12); setTask(b.dataset.id, { s: "done", was: "project", doneAt: tk }); S.stepFor = null; toast("Project finished", u); break; }
-    case "delAcct": S.confirm = "delacct"; break;
+    case "delAcct": S.confirm = "delacct"; S.delPw = false; break;
     case "delAcctNo": S.confirm = null; break;
     case "delAcctYes": deleteAccount(false); return;
     case "account": S.sheet = { type: "account" }; if (S.ob) { renderSheet(); return; } break;
@@ -4335,7 +4447,7 @@ document.addEventListener("click", e => {
       openComp(c, true); S.sheet.dup = true; S.shType = null; break;
     }
     case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
-    case "closeSheet": { const back = S.sheet && S.sheet.fromTask && !S.sheet.fromMenu && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
+    case "closeSheet": if (S.sheet && S.sheet.type === "auth") { S.sheet = null; renderSheet(); return; } { const back = S.sheet && S.sheet.fromTask && !S.sheet.fromMenu && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
     case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
     case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.every; delete c.from; c.people = false; } break; }
     case "cTarget": { const c = S.sheet.draft, max = c.cadence === "monthly" ? 4 : c.cadence === "daily" ? 7 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, (c.target || 0) + (+b.dataset.d) * st)); break; }
@@ -4359,7 +4471,7 @@ document.addEventListener("click", e => {
       if (!before) return;
       const c = clone(before);
       if (pause) { c.paused = mon; stat("paused"); }
-      else { if (c.paused && c.paused < mon) c.pauses = (c.pauses || []).concat([[c.paused, mon]]).slice(-20); delete c.paused; }
+      else { if (c.paused && c.paused < mon) c.pauses = (c.pauses || []).map(span).concat({ from: c.paused, to: mon }).slice(-20); delete c.paused; }
       editProfile(p => { const i = p.components.findIndex(x => x.id === id); if (i >= 0) p.components[i] = c; });
       S.sheet = null; S.confirm = null;
       toast(pause ? `Paused “${c.name}”. Resume it from Compass any time.` : `“${c.name}” is back and counts from this week.`);
@@ -4391,6 +4503,7 @@ document.addEventListener("dragleave", e => { const z = e.target.closest && e.ta
 document.addEventListener("drop", e => { const z = e.target.closest && e.target.closest("#impDrop"); if (!z) return; e.preventDefault(); z.classList.remove("over"); if (e.dataTransfer && e.dataTransfer.files.length) impAddFiles([...e.dataTransfer.files]); });
 document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
+  if (f.id === "authForm") { emailAuth(); return; }
   if (f.id === "pForm") { const name = $("#pName").value.trim(); if (!name) return; editPeople(p => { p.list.push({ id: uidGen(), name, tier: $("#pTier").value, last: null }); }); render(); const n = $("#pName"); if (n) n.focus(); }
   else if (f.id === "inForm") { const t = $("#inText").value.trim(); if (!t) return; editSettings(s => { s.inbox = (s.inbox || []).concat({ id: uidGen(), t }); }); render(); const n = $("#inText"); if (n) n.focus(); }
   else if (f.id === "obCustomValue") { const n = $("#obCv").value.trim(); if (!n) return; const id = "v-" + uidGen(); S.ob.d.custom.push({ id, name: n }); S.ob.d.values.push(id); updateOb(); }

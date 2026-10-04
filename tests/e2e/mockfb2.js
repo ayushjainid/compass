@@ -25,6 +25,8 @@ export const collection = (fs, ...segs) => ({ path: segs.join("/") });
 export const where = (f, op, v) => ({ f, op, v });
 export const query = (c, w) => ({ c, w });
 
+const nestedArr = (v, inArr) => Array.isArray(v) ? (inArr || v.some(x => nestedArr(x, true))) : (v && typeof v === "object" ? Object.values(v).some(x => nestedArr(x, false)) : false);
+const refuseNested = d => { if (nestedArr(d, false)) { const e = new Error("Property array contains an invalid nested entity"); e.code = "invalid-argument"; window.__nestedRefused = (window.__nestedRefused || 0) + 1; throw e; } };
 const cache = {};            // this device's view: path -> data
 const queue = [];            // offline writes waiting for the network
 const listeners = {};        // path -> [cb]
@@ -41,6 +43,7 @@ async function drain() {
 window.addEventListener("online", () => { drain().then(async () => { for (const p of Object.keys(listeners)) { const r = await window.__srv({ op: "get", path: p }); cache[p] = r.data; fire(p); } }); });
 
 export const setDoc = (r, data, opt) => {
+  refuseNested(data);
   const merge = !!(opt && opt.merge);
   cache[r.path] = merge ? Object.assign(cp(cache[r.path]) || {}, cp(data)) : cp(data);
   fire(r.path);
@@ -69,7 +72,7 @@ export const runTransaction = async (fs, fn) => {
     const reads = {}, writes = [];
     const tx = {
       get: async r => { const x = await window.__srv({ op: "get", path: r.path }); reads[r.path] = x.v; return snapOf(r.path, x.data); },
-      set: (r, data) => { writes.push({ path: r.path, data: cp(data) }); return tx; },
+      set: (r, data) => { refuseNested(data); writes.push({ path: r.path, data: cp(data) }); return tx; },
     };
     const out = await fn(tx);
     if (window.__txDelay) await new Promise(r => setTimeout(r, window.__txDelay));

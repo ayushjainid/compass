@@ -8,3 +8,5 @@ key.json
 **/key.json
 *-firebase-adminsdk-*.json
 worker/.dev.vars
+backups/
+*.cbk

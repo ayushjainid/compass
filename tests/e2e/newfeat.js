@@ -78,9 +78,16 @@ let VERSION = null;   // what /version.json returns
   await tap('[data-act=tab][data-t=compass]'); if (!(await p.locator(`[data-act=editComp]:has-text("${gymName}")`).count())) await tap('[data-act=cSec][data-k=values]');
   await tap(`[data-act=editComp]:has-text("${gymName}")`); await tap('[data-act=resumeComp]'); await p.waitForTimeout(500);
   st = await store(); c = st['users/u1/docs/profile'].components.find(c => c.id === 'dhab');
-  ok('resume: older pause is kept as a [from, to) span', !c.paused && c.pauses && c.pauses.length === 1 && c.pauses[0][1] === mon, c);
+  ok('resume: older pause is kept as a { from, to } span', !c.paused && c.pauses && c.pauses.length === 1 && c.pauses[0].to === mon && !Array.isArray(c.pauses[0]), c);
   await tap('[data-act=tab][data-t=today]'); await tap(`[data-act=day][data-k="${keys[0]}"]`);
   ok('resume: back on Today', await p.locator('.dayrow[data-k=dhab]').count() === 1);
+  // a device still holding the old [from, to] pairs converts them and syncs again
+  await setComp('dhab', 'c.pauses=[["2026-08-03","2026-08-17"]]');
+  await p.evaluate(() => Object.keys(localStorage).filter(k => /profile$/.test(k) && k !== '__mockstore').forEach(k => localStorage.removeItem(k)));   // this device knows only what the server has
+  await p.reload(); await p.waitForTimeout(2500);
+  st = await store(); c = st['users/u1/docs/profile'].components.find(c => c.id === 'dhab');
+  ok('old pause pairs are converted to { from, to } and saved', c.pauses.length === 1 && !Array.isArray(c.pauses[0]) && c.pauses[0].from === '2026-08-03' && c.pauses[0].to === '2026-08-17', c.pauses);
+  ok('nothing refused by the database afterwards', !(await p.evaluate(() => window.__nestedRefused)), await p.evaluate(() => window.__nestedRefused));
   // ---- update prompt
   VERSION = { build: 'newer123', min: 1 };
   await p.evaluate(() => { Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true }); });

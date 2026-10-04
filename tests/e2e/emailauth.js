@@ -1,0 +1,73 @@
+// Email + password: create account, sign out/in, wrong password, reset link, change password, delete with password
+const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const root = path.join(__dirname, '../../public'), S = process.env.S;
+const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0', dark = process.env.D === '1';
+const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
+(async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
+  const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: dark ? 'dark' : 'light', deviceScaleFactor: 2 });
+  await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort());
+  await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
+    if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
+    route.fulfill({ status: 200, body, contentType: type }); });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  const tap = async s => { const l = typeof s === 'string' ? p.locator(s).first() : s; await l.scrollIntoViewIfNeeded().catch(() => {}); touch ? await l.tap() : await l.click(); await p.waitForTimeout(250); };
+  const fill = async (sel, v) => { await p.locator(sel).fill(v); };
+  await p.goto('http://compass.test/'); await p.waitForTimeout(600);
+  ok('landing offers email next to Google', await p.locator('.lhero [data-act=signin]').count() === 1 && await p.locator('.lhero [data-act=authOpen]').count() === 1);
+  await tap('.lhero [data-act=authOpen]');
+  ok('sheet opens on Create account, with Google too', /Create your account/.test(await p.locator('.sheet').innerText()) && await p.locator('.sheet [data-act=signin]').count() === 1);
+  await p.screenshot({ path: `${S}/email-create-${W}${dark ? 'd' : ''}.png` });
+  // validation
+  await fill('#au-email', 'not-an-email'); await fill('#au-pw', 'longenough'); await tap('.sheet button[type=submit]');
+  ok('bad email is caught', /doesn't look right/.test(await p.locator('.sheet .banner').innerText()));
+  await fill('#au-email', 'Sam@Example.com'); await fill('#au-pw', 'short'); await tap('.sheet button[type=submit]');
+  ok('short password is caught (8+)', /at least 8/.test(await p.locator('.sheet .banner').innerText()));
+  ok('email kept after an error', (await p.locator('#au-email').inputValue()) === 'Sam@Example.com');
+  await tap('[data-act=authShow]');
+  ok('Show reveals the password, keeps the email', (await p.locator('#au-pw').getAttribute('type')) === 'text' && (await p.locator('#au-pw').inputValue()) === 'short' && (await p.locator('#au-email').inputValue()) === 'Sam@Example.com', [await p.locator('#au-pw').getAttribute('type'), await p.locator('#au-pw').inputValue(), await p.locator('#au-email').inputValue()]);
+  await fill('#au-name', 'Sam'); await fill('#au-pw', 'correct horse'); await tap('.sheet button[type=submit]'); await p.waitForTimeout(1200);
+  ok('account created, signed in, setup starts', await p.locator('[data-act=obNext]').count() >= 1 && await p.locator('.sheet').count() === 0);
+  ok('verification email sent', (await p.evaluate(() => window.__verifies || [])).length === 1);
+  await tap('[data-act=obNext]'); for (const v of ['rel', 'body']) await tap(`[data-act=obValue][data-v=${v}]`);
+  while (await p.locator('[data-act=obNext]').count()) await tap('[data-act=obNext]');
+  await p.waitForTimeout(900);
+  ok('greets by the name given', /Sam/.test(await p.locator('#main').innerText()));
+  await tap('#acctBtn');
+  const acct = await p.locator('.sheet').innerText();
+  ok('account sheet says email sign-in, offers Change password', /email and password/.test(acct) && await p.locator('.sheet [data-act=pwReset]').count() === 1);
+  await tap('.sheet [data-act=pwReset]'); await p.waitForTimeout(300);
+  ok('Change password sends a reset link to the account email', (await p.evaluate(() => window.__resets || [])).includes('sam@example.com'));
+  await tap('.sheet [data-act=signout]'); await p.waitForTimeout(1500);
+  ok('signed out to the front page', await p.locator('.lhero').count() === 1);
+  // sign in again
+  await tap('.lnav [data-act=authOpen]');
+  ok('nav Sign in opens the Sign in form', /Sign in/.test(await p.locator('.sheet h2').innerText()) && await p.locator('#au-name').count() === 0);
+  await fill('#au-email', 'sam@example.com'); await fill('#au-pw', 'wrong one'); await tap('.sheet button[type=submit]');
+  ok('wrong password: clear message, nothing else', /don't match/.test(await p.locator('.sheet .banner').innerText()));
+  await tap('[data-act=authMode][data-v=reset]');
+  ok('Forgot password keeps the email', (await p.locator('#au-email').inputValue()) === 'sam@example.com' && await p.locator('#au-pw').count() === 0);
+  await tap('.sheet button[type=submit]'); await p.waitForTimeout(300);
+  ok('reset: neutral confirmation (no account fishing)', /If sam@example.com has a Compass account/.test(await p.locator('.sheet .okmsg').innerText()));
+  await tap('[data-act=authMode][data-v=in]');
+  await fill('#au-pw', 'correct horse'); await p.locator('#au-pw').press('Enter'); await p.waitForTimeout(1500);
+  ok('Enter submits; back in with the same data', /Sam/.test(await p.locator('#main').innerText()) && await p.locator('[data-act=obNext]').count() === 0);
+  // creating the same email again
+  await tap('#acctBtn'); await tap('.sheet [data-act=signout]'); await p.waitForTimeout(1500);
+  await tap('.lhero [data-act=authOpen]'); await fill('#au-email', 'sam@example.com'); await fill('#au-pw', 'another pass'); await tap('.sheet button[type=submit]');
+  ok('existing email: told to sign in instead', /already has a Compass account/.test(await p.locator('.sheet .banner').innerText()));
+  await tap('.sheet [data-act=closeSheet]');
+  ok('close removes the sheet on the front page', await p.locator('.sheet').count() === 0);
+  // delete with password (stale sign-in → password prompt)
+  await tap('.lnav [data-act=authOpen]'); await fill('#au-email', 'sam@example.com'); await fill('#au-pw', 'correct horse');
+  await p.evaluate(() => { window.__staleMin = 30; }); await tap('.sheet button[type=submit]'); await p.waitForTimeout(1500);
+  await tap('#acctBtn'); await tap('[data-act=delAcct]'); await tap('[data-act=delAcctYes]'); await p.waitForTimeout(300);
+  ok('stale sign-in: asks for the password (no Google pop-up)', await p.locator('#del-pw').count() === 1 && !(await p.evaluate(() => window.__reauth)));
+  await p.screenshot({ path: `${S}/email-delete-${W}${dark ? 'd' : ''}.png` });
+  await fill('#del-pw', 'nope'); await tap('[data-act=delPwGo]'); await p.waitForTimeout(300);
+  ok('wrong password: nothing deleted', /didn't match/.test(await p.locator('.sheet').innerText()) && Object.keys(await p.evaluate(() => JSON.parse(localStorage.getItem('__mockaccounts')))).length === 1);
+  await fill('#del-pw', 'correct horse'); await tap('[data-act=delPwGo]'); await p.waitForTimeout(3000);
+  const st = await p.evaluate(() => ({ docs: Object.keys(JSON.parse(localStorage.getItem('__mockstore') || '{}')).filter(k => k.startsWith('users/e')).length, accts: Object.keys(JSON.parse(localStorage.getItem('__mockaccounts') || '{}')).length }));
+  ok('right password: data and account gone', st.docs === 0 && st.accts === 0, st);
+  ok('no page errors', !errs.length, errs);
+  console.log(`emailauth ${W}${dark ? 'd' : ''}: ${results.filter(x => x.pass).length}/${results.length} passed`); results.filter(x => !x.pass).forEach(x => console.log('  FAIL', x.n, JSON.stringify(x.i || '').slice(0, 300)));
+  await b.close(); })();

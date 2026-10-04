@@ -83,8 +83,8 @@ async function setup(b, init) {
     const left = await p.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('__mockstore') || '{}')).filter(k => k.startsWith('users/u1/')).length);
     ok('7 delete finishes quickly (recent sign-in)', Date.now() - t0 < 5000, Date.now() - t0);
     ok('7 every document is gone', left === 0, left);
-    await p.waitForTimeout(1600);
-    ok('7 lands back on the front page', await p.locator('.lhero').count() === 1);
+    const landed = await p.locator('.lhero').first().waitFor({ timeout: 8000 }).then(() => true, () => false);
+    ok('7 lands back on the front page', landed && await p.locator('.lhero').count() === 1, Date.now() - t0);
     ok('no page errors (main run)', errs.length === 0, errs);
     await ctx.close(); }
   /* 7b. stale sign-in: asks Google first, then deletes */

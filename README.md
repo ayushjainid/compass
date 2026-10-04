@@ -25,13 +25,15 @@ compass-web/
 2. **Create a project** → name it (for example `compass-ayush`) → turn Google Analytics **off** → **Create**.
 3. Note the **Project ID** shown under the name. You'll need it in step 5.
 
-## 2. Turn on Google sign-in
+## 2. Turn on sign-in (Google and email)
 
 1. In the left panel, open **Security → Authentication**. If you see a **Get started** button, click it.
    (Older consoles call this section **Build → Authentication**.)
 2. Open the **Sign-in method** tab → under **Sign-in providers**, click **Google** (or **Add new provider → Google**) → switch **Enable** on.
 3. In the same panel, set **Public-facing name for project** to `Compass` and choose your **Support email for project** → **Save**.
    This name is what people see on Google's "Choose an account" screen. If you don't see the name field, set it later under the gear icon → **Project settings → General → Public-facing name**.
+4. **Email sign-in (for people without Google):** still under **Sign-in method** → **Add new provider → Email/Password** → switch **Email/Password** on (leave *Email link (passwordless sign-in)* off: the free plan only sends 5 of those a day) → **Save**.
+   Optional: **Templates** tab → *Password reset* and *Email address verification* → set the sender name to `Compass`. The free plan sends up to 150 password-reset and 1,000 verification emails a day.
 
 ## 3. Create the database
 
@@ -136,9 +138,11 @@ Anyone who signs in could, in theory, write data in a loop and use up the free d
 
 1. **Database rules** (already in `firestore.rules`): each account can only write the few documents Compass uses, reminder and feedback entries are size-checked, and nobody can read anyone else's data. They go live with `npx firebase-tools deploy`; if a rule has a typo the deploy is refused and the old rules stay.
 2. **App Check** proves requests come from your copy of Compass:
-   - Google Cloud console → **reCAPTCHA** → **Create key** (type: Website, add `life-compass.web.app` and `localhost`). Copy the key id.
+   - Google Cloud console → **reCAPTCHA** → **Create key** (type: Website, domain `life-compass.web.app` only; never add `localhost` to this key). Copy the key id.
    - Firebase console → **App Check** → your web app → **reCAPTCHA Enterprise** → paste the key → Save.
    - Put the same key in `public/firebase-config.js` as `window.COMPASS_APPCHECK_SITE_KEY` and deploy.
+   - In the same App Check screen, set the token time to live to **7 days** (fewer checks, which keeps you inside reCAPTCHA's free monthly allowance).
+   - Testing on your computer (`localhost`): open the browser console once; Compass prints an *App Check debug token*. Add it under App Check → your web app → ⋮ → **Manage debug tokens**. Keep it private.
    - Watch App Check → **Metrics** for a day or two. When almost all requests show as verified, press **Enforce** for Cloud Firestore. (The reminders Worker uses a service account, so it is unaffected.)
 
 ## 10. Your dashboard: usage, reminders health, feedback, errors
@@ -170,6 +174,32 @@ To turn on the automatic deploy (until then, tests still run and you deploy by h
 
 Run the tests on your computer: `npm install && npx playwright install chromium && npm test` (the browser suites), `npm run test:rules` (needs Java), `npm run test:worker`.
 
+## 12. Backups (nightly, encrypted)
+
+Every night `.github/workflows/backup.yml` saves the **whole database** (everyone's data, reminders, feedback, tallies) as one encrypted file and keeps the last **30 days** under the repo's **Actions → Backup** runs. Each person can also download their own copy in the app; this one is for you, if something goes wrong for everyone at once.
+
+**Turn it on (once):**
+1. Make a long passphrase (at least 20 characters; a few random words is good) and **store it in your password manager**. Without it the backups can't be opened, by anyone, including you.
+2. GitHub → repo → **Settings → Secrets and variables → Actions → New repository secret**: name `BACKUP_PASSPHRASE`, value: the passphrase. (It reuses `FIREBASE_SERVICE_ACCOUNT` from section 11.)
+3. **Actions → Backup → Run workflow** to make the first one now. A green run with a `compass-backup-…` file under **Artifacts** means it works. GitHub emails you if a nightly run fails.
+
+The repo is public, so anyone signed in to GitHub can download these files. They're encrypted with AES-256 using a key derived from your passphrase, so they're useless without it. A backup reads every document once, a few thousand reads a night at your size, well inside the free quota.
+
+**Restore** (on your computer, from the repo folder):
+1. Download the artifact from the run you want and unzip it to get `compass-YYYY-MM-DD.cbk`.
+2. You need a service-account key: Firebase console → ⚙ **Project settings → Service accounts → Generate new private key**. Keep it outside the repo and delete it when you're done.
+3. Look first; nothing is written without `--yes`:
+   ```bash
+   npm install
+   export GOOGLE_APPLICATION_CREDENTIALS=~/Downloads/compass-key.json
+   export BACKUP_PASSPHRASE='your passphrase'
+   npm run restore -- compass-2026-10-03.cbk                       # what's inside
+   npm run restore -- compass-2026-10-03.cbk --uid THEIR_UID       # one person, dry run
+   npm run restore -- compass-2026-10-03.cbk --uid THEIR_UID --yes # do it
+   npm run restore -- compass-2026-10-03.cbk --all --yes           # everything
+   ```
+   A restore puts back every document in the backup as it was. Documents created after the backup are left alone. A person's user id is shown in Firebase → Authentication → Users.
+
 ## Troubleshooting
 
 - **"This address isn't allowed to sign in yet"**: add the domain under Authentication → Settings → Authorized domains. Only your project's own `PROJECT-ID.web.app` and `PROJECT-ID.firebaseapp.com` are allowed automatically; extra sites like `life-compass.web.app` must be added.
@@ -198,7 +228,7 @@ You don't need to redeploy, or clear cookies, to see a change.
 - Sync: each doc keeps a *base* (the last version this device and the server agreed on, saved locally). Saves run in a Firestore transaction that merges base, this device and the server three ways; counters (any map named `c`) add up; offline edits wait on the device and go out when it's back online. Every save carries a `_w` marker so a save whose reply was lost is never applied twice.
 - The app shell is cached by `public/sw.js` (network-first for pages), so Compass opens offline.
 - Updates: an open copy of Compass checks every 30 minutes (and when it comes back to the foreground) whether the deployed page differs, and offers **Reload**. `DATA_V` in `index.html` is the shape of saved data: **raise it when a change makes old code unsafe to save with** (renamed or restructured fields). Copies running older code then stop saving, keep edits on the device, and ask to reload; after the reload the kept edits sync.
-- Pausing a floor stores `paused` (the Monday it paused from) and, after resuming, `pauses: [[from, to), …]`, so past weeks still count it and paused weeks don't.
+- Pausing a floor stores `paused` (the Monday it paused from) and, after resuming, `pauses: [{ from, to }, …]` (Firestore can't store lists inside lists), so past weeks still count it and paused weeks don't.
 - Anonymous tallies: `stats/d-YYYY-MM-DD` and `stats/w-<Monday>`, one field per event; rules allow only +1 to one known field per write. Which tallies an account already counted is kept in its own `settings.seen`.
 - Tests live in `tests/`: `tests/e2e/*.js` drive the app with a stand-in Firebase (`mockfb.js`, `mockfb2.js` for two devices), `tests/rules/` checks `firestore.rules`, `worker/test/` checks the Worker.
 - The reminders Worker is in `worker/`: `src/plan.js` decides, `src/push.js` encrypts (RFC 8291) and signs (VAPID) with WebCrypto only, `src/firestore.js` talks to Firestore's REST API.
