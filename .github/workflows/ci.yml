@@ -45,7 +45,7 @@ jobs:
       - run: npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass "node tests/backup/roundtrip.mjs"
 
   worker:
-    name: Reminders Worker
+    name: Reminders Worker, calendar feed and reminder buttons
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults: { run: { working-directory: worker } }
@@ -54,7 +54,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm install --no-save --no-audit --no-fund http_ece@1
-      - run: node test/unit.mjs && node test/run.mjs
+      - run: node test/unit.mjs && node test/run.mjs && node test/features.mjs
+      - run: node ../tests/sw/sw.test.mjs
 
   deploy:
     name: Deploy to life-compass.web.app

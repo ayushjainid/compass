@@ -34,6 +34,7 @@ const REVIEW = [
   ["Plot twist: you did more than you think", "Your Sunday review is ready to prove it."],
 ];
 
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function dayNumber(day) { return Math.floor(Date.parse(day + "T00:00:00Z") / 864e5); }
 function hash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 /** Rotates through the list so the same words never show twice in a row (novelty matters). */
@@ -68,5 +69,7 @@ export function decide(kind, uid, d, now) {
   if (d.revDone === monday) return skip("review done");
   fields.sentRev = monday;
   const [title, body] = pick(REVIEW, uid, Math.floor(dayNumber(today) / 7));
-  return { send: { title, body, url: "/?tab=review&from=review", tag: "compass-review" }, fields, why: "send" };
+  /* the first Sunday of a month also brings last month's look-back */
+  const dom = +today.slice(8, 10), lastMonth = MONTHS[(+today.slice(5, 7) + 10) % 12];
+  return { send: { title, body: dom <= 7 ? `${body}\nIf you logged in ${lastMonth}, its look-back is in the review too.` : body, url: "/?tab=review&from=review", tag: "compass-review" }, fields, why: "send" };
 }

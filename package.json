@@ -8,7 +8,7 @@
     "deploy": "npx firebase-tools deploy",
     "test": "node tests/e2e/run.js",
     "test:rules": "npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass \"node tests/rules/rules.test.mjs\"",
-    "test:worker": "cd worker && node test/unit.mjs && node test/run.mjs",
+    "test:worker": "cd worker && node test/unit.mjs && node test/run.mjs && node test/features.mjs && node ../tests/sw/sw.test.mjs",
     "backup": "node scripts/backup/backup.mjs",
     "restore": "node scripts/backup/restore.mjs",
     "test:backup": "node tests/backup/unit.mjs && npx -y firebase-tools@15 emulators:exec --only firestore --project demo-compass \"node tests/backup/roundtrip.mjs\""

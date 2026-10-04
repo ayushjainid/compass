@@ -6,7 +6,7 @@
     "keys": "node gen-vapid.mjs",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
-    "test": "node test/unit.mjs && node test/run.mjs"
+    "test": "node test/unit.mjs && node test/run.mjs && node test/features.mjs"
   },
   "devDependencies": {
     "wrangler": "^4",

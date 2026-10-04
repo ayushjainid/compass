@@ -8,6 +8,34 @@
 import { client } from "./firestore.js";
 import { decide } from "./plan.js";
 import { importVapid, pushRequest } from "./push.js";
+import { localDay, localMonday, validTz } from "./time.js";
+import { openToday, listNames, signAction, weekId } from "./today.js";
+import { handleFeed } from "./feed.js";
+import { handleAction } from "./act.js";
+
+/** The evening reminder says what's left today and, when it's one or two things, offers to tick them
+    right from the notification; otherwise "Remind me in an hour". Hidden names → only the snooze button. */
+export async function enrichEvening(env, db, uid, d, payload, now) {
+  const tz = validTz(d.tz) ? d.tz : "UTC", day = localDay(tz, now), mon = localMonday(tz, now);
+  const base = `users/${uid}/docs/`;
+  const got = await db.getMany([base + "profile", base + "settings", base + weekId(mon)]);
+  const items = openToday({ profile: got[base + "profile"], settings: got[base + "settings"], week: got[base + weekId(mon)] }, day, mon);
+  const x = now + 18 * 3600e3, names = d.names !== false;
+  const out = { ...payload, actions: [], act: {} };
+  if (items.length && names) out.body = `${payload.body}\n${items.length === 1 ? "Left today" : `${items.length} left today`}: ${listNames(items)}.`;
+  else if (items.length) out.body = `${payload.body}\n${items.length} left today.`;
+  if (names && items.length && items.length <= 2) {
+    for (const [i, it] of items.entries()) {
+      const key = "tick" + i;
+      out.actions.push({ action: key, title: "✓ " + it.name.slice(0, 28) });
+      out.act[key] = await signAction(env, { k: "tick", u: uid, d: day, w: weekId(mon), c: it.id, t: it.kind, s: it.step || 1, n: it.name.slice(0, 40), z: tz, x });
+    }
+  } else {
+    out.actions.push({ action: "snooze", title: "Remind me in an hour" });
+    out.act.snooze = await signAction(env, { k: "snooze", u: uid, d: day, z: tz, x: now + 6 * 3600e3 });
+  }
+  return out;
+}
 
 // Free plan: 10 ms of CPU per run and ~1 ms of crypto per push, so 8 a minute is the safe ceiling.
 // On Workers Paid ($5/month) set PER_RUN to e.g. 200 in wrangler.toml.
@@ -63,6 +91,8 @@ async function work(env, db, now, fetchFn, log) {
   }
 
   if (!env.VAPID_PUBLIC || !env.VAPID_PRIVATE) throw new Error("VAPID keys are not set");
+  /* evening reminders say what's left and carry one-tap buttons; if that lookup fails, the plain reminder still goes */
+  for (const s of sends) if (s.kind === "eve" && claimed.has(s.name)) { try { s.payload = await enrichEvening(env, db, s.id, s.data, s.payload, now); } catch (e) { log("enrich failed: " + e.message); } }
   const vapid = await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE);
   const dead = [];
   let sent = 0, failed = 0;
@@ -85,8 +115,11 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runOnce(env, event.scheduledTime || Date.now()).then(r => console.log(JSON.stringify(r))));
   },
-  // A tiny health check so you can see the Worker is alive in a browser.
-  async fetch() {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/cal/")) return handleFeed(request, env);
+    if (url.pathname === "/act") return handleAction(request, env);
+    // A tiny health check so you can see the Worker is alive in a browser.
     return new Response("Compass reminders are running.", { headers: { "Content-Type": "text/plain" } });
   },
 };

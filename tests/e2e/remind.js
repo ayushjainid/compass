@@ -49,6 +49,11 @@ const nt = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') 
     ok('evening off clears its schedule, review stays', d.eve === '' && d.nextEve === null && d.rev === '18:00' && d.nextRev, d);
     await tap('[data-act=ntToggle][data-k=eve]'); d = await nt(p);
     ok('evening back on uses the default time', d.eve === '21:30' && d.nextEve);
+    ok("'Say what's left' is on by default", (await p.locator('[data-act=ntNames]').getAttribute('aria-checked')) === 'true');
+    await tap('[data-act=ntNames]'); await p.waitForTimeout(300); d = await nt(p);
+    ok("turning it off keeps names off the lock screen", d.names === false && (await p.locator('[data-act=ntNames]').getAttribute('aria-checked')) === 'false', d);
+    await tap('[data-act=ntNames]'); await p.waitForTimeout(300); d = await nt(p);
+    ok("…and back on", d.names === true, d);
     await tap('[data-act=ntTest]');
     ok('test notification shows', await p.evaluate(() => window.__shown) === "Psst, it's your compass");
     // review done this week → revDone

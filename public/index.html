@@ -762,6 +762,32 @@ html.dragging{scroll-behavior:auto!important}
 .pstep.edit{background:transparent;padding:0;gap:8px}
 .pstep.edit input{flex:1;min-width:0}
 .admlink{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}.admlink small{font-weight:400;color:var(--muted);font-size:12px}
+.feedcard{display:grid;gap:10px}.feedcard .tag.good{background:var(--good-soft);color:var(--good);margin-left:6px;vertical-align:middle}
+.feedbtns{display:flex;flex-wrap:wrap;gap:8px}.feedbtns .btn{text-decoration:none}
+.feedmgr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13.5px;color:var(--ink2)}
+.lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
+.lookcard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
+.lookcard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small{grid-column:1;color:var(--ink2);font-size:13px}
+.lookcard .chev{grid-column:2;grid-row:1/4;align-self:center;width:9px;height:9px;border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(-45deg)}
+.lkhead{display:flex;align-items:center;gap:10px;margin:6px 0 2px}.lkhead .eyebrow{display:block}
+.iconbtn{flex:none;width:40px;height:40px;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:22px;line-height:1}
+.lknav{display:flex;justify-content:space-between;margin:0 0 12px}
+.lktiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.lktile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.lktile b{font:600 26px/1.1 var(--display);overflow-wrap:anywhere}.lktile b small{font-size:15px;color:var(--muted);font-weight:500}
+.lktile span{font-size:12.5px;color:var(--ink2);line-height:1.3}.lktile>small{font-size:11.5px;color:var(--muted)}
+.lkvals{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.lkvals li{display:grid;grid-template-columns:minmax(0,1fr) auto 36px;align-items:center;gap:10px}
+.lkvals .nm{min-width:0;overflow-wrap:anywhere}.lkvals .n{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+.lkdots{display:flex;gap:5px}.lkdots i{flex:none;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line)}
+.lkdots i.ok{background:var(--good);border-color:var(--good)}.lkdots i.rest{background:var(--sunk)}.lkdots i.miss{border-color:var(--warn)}.lkdots i.open{border-style:dashed}
+.lkbest{display:flex;flex-direction:column;gap:2px}.lkbest small{color:var(--muted)}
+.lkcols{display:grid;gap:10px}@media(min-width:700px){.lkcols{grid-template-columns:1fr 1fr}}
+.lkfl{list-style:none;margin:6px 0 0;padding:0}.lkfl li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}.lkfl li:last-child{border-bottom:0}
+.lkfl small{color:var(--muted);font-variant-numeric:tabular-nums}.lkfl small.ok{color:var(--good)}
+.lkwords{list-style:none;margin:0;padding:0;display:grid;gap:10px}.lkwords q{font:500 16px/1.4 var(--display);font-style:italic}.lkwords small{display:block;color:var(--muted);font-size:12px}
+.lkextra{margin:14px 0 0}.lkadj{margin-top:14px;display:grid;gap:4px}.lkadj q{font-style:italic}.lkadj small{color:var(--muted)}
+.lklink{display:inline-block;margin:14px 0 0}
 .tmedit{margin:6px 0 14px}
 .tmrow{display:flex;gap:8px}.tmrow input{flex:1;min-width:0}
 .tmacts{display:grid;gap:8px}
@@ -946,6 +972,8 @@ details.fold[open] summary::before{content:"▾ ";}
 <script src="/firebase-config.js"></script>
 <script type="module">
 import * as FB from "/vendor/firebase.js?v=5";
+import { VALUE_LIB } from "/shared/values.js";
+import { buildIcs as buildIcsFor } from "/shared/ics.js";
 /* ============ helpers ============ */
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -969,18 +997,7 @@ const hrs = h => h >= 10 ? Math.round(h) + "" : (Math.round(h * 2) / 2).toString
 const reduced = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
 
 /* ============ research library ============ */
-const VALUE_LIB = [
-  { id: "rel",    name: "Deep relationships", why: "Close ties are the strongest single predictor of health and happiness.", src: "Holt-Lunstad et al. 2010" },
-  { id: "solve",  name: "Problem solving",    why: "Visible progress on meaningful work is the top driver of a good workday.", src: "Amabile & Kramer 2011" },
-  { id: "create", name: "Creativity",         why: "Small everyday creative acts lift mood the next day.", src: "Conner, DeYoung & Silvia 2018" },
-  { id: "mind",   name: "Mental fitness",     why: "Reappraisal and mindfulness steady mood under stress.", src: "Webb et al. 2012; Goyal et al. 2014" },
-  { id: "body",   name: "Physical fitness",   why: "Exercise rivals therapy for mood; regular sleep matters as much as long sleep.", src: "Noetel et al. 2024; Windred et al. 2024" },
-  { id: "serve",  name: "Service",            why: "Helping others reliably raises your own well-being.", src: "Dunn et al. 2008; Hui et al. 2020" },
-  { id: "money",  name: "Financial security", why: "Money worry taxes attention; a floor of security frees it.", src: "Mani et al. 2013" },
-  { id: "world",  name: "Travel & novelty",   why: "New experiences and awe counter getting used to everything.", src: "Van Boven & Gilovich 2003; Bai et al. 2021" },
-  { id: "learn",  name: "Learning",           why: "Growing competence is one of three core psychological needs.", src: "Deci & Ryan, SDT" },
-  { id: "time",   name: "Time you own",       why: "Unscheduled time protects autonomy; over-scheduled leisure starts to feel like work.", src: "Tonietto & Malkoc 2016" },
-];
+/* VALUE_LIB comes from /shared/values.js (also used by the calendar feed) */
 const COMP_LIB = [
   { id: "reach",     value: "rel",    name: "Reach out to someone close", cadence: "daily",   target: 5, hours: 0.25, mvw: true, note: "A call, voice note or message" },
   { id: "quality",   value: "rel",    name: "Quality time with someone close", cadence: "weekly", target: 2, hours: 1.5 },
@@ -1447,6 +1464,7 @@ async function deleteAccount(confirmed) {
     try { const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
     try { await within(FB.deleteDoc(FB.doc(ST.fs, "notify", ST.uid)), 10000, "timeout"); } catch (e) {}
     try { await within(FB.deleteDoc(FB.doc(ST.fs, "errors", ST.uid)), 10000, "timeout"); } catch (e) {}
+    try { const ct = settings().calFeed; if (ct) await within(FB.deleteDoc(FB.doc(ST.fs, "calfeeds", ct)), 10000, "timeout"); } catch (e) {}
     try { const fbs = await within(FB.getDocs(FB.query(FB.collection(ST.fs, "feedback"), FB.where("uid", "==", ST.uid))), 10000, "timeout"); for (const d of fbs.docs) await within(FB.deleteDoc(FB.doc(ST.fs, "feedback", d.id)), 10000, "timeout"); } catch (e) {}
     try { localStorage.removeItem("compass-errlist"); localStorage.removeItem("compass-errs"); } catch (e) {}
     let ids = [];
@@ -1580,6 +1598,7 @@ async function init() {
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
     stat(onboarded() ? "active" : "obStart");
+    setTimeout(calFeedTz, 4000);
     /* the owner (a document at admins/{uid}, made by hand in the console) gets a link to the usage dashboard */
     const uidNow = u.uid; FB.getDoc(FB.doc(ST.fs, "admins", uidNow)).then(sn => { if (ST.uid === uidNow && sn.exists()) { S.isAdmin = true; scheduleRender(); } }).catch(() => {});
     if (START_URL) openFromUrl(START_URL);
@@ -1604,7 +1623,7 @@ function feedbackSheet() {
    The first time something happens in a day (and in a week), this account adds 1 to that day's and week's tally in
    stats/d-YYYY-MM-DD and stats/w-<Monday>. Tallies hold numbers only: no ids, no names, nothing you typed. Only the
    owner's dashboard (stats.html) can read them. Which tallies this account already added to is kept in its own settings. */
-const STAT_EVENTS = ["active", "obStart", "obDone", "logged", "planned", "reviewed", "tasks", "remindersOn", "paused", "exported", "feedback"];
+const STAT_EVENTS = ["active", "obStart", "obDone", "logged", "planned", "reviewed", "tasks", "remindersOn", "paused", "exported", "feedback", "lookback", "calfeed"];
 function stat(ev) {
   try {
     if (S.mode !== "db" || !ST.fs || !ST.uid || S.tooOld || !STAT_EVENTS.includes(ev) || !FB.increment) return;
@@ -1652,6 +1671,7 @@ window.addEventListener("unhandledrejection", e => { const r = e && e.reason; lo
 
 /* ============ check-in reminders: at most one evening nudge + a Sunday review, sent by the Cloudflare Worker ============ */
 const VAPID = () => String(window.COMPASS_VAPID_PUBLIC || "").trim();
+const WORKER = () => String(window.COMPASS_WORKER_URL || "").trim().replace(/\/$/, "");
 const pushCapable = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -1760,6 +1780,7 @@ function remindersSection() {
   if (on) body = `${why}${late ? `<div class="ntlate"><b>Reminders look delayed</b><div class="hint">The last one due didn't go out. It's been reported automatically; nothing for you to do.</div></div>` : ""}
     <div class="ntrow"><div><b>Evening check-in</b><div class="hint">Only if you haven't opened Compass that day.</div></div><button class="switch" role="switch" aria-checked="${!!n.eve}" data-act="ntToggle" data-k="eve" aria-label="Evening check-in"></button></div>
     ${n.eve ? `<div class="ntime"><label class="flabel" for="nt-eve">Time</label><input type="time" id="nt-eve" data-nt="eve" value="${esc(n.eve)}"></div>` : ""}
+    <div class="ntrow"><div><b>Say what's left</b><div class="hint">The evening reminder names what's still open${WORKER() ? ", with buttons to tick one or two of them right there" : ""}. Turn off to keep names off your lock screen.</div></div><button class="switch" role="switch" aria-checked="${n.names !== false}" data-act="ntNames" aria-label="Say what's left"></button></div>
     <div class="ntrow"><div><b>Sunday review</b><div class="hint">Skipped once the week is reviewed.</div></div><button class="switch" role="switch" aria-checked="${!!n.rev}" data-act="ntToggle" data-k="rev" aria-label="Sunday review"></button></div>
     ${n.rev ? `<div class="ntime"><label class="flabel" for="nt-rev">Time on Sunday</label><input type="time" id="nt-rev" data-nt="rev" value="${esc(n.rev)}"></div>` : ""}
     <div class="row" style="margin-top:12px"><button class="btn" data-act="ntTest">Show a test</button><button class="btn quiet danger" data-act="ntOff">Turn off</button></div>`;
@@ -3124,53 +3145,9 @@ function blockSheet(sh) {
     ${!mplan && planDays(c).length > 1 ? `<label class="mini" style="gap:8px"><input type="checkbox" id="blk-all" ${!(c.block.times && Object.keys(c.block.times).length) ? "checked" : ""}> Same time on all its days (${planDays(c).map(d => WD[d]).join(", ")})</label>` : ""}
     <div class="row"><button class="btn quiet danger" data-act="${mplan ? "mRemove" : "blkRemove"}">${mplan ? "Remove the date" : `Remove from ${WD[di]}`}</button><button class="btn primary" data-act="blkSave">Save</button></div></div>`;
 }
-/* ---- .ics export ---- */
-function icsEsc(t) { return String(t || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1"); }
-function icsFold(line) { const out = []; let l = line; while (l.length > 74) { out.push(l.slice(0, 74)); l = " " + l.slice(74); } out.push(l); return out.join("\r\n"); }
-const icsStamp = d => d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + "T" + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + "Z";
-const icsLocal = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "T" + pad(d.getHours()) + pad(d.getMinutes()) + "00";
-const icsDay = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
-/* timed events carry an alert at their start; all-day ones stay silent so nothing pings at midnight */
-function icsAlarm(push, name) { const m = S.icsAlert ?? 0; if (m < 0) return; push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(name), `TRIGGER:-PT${m}M`, "END:VALARM"); }
-function buildIcs() {
-  const zone = tz(), now = new Date(), start = monday(new Date()), L = [];
-  const push = (...xs) => xs.forEach(x => L.push(icsFold(x)));
-  push("BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Compass//life-compass.web.app//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Compass", zone ? "X-WR-TIMEZONE:" + zone : "");
-  let n = 0;
-  const dailyAll = comps().filter(c => !c.fun && !c.paused && c.cadence === "daily" && c.auto !== "journal");
-  dailyAll.concat(weeklyPlannable()).forEach(c => {
-    const days = planDays(c); if (!days.length) return;
-    const groups = {}; days.forEach(d => { const t = timeOn(c, d); (groups[t] = groups[t] || []).push(d); });
-    Object.entries(groups).forEach(([t, ds]) => {
-      let first = null;
-      for (let i = 0; i < 7 * 9 + 400 && !first; i++) { const d = addDays(start, i); if (ds.includes((d.getDay() + 6) % 7) && onWeek(c, dkey(monday(d)))) first = d; }
-      if (!first) return;
-      const rule = "RRULE:FREQ=WEEKLY;" + (everyN(c) > 1 ? `INTERVAL=${everyN(c)};` : "") + "BYDAY=" + ds.slice().sort().map(d => RR[d]).join(",");
-      push("BEGIN:VEVENT", `UID:compass-${c.id}-${t.replace(":", "") || "any"}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now));
-      if (t) { const [h, m] = t.split(":").map(Number); const s0 = new Date(first); s0.setHours(h, m, 0, 0); const e0 = new Date(s0.getTime() + durOf(c) * 60000); push(`DTSTART${zone ? ";TZID=" + zone : ""}:${icsLocal(s0)}`, `DTEND${zone ? ";TZID=" + zone : ""}:${icsLocal(e0)}`); }
-      else push("DTSTART;VALUE=DATE:" + icsDay(first), "DTEND;VALUE=DATE:" + icsDay(addDays(first, 1)), "TRANSP:TRANSPARENT");
-      push(rule, "SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. ${freqWords(c)}. Hold it loosely.`)); if (t) icsAlarm(push, c.name); push("END:VEVENT"); n++;
-    });
-  });
-  /* daily floors with no days set: all-day events every day, one each or combined (export sheet choice) */
-  const loose = dailyAll.filter(c => !planDays(c).length), mode = S.icsDaily || "each", d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const allDay = (uid, name, desc) => { push("BEGIN:VEVENT", `UID:${uid}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now), "DTSTART;VALUE=DATE:" + icsDay(d0), "DTEND;VALUE=DATE:" + icsDay(addDays(d0, 1)), "TRANSP:TRANSPARENT", "RRULE:FREQ=DAILY", "SUMMARY:" + icsEsc(name), "DESCRIPTION:" + icsEsc(desc), "END:VEVENT"); n++; };
-  if (loose.length && mode === "each") loose.forEach(c => allDay(`compass-${c.id}-daily`, c.name, `Compass · ${valName(c.value)}. ${freqWords(c)}, any time of day.${c.note ? " " + c.note : ""}`));
-  else if (loose.length && mode === "one") allDay("compass-daily-floors", "Daily floors", "Compass · any time today: " + loose.map(c => c.name).join(", ") + ".");
-  [monthKey(new Date()), monthKey(new Date(now.getFullYear(), now.getMonth() + 1, 1))].forEach(ym => {
-    const mp = ((settings().months || {})[ym] || {}).plan || {};
-    Object.entries(mp).forEach(([cid, pl]) => {
-      const c = compById(cid); if (!c || !pl.date || c.paused) return;
-      const d = parse(pl.date);
-      push("BEGIN:VEVENT", `UID:compass-${cid}-${pl.date}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now));
-      if (pl.time) { const [h, m] = pl.time.split(":").map(Number); d.setHours(h, m, 0, 0); push(`DTSTART${zone ? ";TZID=" + zone : ""}:${icsLocal(d)}`, `DTEND${zone ? ";TZID=" + zone : ""}:${icsLocal(new Date(d.getTime() + durOf(c) * 60000))}`); }
-      else push("DTSTART;VALUE=DATE:" + icsDay(d), "DTEND;VALUE=DATE:" + icsDay(addDays(d, 1)), "TRANSP:TRANSPARENT");
-      push("SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. Monthly floor.`)); if (pl.time) icsAlarm(push, c.name); push("END:VEVENT"); n++;
-    });
-  });
-  push("END:VCALENDAR");
-  return { text: L.filter(x => x !== "").join("\r\n") + "\r\n", n };
-}
+/* ---- .ics export: built by /shared/ics.js, the same code that serves the live calendar feed ---- */
+const icsPrefs = () => Object.assign({ alert: 0, daily: "each" }, settings().cal || {});
+function buildIcs() { const p = icsPrefs(); return buildIcsFor({ profile: profile(), settings: settings(), today: new Date(), now: new Date(), zone: tz(), alert: p.alert, daily: p.daily }); }
 function downloadIcs() {
   const { text, n } = buildIcs(); if (!n) { toast("Plan at least one block first."); return; }
   stat("exported");
@@ -3179,17 +3156,61 @@ function downloadIcs() {
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
   toast(`Saved ${n} event${n > 1 ? "s" : ""}`);
 }
+/* ---- live calendar feed: a private link the calendar app subscribes to (served by the reminders Worker) ---- */
+const feedUrl = t => `${WORKER()}/cal/${t}.ics`;
+const webcal = u => u.replace(/^https?:/, "webcal:");
+function newFeedToken() { const b = new Uint8Array(32); crypto.getRandomValues(b); return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+async function calFeedMake(replace) {
+  if (!ST.uid || S.calBusy) return;
+  if (navigator.onLine === false) { toast("You're offline. Connect, then try again."); return; }
+  S.calBusy = true; renderSheet();
+  const old = settings().calFeed, t = newFeedToken();
+  try {
+    await within(FB.setDoc(FB.doc(ST.fs, "calfeeds", t), { uid: ST.uid, tz: tz() || "UTC", at: Date.now() }), 10000, "timeout");
+    editSettings(st => { st.calFeed = t; });
+    if (old && replace) { try { await within(FB.deleteDoc(FB.doc(ST.fs, "calfeeds", old)), 10000, "timeout"); } catch (e) {} }
+    toast(replace ? "New link made. The old one no longer works." : "Your calendar link is ready"); if (!replace) stat("calfeed");
+  } catch (e) { toast("Couldn't make the link just now. Try again."); }
+  S.calBusy = false; S.confirm = null; renderSheet();
+}
+async function calFeedOff() {
+  const t = settings().calFeed; if (!t) return;
+  /* the feed only answers for the link saved in settings, so clearing it switches the link off even if the delete below fails */
+  editSettings(st => { delete st.calFeed; }); S.confirm = null; toast("Calendar link turned off"); renderSheet();
+  try { await within(FB.deleteDoc(FB.doc(ST.fs, "calfeeds", t)), 10000, "timeout"); } catch (e) {}
+}
+/* the feed writes times in your time zone; keep it right after travel (one read per session) */
+async function calFeedTz() {
+  const t = settings().calFeed; if (!t || S.calTzDone || !ST.fs) return; S.calTzDone = true;
+  try { const sn = await FB.getDoc(FB.doc(ST.fs, "calfeeds", t)); const z = tz() || "UTC"; if (sn.exists() && sn.data().tz !== z) await FB.setDoc(FB.doc(ST.fs, "calfeeds", t), { uid: ST.uid, tz: z, at: Date.now() }); } catch (e) {}
+}
 function icsSheet() {
-  const { n } = buildIcs();
-  return `<div class="in"><div class="grab"></div><h2 style="margin:0">Add your plan to a calendar</h2>
-    <p class="lede" style="margin:0">${n ? `${n} repeating block${n > 1 ? "s" : ""} and one-offs in one file.` : "Nothing planned yet. Place a floor on a day first."}</p>
-    <div class="fl"><span class="flabel">Alerts for timed blocks</span><div class="seg">${[[0, "At start"], [10, "10 min before"], [-1, "None"]].map(([k, l]) => `<button data-act="icsAlert" data-v="${k}" aria-pressed="${(S.icsAlert ?? 0) === k}">${l}</button>`).join("")}</div>
-      <div class="hint">Apple Calendar keeps these. Google Calendar drops alerts from imported files: set default notifications on your Compass calendar in Google Calendar's settings instead.</div></div>
-    ${comps().some(c => !c.fun && !c.paused && c.cadence === "daily" && c.auto !== "journal" && !planDays(c).length) ? `<div class="fl"><span class="flabel">Daily floors without a time</span><div class="seg">${[["each", "All-day, one each"], ["one", "One all-day list"], ["none", "Leave out"]].map(([k, l]) => `<button data-act="icsDaily" data-v="${k}" aria-pressed="${(S.icsDaily || "each") === k}">${l}</button>`).join("")}</div></div>` : ""}
-    <button class="btn primary" data-act="icsDownload" ${n ? "" : "disabled"}>Download calendar file (.ics)</button>
+  const { n } = buildIcs(), live = !!WORKER(), t = settings().calFeed;
+  const opts = `<div class="fl"><span class="flabel">Alerts for timed blocks</span><div class="seg">${[[0, "At start"], [10, "10 min before"], [-1, "None"]].map(([k, l]) => `<button data-act="icsAlert" data-v="${k}" aria-pressed="${icsPrefs().alert === k}">${l}</button>`).join("")}</div>
+      <div class="hint">Apple Calendar shows these. Google Calendar ignores alerts from other calendars: set default notifications on the Compass calendar in Google Calendar's settings instead.</div></div>
+    ${comps().some(c => !c.fun && !c.paused && c.cadence === "daily" && c.auto !== "journal" && !planDays(c).length) ? `<div class="fl"><span class="flabel">Daily floors without a time</span><div class="seg">${[["each", "All-day, one each"], ["one", "One all-day list"], ["none", "Leave out"]].map(([k, l]) => `<button data-act="icsDaily" data-v="${k}" aria-pressed="${icsPrefs().daily === k}">${l}</button>`).join("")}</div></div>` : ""}`;
+  const download = `<button class="btn ${live ? "" : "primary"}" data-act="icsDownload" ${n ? "" : "disabled"}>Download calendar file (.ics)</button>
     <div class="card"><div class="field"><span class="flabel">Apple Calendar · iPhone or Mac</span><span>Open the downloaded file and choose <b>Add All</b>. On iPhone, tap it from the download bar or the Files app.</span></div>
       <div class="field"><span class="flabel">Google Calendar · on a computer</span><span>Go to <a class="linkbtn" href="https://calendar.google.com/calendar/r/settings/export" target="_blank" rel="noopener">calendar.google.com → Settings → Import</a>, choose the file and click <b>Import</b>. It then shows on your phone too.</span></div></div>
-    <p class="hint" style="margin:0">Tip: import into a separate calendar called “Compass”. When your plan changes, delete that calendar and import the new file, so nothing is duplicated.</p>
+    <p class="hint" style="margin:0">A file is a snapshot: when your plan changes, delete the old events and import a new file.</p>`;
+  if (!live) return `<div class="in"><div class="grab"></div><h2 style="margin:0">Add your plan to a calendar</h2>
+    <p class="lede" style="margin:0">${n ? `${n} repeating block${n > 1 ? "s" : ""} and one-offs in one file.` : "Nothing planned yet. Place a floor on a day first."}</p>
+    ${opts}${download}<button class="btn quiet" data-act="closeSheet">Close</button></div>`;
+  const u = t ? feedUrl(t) : "";
+  const linked = t ? `<div class="feedbtns">
+        <a class="btn primary" href="${esc(webcal(u))}">Add to Apple Calendar</a>
+        <a class="btn" href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal(u))}" target="_blank" rel="noopener">Add to Google Calendar</a>
+        <button class="btn quiet" data-act="calCopy">Copy link</button></div>
+      <p class="hint" style="margin:0">Changes in Compass reach your calendar by themselves: Apple checks every few hours, Google about once or twice a day (Google decides). Anyone with this link can see your plan's names and times, never your notes or journal.</p>
+      <div class="feedmgr">${S.confirm === "calReset" ? `<span>Make a new link? The old one stops working, so re-add it in your calendar.</span><button class="btn small danger" data-act="calReset">Make new link</button><button class="btn small quiet" data-act="calNo">Cancel</button>`
+        : S.confirm === "calOff" ? `<span>Turn the link off? Your calendar stops updating and Compass events stay as they are.</span><button class="btn small danger" data-act="calOff">Turn off</button><button class="btn small quiet" data-act="calNo">Cancel</button>`
+        : `<button class="textlink" data-act="calAsk" data-v="calReset">Shared it by mistake? Make a new link</button><button class="textlink" data-act="calAsk" data-v="calOff">Turn off</button>`}</div>`
+    : `<p class="hint" style="margin:0">Your calendar subscribes to a private link and updates by itself whenever your plan changes. No re-importing.</p>
+      <button class="btn primary" data-act="calMake" ${S.calBusy ? "disabled" : ""}>${S.calBusy ? "Making your link…" : "Get my calendar link"}</button>`;
+  return `<div class="in"><div class="grab"></div><h2 style="margin:0">Add your plan to a calendar</h2>
+    <div class="card pad feedcard"><b>Live calendar <span class="tag good">Stays in sync</span></b>${linked}</div>
+    ${opts}
+    <details class="fold"><summary>Or download a one-time file</summary>${download}</details>
     <button class="btn quiet" data-act="closeSheet">Close</button></div>`;
 }
 function rWeek(id, F, trips, sugg) {
@@ -3298,7 +3319,94 @@ function floorHistory() {
   }).join("");
   return `<h3>Floors, last 8 weeks</h3><div class="card pad fhist">${rows}<p class="hint" style="margin:8px 0 0">Each bar is a week, filled by how much of the floor you met; this week is the outlined one. The number counts finished weeks held.</p></div>`;
 }
+/* ============ monthly look-back ============
+   A week belongs to the month its Thursday falls in, so every week counts in exactly one month. */
+const FELT_WORDS = ["Adrift", "Uneasy", "Steady", "Good", "At peace"];
+const ymName = ym => MONTHS[+ym.slice(5) - 1];
+const ymPrev = ym => monthKey(new Date(+ym.slice(0, 4), +ym.slice(5) - 2, 1));
+const ymNext = ym => monthKey(new Date(+ym.slice(0, 4), +ym.slice(5), 1));
+function monthWeeks(ym) {
+  const first = new Date(+ym.slice(0, 4), +ym.slice(5) - 1, 1), out = [];
+  for (let m = monday(addDays(first, -6)); ; m = addDays(m, 7)) { const thu = addDays(m, 3); if (monthKey(thu) > ym) break; if (monthKey(thu) === ym) out.push(m); }
+  return out;
+}
+/* the latest month that has ended, and whether it has anything in it */
+const lastMonth = () => ymPrev(monthKey(new Date()));
+function monthHasData(ym) { return monthWeeks(ym).some(m => anyWeek(wid(m))); }
+function lookbackCard() {
+  const ym = lastMonth(), seen = (settings().lookSeen || {})[ym], since = (profile() || {}).onboardedAt || "";
+  if (new Date().getDate() > 10 || seen || !monthHasData(ym) || (since && since.slice(0, 7) > ym)) return "";
+  return `<button class="lookcard" data-act="lookOpen" data-v="${ym}"><span class="lk">Your ${ymName(ym)}</span><b>A look back at your month is ready</b><small>Which values held, your best week, and a few of your own words. Two minutes.</small><span class="chev" aria-hidden="true"></span></button>`;
+}
+function rLookback(ym) {
+  const weeks = monthWeeks(ym), ids = weeks.map(wid), tk = todayKey(), vals = valueList();
+  const nowYm = monthKey(new Date()), partial = ym === nowYm;
+  const have = ids.filter(id => anyWeek(id));
+  const head = `<div class="lkhead"><button class="iconbtn" data-act="lookClose" aria-label="Back to the review">‹</button><div><span class="eyebrow">Month in review</span><h2 style="margin:0">Your ${ymName(ym)}${partial ? " so far" : ""}</h2></div></div>
+    <div class="lknav">${monthHasData(ymPrev(ym)) ? `<button class="textlink" data-act="lookOpen" data-v="${ymPrev(ym)}">‹ ${ymName(ymPrev(ym))}</button>` : "<span></span>"}${ymNext(ym) <= nowYm ? `<button class="textlink" data-act="lookOpen" data-v="${ymNext(ym)}">${ymName(ymNext(ym))}${ymNext(ym) === nowYm ? " so far" : ""} ›</button>` : ""}</div>`;
+  if (!have.length) return head + `<div class="card pad"><p style="margin:0">Nothing was logged in ${ymName(ym)}. Months fill in as you tick things on Today.</p></div>`;
+  /* weeks: how much of the floors each held, and whether every value cleared */
+  const W = weeks.map((m, i) => {
+    const id = ids[i], w = anyWeek(id); if (!w) return null;
+    const F = floorsFor(id), met = F.filter(f => f.have >= f.need).length, st = vals.map(v => valueStatus(v.id, F, id).s);
+    const done = weekOver(id) || id < wid(monday(new Date()));
+    return { m, id, w, F, pct: F.length ? met / F.length : 0, all: st.every(x => x === "clear" || x === "rest"), done, felt: (w.r || {}).felt || null };
+  }).filter(Boolean);
+  const closed = W.filter(x => x.done);
+  /* days: every calendar day of the month, read from whichever week holds it (edge days sit in a neighbouring month's week) */
+  const dayRec = k => { const w = anyWeek(wid(monday(parse(k)))); return (w && (w.days || {})[k]) || null; };
+  const dkeys = []; for (let d = new Date(+ym.slice(0, 4), +ym.slice(5) - 1, 1); monthKey(d) === ym && dkey(d) <= tk; d = addDays(d, 1)) dkeys.push(dkey(d));
+  const logged = dkeys.filter(k => { const d = dayRec(k); return d && (Object.values(d.a || {}).some(Boolean) || Object.values(d.p || {}).some(Boolean) || hasJournal(d)); }).length;
+  const daysSoFar = partial ? new Date().getDate() : new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate();
+  const felts = W.map(x => x.felt).filter(Boolean), feltAvg = felts.length ? felts.reduce((a, b) => a + b, 0) / felts.length : null;
+  /* values */
+  const vrows = vals.map(v => {
+    const marks = W.map(x => { const st = valueStatus(v.id, x.F, x.id).s; return { ok: st === "clear", open: !x.done && st !== "clear", rest: st === "rest" }; });
+    /* a week with no floors for this value (resting) is neither held nor missed */
+    const held = marks.filter((k, i) => k.ok && W[i].done).length, n = marks.filter((k, i) => W[i].done && !k.rest).length;
+    return { v, marks, held, n, rate: n ? held / n : 0 };
+  });
+  /* name a strongest and a weakest value only when they actually differ */
+  const scored = vrows.filter(r => r.n), hi = Math.max(0, ...scored.map(r => r.rate)), lo = Math.min(1, ...scored.map(r => r.rate));
+  const strongest = hi > lo ? scored.find(r => r.rate === hi) : null, weakest = hi > lo ? scored.find(r => r.rate === lo) : null;
+  const valueNote = !scored.length ? "" : hi === 1 && lo === 1 ? "Every value held every week. That's a good month."
+    : strongest ? `<b>Strongest:</b> ${esc(strongest.v.name)}. <b>Slipped most:</b> ${esc(weakest.v.name)}. One small floor there next month would go far.`
+    : hi === 0 ? "No value held a full week this month. Smaller floors make next month easier to win." : "Your values moved together this month.";
+  /* floors */
+  const fmap = {};
+  closed.forEach(x => x.F.forEach(f => { const r = fmap[f.c.id] = fmap[f.c.id] || { c: f.c, held: 0, n: 0 }; r.n++; if (f.have >= f.need) r.held++; }));
+  const frows = Object.values(fmap).filter(r => r.n >= 2 || closed.length < 2);
+  const heldBest = frows.filter(r => r.held === r.n).sort((a, b) => b.n - a.n).slice(0, 4);
+  const needsCare = frows.filter(r => r.held / r.n < 0.5).sort((a, b) => a.held / a.n - b.held / b.n).slice(0, 3);
+  const best = closed.slice().sort((a, b) => b.pct - a.pct)[0];
+  /* in your own words */
+  const words = dkeys.slice().reverse().map(k => { const j = (dayRec(k) || {}).j || {}; return (j.win || "").trim() ? { k, t: j.win.trim() } : null; }).filter(Boolean).slice(0, 5);
+  const tasksDone = titems().filter(i => i.s === "done" && (i.doneAt || "").slice(0, 7) === ym).length;
+  const funN = W.reduce((a, x) => a + comps().filter(c => c.fun).reduce((s2, c) => s2 + (((x.w.c || {})[c.id]) || 0), 0), 0);
+  const adjust = (((settings().months || {})[ymPrev(ym)] || {}).adjust || "").trim();
+  const mon = (settings().months || {})[ym] || {}, mfloors = comps().filter(c => !c.fun && c.cadence === "monthly");
+  const tile = (big, label, sub) => `<div class="lktile"><b>${big}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
+  return head + `
+  <div class="lktiles">
+    ${tile(`${closed.filter(x => x.all).length}<small>/${closed.length || W.length}</small>`, "weeks every value held", closed.length ? "" : "first week still running")}
+    ${tile(`${logged}<small>/${daysSoFar}</small>`, "days you checked in", "")}
+    ${tile(feltAvg ? FELT_WORDS[Math.round(feltAvg) - 1] : "–", "how the month felt", feltAvg ? `average of ${felts.length} review${felts.length > 1 ? "s" : ""}` : "no Sunday reviews yet")}
+  </div>
+  <h3>Values</h3>
+  <div class="card pad"><ul class="lkvals">${vrows.map(r => `<li><span class="nm">${esc(r.v.name)}${isCore(r.v.id) ? ' <span class="core">Core</span>' : ""}</span><span class="lkdots" role="img" aria-label="${r.held} of ${r.n} weeks held">${r.marks.map((k, i) => `<i class="${k.rest ? "rest" : k.open ? "open" : k.ok ? "ok" : "miss"}" title="Week of ${esc(fmtShort(W[i].m))}"></i>`).join("")}</span><span class="n">${r.n ? `${r.held}/${r.n}` : "–"}</span></li>`).join("")}</ul>
+    ${valueNote ? `<p class="hint" style="margin:10px 0 0">${valueNote}</p>` : ""}</div>
+  ${best && best.pct > 0 ? `<h3>Best week</h3><div class="card pad lkbest"><b>${esc(fmtShort(best.m))} – ${esc(fmtShort(addDays(best.m, 6)))}</b><span>${Math.round(best.pct * 100)}% of floors met${best.felt ? ` · felt ${FELT_WORDS[best.felt - 1].toLowerCase()}` : ""}</span><small>Worth asking what made it work, and keeping that.</small></div>` : ""}
+  ${heldBest.length || needsCare.length ? `<h3>Floors</h3><div class="lkcols">
+    ${heldBest.length ? `<div class="card pad"><span class="flabel">Held every week</span><ul class="lkfl">${heldBest.map(r => `<li>${esc(r.c.name)}<small>${r.held}/${r.n}</small></li>`).join("")}</ul></div>` : ""}
+    ${needsCare.length ? `<div class="card pad"><span class="flabel">Needs a smaller floor?</span><ul class="lkfl">${needsCare.map(r => `<li>${esc(r.c.name)}<small>${r.held}/${r.n}</small></li>`).join("")}</ul><p class="hint" style="margin:8px 0 0">A floor you hold beats one you miss. Lower it in Compass, or pause it for now.</p></div>` : ""}</div>` : ""}
+  ${mfloors.length ? `<h3>Monthly floors</h3><div class="card pad"><ul class="lkfl">${mfloors.map(c => { const h = ((mon.c || {})[c.id] || 0); return `<li>${esc(c.name)}<small class="${h >= c.target ? "ok" : ""}">${h}/${c.target}${h >= c.target ? " ✓" : ""}</small></li>`; }).join("")}</ul></div>` : ""}
+  ${words.length ? `<h3>In your own words</h3><div class="card pad"><ul class="lkwords">${words.map(w => `<li><q>${esc(w.t)}</q><small>${esc(fmtShort(parse(w.k)))}</small></li>`).join("")}</ul></div>` : ""}
+  ${tasksDone || funN ? `<p class="hint lkextra">${[tasksDone ? `${tasksDone} task${tasksDone > 1 ? "s" : ""} done` : "", funN ? `${funN} thing${funN > 1 ? "s" : ""} from your fun menu` : ""].filter(Boolean).join(" · ")}.</p>` : ""}
+  ${adjust ? `<div class="card pad lkadj"><span class="flabel">The one adjustment you chose for ${ymName(ym)}</span><q>${esc(adjust)}</q><small>Did it help? Choose next month's in the Sunday review.</small></div>` : ""}
+  <div style="margin-top:16px"><button class="btn" data-act="lookClose">Back to the review</button></div>`;
+}
 function rReview(id, F, trips, sugg) {
+  if (S.lookback) return rLookback(S.lookback);
   const w = anyWeek(id) || { r: {} }, r = w.r || {};
   const nextId = wid(addDays(S.viewMon, 7)), pre = !!(settings().preMvw || {})[nextId];
   const inbox = settings().inbox || [], ym = monthKey(new Date()), mo = (settings().months || {})[ym] || {};
@@ -3312,6 +3420,7 @@ function rReview(id, F, trips, sugg) {
   const firstSunday = new Date().getDay() === 0 && new Date().getDate() <= 7;
   return `
   ${trips.length ? `<h2>Tripwires</h2><p class="lede">These trigger a review, not blame.</p>${trips.map(t => `<div class="trip">${esc(t)}</div>`).join("")}` : ""}
+  ${lookbackCard()}
   <h2>Sunday review</h2>
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
   ${reviewSetupCards()}
@@ -3336,6 +3445,7 @@ function rReview(id, F, trips, sugg) {
   <div style="margin-top:16px"><button class="btn primary" data-act="reviewDone" id="reviewDoneBtn">${r.done ? "Reviewed ✓" : "Mark review done"}</button></div>
   ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
   ${coachCard()}
+  ${monthHasData(lastMonth()) || monthHasData(monthKey(new Date())) ? `<button class="textlink lklink" data-act="lookOpen" data-v="${monthHasData(lastMonth()) ? lastMonth() : monthKey(new Date())}">Look back by month ›</button>` : ""}
   <h3>Felt-sense, last 12 weeks</h3>
   <div class="card pad">${spark()}</div>
   ${floorHistory()}
@@ -4277,7 +4387,7 @@ document.addEventListener("click", e => {
     case "fbOpen": S.sheet = { type: "feedback", text: "" }; break;
     case "fbSend": sendFeedback(); return;
     /* app */
-    case "tab": S.tab = b.dataset.t; S.confirm = null; if (S.tab === "review") loadHistory(); window.scrollTo(0, 0); break;
+    case "tab": S.tab = b.dataset.t; S.confirm = null; S.lookback = null; if (S.tab === "review") loadHistory(); window.scrollTo(0, 0); break;
     case "prevWk": case "nextWk": {
       const old = curWid(); S.viewMon = addDays(S.viewMon, act === "prevWk" ? -7 : 7); const nid = curWid();
       if (old !== wid(monday(new Date()))) unsubscribe(old);
@@ -4373,8 +4483,14 @@ document.addEventListener("click", e => {
     case "mRemove": { const sh = S.sheet; setMonthPlan(sh.ym, sh.id, () => null); S.sheet = null; break; }
     case "icsOpen": S.sheet = { type: "ics" }; break;
     case "icsDownload": downloadIcs(); return;
-    case "icsDaily": S.icsDaily = b.dataset.v; renderSheet(); return;
-    case "icsAlert": S.icsAlert = +b.dataset.v; renderSheet(); return;
+    case "calMake": calFeedMake(false); return;
+    case "calReset": calFeedMake(true); return;
+    case "calOff": calFeedOff(); return;
+    case "calAsk": S.confirm = b.dataset.v; renderSheet(); return;
+    case "calNo": S.confirm = null; renderSheet(); return;
+    case "calCopy": { const u = feedUrl(settings().calFeed || ""); (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => toast("Link copied. Paste it into your calendar's “Add by URL”."), () => { window.prompt("Copy this link:", u); }); return; }
+    case "icsDaily": editSettings(st => { st.cal = Object.assign({}, st.cal, { daily: b.dataset.v }); }); renderSheet(); return;
+    case "icsAlert": editSettings(st => { st.cal = Object.assign({}, st.cal, { alert: +b.dataset.v }); }); renderSheet(); return;
     case "planDone": {
       const c = compById(k); if (!c) return; let on;
       editWeek(w => { const dd = dayObj(w, S.selDay); dd.p = dd.p || {}; dd.p[k] = !dd.p[k]; on = dd.p[k]; });
@@ -4390,6 +4506,8 @@ document.addEventListener("click", e => {
       return;
     }
     case "mvw": editWeek(w => { w.mvw = !isMvw(w, curWid()); }); break;
+    case "lookOpen": { const ym = b.dataset.v; S.lookback = ym; if (!(settings().lookSeen || {})[ym] && ym < monthKey(new Date())) editSettings(st => { st.lookSeen = Object.assign({}, st.lookSeen, { [ym]: 1 }); }); stat("lookback"); loadHistory(); window.scrollTo(0, 0); break; }
+    case "lookClose": S.lookback = null; window.scrollTo(0, 0); break;
     case "felt": editWeek(w => { const v = +b.dataset.v; w.r.felt = w.r.felt === v ? null : v; }); break;
     case "starve": editWeek(w => { const a = w.r.starved || [], v = b.dataset.v; w.r.starved = a.includes(v) ? a.filter(x => x !== v) : a.concat(v); }); break;
     case "reviewDone": { let done; editWeek(w => { w.r.done = !w.r.done; w.r.doneAt = tk; done = w.r.done; }); if (done) stat("reviewed"); if (S.nt && S.nt.on && curWid() === thisWk()) ntSave({ revDone: done ? thisWk().slice(2) : "" }); render(); if (done) { burst($("#reviewDoneBtn"), "var(--good)", 14); toast("Week reviewed. See you next Sunday."); } return; }
@@ -4430,6 +4548,7 @@ document.addEventListener("click", e => {
     case "fadeYes": ntSet("eve", ""); toast("Evening nudge off. Sunday's stays. Turn it back on any time in Compass → Reminders."); return;
     case "fadeNo": ntSave({ fadeAsk: todayKey() }); render(); return;
     case "ntLater": try { localStorage.setItem("compass-ntask", String(Date.now())); } catch (e) {} render(); return;
+    case "ntNames": ntSave({ names: S.nt && S.nt.names === false ? true : false }); render(); return;
     case "ntOptOut": ntSave({ optOut: true, on: false }); toast("Reminders off. Turn them on any time in Compass → Reminders."); render(); return;
     case "ntOff": ntDisable(); return;
     case "ntTest": ntTest(); return;

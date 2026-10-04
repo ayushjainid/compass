@@ -63,6 +63,7 @@ export function client(env, fetchFn = fetch) {
     if (!r.ok) throw new Error(`firestore ${path} ${r.status} ${(await r.text()).slice(0, 300)}`);
     return r.json();
   };
+  const root = `projects/${project}/databases/(default)/documents`;
   return {
     project,
     /** Documents in `collection` whose `field` (a timestamp) is due by `nowMs`, oldest first. */
@@ -74,6 +75,26 @@ export function client(env, fetchFn = fetch) {
         limit,
       } });
       return rows.filter(r => r.document).map(r => ({ name: r.document.name, id: r.document.name.split("/").pop(), data: fromFields(r.document.fields || {}) }));
+    },
+    /** Several documents in one request: { path: data | null }. */
+    async getMany(paths, { times } = {}) {
+      if (!paths.length) return {};
+      const rows = await call(":batchGet", { documents: paths.map(p => `${root}/${p}`) });
+      const out = {}; for (const p of paths) out[p] = null;
+      for (const r of rows) if (r.found) { const k = r.found.name.slice(root.length + 1); out[k] = fromFields(r.found.fields || {}); if (times) Object.defineProperty(out[k], "__updateTime", { value: r.found.updateTime }); }
+      return out;
+    },
+    /** Write nested fields: `sets` and `incs` map field paths (arrays of segments) to values / amounts. */
+    async setPaths(path, sets = [], incs = [], { mustExist = false, updateTime = null, missing = false } = {}) {
+      const q = seg => "`" + String(seg).replace(/\\/g, "\\\\").replace(/`/g, "\\`") + "`";
+      const fields = {};
+      for (const [segs, v] of sets) { let o = fields; segs.slice(0, -1).forEach(k => { o[k] = o[k] || { mapValue: { fields: {} } }; o = o[k].mapValue.fields; }); o[segs[segs.length - 1]] = toValue(v); }
+      const write = { update: { name: `${root}/${path}`, fields }, updateMask: { fieldPaths: sets.map(([segs]) => segs.map(q).join(".")) } };
+      if (mustExist) write.currentDocument = { exists: true };
+      if (updateTime) write.currentDocument = { updateTime };      // unchanged since we read it
+      else if (missing) write.currentDocument = { exists: false };  // still not there
+      if (incs.length) write.updateTransforms = incs.map(([segs, n]) => ({ fieldPath: segs.map(q).join("."), increment: Number.isInteger(n) ? { integerValue: String(n) } : { doubleValue: n } }));
+      await call(":commit", { writes: [write] });
     },
     /** Set fields on one document (creating it if needed), adding `inc` amounts to number fields. */
     async upsert(path, fields, inc = {}) {

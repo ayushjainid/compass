@@ -18,6 +18,8 @@ const JOBS = [
   ["statspage.js", PHONE], ["statspage.js", DARK], ["statspage.js", DESK],
   ["tasks2.js", PHONE], ["tasks2.js", SMALL], ["tasks2.js", DARK], ["tasks2.js", DESK],
   ["admin.js", PHONE], ["admin.js", DESK], ["appcheck.js", X],
+  ["livecal.js", PHONE], ["livecal.js", DARK], ["livecal.js", DESK],
+  ["lookback.js", PHONE], ["lookback.js", SMALL], ["lookback.js", DARK], ["lookback.js", DESK],
   ["emailauth.js", PHONE], ["emailauth.js", SMALL], ["emailauth.js", DARK], ["emailauth.js", DESK],
   ["a11y.js", X],
 ];

@@ -15,7 +15,7 @@ service cloud.firestore {
         || request.resource.data.get(k, 0) == resource.data.get(k, 0) + 1;
     }
     function statKeys() {
-      return ['active', 'obStart', 'obDone', 'logged', 'planned', 'reviewed', 'tasks', 'remindersOn', 'paused', 'exported', 'feedback',
+      return ['active', 'obStart', 'obDone', 'logged', 'planned', 'reviewed', 'tasks', 'remindersOn', 'paused', 'exported', 'feedback', 'lookback', 'calfeed',
               'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11', 'a12'];
     }
 
@@ -31,7 +31,7 @@ service cloud.firestore {
     match /notify/{uid} {
       allow read, delete: if signedIn(uid);
       allow create, update: if signedIn(uid)
-        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk'])
+        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk', 'names'])
         && (!('sub' in request.resource.data) || request.resource.data.sub == null
             || (request.resource.data.sub is map && request.resource.data.sub.endpoint is string && request.resource.data.sub.endpoint.size() < 1000))
         && (!('tz' in request.resource.data) || (request.resource.data.tz is string && request.resource.data.tz.size() < 64))
@@ -61,6 +61,22 @@ service cloud.firestore {
         && request.resource.data.items is list && request.resource.data.items.size() <= 20;
     }
 
+    // Live calendar feed links: the id is a long random secret; the doc only says whose plan it is and
+    // their time zone. Read by the reminders Worker (service account). People can make, update the time
+    // zone of, read and delete only their own; nobody can list them.
+    match /calfeeds/{token} {
+      allow create: if request.auth != null
+        && token.matches('^[A-Za-z0-9_-]{43}$')
+        && request.resource.data.keys().hasOnly(['uid', 'tz', 'at'])
+        && request.resource.data.uid == request.auth.uid
+        && (!('tz' in request.resource.data) || (request.resource.data.tz is string && request.resource.data.tz.size() < 64));
+      allow update: if request.auth != null && resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'tz', 'at'])
+        && request.resource.data.uid == request.auth.uid
+        && (!('tz' in request.resource.data) || (request.resource.data.tz is string && request.resource.data.tz.size() < 64));
+      allow get, delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
     // Anonymous usage tallies: numbers only, one per day (d-YYYY-MM-DD) and per week (w-<Monday>).
     // Anyone signed in may add exactly 1 to exactly one known counter per write; only the owner can read them.
     match /stats/{id} {
@@ -76,6 +92,7 @@ service cloud.firestore {
         && sameOrPlusOne('active') && sameOrPlusOne('obStart') && sameOrPlusOne('obDone') && sameOrPlusOne('logged')
         && sameOrPlusOne('planned') && sameOrPlusOne('reviewed') && sameOrPlusOne('tasks') && sameOrPlusOne('remindersOn')
         && sameOrPlusOne('paused') && sameOrPlusOne('exported') && sameOrPlusOne('feedback')
+        && sameOrPlusOne('lookback') && sameOrPlusOne('calfeed')
         && sameOrPlusOne('a0') && sameOrPlusOne('a1') && sameOrPlusOne('a2') && sameOrPlusOne('a3') && sameOrPlusOne('a4')
         && sameOrPlusOne('a5') && sameOrPlusOne('a6') && sameOrPlusOne('a7') && sameOrPlusOne('a8') && sameOrPlusOne('a9')
         && sameOrPlusOne('a10') && sameOrPlusOne('a11') && sameOrPlusOne('a12');

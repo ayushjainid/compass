@@ -132,6 +132,16 @@ Open Compass → **Compass** tab → **Reminders** → **Turn on reminders**. On
 
 **How far the free plan goes.** Each run may use 10 ms of CPU, which is about 8 reminders a minute, or roughly 11,000 a day. People who pick the same minute are served over the following minutes, so a few hundred people sharing one time still get theirs within about a minute or two each. The other ceiling is Firestore's free quota (50,000 reads and 20,000 writes a day), which the app itself already uses: reminders add only about 2 reads and 2 writes per person per day, so the app's own use will run out first. Beyond either limit, Workers Paid ($5/month) lets you set `PER_RUN = "200"` in `wrangler.toml`, and extra Firestore use costs cents per 100,000 operations.
 
+## 8b. Live calendar and reminder buttons (uses the same Worker)
+
+The reminders Worker also serves each person's **live calendar** (a private `webcal://` link their calendar app subscribes to, so plan changes appear by themselves) and the **buttons on the evening reminder** (tick one or two of what's left, or "Remind me in an hour"). To turn both on:
+
+1. Deploy the Worker after pulling: `cd worker && npx wrangler deploy`. It prints its address, like `https://compass-reminders.yourname.workers.dev`.
+2. Put that address in `public/firebase-config.js` as `self.COMPASS_WORKER_URL = "https://…workers.dev"`, then commit and push.
+3. In Compass: **Week → Plan → Add to calendar** now offers **Get my calendar link** with Apple and Google buttons. Reminder buttons appear on Android and desktop; iPhone shows the reminder without buttons.
+
+People can replace or turn off their link at any time (the old one stops working at once), and turn off **Say what's left** under Reminders to keep floor names off their lock screen. Each calendar refresh costs three database reads; Apple checks every few hours, Google once or twice a day.
+
 ## 9. Protect your free quota (recommended once others use it)
 
 Anyone who signs in could, in theory, write data in a loop and use up the free daily quota for everyone. Two layers stop that:

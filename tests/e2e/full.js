@@ -106,6 +106,8 @@ const results = []; const ok = (name, cond, info = '') => { results.push({ name,
   ok('fixed time saved and shown on Tue', /Evening class/.test(await txt('.pday[data-d="1"]')));
   await tap('[data-act=fixEdit]');
   ok('edit sheet has Cancel and X', await p.locator('.sheet [data-act=closeSheet]').count() >= 2);
+  /* let any scrolling from opening the sheet settle first (a busy machine can still be moving) */
+  for (let i = 0, last = -1; i < 20; i++) { const y = await p.evaluate(() => scrollY); if (y === last) break; last = y; await p.waitForTimeout(150); }
   const before = await p.evaluate(() => scrollY);
   if (phone) { await cdp.send('Input.synthesizeScrollGesture', { x: 195, y: 150, yDistance: -400, speed: 1500, gestureSourceType: 'touch' }).catch(() => {}); }
   else { await p.mouse.move(640, 100); await p.mouse.wheel(0, 600); }

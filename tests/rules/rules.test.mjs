@@ -2,7 +2,7 @@
 // Run with:  npx firebase-tools emulators:exec --only firestore --project demo-compass "node tests/rules/rules.test.mjs"
 import { readFileSync } from "node:fs";
 import { initializeTestEnvironment, assertSucceeds, assertFails } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, increment, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, increment, serverTimestamp, query, where, limit } from "firebase/firestore";
 
 const env = await initializeTestEnvironment({
   projectId: "demo-compass",
@@ -51,6 +51,7 @@ await t("errors: others can't list", assertFails(getDocs(collection(me, "errors"
 await t("stats: create a day tally at 1", assertSucceeds(setDoc(doc(me, "stats/d-2026-10-02"), { active: increment(1) }, { merge: true })));
 await t("stats: add 1 to an existing tally", assertSucceeds(setDoc(doc(other, "stats/d-2026-10-02"), { active: increment(1) }, { merge: true })));
 await t("stats: add 1 to a new key on the doc", assertSucceeds(setDoc(doc(me, "stats/d-2026-10-02"), { logged: increment(1) }, { merge: true })));
+await t("stats: new events count", assertSucceeds(setDoc(doc(me, "stats/d-2026-10-02"), { lookback: increment(1) }, { merge: true })));
 await t("stats: week doc + age key", assertSucceeds(setDoc(doc(me, "stats/w-2026-09-28"), { a3: increment(1) }, { merge: true })));
 await t("stats: +5 refused", assertFails(setDoc(doc(me, "stats/d-2026-10-02"), { active: increment(5) }, { merge: true })));
 await t("stats: setting a number refused", assertFails(setDoc(doc(me, "stats/d-2026-10-02"), { active: 999 }, { merge: true })));
@@ -66,6 +67,21 @@ await env.withSecurityRulesDisabled(async c => {
   const d = (await getDoc(doc(c.firestore(), "stats/d-2026-10-02"))).data();
   current = "stats: values add up"; R.push([current, d.active === 2 && d.logged === 1, JSON.stringify(d)]);
 });
+
+// ---- calendar feed links
+const T1 = "A".repeat(43), T2 = "b".repeat(43);
+await t("calfeed: create own", assertSucceeds(setDoc(doc(me, `calfeeds/${T1}`), { uid: "alice", tz: "Asia/Kolkata", at: 1 })));
+await t("calfeed: short id refused", assertFails(setDoc(doc(me, "calfeeds/short"), { uid: "alice" })));
+await t("calfeed: someone else's uid refused", assertFails(setDoc(doc(me, `calfeeds/${T2}`), { uid: "bob" })));
+await t("calfeed: extra fields refused", assertFails(setDoc(doc(me, `calfeeds/${T2}`), { uid: "alice", evil: 1 })));
+await t("calfeed: update own time zone", assertSucceeds(setDoc(doc(me, `calfeeds/${T1}`), { uid: "alice", tz: "Europe/London", at: 1 })));
+await t("calfeed: can't hand it to someone else", assertFails(setDoc(doc(me, `calfeeds/${T1}`), { uid: "bob", tz: "x", at: 1 })));
+await t("calfeed: others can't read it", assertFails(getDoc(doc(other, `calfeeds/${T1}`))));
+await t("calfeed: others can't take it over", assertFails(setDoc(doc(other, `calfeeds/${T1}`), { uid: "bob", at: 1 })));
+await t("calfeed: others can't delete it", assertFails(deleteDoc(doc(other, `calfeeds/${T1}`))));
+await t("calfeed: nobody can list them", assertFails(getDocs(query(collection(me, "calfeeds"), where("uid", "==", "alice"), limit(20)))));
+await t("calfeed: delete own", assertSucceeds(deleteDoc(doc(me, `calfeeds/${T1}`))));
+await t("notify: names setting allowed", assertSucceeds(setDoc(doc(me, "notify/alice"), { on: true, names: false }, { merge: true })));
 
 // ---- owner-only docs
 await t("status: owner reads", assertSucceeds(getDoc(doc(owner, "status/reminders"))));

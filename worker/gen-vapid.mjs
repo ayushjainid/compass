@@ -8,7 +8,7 @@ const pub = b64u(await crypto.subtle.exportKey("raw", kp.publicKey));
 const priv = (await crypto.subtle.exportKey("jwk", kp.privateKey)).d;
 const cfg = new URL("../public/firebase-config.js", import.meta.url);
 let c = readFileSync(cfg, "utf8");
-c = /COMPASS_VAPID_PUBLIC\s*=/.test(c) ? c.replace(/window\.COMPASS_VAPID_PUBLIC\s*=\s*"[^"]*"/, `window.COMPASS_VAPID_PUBLIC = "${pub}"`) : c.trimEnd() + `\nwindow.COMPASS_VAPID_PUBLIC = "${pub}";\n`;
+c = /COMPASS_VAPID_PUBLIC\s*=/.test(c) ? c.replace(/(?:window|self)\.COMPASS_VAPID_PUBLIC\s*=\s*"[^"]*"/, `self.COMPASS_VAPID_PUBLIC = "${pub}"`) : c.trimEnd() + `\nself.COMPASS_VAPID_PUBLIC = "${pub}";\n`;
 writeFileSync(cfg, c);
 const wr = new URL("./wrangler.toml", import.meta.url);
 writeFileSync(wr, readFileSync(wr, "utf8").replace(/VAPID_PUBLIC = "[^"]*"/, `VAPID_PUBLIC = "${pub}"`));

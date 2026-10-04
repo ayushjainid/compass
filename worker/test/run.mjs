@@ -27,6 +27,10 @@ async function fakeFetch(url, init) {
       .filter(r => r.t !== null && r.t <= cut).sort((a, b) => a.t - b.t).slice(0, lim);
     return new Response(JSON.stringify(rows.length ? rows.map(r => ({ document: { name: r.name, fields: r.fields } })) : [{ readTime: "x" }]), { status: 200 });
   }
+  if (u.includes(":batchGet")) {
+    const { documents } = JSON.parse(init.body);
+    return new Response(JSON.stringify(documents.map(n => store.has(n) ? { found: { name: n, fields: store.get(n) } } : { missing: n })), { status: 200 });
+  }
   if (u.includes(":commit")) {
     calls.commit++;
     const { writes } = JSON.parse(init.body);
@@ -59,6 +63,8 @@ const env = { FIRESTORE_EMULATOR: "http://fake", FIREBASE_PROJECT: "demo", VAPID
 const now = Date.parse("2026-09-30T16:00:20Z"); // 9:30 pm Kolkata, 12:00 noon New York
 const due = new Date("2026-09-30T16:00:00Z");
 addUser("a", { tz: "Asia/Kolkata", eve: "21:30", rev: "18:00", nextEve: due, nextRev: new Date("2026-10-04T12:30:00Z"), last: "2026-09-29", ign: 0 });
+// a's plan: two floors still open on Wednesday 30 Sep → the reminder offers to tick them
+store.set(`${P}/users/a/docs/profile`, { components: toValue({ x: [{ id: "gym", name: "Gym", cadence: "daily", target: 3, block: { days: [2], time: "07:00" } }, { id: "read", name: "Read", cadence: "weekly", target: 2, block: { days: [2], time: "21:00" } }] }).mapValue.fields.x });
 addUser("b", { tz: "Asia/Kolkata", eve: "21:30", rev: "", nextEve: due, last: "2026-09-30", ign: 0 });             // active today
 addUser("c", { tz: "America/New_York", eve: "21:30", rev: "18:00", nextEve: new Date("2026-10-01T01:30:00Z"), nextRev: new Date("2026-10-04T22:00:00Z"), last: "2026-09-29" }); // not due
 addUser("gone", { tz: "Asia/Kolkata", eve: "21:30", nextEve: due, last: "2026-09-20", ign: 1 });
@@ -67,6 +73,8 @@ const logs = [];
 let r = await runOnce(env, now, fakeFetch, m => logs.push(m));
 const doc = id => fromFields(store.get(`${P}/notify/${id}`));
 ok("sends to the person who hasn't checked in", users.a.got.length === 1 && users.a.got[0].tag === "compass-checkin", users.a.got);
+const pa = users.a.got[0] || {};
+ok("evening push says what's left and carries a tick button for each", /2 left today: Gym and Read\./.test(pa.body) && (pa.actions || []).map(x => x.title).join("|") === "✓ Gym|✓ Read" && pa.act && pa.act.tick0 && pa.act.tick1, pa);
 ok("skips the person active today", users.b.got.length === 0);
 ok("does not touch people not yet due", users.c.got.length === 0 && doc("c").nextEve === Date.parse("2026-10-01T01:30:00Z"));
 ok("books tomorrow for everyone it handled", doc("a").nextEve === Date.parse("2026-10-01T16:00:00Z") && doc("b").nextEve === Date.parse("2026-10-01T16:00:00Z"));
