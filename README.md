@@ -136,9 +136,9 @@ Open Compass → **Compass** tab → **Reminders** → **Turn on reminders**. On
 
 Anyone who signs in could, in theory, write data in a loop and use up the free daily quota for everyone. Two layers stop that:
 
-1. **Database rules** (already in `firestore.rules`): each account can only write the few documents Compass uses, reminder and feedback entries are size-checked, and nobody can read anyone else's data. They go live with `npx firebase-tools deploy`; if a rule has a typo the deploy is refused and the old rules stay.
+1. **Database rules** (already in `firestore.rules`): each account can only write the few documents Compass uses, reminder and feedback entries are size-checked, and nobody can read anyone else's data. They're tested on every push and go live with the automatic deploy (section 11); if a rule has a typo the tests fail, nothing is deployed and the old rules stay.
 2. **App Check** proves requests come from your copy of Compass:
-   - Google Cloud console → **reCAPTCHA** → **Create key** (type: Website, domain `life-compass.web.app` only; never add `localhost` to this key). Copy the key id.
+   - Google Cloud console (project `compass-ayush`) → **reCAPTCHA** → **Create key**: platform **Website**, domain `life-compass.web.app` only (never `localhost`), and leave the *checkbox challenge* **off** (App Check needs a score-based key). Copy the key ID.
    - Firebase console → **App Check** → your web app → **reCAPTCHA Enterprise** → paste the key → Save.
    - Put the same key in `public/firebase-config.js` as `window.COMPASS_APPCHECK_SITE_KEY` and deploy.
    - In the same App Check screen, set the token time to live to **7 days** (fewer checks, which keeps you inside reCAPTCHA's free monthly allowance).
