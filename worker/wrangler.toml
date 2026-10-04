@@ -10,7 +10,7 @@ crons = ["* * * * *"]   # every minute
 [vars]
 FIREBASE_PROJECT = "compass-ayush"              # your Firebase project id
 VAPID_PUBLIC = "BOcXXvYX3OcbZ5JOXVuoGclRozkO4kdSUbugFrDZ7oFcTcp3iRYYfwX3anMI0UbUJjd7aglcOkX4bAybjTIaLRY"                           # filled in by `npm run keys`
-VAPID_SUBJECT = "mailto:you@example.com"    # a contact address push services can reach
+VAPID_SUBJECT = "mailto:ayushjainid@gmail.com"    # a contact address push services can reach
 
 # Secrets (never committed), set with:
 #   npx wrangler secret put VAPID_PRIVATE
