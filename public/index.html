@@ -3835,7 +3835,7 @@ async function runTailor() {
 
 /* ============ IMPORT: a head start from Todoist, TickTick, Sunsama and calendars ============ */
 let IMPMOD = null;
-const impMod = async () => IMPMOD || (IMPMOD = await import("/import.js"));
+const impMod = async () => IMPMOD || (IMPMOD = await import("/import.js"));   /* callers handle a failed load (offline, flaky network) */
 const IMP_HOW = [
   ["Todoist", "Settings → Backups → download the latest backup (.zip). On the free plan: open a project → ⋯ → Export as CSV, once per project. Todoist leaves out finished tasks, so repeating ones matter most."],
   ["TickTick", "On the web: Settings → Account → Backup → Generate backup (.csv). It includes finished tasks, so Compass can see how often you really do things."],
@@ -3931,7 +3931,9 @@ async function impAddFiles(list) {
 }
 async function impPaste() {
   const im = S.imp, ta = $("#imp-paste"); if (!im || !ta || !ta.value.trim()) return;
-  const M = await impMod(); const got = M.readPasted(ta.value);
+  const M = await impMod().catch(() => null);
+  if (!M) { im.err = "Couldn't load the importer. Check your connection and try again."; renderOnboarding(); return; }
+  const got = M.readPasted(ta.value);
   const name = "Pasted list" + (im.pasted ? " " + (im.pasted + 1) : ""); im.pasted++;
   im.files.push({ name, n: got.length, src: "Pasted list" }); im.items = im.items.concat(got.map(i => Object.assign(i, { _f: name })));
   renderOnboarding();
@@ -3939,7 +3941,8 @@ async function impPaste() {
 async function impRun() {
   const im = S.imp; if (!im || !im.items.length) return;
   im.busy = true; renderOnboarding();
-  const M = await impMod();
+  const M = await impMod().catch(() => null);
+  if (!M) { im.busy = false; im.err = "Couldn't load the importer. Check your connection and try again."; renderOnboarding(); return; }
   const res = M.analyze(im.items.map(i => Object.assign({}, i)), { VALUE_LIB, COMP_LIB });
   im.res = res;
   im.sel = { values: Object.fromEntries(res.values.map(v => [v.id, v.on])), comps: Object.fromEntries(res.comps.map(c => [c.id, true])), unplaced: {}, cores: res.cores.length > 0, week: !!res.week, people: Object.fromEntries(res.people.map(p => [p.name, true])), inbox: res.tasks.inbox.length > 0, someday: res.tasks.someday.length > 0, fun: Object.fromEntries(res.fun.map(f => [f, true])) };

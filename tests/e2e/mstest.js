@@ -59,7 +59,9 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
       route.fulfill({ status: 404, headers: cors, body: '{}' });
     });
     if (mode === 'blocked') await ctx.addInitScript(() => { window.open = () => null; });
-    const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+    const p = await ctx.newPage(); const errs = [];
+    /* on WebKit, Playwright's faked https site fails some background loads ("Load failed"); the CSV part below runs on http and checks real loading */
+    p.on('pageerror', e => { if (!(NAME === 'webkit' && /^TypeError: Load failed$|index\.html/.test(e.message))) errs.push(e.message); });
     const tap = async sel => { const l = p.locator(sel).first(); await l.scrollIntoViewIfNeeded().catch(() => {}); return mode === 'desktop' ? l.click() : l.tap(); };
     await p.goto('https://compass.test/'); await p.waitForTimeout(500);
     await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
