@@ -241,5 +241,6 @@ You don't need to redeploy, or clear cookies, to see a change.
 - Pausing a floor stores `paused` (the Monday it paused from) and, after resuming, `pauses: [{ from, to }, …]` (Firestore can't store lists inside lists), so past weeks still count it and paused weeks don't.
 - Anonymous tallies: `stats/d-YYYY-MM-DD` and `stats/w-<Monday>`, one field per event; rules allow only +1 to one known field per write. Which tallies an account already counted is kept in its own `settings.seen`.
 - Tests live in `tests/`: `tests/e2e/*.js` drive the app with a stand-in Firebase (`mockfb.js`, `mockfb2.js` for two devices), `tests/rules/` checks `firestore.rules`, `worker/test/` checks the Worker.
+- Every push also runs the browser suites on Safari's engine (WebKit, as an iPhone), Android Chrome and Firefox (`BROWSER=webkit DEVICE=iphone node tests/e2e/run.js` locally, if those browsers are installed). These don't block a deploy; check them on the run page. To look into one engine quickly, run the **Engine check** workflow from the Actions tab with the engine and suite names.
 - The reminders Worker is in `worker/`: `src/plan.js` decides, `src/push.js` encrypts (RFC 8291) and signs (VAPID) with WebCrypto only, `src/firestore.js` talks to Firestore's REST API.
 - Firebase SDK 12.19.0, bundled with esbuild.

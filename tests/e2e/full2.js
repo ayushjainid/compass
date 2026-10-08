@@ -66,7 +66,8 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
     { const mid = await p.evaluate(() => { const t = document.querySelector('.ptraywrap').getBoundingClientRect().bottom, b = document.querySelector('#tabbar').getBoundingClientRect().top; return Math.round((t + b) / 2); }); await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 60, y: mid }] }); await wait(300); }
     const sb2 = await p.locator('.pday[data-d="6"] .pdh').boundingBox();
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sb2.x + 40, y: sb2.y + 10 }] }); await wait(40);
-    { const sb3 = await p.locator('.pday[data-d="6"] .pdh').boundingBox(); await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sb3.x + 40, y: sb3.y + 10 }] }); }
+    /* on a slow machine the page can still be settling: keep the finger on Sunday's header until Sunday opens under it */
+    for (let i = 0; i < 20; i++) { const sb3 = await p.locator('.pday[data-d="6"] .pdh').boundingBox(); await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sb3.x + 40, y: sb3.y + 10 }] }); await wait(60); if (await p.locator('.pday[data-d="6"].hot').count()) break; }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await wait(400);
     ok('drop on Sunday places the floor there', await p.locator(`.pday[data-d="6"] .pblk[data-id="${firstId}"]`).count() === 1, await p.evaluate(() => window.__pev.filter(x => !/^pointermove/.test(x) || true).slice(-14)));
     // auto-scroll back up: drag the Sunday block up to Monday
