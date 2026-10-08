@@ -1,0 +1,20 @@
+# Run chosen browser suites on one engine, on demand (for looking into an engine-specific failure quickly)
+name: Engine check
+on:
+  workflow_dispatch:
+    inputs:
+      browser: { description: "chromium, webkit or firefox", default: webkit }
+      device: { description: "iphone, android or empty", default: iphone }
+      suites: { description: "suite name filters, space-separated (empty = all)", default: "" }
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ inputs.browser }}
+      - run: node tests/e2e/run.js $SUITES
+        env: { SUITES: "${{ inputs.suites }}", JOBS: "3", BROWSER: "${{ inputs.browser }}", DEVICE: "${{ inputs.device }}", LONG_NOTES: "1" }

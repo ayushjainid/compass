@@ -13,6 +13,10 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
     else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type });
   });
+  /* who scrolls the page, and when (shown only if a check about the page holding still fails) */
+  await ctx.addInitScript(() => { const L = window.__scrolls = []; const t0 = performance.now(); let last = 0;
+    for (const [o, n] of [[window, 'scrollBy'], [window, 'scrollTo'], [window, 'scroll'], [Element.prototype, 'scrollIntoView'], [Element.prototype, 'scrollBy'], [Element.prototype, 'scrollTo']]) { const f = o[n]; o[n] = function (...a) { L.push({ n, a: JSON.stringify(a).slice(0, 60), t: Math.round(performance.now() - t0), at: (new Error().stack || '').split('\n').slice(1, 3).join(' < ').replace(/https?:\/\/[^ ]*\//g, '').slice(0, 120) }); return f.apply(this, a); }; }
+    addEventListener('scroll', () => { const y = Math.round(scrollY); if (y !== last) { L.push({ n: 'at', y, t: Math.round(performance.now() - t0) }); last = y; } }, true); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   const tap = async sel => { const l = typeof sel === 'string' ? p.locator(sel).first() : sel; try { await l.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {}); return await (touch ? l.tap({ timeout: 8000 }) : l.click({ timeout: 8000 })); } catch (e) { if (typeof sel === 'string' && await p.locator(sel).count() === 0) { console.log('  (tap raced a redraw: ' + sel + '; outcome is checked next)'); return; } throw new Error('tap ' + String(sel) + ': ' + e.message.split('\n').slice(0, 14).join(' | ')); } };
   const wait = ms => p.waitForTimeout(ms);
@@ -55,13 +59,13 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
   // move down to Wednesday: Tue closes, Wed opens, Wed stays under the finger
   await p.evaluate(() => { const e = document.querySelector('.pday[data-d="2"] .pdh'); const t = document.querySelector('.ptraywrap').getBoundingClientRect().bottom, bt = document.querySelector('#tabbar').getBoundingClientRect().top; scrollBy({ top: e.getBoundingClientRect().top - (t + bt) / 2, behavior: 'instant' }); }); await wait(100);
   const geo = () => p.evaluate(() => ({ sy: Math.round(scrollY), tue: document.querySelector('.pday[data-d="1"]').offsetHeight, wed: document.querySelector('.pday[data-d="2"]').offsetHeight, tray: Math.round(document.querySelector('.ptraywrap').getBoundingClientRect().height), wedTop: Math.round(document.querySelector('.pday[data-d="2"]').getBoundingClientRect().top) }));
-  const g0 = await geo();
+  const g0 = await geo(); await p.evaluate(() => { window.__scrolls.length = 0; });
   pt = await over(2); const wedY0 = pt.y; await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [pt] }); await wait(150);
   const g1 = await geo();
   R.hoverWed = await vis();
   const wedY1 = (await over(2)).y;
   ok('moving to Wednesday closes Tuesday and opens Wednesday', R.hoverWed[2] > 0 && R.hoverWed[1] === 0, R.hoverWed);
-  ok('Wednesday stays under the finger when Tuesday closes', Math.abs(wedY1 - wedY0) < 12, { wedY0, wedY1, g0, g1 });
+  ok('Wednesday stays under the finger when Tuesday closes', Math.abs(wedY1 - wedY0) < 12, { wedY0, wedY1, g0, g1, scrolls: await p.evaluate(() => window.__scrolls.slice(0, 14)) });
   await shot('hover-wed');
   // drop on Wednesday's last free slot, which sets that time
   const slot = await p.evaluate(() => { const t = document.querySelector('.ptraywrap').getBoundingClientRect().bottom, bt = document.querySelector('#tabbar').getBoundingClientRect().top;
