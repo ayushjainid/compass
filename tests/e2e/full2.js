@@ -13,6 +13,8 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
     else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type });
   });
+  /* the last pointer/touch events the page saw (shown only if a drop check fails) */
+  await ctx.addInitScript(() => { const L = window.__pev = []; for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'touchstart', 'touchend', 'touchcancel']) addEventListener(t, e => { L.push(t + ':' + (e.pointerType || '') + (e.isTrusted ? '!' : '') + '@' + Math.round(e.clientY || (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY) || 0)); if (L.length > 40) L.shift(); }, true); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   const tap = async sel => { const l = typeof sel === 'string' ? p.locator(sel).first() : sel; try { await l.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {}); return await (touch ? l.tap({ timeout: 8000 }) : l.click({ timeout: 8000 })); } catch (e) { if (typeof sel === 'string' && await p.locator(sel).count() === 0) { console.log('  (tap raced a redraw: ' + sel + '; outcome is checked next)'); return; } throw new Error('tap ' + String(sel) + ': ' + e.message.split('\n').slice(0, 14).join(' | ')); } };
   const wait = ms => p.waitForTimeout(ms);
@@ -66,7 +68,7 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sb2.x + 40, y: sb2.y + 10 }] }); await wait(40);
     { const sb3 = await p.locator('.pday[data-d="6"] .pdh').boundingBox(); await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sb3.x + 40, y: sb3.y + 10 }] }); }
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await wait(400);
-    ok('drop on Sunday places the floor there', await p.locator(`.pday[data-d="6"] .pblk[data-id="${firstId}"]`).count() === 1);
+    ok('drop on Sunday places the floor there', await p.locator(`.pday[data-d="6"] .pblk[data-id="${firstId}"]`).count() === 1, await p.evaluate(() => window.__pev.filter(x => !/^pointermove/.test(x) || true).slice(-14)));
     // auto-scroll back up: drag the Sunday block up to Monday
     const blk = p.locator(`.pday[data-d="6"] .pblk[data-id="${firstId}"]`);
     { const k0 = await blk.boundingBox(); await p.evaluate(dy => scrollBy({ top: dy, behavior: 'instant' }), Math.round(k0.y - (H * 0.6))); await wait(200); }
