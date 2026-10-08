@@ -3080,14 +3080,13 @@ function dragMove(x, y) {
   const day = t ? t.closest(".pday") : null;
   if (day && day !== st.hot) {
     const old = st.hot;
-    if (old) {
-      /* closing a day above the finger would pull the next day up from under it; hold the page still */
-      const above = old.getBoundingClientRect().top < day.getBoundingClientRect().top, h0 = old.offsetHeight;
-      old.classList.remove("hot");
-      const dh = h0 - old.offsetHeight;
-      if (above && dh > 0 && !matchMedia("(min-width:900px)").matches) window.scrollBy({ top: -dh, left: 0, behavior: "instant" });
-    }
+    /* closing a day above the finger would pull the next day up from under it: measure where the new day was and
+       put it back exactly there, whatever moved (more robust than adding up heights) */
+    const y0 = day.getBoundingClientRect().top;
+    if (old) old.classList.remove("hot");
     day.classList.add("hot"); st.hot = day;
+    const dy = day.getBoundingClientRect().top - y0;
+    if (old && Math.abs(dy) >= 1 && !matchMedia("(min-width:900px)").matches) window.scrollBy({ top: dy, left: 0, behavior: "instant" });
     t = dragTarget(x, y);
   }
   if (t !== st.over) { if (st.over) st.over.classList.remove("over"); if (t) t.classList.add("over"); st.over = t; }
