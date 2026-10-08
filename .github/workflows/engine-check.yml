@@ -6,6 +6,7 @@ on:
       browser: { description: "chromium, webkit or firefox", default: webkit }
       device: { description: "iphone, android or empty", default: iphone }
       suites: { description: "suite name filters, space-separated (empty = all)", default: "" }
+      script: { description: "or run one script from tests/e2e directly (e.g. tapprobe.js)", default: "" }
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -16,5 +17,5 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps ${{ inputs.browser }}
-      - run: node tests/e2e/run.js $SUITES
-        env: { SUITES: "${{ inputs.suites }}", JOBS: "3", BROWSER: "${{ inputs.browser }}", DEVICE: "${{ inputs.device }}", LONG_NOTES: "1" }
+      - run: if [ -n "$SCRIPT" ]; then node "tests/e2e/$(basename "$SCRIPT")"; else node tests/e2e/run.js $SUITES; fi
+        env: { SUITES: "${{ inputs.suites }}", SCRIPT: "${{ inputs.script }}", JOBS: "3", BROWSER: "${{ inputs.browser }}", DEVICE: "${{ inputs.device }}", LONG_NOTES: "1" }
