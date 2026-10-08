@@ -40,7 +40,7 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
   ok('admin: age chart 13 groups', await p.locator('#c-age g.m').count() === 13);
   ok('admin: feature table share', /Logged a floor\s*90\s*90\s*75%/.test(main), main.match(/Logged a floor[^\n]*/));
   ok('admin: reminders healthy', await p.locator('.status.ok').count() === 1 && /Sent, last 7 days\s*41/.test(main));
-  ok('admin: errors grouped by accounts, old ones dropped', /\b3\b\s*TypeError: x is undefined/.test(main) && !/old one|bad date/.test(main), main.match(/Errors, last 7 days[\s\S]{0,200}/));
+  ok('admin: errors grouped by accounts, old ones dropped', /(^|\D)3\s*TypeError: x is undefined/.test(main) && !/old one|bad date/.test(main), main.match(/Errors, last 7 days[\s\S]{0,200}/));
   ok('admin: feedback escaped, newest first, no uid', /Pause is great[\s\S]*Love the Sunday/.test(main) && /<b>bold<\/b>/.test(main) && !/u9|u8/.test(main));
   await tap('[data-range="90"]');
   ok('range 90: 90 daily bars, 13 weeks', await p.locator('#c-daily g.m').count() === 90 && await p.locator('#c-weekly g.m').count() === 13);

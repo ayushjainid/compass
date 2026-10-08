@@ -686,7 +686,7 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 @media (min-width:900px){.pweek.dragging .pday.hot .pslot{display:flex}}
 .pweek.dragging .pday.hot{border-color:var(--good);background:var(--good-soft);background:color-mix(in srgb,var(--good) 6%,var(--surface))}
 [data-drag]{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
-html.dragging{scroll-behavior:auto!important}
+html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag keeps the page still itself; browser scroll anchoring on top of that would move it twice */
 /* anything scrolled into view on the plan stops below the pinned tray */
 .pday,.pblk,.pdh{scroll-margin-top:calc(var(--trayh,210px) + 12px)}
 #dragkeep{position:fixed;left:-200vw;top:0;width:1px;height:1px;overflow:hidden;opacity:0}

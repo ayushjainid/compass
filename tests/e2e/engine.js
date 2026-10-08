@@ -28,7 +28,13 @@ function touchShim(page) {
     x = S.x; y = S.y; pev('pointerup', t.isConnected ? t : hit(), 0); t.dispatchEvent(tev('touchend', t, [])); window.__shimTouch = {};
   }, [type, x || 0, y || 0]);
   /* a swipe scrolls whatever is under the finger, and is blocked where the page locks scrolling, like the wheel */
-  const scroll = async (x, y, dy) => { await page.mouse.move(x, y); await page.mouse.wheel(0, dy); };
+  const scroll = async (x, y, dy) => { await page.mouse.move(x, y);
+    try { await page.mouse.wheel(0, dy); return; } catch (e) { /* phone WebKit has no wheel: scroll what's under the finger, and the page only if it isn't locked */ }
+    await page.evaluate(([x, y, dy]) => {
+      for (let el = document.elementFromPoint(x, y); el && el !== document.body && el !== document.documentElement; el = el.parentElement) { const cs = getComputedStyle(el); if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1) { el.scrollBy(0, dy); return; } }
+      const locked = [document.documentElement, document.body].some(e => { const cs = getComputedStyle(e); return cs.overflow === 'hidden' || cs.overflowY === 'hidden' || cs.position === 'fixed'; });
+      if (!locked) window.scrollBy(0, dy);
+    }, [x, y, dy]); };
   return { send: async (method, a = {}) => {
     if (method === 'Input.dispatchTouchEvent') { const pt = (a.touchPoints || [])[0] || {}; return touch(a.type, pt.x, pt.y); }
     if (method === 'Input.synthesizeScrollGesture') { await scroll(a.x, a.y, -(a.yDistance || 0)); return page.waitForTimeout(250); }
@@ -40,7 +46,7 @@ const chromium = {
   name: NAME,
   async launch(opts = {}) {
     const o = Object.assign({}, opts);
-    if (NAME !== 'chromium') { delete o.channel; delete o.executablePath; }
+    if (NAME !== 'chromium') { delete o.channel; delete o.executablePath; delete o.args; }   // args are Chrome switches
     const b = await engine.launch(o);
     const newContext = b.newContext.bind(b);
     b.newContext = async (c = {}) => {

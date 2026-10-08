@@ -66,10 +66,11 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
     return Object.assign(all.find(o => o.y > t + 100 && o.y < bt - 100) || all[0], { band: [Math.round(t), Math.round(bt)], ys: all.map(o => Math.round(o.y)) }); });
   console.log('slot pick', JSON.stringify(slot));
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: slot.x, y: slot.y }] }); await wait(120);
+  const atDrop = await p.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return { el: e && (e.tagName + '.' + [...e.classList].join('.') + ' ' + (e.dataset.t || '')), over: [...document.querySelectorAll('.over')].map(o => o.className + ' ' + (o.dataset.t || '')), scrollY }; }, [slot.x, slot.y]);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await wait(400);
   const blk = await p.locator(`.pday[data-d="2"] .pblk[data-id="${cid}"]`).innerText().catch(() => 'MISSING');
   const want = await p.evaluate(t => { const [h, m] = t.split(':').map(Number); return ((h + 11) % 12 + 1) + (m ? ':' + String(m).padStart(2, '0') : ''); }, slot.t);
-  ok('dropping on a slot places it at that time', blk.startsWith(want), { blk, slot: slot.t });
+  ok('dropping on a slot places it at that time', blk.startsWith(want), { blk, slot: slot.t, atDrop, after: await p.locator('.pday[data-d="2"]').innerText().catch(() => '') });
   ok('after the drop no slots are left open', (await vis()).every(n => n === 0));
   ok('no page errors', errs.length === 0, errs);
   const fails = results.filter(r => !r.pass);

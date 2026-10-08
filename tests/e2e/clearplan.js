@@ -8,7 +8,7 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
     if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type }); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  const tap = async (s, o = {}) => { const l = p.locator(s).first(); await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap(o) : await l.click(o); await p.waitForTimeout(250); };
+  const tap = async (s, o = {}) => { const l = p.locator(s).first(); await l.scrollIntoViewIfNeeded().catch(()=>{}); try { touch ? await l.tap(Object.assign({ timeout: 10000 }, o)) : await l.click(Object.assign({ timeout: 10000 }, o)); } catch (e) { throw new Error('tap ' + s + ': ' + e.message.split('\n').slice(0, 8).join(' | ')); } await p.waitForTimeout(250); };
   await p.goto('http://compass.test/'); await p.waitForTimeout(500); await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
   await tap('[data-act=obNext]'); for (const v of ['rel', 'body', 'solve']) await tap(`[data-act=obValue][data-v=${v}]`);
   while (await p.locator('[data-act=obNext]').count()) await tap('[data-act=obNext]');

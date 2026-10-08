@@ -51,7 +51,8 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
   r = await rows();
   ok('unticking puts it back in its time slot', r[0].id === 'gym' && await p.locator('.donelist .dayrow').count() === 1, r);
   // weekly progress counted once and reverted
-  const cnt = await p.evaluate(() => { const st = JSON.parse(localStorage.getItem('__mockstore')); const k = Object.keys(st).find(k => /docs\/w-/.test(k)); return st[k] && st[k].c && st[k].c.gym; });
+  /* saves are batched, so give a slower browser a moment to write */
+  let cnt; for (let i = 0; i < 15; i++) { cnt = await p.evaluate(() => { const st = JSON.parse(localStorage.getItem('__mockstore')); const k = Object.keys(st).find(k => /docs\/w-/.test(k)); return st[k] && st[k].c && st[k].c.gym; }); if (!cnt) break; await p.waitForTimeout(200); }
   ok('weekly count reverted after untick', !cnt, cnt);
   // tick everything
   for (let i = 0; i < 30 && await p.locator('.daylist .dayrow').count(); i++) { await tap('.daylist .dayrow'); await p.waitForTimeout(450); }

@@ -66,4 +66,4 @@ const WURL = 'https://compass-reminders.test.workers.dev';
   ok('deleting the account deletes the calendar link', t3 && !st['calfeeds/' + t3], Object.keys(st));
   ok('no page errors', !errs.length, errs);
   console.log(`livecal ${W}${dark ? 'd' : ''}: ${results.filter(x => x.pass).length}/${results.length} passed`); results.filter(x => !x.pass).forEach(x => console.log('  FAIL', x.n, JSON.stringify(x.i || '').slice(0, 300)));
-  await b.close(); })();
+  await b.close(); })().catch(e => { console.log('CRASH', e.message.split('\n').slice(0, 4).join(' | ')); process.exit(1); });
