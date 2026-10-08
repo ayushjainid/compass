@@ -123,7 +123,8 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
     await p.click('summary:has-text("How to export")');
     { const h = await p.locator('details.fold:has-text("How to export")').innerText(); ok('[csv] export help covers Microsoft To Do via Outlook', /Microsoft To Do/i.test(h) && /Outlook/.test(h), h.slice(0, 300)); }
     await p.setInputFiles('#impFiles', CSV_FILE); await p.waitForTimeout(600);
-    ok('[csv] Outlook CSV is recognised as Microsoft To Do', /Microsoft To Do · 24 items/.test(await p.locator('.card .task').first().innerText()), await p.locator('.card .task').first().innerText());
+    { const row = await p.locator('.card .task').first().innerText({ timeout: 5000 }).catch(() => '');
+      ok('[csv] Outlook CSV is recognised as Microsoft To Do', /Microsoft To Do · 24 items/.test(row), row || { main: (await p.locator('#main').innerText()).slice(0, 300), errs }); }
     await p.click('[data-act=impRun]'); await p.waitForTimeout(500);
     const t = await p.locator('#main').innerText();
     ok('[csv] Guitar practice found with Mon/Thu 8 pm', /Guitar practice/.test(t) && /Mon, Thu/.test(t) && /8 pm/.test(t), t.slice(0, 500));

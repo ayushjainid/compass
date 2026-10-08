@@ -1,4 +1,4 @@
-const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
+const { chromium, NAME } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
@@ -25,7 +25,10 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
   await p.screenshot({ path: `${S}/clearplan-${W}.png` });
   await tap('[data-act=clearPlanNo]');
   ok('Keep my plan closes and changes nothing', await p.locator('.sheet').count() === 0 && await placed() === n0);
-  await tap('[data-act=clearPlan]'); await tap('.scrim', { position: { x: 20, y: 20 } });  // the top of the dimmed page, clear of the sheet whatever its height
+  await tap('[data-act=clearPlan]');
+  /* Playwright's WebKit never turns a tap on a plain <div> into a click (an iPhone does once it has a pointer cursor,
+     which the backdrop has), so there the backdrop gets the click directly; tapping outside is on the real-device list */
+  if (NAME === 'webkit') { await p.locator('.scrim').dispatchEvent('click'); await p.waitForTimeout(250); } else await tap('.scrim', { position: { x: 20, y: 20 } });  // the top of the dimmed page, clear of the sheet whatever its height
   ok('tapping outside also keeps it', await p.locator('.sheet').count() === 0 && await placed() === n0);
   await tap('[data-act=clearPlan]'); await tap('[data-act=clearPlanYes]'); await p.waitForTimeout(300);
   ok('confirming clears every day', await placed() === 0 && await p.locator('.sheet').count() === 0);
