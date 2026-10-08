@@ -1,5 +1,5 @@
 // The installed app opens with no connection; online it still gets new versions; a weak connection doesn't block it
-const { chromium } = require('playwright'); const fs = require('fs'), path = require('path'), http = require('http');
+const { chromium } = require('./engine'); const fs = require('fs'), path = require('path'), http = require('http');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
 let marker = 'v-one', slow = 0;

@@ -1,5 +1,5 @@
 // No save loops: sit idle on each setup step and on every tab, count saves
-const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
 (async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });

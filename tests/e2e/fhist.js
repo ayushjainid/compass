@@ -1,5 +1,5 @@
 // Review: each floor's last 8 weeks
-const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0', dark = process.env.D === '1';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });

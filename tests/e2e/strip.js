@@ -1,4 +1,4 @@
-const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 (async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, colorScheme: 'dark', deviceScaleFactor: 2 });

@@ -1,5 +1,5 @@
 // Two devices, one account: nothing either device does may be lost, online or offline.
-const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
 const server = new Map(); let ver = 0; const vers = new Map(); const subs = new Map(); // path -> Set(page)

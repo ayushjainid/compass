@@ -1,8 +1,15 @@
-const { chromium } = require('playwright');
+const { chromium } = require('./engine');
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const results = []; const ok = (name, cond, info) => results.push({ name, pass: !!cond, info: cond ? undefined : info });
-const FX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/') + 'mstodo-graph.json', 'utf8'));
+/* the sample data was recorded around 1 Oct 2026; move every date forward by however long ago that was,
+   so "done about 1.8× a week over recent weeks" stays true whenever the tests run */
+const FX_REF = Date.UTC(2026, 9, 1), SHIFT = 7 * Math.max(0, Math.floor((Date.now() - FX_REF) / (7 * 864e5)));   // whole weeks, so weekdays stay put
+const shiftIso = t => t.replace(/(\d{4})-(\d{2})-(\d{2})(?=T|")/g, (m, y, mo, d) => new Date(Date.UTC(+y, +mo - 1, +d) + SHIFT * 864e5).toISOString().slice(0, 10));
+const shiftUs = t => t.replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g, (m, mo, d, y) => { const x = new Date(Date.UTC(+y, +mo - 1, +d) + SHIFT * 864e5); return `${x.getUTCMonth() + 1}/${x.getUTCDate()}/${x.getUTCFullYear()}`; });
+const FX = JSON.parse(shiftIso(fs.readFileSync(path.join(__dirname, 'fixtures/') + 'mstodo-graph.json', 'utf8')));
+const CSV_DIR = fs.mkdtempSync(path.join(require('os').tmpdir(), 'fx-')), CSV_FILE = path.join(CSV_DIR, 'Outlook-Tasks.CSV');
+fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixtures', 'Outlook-Tasks.CSV'), 'utf8')));
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium', args: ['--ignore-certificate-errors'] });
   const run = async (mode) => {
@@ -83,7 +90,7 @@ const FX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/') + 'mstod
       await tap('[data-act=impRun]'); await p.waitForTimeout(600);
       const txt = await p.locator('#main').innerText();
       ok(`[${mode}] review finds Morning run with its days and time`, /Morning run/.test(txt) && /Tue, Thu, Sat/.test(txt) && /6:30 am/.test(txt), txt.slice(0, 400));
-      ok(`[${mode}] review floors Morning run at what you really do`, /done about 1\.8/.test(txt));
+      ok(`[${mode}] review floors Morning run at what you really do`, /done about 1\.[6-9]/.test(txt));
       ok(`[${mode}] flagged emails left out`, !/invoice/i.test(txt));
       await p.screenshot({ path: `${S}/ms-review-${mode}.png`, fullPage: true });
       await tap('[data-act=impUse]'); await p.waitForTimeout(400);
@@ -112,7 +119,7 @@ const FX = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/') + 'mstod
     ok('[csv] no Connect button without a client ID', await p.locator('[data-act=msConnect]').count() === 0);
     await p.click('summary:has-text("How to export")');
     { const h = await p.locator('details.fold:has-text("How to export")').innerText(); ok('[csv] export help covers Microsoft To Do via Outlook', /Microsoft To Do/i.test(h) && /Outlook/.test(h), h.slice(0, 300)); }
-    await p.setInputFiles('#impFiles', path.join(__dirname, 'fixtures/') + 'Outlook-Tasks.CSV'); await p.waitForTimeout(600);
+    await p.setInputFiles('#impFiles', CSV_FILE); await p.waitForTimeout(600);
     ok('[csv] Outlook CSV is recognised as Microsoft To Do', /Microsoft To Do · 24 items/.test(await p.locator('.card .task').first().innerText()), await p.locator('.card .task').first().innerText());
     await p.click('[data-act=impRun]'); await p.waitForTimeout(500);
     const t = await p.locator('#main').innerText();

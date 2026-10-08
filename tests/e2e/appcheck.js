@@ -1,5 +1,5 @@
 // App Check starts with the site key from firebase-config.js (app and dashboard); a debug token only on localhost
-const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public');
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
 (async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });

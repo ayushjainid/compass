@@ -271,7 +271,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .tag{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:5px;background:var(--sunk);color:var(--muted)}
 .tag.mvw{background:var(--accent-soft);color:var(--accent)} .tag.paused{background:var(--brass-soft);color:var(--brass)}
 .comp.ispaused .lbl>span:first-child{color:var(--muted)}
-.pausenote{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--brass-soft);border:1px solid color-mix(in srgb,var(--brass) 30%,transparent)}
+.pausenote{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--brass-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--brass) 30%,transparent)}
 .pausenote>div{flex:1;min-width:0}.pausenote .hint{margin-top:2px}
 .pauserow{padding:12px 0 2px;border-top:1px solid var(--line)}.pauserow .btn{flex:none} .tag.fun{background:var(--brass-soft);color:var(--brass)} .tag.ai{background:var(--good-soft);color:var(--good)}
 .chev{color:var(--muted);font-size:18px}
@@ -324,11 +324,11 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .vmain[aria-pressed="true"] .tick::after{content:"";width:5px;height:9px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
 .vpick.starred .vmain .tick{background:var(--brass);border-color:var(--brass)}
 .vt{display:flex;flex-direction:column;gap:3px;min-width:0}.vt b{font-weight:600}.vt small{color:var(--ink2);font-size:13px;line-height:1.4}.vt .src{display:inline;margin:0}
-.vstar{flex:none;width:52px;font-size:22px;color:var(--brass);border-left:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.vstar{flex:none;width:52px;font-size:22px;color:var(--brass);border-left:1px solid var(--line);border-left:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 .vstar[aria-pressed="false"]{color:var(--muted)}
 .vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .vlede{color:var(--muted);margin:2px 0 22px}
-.goalcard{border-radius:var(--r);padding:14px 16px 10px;background:color-mix(in srgb,var(--accent) 7%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);transition:border-color .15s}
+.goalcard{border-radius:var(--r);padding:14px 16px 10px;background:var(--accent-soft);background:color-mix(in srgb,var(--accent) 7%,var(--surface));border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);transition:border-color .15s}
 .goalcard:focus-within{border-color:var(--accent)}
 .goalcard label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--ink2)}
 .optpill{flex:none;font-size:11px;letter-spacing:.04em;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
@@ -362,7 +362,7 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .obmore{display:block;width:100%;text-align:left;padding:12px 14px;font-size:14px;color:var(--accent);font-weight:500;border-top:1px solid var(--line)}
 .obsum{margin:8px 0 12px}
 .obsum .chip{gap:6px}.obsum .cstar{color:var(--brass)}
-.intro{margin:8px 0 14px;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.intro{margin:8px 0 14px;border-color:var(--accent);background:var(--accent-soft);background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
 .intro ul{margin:8px 0 12px;padding-left:18px;display:grid;gap:6px;color:var(--ink2);font-size:14.5px;line-height:1.45}
 .progress i{height:4px;flex:1;border-radius:2px;background:var(--line);transition:background .3s}
 .progress i.on{background:var(--accent)}
@@ -415,7 +415,7 @@ body{transition:background-color .35s ease,color .35s ease}
 .burst{position:fixed;width:7px;height:7px;border-radius:50%;pointer-events:none;z-index:50;animation:fly .65s cubic-bezier(.2,.7,.3,1) forwards}
 @keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
 .toast.withundo{display:flex;align-items:center;gap:14px;padding:6px 6px 6px 16px}
-.toast.withundo button{background:transparent;color:var(--bg);font-weight:600;padding:6px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--bg) 35%,transparent)}
+.toast.withundo button{background:transparent;color:var(--bg);font-weight:600;padding:6px 10px;border-radius:999px;border:1px solid var(--muted);border:1px solid color-mix(in srgb,var(--bg) 35%,transparent)}
 .ntlate{padding:10px 12px;border-radius:12px;background:var(--brass-soft);margin:0 0 12px}
 .toast{position:fixed;left:50%;bottom:calc(146px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13.5px;z-index:40;animation:toastIn .28s cubic-bezier(.2,.8,.2,1) both;max-width:calc(100% - 32px);text-align:center}
 .toast.out{animation:toastOut .22s ease forwards}
@@ -426,7 +426,7 @@ body{transition:background-color .35s ease,color .35s ease}
 html{scroll-behavior:smooth}
 body.landing .wrap{max-width:1120px;padding-block:0 32px}
 body.landing .top,body.landing #statusline,body.landing .island{display:none}
-.lnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px;background:var(--bg);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px;background:var(--bg);background:var(--bg);background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 .lnav .brand svg{width:26px;height:26px}
 .lnav .links{display:flex;gap:26px;font-size:14.5px}
 .lnav .links a{color:var(--ink2);text-decoration:none}
@@ -601,8 +601,8 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .cpair.fun{background:var(--brass-soft);border-color:transparent}
 .cpair.fun b{color:var(--brass)}
 .cminus{min-width:40px;padding:0 12px;border-left:1px solid var(--line);color:var(--ink2);font-size:18px;line-height:1}
-.cpair.done .cminus,.cpair.fun .cminus{border-left-color:color-mix(in srgb,var(--ink) 12%,transparent)}
-.cminus:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.cpair.done .cminus,.cpair.fun .cminus{border-left-color:var(--line);border-left-color:color-mix(in srgb,var(--ink) 12%,transparent)}
+.cminus:hover{background:var(--sunk);background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .cminus:active{transform:scale(.94)}
 /* ---------- planning ---------- */
 .pdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--brass);margin-left:4px;vertical-align:2px}
@@ -619,7 +619,7 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .pmin{margin-left:auto;font:500 12px var(--mono);color:var(--muted)}
 .pmin.heavy{color:var(--warn)}
 .pblocks{display:flex;flex-wrap:wrap;gap:6px}
-.pblk{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border-radius:10px;padding:6px 10px 6px 9px;background:color-mix(in srgb,var(--c) 14%,var(--surface));border-left:3px solid var(--c);font-size:13px;min-width:0}
+.pblk{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border-radius:10px;padding:6px 10px 6px 9px;background:var(--sunk);background:color-mix(in srgb,var(--c) 14%,var(--surface));border-left:3px solid var(--c);font-size:13px;min-width:0}
 .pblk .t{font:600 12px var(--mono);color:var(--ink2);grid-row:span 2;align-self:center}
 .pblk .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pblk .dur{font-size:11.5px;color:var(--muted)}
@@ -661,7 +661,7 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .pshead{display:flex;gap:12px;align-items:center}.pshead>i{width:12px;height:12px;border-radius:50%;flex:none}
 .psrows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .psrow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}.psrow:last-child{border-bottom:0}
-.psrow.on{background:color-mix(in srgb,var(--good) 10%,var(--surface))}
+.psrow.on{background:var(--good-soft);background:color-mix(in srgb,var(--good) 10%,var(--surface))}
 .psd{width:104px;flex:none;display:flex;flex-direction:column}.psd b{font:600 15px var(--display)}.psd span{font:500 11.5px var(--mono);color:var(--good)}.psd span.over{color:var(--warn)}
 .pst{display:flex;gap:6px;flex-wrap:wrap;flex:1}
 .pstime{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font:500 13px var(--mono);color:var(--ink);display:inline-flex;gap:6px;align-items:center;min-height:36px}
@@ -675,15 +675,15 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .pscustom input{width:auto;padding:7px 10px;font-size:15px}.pscustom .flabel{margin:0}
 @media (max-width:420px){.pscustom{padding-left:0}}.daypick button:disabled{opacity:.35}
 @media (min-width:900px){.pfix,.pslot{display:flex;flex-direction:column;gap:1px;padding:6px 8px}.pfix .nm,.pslot .nm{line-height:1.25}}
-.pslot{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border:1.5px dashed color-mix(in srgb,var(--c,var(--good)) 60%,transparent);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--ink2);animation:pop .2s}
+.pslot{display:grid;grid-template-columns:auto 1fr;column-gap:8px;text-align:left;border:1.5px dashed var(--good);border:1.5px dashed color-mix(in srgb,var(--c,var(--good)) 60%,transparent);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--ink2);animation:pop .2s}
 .pslot .t{font:500 12px var(--mono);color:var(--muted)}.pslot .nm{font-weight:600;color:var(--ink)}
-.pslot.over,.pday.over{background:color-mix(in srgb,var(--good) 14%,var(--surface));border-color:var(--good)}
+.pslot.over,.pday.over{background:var(--good-soft);background:color-mix(in srgb,var(--good) 14%,var(--surface));border-color:var(--good)}
 .pslot:hover{border-style:solid}
 /* while dragging, the week stays compact: free slots show only in the day being hovered */
 .pweek.dragging .pslot{display:none}
 .pweek.dragging .pday.hot .pslot{display:grid}
 @media (min-width:900px){.pweek.dragging .pday.hot .pslot{display:flex}}
-.pweek.dragging .pday.hot{border-color:var(--good);background:color-mix(in srgb,var(--good) 6%,var(--surface))}
+.pweek.dragging .pday.hot{border-color:var(--good);background:var(--good-soft);background:color-mix(in srgb,var(--good) 6%,var(--surface))}
 [data-drag]{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
 html.dragging{scroll-behavior:auto!important}
 /* anything scrolled into view on the plan stops below the pinned tray */
@@ -765,7 +765,7 @@ html.dragging{scroll-behavior:auto!important}
 .feedcard{display:grid;gap:10px}.feedcard .tag.good{background:var(--good-soft);color:var(--good);margin-left:6px;vertical-align:middle}
 .feedbtns{display:flex;flex-wrap:wrap;gap:8px}.feedbtns .btn{text-decoration:none}
 .feedmgr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13.5px;color:var(--ink2)}
-.lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
+.lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
 .lookcard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
 .lookcard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small{grid-column:1;color:var(--ink2);font-size:13px}
 .lookcard .chev{grid-column:2;grid-row:1/4;align-self:center;width:9px;height:9px;border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(-45deg)}
@@ -912,8 +912,8 @@ details.fold[open] summary::before{content:"▾ ";}
 .fh .nm{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fh .bars{display:flex;align-items:flex-end;gap:3px;height:22px}
 .fh .bars i{display:block;width:9px;height:var(--h,8%);border-radius:2px;background:var(--line)}
-.fh .bars i.ok{background:var(--good)}.fh .bars i.part{background:color-mix(in srgb,var(--brass) 75%,transparent)}
-.fh .bars i.none{background:color-mix(in srgb,var(--muted) 35%,transparent);height:8%}
+.fh .bars i.ok{background:var(--good)}.fh .bars i.part{background:var(--brass);background:color-mix(in srgb,var(--brass) 75%,transparent)}
+.fh .bars i.none{background:var(--line);background:color-mix(in srgb,var(--muted) 35%,transparent);height:8%}
 .fh .bars i.rest,.fh .bars i.pre{background:none;border-bottom:2px dotted var(--line);height:2px;border-radius:0}
 .fh .bars i.now{outline:1.5px solid var(--ink2);outline-offset:1px}
 .fh .sum{font:500 12.5px/1 var(--sans);font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
@@ -921,12 +921,12 @@ details.fold[open] summary::before{content:"▾ ";}
 .h3n{font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--muted);margin-left:6px}
 .dayrow .lbl small{display:block}.dayrow .sep{opacity:.7}
 .dayrow.weekly,.dayrow.monthly{box-shadow:inset 3px 0 0 var(--vc)}
-.ktag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:color-mix(in srgb,var(--vc) 18%,transparent);color:var(--ink2);vertical-align:1px}
+.ktag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:var(--sunk);background:color-mix(in srgb,var(--vc) 18%,transparent);color:var(--ink2);vertical-align:1px}
 .dayrow.going{animation:rowout .38s ease forwards}
 @keyframes rowout{0%{opacity:1}60%{opacity:.5}100%{opacity:0;transform:translateY(6px)}}
 .donefold{margin-top:8px;border:1px dashed var(--line);border-radius:var(--r)}
 .donehead{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 14px;min-height:48px}
-.donehead .dck{flex:none;width:24px;height:24px;border-radius:7px;background:color-mix(in srgb,var(--good) 22%,transparent);color:var(--good);display:grid;place-items:center;font-size:13px;font-weight:700}
+.donehead .dck{flex:none;width:24px;height:24px;border-radius:7px;background:var(--good-soft);background:color-mix(in srgb,var(--good) 22%,transparent);color:var(--good);display:grid;place-items:center;font-size:13px;font-weight:700}
 .donehead .dtx{flex:1;min-width:0;display:flex;flex-direction:column}.donehead .dtx b{font-weight:500;font-size:14px;color:var(--ink2)}
 .donehead .dtx small{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .donefold.open .chev{transform:rotate(-135deg) translate(-2px,-2px)}
@@ -1674,6 +1674,8 @@ const VAPID = () => String(window.COMPASS_VAPID_PUBLIC || "").trim();
 const WORKER = () => String(window.COMPASS_WORKER_URL || "").trim().replace(/\/$/, "");
 const pushCapable = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 const isIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isAndroid = () => /Android/i.test(navigator.userAgent);
+const isMac = () => /Macintosh|Mac OS X/.test(navigator.userAgent) && !isIOS();
 const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 const myTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch (e) { return "UTC"; } };
 const ntRef = () => FB.doc(ST.fs, "notify", ST.uid);
@@ -3197,10 +3199,14 @@ function icsSheet() {
     <p class="lede" style="margin:0">${n ? `${n} repeating block${n > 1 ? "s" : ""} and one-offs in one file.` : "Nothing planned yet. Place a floor on a day first."}</p>
     ${opts}${download}<button class="btn quiet" data-act="closeSheet">Close</button></div>`;
   const u = t ? feedUrl(t) : "";
+  /* the device's own calendar first: Apple on iPhone/Mac; Android has nothing that opens webcal:// links, so only Google there */
+  const appleFirst = isIOS() || isMac(), android = isAndroid();
+  const appleBtn = p => `<a class="btn ${p ? "primary" : ""}" data-cal="apple" href="${esc(webcal(u))}">Add to Apple Calendar</a>`;
+  const googleBtn = p => `<a class="btn ${p ? "primary" : ""}" data-cal="google" href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal(u))}" target="_blank" rel="noopener">Add to Google Calendar</a>`;
   const linked = t ? `<div class="feedbtns">
-        <a class="btn primary" href="${esc(webcal(u))}">Add to Apple Calendar</a>
-        <a class="btn" href="https://calendar.google.com/calendar/render?cid=${encodeURIComponent(webcal(u))}" target="_blank" rel="noopener">Add to Google Calendar</a>
+        ${android ? googleBtn(true) : appleFirst ? appleBtn(true) + googleBtn(false) : googleBtn(true) + appleBtn(false)}
         <button class="btn quiet" data-act="calCopy">Copy link</button></div>
+      ${android ? `<p class="hint" style="margin:0">Using another calendar app? Copy the link and add it there as a subscription (“Add calendar from URL”).</p>` : ""}
       <p class="hint" style="margin:0">Changes in Compass reach your calendar by themselves: Apple checks every few hours, Google about once or twice a day (Google decides). Anyone with this link can see your plan's names and times, never your notes or journal.</p>
       <div class="feedmgr">${S.confirm === "calReset" ? `<span>Make a new link? The old one stops working, so re-add it in your calendar.</span><button class="btn small danger" data-act="calReset">Make new link</button><button class="btn small quiet" data-act="calNo">Cancel</button>`
         : S.confirm === "calOff" ? `<span>Turn the link off? Your calendar stops updating and Compass events stay as they are.</span><button class="btn small danger" data-act="calOff">Turn off</button><button class="btn small quiet" data-act="calNo">Cancel</button>`

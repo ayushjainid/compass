@@ -1,5 +1,5 @@
 // Live calendar feed in the app: make the link, subscribe buttons, copy, reset, turn off, delete account
-const { chromium } = require('playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0', dark = process.env.D === '1';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
@@ -35,7 +35,11 @@ const WURL = 'https://compass-reminders.test.workers.dev';
   await tap('.sheet [data-act=calMake]'); await p.waitForTimeout(600);
   let st = await store(p); const t1 = st['users/u1/docs/settings'].calFeed;
   ok('link made: a 43-character secret, saved with your time zone', /^[A-Za-z0-9_-]{43}$/.test(t1) && st['calfeeds/' + t1] && st['calfeeds/' + t1].uid === 'u1' && st['calfeeds/' + t1].tz, { t1, doc: st['calfeeds/' + t1] });
-  const apple = await p.locator('.sheet .feedbtns a').first().getAttribute('href'), google = await p.locator('.sheet .feedbtns a').nth(1).getAttribute('href');
+  const android = /Android/.test(await p.evaluate(() => navigator.userAgent));
+  const apple = android ? `webcal://compass-reminders.test.workers.dev/cal/${t1}.ics` : await p.locator('.sheet .feedbtns a[data-cal=apple]').getAttribute('href'), google = await p.locator('.sheet .feedbtns a[data-cal=google]').getAttribute('href');
+  if (android) ok('Android: Google only (nothing on Android opens webcal links)', await p.locator('.sheet .feedbtns a[data-cal=apple]').count() === 0 && (await p.locator('.sheet .feedbtns a').first().getAttribute('data-cal')) === 'google');
+  else if (/iPhone|Macintosh/.test(await p.evaluate(() => navigator.userAgent))) ok('iPhone/Mac: Apple Calendar first', (await p.locator('.sheet .feedbtns a').first().getAttribute('data-cal')) === 'apple');
+  else ok('elsewhere: Google first, Apple too', (await p.locator('.sheet .feedbtns a').first().getAttribute('data-cal')) === 'google' && await p.locator('.sheet .feedbtns a[data-cal=apple]').count() === 1);
   ok('Apple button subscribes with webcal://', apple === `webcal://compass-reminders.test.workers.dev/cal/${t1}.ics`, apple);
   ok('Google button opens Add-by-URL with the link', google.startsWith('https://calendar.google.com/calendar/render?cid=') && decodeURIComponent(google.split('cid=')[1]) === `webcal://compass-reminders.test.workers.dev/cal/${t1}.ics`, google);
   await p.screenshot({ path: `${S}/livecal-1-${W}${dark ? 'd' : ''}.png` });
@@ -51,7 +55,7 @@ const WURL = 'https://compass-reminders.test.workers.dev';
   await tap('.sheet [data-act=calReset]'); await p.waitForTimeout(600); st = await store(p);
   const t2 = st['users/u1/docs/settings'].calFeed;
   ok('new link replaces the old (old one deleted)', t2 && t2 !== t1 && st['calfeeds/' + t2] && !st['calfeeds/' + t1], { t1, t2 });
-  ok('buttons now point at the new link', (await p.locator('.sheet .feedbtns a').first().getAttribute('href')).includes(t2));
+  ok('buttons now point at the new link', (await p.locator('.sheet .feedbtns a[data-cal=google]').getAttribute('href')).includes(t2));
   await tap('.sheet [data-act=calAsk][data-v=calOff]'); await tap('.sheet [data-act=calOff]'); await p.waitForTimeout(500); st = await store(p);
   ok('turn off: link deleted, back to Get my link', !st['users/u1/docs/settings'].calFeed && !st['calfeeds/' + t2] && await p.locator('.sheet [data-act=calMake]').count() === 1);
   // delete account removes the link too

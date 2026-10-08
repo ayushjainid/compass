@@ -1,5 +1,5 @@
 // Exhaustive plan-flow test. MODE=phone (390x844 touch) or MODE=desk (1280 mouse). D=1 dark.
-const { chromium } = require('playwright');
+const { chromium } = require('./engine');
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const MODE = process.env.MODE || 'phone', phone = MODE === 'phone', dark = process.env.D === '1';

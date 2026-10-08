@@ -1,5 +1,5 @@
 // Reminders in the app: turn on/off, times, activity, review, iOS hint, deep link, deletion
-const { chromium, devices } = require('playwright'); const fs = require('fs'), path = require('path');
+const { chromium } = require('./engine'); const { devices } = require('playwright'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
@@ -13,12 +13,14 @@ const fakePush = (perm) => `(() => {
   const reg = { pushManager: pm, showNotification: async (t, o) => { window.__shown = t; } };
   Object.defineProperty(navigator, "serviceWorker", { value: { register: async u => { window.__swurl = u; return reg; }, ready: Promise.resolve(reg), getRegistration: async () => reg, addEventListener() {} }, configurable: true });
 })()`;
-async function setup(b, { perm = 'granted', ua, vapid = VAPID, url = 'http://compass.test/' } = {}) {
+async function setup(b, { perm = 'granted', ua, vapid = VAPID, url = 'http://compass.test/', standalone = false } = {}) {
   const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: 'dark', deviceScaleFactor: 2, ...(ua ? { userAgent: ua } : {}) });
   await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
     if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = `window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"};window.COMPASS_VAPID_PUBLIC=${JSON.stringify(vapid)};`; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type }); });
   await ctx.addInitScript(fakePush(perm));
+  /* opened from the Home Screen icon: iOS reports navigator.standalone and display-mode: standalone */
+  if (standalone) await ctx.addInitScript(() => { Object.defineProperty(navigator, 'standalone', { value: true, configurable: true }); const mm = window.matchMedia.bind(window); window.matchMedia = q => /display-mode:\s*standalone/.test(q) ? { matches: true, media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent() { return false; } } : mm(q); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   const tap = async s => { const l = typeof s === 'string' ? p.locator(s).first() : s; await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap() : await l.click(); await p.waitForTimeout(250); };
   await p.goto(url); await p.waitForTimeout(500); await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
@@ -105,6 +107,14 @@ const nt = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') 
     ok('iPhone in Safari: asks to add to Home Screen first', /Add to Home Screen/.test(await p.locator('#csec-remind').innerText()) && await p.locator('[data-act=ntOn]').count() === 0);
     await p.screenshot({ path: `${S}/remind-ios-${W}.png` });
     ok('no page errors (iOS)', errs.length === 0, errs); await ctx.close(); }
+  { const IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+    const { ctx, p, errs, tap } = await setup(b, { ua: IOS, standalone: true });
+    const d = await nt(p);
+    ok('iPhone from the Home Screen: setup turns reminders on like any phone', d && d.on && d.sub && d.sub.endpoint && d.eve === '21:30', d);
+    await tap('[data-act=tab][data-t=compass]'); if (!(await p.locator('[data-act=ntToggle]').count())) await tap('[data-act=cSec][data-k=remind]');
+    ok('iPhone from the Home Screen: full reminder settings, no Add-to-Home-Screen advice', await p.locator('#csec-remind [data-act=ntToggle]').count() === 2 && !/Add to Home Screen/.test(await p.locator('#csec-remind').innerText()));
+    ok('iPhone: the lock-screen names toggle is there', await p.locator('#csec-remind [data-act=ntNames]').count() === 1);
+    ok('no page errors (iOS installed)', errs.length === 0, errs); await ctx.close(); }
   { const { ctx, p, errs, tap } = await setup(b, { vapid: '' });
     await tap('[data-act=tab][data-t=compass]');
     ok('no key configured: no Reminders section', await p.locator('#csec-remind').count() === 0);

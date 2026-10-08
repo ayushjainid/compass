@@ -1,5 +1,5 @@
 // New onboarding: a half-finished setup survives reload and sign-out; goal, stars, week preset and floor edits are kept.
-const { chromium } = require('playwright');
+const { chromium } = require('./engine');
 const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const results = []; const ok = (name, cond, info) => results.push({ name, pass: !!cond, info: cond ? undefined : info });
