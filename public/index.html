@@ -287,7 +287,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .meter .nums{display:flex;flex-wrap:wrap;gap:2px 12px;justify-content:space-between;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
 
 /* sheet */
-.scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;animation:fade .2s;touch-action:none}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;animation:fade .2s;touch-action:none;cursor:pointer}  /* cursor: iPhone Safari only sends taps on a plain div to the page's click handler if it looks clickable */
 html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
 .sheet .in>h2:first-of-type,.sheet .in>div:nth-child(2) h2,.sheet .pshead h2{padding-right:44px}
 .sheetx{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:50%;background:var(--sunk);color:var(--ink2);font-size:15px;display:grid;place-items:center;z-index:2}
