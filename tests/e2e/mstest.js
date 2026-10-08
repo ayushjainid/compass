@@ -106,10 +106,10 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
   /* Playwright's WebKit lets the token request slip past the fake Microsoft (it reached the real one in CI), so on
      WebKit only the cancel path and the CSV run here; the full sign-in is checked on Chromium and Firefox */
   for (const m of NAME === 'webkit' ? ['cancel'] : ['desktop', 'blocked', 'cancel']) await run(m);
-  /* Outlook CSV through the file picker */
+  /* Outlook CSV through the file picker (plain http like the other suites: nothing here needs a secure page) */
   {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-    await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('https://compass.test/**', async route => {
+    await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => {
       const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
       if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; }
       else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"test",authDomain:"x",projectId:"x",appId:"x"};'; type = 'text/javascript'; }
@@ -117,14 +117,14 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
       route.fulfill({ status: 200, body, contentType: type });
     });
     const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('https://compass.test/'); await p.waitForTimeout(500); await p.click('.lhero [data-act=signin]'); await p.waitForTimeout(600);
+    await p.goto('http://compass.test/'); await p.waitForTimeout(500); await p.click('.lhero [data-act=signin]'); await p.waitForTimeout(600);
     await p.click('[data-act=impOpen]'); await p.waitForTimeout(200);
     ok('[csv] no Connect button without a client ID', await p.locator('[data-act=msConnect]').count() === 0);
     await p.click('summary:has-text("How to export")');
     { const h = await p.locator('details.fold:has-text("How to export")').innerText(); ok('[csv] export help covers Microsoft To Do via Outlook', /Microsoft To Do/i.test(h) && /Outlook/.test(h), h.slice(0, 300)); }
     await p.setInputFiles('#impFiles', CSV_FILE); await p.waitForTimeout(600);
     { const row = await p.locator('.card .task').first().innerText({ timeout: 5000 }).catch(() => '');
-      ok('[csv] Outlook CSV is recognised as Microsoft To Do', /Microsoft To Do · 24 items/.test(row), row || { main: (await p.locator('#main').innerText()).slice(0, 300), errs }); }
+      ok('[csv] Outlook CSV is recognised as Microsoft To Do', /Microsoft To Do · 24 items/.test(row), row || { err: await p.locator('.imperr').innerText().catch(() => ''), main: (await p.locator('#main').innerText()).slice(-300), errs }); }
     await p.click('[data-act=impRun]'); await p.waitForTimeout(500);
     const t = await p.locator('#main').innerText();
     ok('[csv] Guitar practice found with Mon/Thu 8 pm', /Guitar practice/.test(t) && /Mon, Thu/.test(t) && /8 pm/.test(t), t.slice(0, 500));
