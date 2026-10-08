@@ -627,7 +627,8 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .padd{border:1.5px dashed var(--c);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;color:var(--ink);animation:pop .25s}
 .pempty{font-size:12.5px;color:var(--muted)}
 @media (min-width:900px){
-  .pweek{grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;width:min(1180px,calc(100vw - 48px));position:relative;left:50%;transform:translateX(-50%)}
+  /* wider than the page column, centred with margins (a shifted-and-transformed box still widens the page in Firefox) */
+  .pweek{--pw:min(1180px,calc(100vw - 48px));grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;width:var(--pw);position:relative;margin-left:calc((100% - var(--pw)) / 2)}
   .pday{min-height:170px;padding:10px}
   .pdh{flex-wrap:wrap;row-gap:0;gap:6px}.pmin,.pleft{margin-left:0;flex-basis:100%}
   .pblocks{flex-direction:column;flex-wrap:nowrap}

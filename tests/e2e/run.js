@@ -36,8 +36,9 @@ function judge(file, code, out) {
   if (json) return null;
   return "no pass summary found";
 }
-/* gestures driven through Chrome's debugging protocol (pinch, touch-drag) can only be simulated on Chromium */
-const ENGINE = process.env.BROWSER || "chromium", CHROME_ONLY = ["zoom.js", "hover.js"];
+/* pinch-zoom needs Chrome's gesture API; and outside Chromium, Playwright's faked site never reaches the service
+   worker, so offline is checked on Chromium and by tests/sw. Finger drags run everywhere (engine.js fakes them). */
+const ENGINE = process.env.BROWSER || "chromium", CHROME_ONLY = ["zoom.js", "offline.js"];
 const want = process.argv.slice(2);
 const jobs = JOBS.filter(([f]) => (!want.length || want.some(w => f.includes(w))) && (ENGINE === "chromium" || !CHROME_ONLY.includes(f)));
 /* the permission-prompt reminder suites assume a browser that allows web notifications: an iPhone only does once
@@ -45,7 +46,7 @@ const jobs = JOBS.filter(([f]) => (!want.length || want.some(w => f.includes(w))
 if (process.env.DEVICE === "iphone" || ENGINE === "webkit") jobs.forEach((j, i) => { if (["remind.js", "fade.js"].includes(j[0])) jobs[i] = [j[0], Object.assign({}, j[1], { T: "0" })]; });
 const par = Math.max(1, +(process.env.JOBS || 4));
 let next = 0, failed = [], t0 = Date.now();
-function runOne([file, env]) {
+function runOne([file, env], retried) {
   return new Promise(res => {
     const tag = file + (Object.keys(env).length ? " " + Object.entries(env).map(([k, v]) => `${k}=${v}`).join(" ") : "");
     const p = spawn(process.execPath, [path.join(__dirname, file)], { cwd: __dirname, env: Object.assign({}, process.env, { S: OUT }, env) });
@@ -53,6 +54,8 @@ function runOne([file, env]) {
     const kill = setTimeout(() => { out += "\nTIMEOUT"; p.kill("SIGKILL"); }, 8 * 60 * 1000);
     p.on("close", code => {
       clearTimeout(kill);
+      /* a browser that failed to start (a busy CI machine) says nothing about the app: try that suite once more */
+      if (!retried && /CRASH browserType\.launch/.test(out)) { console.log(`↻ ${file}: the browser didn't start, retrying`); return runOne([file, env], true).then(res); }
       const why = judge(file, code ?? 1, out), last = (out.match(/\d+\/\d+ passed/g) || []).pop() || "";
       if (why && process.env.GITHUB_ACTIONS) {   // show up as annotations on the run summary
         const lines = out.split("\n").filter(l => /FAIL|Error|TIMEOUT|CRASH/.test(l)).slice(0, 6).map(l => l.trim().slice(0, 240));

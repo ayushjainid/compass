@@ -8,7 +8,7 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
     if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type }); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  const tap = async s => { const l = p.locator(s).first(); await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap() : await l.click(); await p.waitForTimeout(250); };
+  const tap = async (s, o = {}) => { const l = p.locator(s).first(); await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap(o) : await l.click(o); await p.waitForTimeout(250); };
   await p.goto('http://compass.test/'); await p.waitForTimeout(500); await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
   await tap('[data-act=obNext]'); for (const v of ['rel', 'body', 'solve']) await tap(`[data-act=obValue][data-v=${v}]`);
   while (await p.locator('[data-act=obNext]').count()) await tap('[data-act=obNext]');
@@ -24,7 +24,7 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
   await p.screenshot({ path: `${S}/clearplan-${W}.png` });
   await tap('[data-act=clearPlanNo]');
   ok('Keep my plan closes and changes nothing', await p.locator('.sheet').count() === 0 && await placed() === n0);
-  await tap('[data-act=clearPlan]'); await tap('.scrim');
+  await tap('[data-act=clearPlan]'); await tap('.scrim', { position: { x: 20, y: 20 } });  // the top of the dimmed page, clear of the sheet whatever its height
   ok('tapping outside also keeps it', await p.locator('.sheet').count() === 0 && await placed() === n0);
   await tap('[data-act=clearPlan]'); await tap('[data-act=clearPlanYes]'); await p.waitForTimeout(300);
   ok('confirming clears every day', await placed() === 0 && await p.locator('.sheet').count() === 0);

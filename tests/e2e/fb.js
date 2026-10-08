@@ -26,13 +26,15 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
   ok('thank-you shows', /Thank you/.test(await p.locator('.sheet').innerText()));
   await tap('.sheet [data-act=closeSheet] >> nth=1').catch(() => tap('.sheet .btn[data-act=closeSheet]'));
   // errors
-  for (let i = 0; i < 3; i++) await p.evaluate(() => setTimeout(() => { throw new Error('Boom in test'); }, 0));
+  /* thrown from a script on the page itself, the way the app's own errors arrive (each engine labels test-injected code differently) */
+  const throwOnPage = code => p.evaluate(code => { const s = document.createElement('script'); s.textContent = code; document.body.append(s); s.remove(); }, code);
+  for (let i = 0; i < 3; i++) await throwOnPage("setTimeout(() => { throw new Error('Boom in test'); }, 0)");
   await p.evaluate(() => { Promise.reject(new Error('Rejected in test')); });
   await p.waitForTimeout(500);
   st = await store();
   const items = (st['errors/u1'] || {}).items || [];
   ok('errors are logged once each (deduped)', items.filter(x => /Boom in test/.test(x.msg)).length === 1 && items.some(x => /Rejected in test/.test(x.msg)), items);
-  for (let i = 0; i < 8; i++) await p.evaluate(i => setTimeout(() => { throw new Error('Different ' + i); }, 0), i);
+  for (let i = 0; i < 8; i++) await throwOnPage(`setTimeout(() => { throw new Error('Different ${i}'); }, 0)`);
   await p.waitForTimeout(500); st = await store();
   ok('at most 5 new errors a day from one device', ((st['errors/u1'] || {}).items || []).length === 5, ((st['errors/u1'] || {}).items || []).map(x => x.msg));
   ok('error entries carry no app data', ((st['errors/u1'] || {}).items || []).every(x => Object.keys(x).sort().join() === 'at,msg,tab,ua,where'));

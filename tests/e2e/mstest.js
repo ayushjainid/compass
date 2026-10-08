@@ -32,7 +32,8 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
         if (mode === 'cancel') { back.searchParams.set('error', 'access_denied'); back.searchParams.set('error_description', 'The user cancelled the sign-in'); }
         else { back.searchParams.set('code', 'one-time-code'); }
         back.searchParams.set('state', u.searchParams.get('state'));
-        return route.fulfill({ status: 302, headers: { location: back.toString() } });
+        /* Microsoft's own sign-in page sends the browser back; a page that does that works in every engine (WebKit can't fake a 302) */
+        return route.fulfill({ status: 200, contentType: 'text/html', body: `<!doctype html><title>Sign in</title><script>location.replace(${JSON.stringify(back.toString())})</script>` });
       }
       if (u.pathname.endsWith('/token')) {
         const f = new URLSearchParams(req.postData() || '');
@@ -68,7 +69,7 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
     if (mode === 'desktop') {
       const [pop] = await Promise.all([ctx.waitForEvent('page'), tap('[data-act=msConnect]')]);
       await pop.waitForEvent('close', { timeout: 8000 }).catch(() => {});
-      ok(`[${mode}] popup closes itself after sign-in`, pop.isClosed());
+      ok(`[${mode}] popup closes itself after sign-in`, pop.isClosed(), { url: pop.isClosed() ? '' : pop.url(), auth: seen.auth });
     } else {
       await tap('[data-act=msConnect]');
     }

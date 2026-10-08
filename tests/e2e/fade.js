@@ -19,7 +19,7 @@ async function setup(b, { perm = 'granted', ua, vapid = VAPID, url = 'http://com
     if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = `window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"};window.COMPASS_VAPID_PUBLIC=${JSON.stringify(vapid)};`; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type }); });
   await ctx.addInitScript(fakePush(perm));
-  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => { if (!/index\.html due to access control checks/.test(e.message)) errs.push(e.message); });  // Safari reports the background update check as cancelled when a reload interrupts it; the app ignores that by design
   const tap = async s => { const l = typeof s === 'string' ? p.locator(s).first() : s; await l.scrollIntoViewIfNeeded().catch(()=>{}); touch ? await l.tap() : await l.click(); await p.waitForTimeout(250); };
   await p.goto(url); await p.waitForTimeout(500); await tap('.lhero [data-act=signin]'); await p.waitForTimeout(600);
   await tap('[data-act=obNext]'); for (const v of ['rel', 'body']) await tap(`[data-act=obValue][data-v=${v}]`);

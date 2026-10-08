@@ -19,7 +19,7 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
   const tag = `${W}${touch ? 't' : ''}${dark ? 'd' : ''}`;
   const shot = n => p.screenshot({ path: `${S}/full-${n}-${tag}.png` });
   const cdp = touch ? await ctx.newCDPSession(p) : null;
-  const noHScroll = async where => { const o = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: innerWidth })); ok(`no sideways overflow: ${where}`, o.sw <= o.iw + 1, o); };
+  const noHScroll = async where => { const o = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: innerWidth, past: [...document.querySelectorAll('body *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > innerWidth + 1 && !(e.parentElement && e.parentElement.getBoundingClientRect().right > innerWidth + 1); }).slice(0, 4).map(e => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + '.' + [...e.classList].join('.') + ' ' + Math.round(e.getBoundingClientRect().left) + '..' + Math.round(e.getBoundingClientRect().right)) })); ok(`no sideways overflow: ${where}`, o.sw <= o.iw + 1, o); };
 
   /* ---- setup, like a fresh user ---- */
   await p.goto('http://compass.test/'); await wait(500);
