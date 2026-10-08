@@ -3122,15 +3122,18 @@ document.addEventListener("pointerdown", e => {
   const off = () => { src.removeEventListener("touchmove", tm); src.removeEventListener("touchend", te); src.removeEventListener("touchcancel", tc); };
   src.addEventListener("touchmove", tm, { passive: false }); src.addEventListener("touchend", te); src.addEventListener("touchcancel", tc);
 });
+/* only the finger (or mouse) that started the drag moves it: Safari sends a made-up mouse move after the page
+   scrolls, at wherever the mouse last was, which would otherwise yank a finger drag there */
+const ownPointer = (st, e) => (e.pointerType === "mouse") === !st.touch;
 document.addEventListener("pointermove", e => {
-  const st = DRAG.st; if (!st) return;
+  const st = DRAG.st; if (!st || !ownPointer(st, e)) return;
   if (st.touch) { if (st.on) dragMove(e.clientX, e.clientY); else if (Math.hypot(e.clientX - st.x, e.clientY - st.y) > 10) { clearTimeout(st.lp); DRAG.st = null; } return; }
   if (!st.on) { if (Math.hypot(e.clientX - st.x, e.clientY - st.y) > 6) { st.x = e.clientX; st.y = e.clientY; dragStart(); } return; }
   e.preventDefault(); dragMove(e.clientX, e.clientY);
 });
 document.addEventListener("touchmove", e => { const st = DRAG.st; if (!st || !st.on) return; e.preventDefault(); const t = e.touches[0]; if (t) dragMove(t.clientX, t.clientY); }, { passive: false });
-document.addEventListener("pointerup", () => { if (DRAG.st) dragEnd(true); });
-document.addEventListener("pointercancel", () => { if (DRAG.st && !DRAG.st.touch) dragEnd(false); });
+document.addEventListener("pointerup", e => { if (DRAG.st && ownPointer(DRAG.st, e)) dragEnd(true); });
+document.addEventListener("pointercancel", e => { if (DRAG.st && !DRAG.st.touch && ownPointer(DRAG.st, e)) dragEnd(false); });
 document.addEventListener("contextmenu", e => { if (DRAG.st && DRAG.st.touch) e.preventDefault(); });
 document.addEventListener("click", e => { if (Date.now() < DRAG.until && e.target.closest("[data-drag],[data-drop]")) { e.stopPropagation(); e.preventDefault(); } }, true);
 function blockSheet(sh) {
