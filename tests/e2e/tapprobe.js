@@ -8,8 +8,9 @@ const { chromium } = require('./engine');
     <div id=plain></div><div id=cursor style="cursor:pointer"></div><div id=ta style="touch-action:none"></div><div id=both style="touch-action:none;cursor:pointer"></div>
     <div id=fixed style="position:fixed;left:0;right:0;bottom:0;height:200px;touch-action:none;cursor:pointer;margin:0"></div>
     <script>window.got=[];document.addEventListener('click',e=>got.push(e.target.id));</script>`);
-  for (const id of ['plain', 'cursor', 'ta', 'both', 'fixed']) { await p.locator('#' + id).tap({ position: { x: 20, y: 20 } }); await p.waitForTimeout(400); }
+  const errs = [];
+  for (const id of ['plain', 'cursor', 'ta', 'both', 'fixed']) { try { await p.locator('#' + id).tap({ position: { x: 20, y: 20 }, timeout: 5000 }); } catch (e) { errs.push(id + ': ' + e.message.split('\n')[0]); } await p.waitForTimeout(400); }
   const got = await p.evaluate(() => window.got);
-  console.log(`::warning title=tap probe::taps that reached the click handler: ${JSON.stringify(got)} (of plain, cursor, ta, both, fixed)`);
+  console.log(`::warning title=tap probe::taps that reached the click handler: ${JSON.stringify(got)} (of plain, cursor, ta, both, fixed) errors ${JSON.stringify(errs)}`);
   console.log('0/1 passed'); await b.close();
-})();
+})().catch(e => console.log('::warning title=tap probe::crash ' + e.message.split('\n').slice(0, 3).join(' | ')));
