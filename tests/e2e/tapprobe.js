@@ -10,6 +10,6 @@ const { chromium } = require('./engine');
     <script>window.got=[];document.addEventListener('click',e=>got.push(e.target.id));</script>`);
   for (const id of ['plain', 'cursor', 'ta', 'both', 'fixed']) { await p.locator('#' + id).tap({ position: { x: 20, y: 20 } }); await p.waitForTimeout(400); }
   const got = await p.evaluate(() => window.got);
-  console.log(`FAIL taps that reached the click handler: ${JSON.stringify(got)} (of plain, cursor, ta, both, fixed)`);
+  console.log(`::warning title=tap probe::taps that reached the click handler: ${JSON.stringify(got)} (of plain, cursor, ta, both, fixed)`);
   console.log('0/1 passed'); await b.close();
 })();
