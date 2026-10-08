@@ -1,5 +1,5 @@
 // Live calendar feed in the app: make the link, subscribe buttons, copy, reset, turn off, delete account
-const { chromium } = require('./engine'); const fs = require('fs'), path = require('path');
+const { chromium, NAME } = require('./engine'); const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0', dark = process.env.D === '1';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
@@ -7,7 +7,7 @@ const WURL = 'https://compass-reminders.test.workers.dev';
 (async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   const mk = async worker => {
     const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: dark ? 'dark' : 'light', deviceScaleFactor: 2 });
-    await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://compass.test' }).catch(() => {});
+    if (NAME === 'chromium') await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://compass.test' }).catch(() => {});   // other engines don't have these permissions
     await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort());
     await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
       if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = `self.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"};self.COMPASS_WORKER_URL=${JSON.stringify(worker)};`; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }

@@ -54,11 +54,14 @@ const results = []; const ok = (name, cond, info) => results.push({ name, pass: 
   await shot('hover-tue');
   // move down to Wednesday: Tue closes, Wed opens, Wed stays under the finger
   await p.evaluate(() => { const e = document.querySelector('.pday[data-d="2"] .pdh'); const t = document.querySelector('.ptraywrap').getBoundingClientRect().bottom, bt = document.querySelector('#tabbar').getBoundingClientRect().top; scrollBy({ top: e.getBoundingClientRect().top - (t + bt) / 2, behavior: 'instant' }); }); await wait(100);
+  const geo = () => p.evaluate(() => ({ sy: Math.round(scrollY), tue: document.querySelector('.pday[data-d="1"]').offsetHeight, wed: document.querySelector('.pday[data-d="2"]').offsetHeight, tray: Math.round(document.querySelector('.ptraywrap').getBoundingClientRect().height), wedTop: Math.round(document.querySelector('.pday[data-d="2"]').getBoundingClientRect().top) }));
+  const g0 = await geo();
   pt = await over(2); const wedY0 = pt.y; await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [pt] }); await wait(150);
+  const g1 = await geo();
   R.hoverWed = await vis();
   const wedY1 = (await over(2)).y;
   ok('moving to Wednesday closes Tuesday and opens Wednesday', R.hoverWed[2] > 0 && R.hoverWed[1] === 0, R.hoverWed);
-  ok('Wednesday stays under the finger when Tuesday closes', Math.abs(wedY1 - wedY0) < 12, { wedY0, wedY1 });
+  ok('Wednesday stays under the finger when Tuesday closes', Math.abs(wedY1 - wedY0) < 12, { wedY0, wedY1, g0, g1 });
   await shot('hover-wed');
   // drop on Wednesday's last free slot, which sets that time
   const slot = await p.evaluate(() => { const t = document.querySelector('.ptraywrap').getBoundingClientRect().bottom, bt = document.querySelector('#tabbar').getBoundingClientRect().top;

@@ -58,7 +58,7 @@ function runOne([file, env], retried) {
       if (!retried && /CRASH browserType\.launch/.test(out)) { console.log(`↻ ${file}: the browser didn't start, retrying`); return runOne([file, env], true).then(res); }
       const why = judge(file, code ?? 1, out), last = (out.match(/\d+\/\d+ passed/g) || []).pop() || "";
       if (why && process.env.GITHUB_ACTIONS) {   // show up as annotations on the run summary
-        const lines = out.split("\n").filter(l => /FAIL|Error|TIMEOUT|CRASH/.test(l)).slice(0, 6).map(l => l.trim().slice(0, 240));
+        const lines = out.split("\n").filter(l => /FAIL|Error|TIMEOUT|CRASH/.test(l)).slice(0, 6).map(l => l.trim().slice(0, /CRASH/.test(l) ? 900 : 400));
         console.log(`::error title=${(process.env.BROWSER || "chromium") + (process.env.DEVICE ? "/" + process.env.DEVICE : "")} ${tag.replace(/[,:]/g, " ")}::${(why + " | " + (lines.join(" | ") || out.slice(-600).replace(/\n/g, " | "))).replace(/%/g, "%25").replace(/\r?\n/g, " ")}`);
       }
       if (why) { failed.push(tag); console.log(`✗ ${tag}: ${why}\n${out.split("\n").filter(l => /FAIL|Error|TIMEOUT/.test(l)).slice(0, 12).map(l => "    " + l.slice(0, 300)).join("\n") || out.slice(-1500)}`); }

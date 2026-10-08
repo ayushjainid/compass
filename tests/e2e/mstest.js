@@ -14,7 +14,7 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium', args: ['--ignore-certificate-errors'] });
   const run = async (mode) => {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: mode !== 'desktop', isMobile: mode !== 'desktop' });
-    const seen = { challenge: null, verifierOk: null, redirect: null, scope: null, pages: 0, auth: 0 };
+    const seen = { challenge: null, verifierOk: null, redirect: null, scope: null, pages: 0, auth: 0, token: 0, body: null };
     await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('https://compass.test/**', async route => {
       const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
       if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; }
@@ -36,7 +36,7 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
         return route.fulfill({ status: 200, contentType: 'text/html', body: `<!doctype html><title>Sign in</title><script>location.replace(${JSON.stringify(back.toString())})</script>` });
       }
       if (u.pathname.endsWith('/token')) {
-        const f = new URLSearchParams(req.postData() || '');
+        seen.token++; seen.body = (req.postData() || '').slice(0, 80); const f = new URLSearchParams(req.postData() || '');
         const ch = crypto.createHash('sha256').update(f.get('code_verifier') || '').digest('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
         seen.verifierOk = ch === seen.challenge && f.get('code') === 'one-time-code' && f.get('redirect_uri') === seen.redirect && f.get('client_id') === 'test-client-id';
         return route.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify(seen.verifierOk ? { access_token: 'tok-123', token_type: 'Bearer' } : { error: 'invalid_grant', error_description: 'PKCE mismatch' }) });
@@ -82,7 +82,7 @@ fs.writeFileSync(CSV_FILE, shiftUs(fs.readFileSync(path.join(__dirname, 'fixture
       const row = await p.locator('.card .task').first().innerText().catch(() => '');
       ok(`[${mode}] redirect_uri is the ms-auth page`, seen.redirect === 'https://compass.test/ms-auth.html', seen.redirect);
       ok(`[${mode}] asks only for Tasks.Read`, seen.scope === 'Tasks.Read', seen.scope);
-      ok(`[${mode}] PKCE verifier matches the challenge`, seen.verifierOk === true);
+      ok(`[${mode}] PKCE verifier matches the challenge`, seen.verifierOk === true, { seen, err: await p.locator('.imperr').innerText().catch(() => ''), busy: await p.locator('#main').innerText().then(t => t.slice(0, 200)).catch(() => '') });
       ok(`[${mode}] reads every page of every list`, seen.pages >= 5, seen.pages);
       ok(`[${mode}] lists come in as one source`, /Microsoft To Do/.test(row) && /72 items/.test(row), row);
       ok(`[${mode}] Connect turns into Refresh`, /Refresh/.test(await p.locator('[data-act=msConnect]').innerText()));
