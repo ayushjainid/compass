@@ -36,6 +36,9 @@ await t("signed out: nothing", assertFails(getDoc(doc(anon, "users/alice/docs/pr
 // ---- reminders settings
 await t("notify: allowed keys", assertSucceeds(setDoc(doc(me, "notify/alice"), { on: true, tz: "Asia/Kolkata", eve: "21:30", fadeAsk: "2026-10-01" })));
 await t("notify: unknown key refused", assertFails(setDoc(doc(me, "notify/alice"), { on: true, evil: 1 })));
+await t("notify: one push address per device", assertSucceeds(setDoc(doc(me, "notify/alice"), { subs: { d1: { endpoint: "https://web.push.apple.com/x", keys: { p256dh: "a", auth: "b" }, dev: "iPhone", at: 1 } }, nextTest: new Date(), test: null }, { merge: true })));
+await t("notify: at most 8 devices", assertFails(setDoc(doc(me, "notify/alice"), { subs: Object.fromEntries([...Array(9)].map((_, i) => ["d" + i, { endpoint: "https://x/" + i }])) }, { merge: true })));
+await t("notify: still writable after the Worker marks a lost device", assertSucceeds(env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), "notify/alice"), { lost: { d9: true }, test: { at: new Date(), res: [] } }, { merge: true })).then(() => setDoc(doc(me, "notify/alice"), { last: "2026-10-16" }, { merge: true }))));
 await t("notify: someone else's refused", assertFails(setDoc(doc(me, "notify/bob"), { on: true })));
 
 // ---- feedback and errors

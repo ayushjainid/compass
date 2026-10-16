@@ -20,6 +20,8 @@ const [url, init] = await pushRequest(sub, { title: "x" }, vapid, { subject: "ma
 const m = init.headers.Authorization.match(/^vapid t=([^.]+)\.([^.]+)\.([^,]+), k=(.+)$/);
 const claims = JSON.parse(Buffer.from(m[2], "base64url"));
 const verified = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, kp.publicKey, b64uDecode(m[3]), new TextEncoder().encode(m[1] + "." + m[2]));
+const [, init2] = await pushRequest(sub, { title: "x" }, vapid, { topic: "compass checkin! with a very long name that goes past thirty-two" });
+ok("Topic header kept to Apple's rules (≤32 URL-safe characters)", /^[A-Za-z0-9_-]{1,32}$/.test(init2.headers.Topic), init2.headers.Topic);
 ok("VAPID token signed and verifiable", verified && claims.aud === "https://fcm.googleapis.com" && claims.sub === "mailto:a@b.c" && m[4] === pub && init.headers["Content-Encoding"] === "aes128gcm", claims);
 // time
 const iso = t => new Date(t).toISOString();

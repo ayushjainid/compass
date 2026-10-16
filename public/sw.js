@@ -2,10 +2,10 @@
 // and shows check-in reminders.
 // Pages and settings are network-first (online you always get the latest version; the copy is only
 // a fallback). The bundled SDK and icons are versioned, so they come from the copy once saved.
-const SHELL = "compass-shell-v4";
+const SHELL = "compass-shell-v5";
 /* the reminders Worker's address (self.COMPASS_WORKER_URL), for the buttons on reminders */
 try { importScripts("/firebase-config.js"); } catch (e) {}
-const PRECACHE = ["/", "/vendor/firebase.js?v=5", "/firebase-config.js", "/import.js", "/shared/values.js", "/shared/ics.js", "/manifest.webmanifest", "/icons/icon-192.png"];
+const PRECACHE = ["/", "/vendor/firebase.js?v=6", "/firebase-config.js", "/import.js", "/shared/values.js", "/shared/ics.js", "/manifest.webmanifest", "/icons/icon-192.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(SHELL).then(c => Promise.all(PRECACHE.map(u => c.add(new Request(u, { cache: "reload" })).catch(() => {})))).then(() => self.skipWaiting()));
 });

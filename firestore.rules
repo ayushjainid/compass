@@ -27,11 +27,13 @@ service cloud.firestore {
         && docId.matches('^(profile|settings|people|tasks|obdraft|w-[0-9]{4}-[0-9]{2}-[0-9]{2})$');
     }
 
-    // Reminder settings and this device's push address; the reminders Worker reads them with a service account.
+    // Reminder settings and each device's push address (subs, one per device); the reminders Worker reads them
+    // with a service account and writes back the schedule, test results and devices that went away.
     match /notify/{uid} {
       allow read, delete: if signedIn(uid);
       allow create, update: if signedIn(uid)
-        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk', 'names'])
+        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'subs', 'lost', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'nextTest', 'test', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk', 'names'])
+        && (!('subs' in request.resource.data) || (request.resource.data.subs is map && request.resource.data.subs.size() <= 8))
         && (!('sub' in request.resource.data) || request.resource.data.sub == null
             || (request.resource.data.sub is map && request.resource.data.sub.endpoint is string && request.resource.data.sub.endpoint.size() < 1000))
         && (!('tz' in request.resource.data) || (request.resource.data.tz is string && request.resource.data.tz.size() < 64))

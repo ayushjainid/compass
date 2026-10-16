@@ -99,6 +99,13 @@ body.landing .island{display:none}
 .ntrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .ntime{display:flex;align-items:center;gap:12px;padding:0 0 10px}.ntime .flabel{margin:0;flex:1}.ntime input{max-width:150px}
 .ntios{margin-top:4px}
+.ntdevs{display:flex;flex-direction:column;gap:6px;padding:12px 0 4px;border-top:1px solid var(--line);align-items:flex-start}
+.ntdev{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;font-size:14px}
+.nttest{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--sunk);font-size:14px;display:flex;flex-direction:column;gap:4px}
+.nttest>span+span{margin-left:8px}.nttest:has(.thinking){flex-direction:row;align-items:center;gap:10px}
+.nttest.bad{background:var(--warn-soft)}
+.nttest ul{margin:2px 0;padding-left:18px}.nttest li.ok::marker{color:var(--good)}.nttest li.bad{color:var(--warn)}
+.nttest code{font-size:12.5px}
 .ntask{margin:8px 0 14px;border-color:var(--accent)}
 .fade{margin:8px 0 14px;border-color:var(--good)}
 .csecs{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
@@ -972,7 +979,7 @@ details.fold[open] summary::before{content:"▾ ";}
 
 <script src="/firebase-config.js"></script>
 <script type="module">
-import * as FB from "/vendor/firebase.js?v=5";
+import * as FB from "/vendor/firebase.js?v=6";
 import { VALUE_LIB } from "/shared/values.js";
 import { buildIcs as buildIcsFor } from "/shared/ics.js";
 /* ============ helpers ============ */
@@ -1689,14 +1696,45 @@ function nextLocal(hhmm, after = Date.now(), dow = null) {
   return null;
 }
 function b64uBytes(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; const b = atob(s), o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; }
-async function ntSave(patch) { if (!ST.uid) return; S.nt = Object.assign(S.nt || {}, patch); try { await FB.setDoc(ntRef(), patch, { merge: true }); } catch (e) { console.warn("reminders", e); } }
+/* Reminders reach every device you turned them on for: each one keeps its own push address in subs[device].
+   (One shared address meant whichever device opened Compass last took the reminders, e.g. a laptop silently
+   stealing them from an iPhone.) `sub` is still written for the copy of the reminders service from before. */
+const devLabel = () => {
+  const u = navigator.userAgent, ipad = /iPad/.test(u) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const os = /iPhone/.test(u) ? "iPhone" : ipad ? "iPad" : /Android/.test(u) ? "Android" : /Mac/.test(u) ? "Mac" : /Windows/.test(u) ? "Windows" : /CrOS/.test(u) ? "Chromebook" : /Linux/.test(u) ? "Linux" : "Device";
+  if ((os === "iPhone" || os === "iPad") && isStandalone()) return os + " · Home Screen app";
+  const br = /Edg\//.test(u) ? "Edge" : /Firefox\//.test(u) ? "Firefox" : /SamsungBrowser/.test(u) ? "Samsung Internet" : /Chrome\//.test(u) ? "Chrome" : /Safari\//.test(u) ? "Safari" : "";
+  return br ? os + " · " + br : os;
+};
+const subEntry = sub => { const j = sub.toJSON(); return { endpoint: j.endpoint, keys: j.keys, at: Date.now(), dev: devLabel() }; };
+const ntSubs = (n = S.nt) => Object.entries((n && n.subs) || {}).filter(([, v]) => v && v.endpoint);
+const ntReaching = (n = S.nt) => !!n && (ntSubs(n).length > 0 || !!(n.sub && n.sub.endpoint && !n.subs));
+async function ntSave(patch) {
+  if (!ST.uid) return;
+  const cur = S.nt || {}, next = Object.assign({}, cur, patch);
+  /* maps merge key by key, like the database does; a deleteField() marker removes that key */
+  for (const k of ["subs", "lost"]) if (patch[k] && typeof patch[k] === "object" && !patch[k]._methodName && !isDel(patch[k])) {
+    const m = Object.assign({}, cur[k] || {}); for (const [kk, v] of Object.entries(patch[k])) { if (isDel(v)) delete m[kk]; else m[kk] = v; } next[k] = m;
+  } else if (isDel(patch[k])) delete next[k];
+  S.nt = next;
+  try { await FB.setDoc(ntRef(), patch, { merge: true }); } catch (e) { console.warn("reminders", e); }
+}
+const isDel = v => !!v && typeof v === "object" && (v.__del === true || v._methodName === "deleteField" || (v.constructor && /DeleteField/.test(v.constructor.name || "")));
 async function loadNotify() {
   if (!VAPID() || !ST.uid) return;
   try { const sn = await FB.getDoc(ntRef()); S.nt = sn.exists() ? sn.data() : {}; } catch (e) { S.nt = {}; }
-  if (!S.nt.on && !S.nt.optOut && ntCanAsk() && Notification.permission === "granted") { await ntEnable(); return; }
-  if (S.nt.on && pushCapable() && Notification.permission === "granted") {
-    try { const reg = await navigator.serviceWorker.register("/sw.js"); const sub = await reg.pushManager.getSubscription();
-      if (!sub) await ntSubscribe(reg); else if (!S.nt.sub || S.nt.sub.endpoint !== sub.endpoint) await ntSave({ sub: sub.toJSON() }); } catch (e) {}
+  const n = S.nt;
+  if (!n.on && !n.optOut && ntCanAsk() && Notification.permission === "granted") { await ntEnable(true); return; }
+  if (n.on && pushCapable() && Notification.permission === "granted" && !(n.lost || {})[DEVICE]) {
+    try {
+      const reg = await navigator.serviceWorker.register("/sw.js"); let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) }).catch(() => null);   // Safari may want a tap for this: then the card below asks
+      if (!sub) S.ntNeedsTap = true;
+      else {
+        const mine = (n.subs || {})[DEVICE];
+        if (!mine || mine.endpoint !== sub.endpoint) await ntSave({ subs: { [DEVICE]: subEntry(sub) }, ...(n.sub && n.sub.endpoint ? {} : { sub: sub.toJSON() }) });
+      }
+    } catch (e) { S.ntNeedsTap = true; }
   }
   touchNotify();
 }
@@ -1708,22 +1746,23 @@ function touchNotify() {
   if (n.tz !== tz) { patch.tz = tz; patch.nextEve = n.eve ? nextLocal(n.eve) : null; patch.nextRev = n.rev ? nextLocal(n.rev, Date.now(), 6) : null; }
   if (Object.keys(patch).length) ntSave(patch);
 }
-async function ntSubscribe(reg) {
-  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
-  await ntSave({ sub: sub.toJSON() });
-  return sub;
-}
 /* reminders are on by default: the browser still has to be asked once, so we ask at a moment the person chose to act */
 const ntCanAsk = () => !!VAPID() && pushCapable() && !(isIOS() && !isStandalone()) && Notification.permission !== "denied";
 const ntAskHidden = () => { try { return Date.now() - (+localStorage.getItem("compass-ntask") || 0) < 14 * 864e5; } catch (e) { return false; } };
+/* this device was set up but stopped receiving (Apple or Google said the address is gone), or Safari wants a tap */
+const ntThisLost = () => { const n = S.nt; return !!n && n.on && pushCapable() && Notification.permission === "granted" && (!!(n.lost || {})[DEVICE] || !!S.ntNeedsTap); };
 function ntAskCard() {
-  const n = S.nt; if (!VAPID() || !n || n.on || n.optOut || ntAskHidden() || pending().intro) return "";
+  const n = S.nt; if (!VAPID() || !n) return "";
+  if (ntThisLost() && !ntAskHidden()) return `<div class="card pad ntask"><b>Reminders stopped reaching this ${isIOS() ? (/iPad/.test(navigator.userAgent) ? "iPad" : "iPhone") : "device"}</b><div class="hint">It happens after some updates or a long time unused. One tap reconnects it.</div>
+    <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small primary" data-act="ntFix">Reconnect</button><button class="btn small quiet" data-act="ntLater">Not now</button></div></div>`;
+  if (n.on || n.optOut || ntAskHidden() || pending().intro) return "";
   if (isIOS() && !isStandalone()) return `<div class="card pad ntask"><b>Get your evening check-in</b><div class="hint">On iPhone, reminders need Compass on your Home Screen: in Safari tap Share, then <b>Add to Home Screen</b>, and open it from there.</div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small quiet" data-act="ntLater">Not now</button></div></div>`;
   if (!ntCanAsk() || Notification.permission !== "default") return "";
   return `<div class="card pad ntask"><b>Your evening check-in is on</b><div class="hint">Allow notifications so a gentle nudge can reach you at ${t12(n.eve || defaultEve())}, plus one on Sunday for your review. Change or turn them off any time in Compass → Reminders.</div>
     <div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn small primary" data-act="ntOn">Allow notifications</button><button class="btn small quiet" data-act="ntLater">Not now</button><button class="btn small quiet" data-act="ntOptOut">Turn off</button></div></div>`;
 }
-async function ntEnable() {
+/* `quiet`: called at start-up because permission was already given, so no toast */
+async function ntEnable(quiet) {
   if (!pushCapable()) return;
   const perm = await Notification.requestPermission();
   if (perm !== "granted") { S.ntBlocked = perm === "denied"; render(); return; }
@@ -1732,14 +1771,37 @@ async function ntEnable() {
     const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
     const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
     const n = S.nt || {}, eve = n.eve === undefined ? defaultEve() : n.eve || defaultEve(), rev = n.rev === undefined ? "18:00" : n.rev || "18:00";
-    await ntSave({ on: true, optOut: false, sub: sub.toJSON(), tz: myTz(), eve, rev, nextEve: nextLocal(eve), nextRev: nextLocal(rev, Date.now(), 6), last: todayKey(), ign: 0, revDone: reviewedMonday() });
-    toast("Reminders on"); stat("remindersOn");
-  } catch (e) { console.warn(e); toast("Couldn't turn reminders on. Try again in a moment."); }
+    await ntSave({ on: true, optOut: false, sub: sub.toJSON(), subs: { [DEVICE]: subEntry(sub) }, lost: { [DEVICE]: FB.deleteField() }, tz: myTz(), eve, rev, nextEve: nextLocal(eve), nextRev: nextLocal(rev, Date.now(), 6), last: todayKey(), ign: 0, revDone: reviewedMonday() });
+    S.ntNeedsTap = false;
+    if (!quiet) { toast("Reminders on"); stat("remindersOn"); }
+  } catch (e) { console.warn(e); if (!quiet) toast("Couldn't turn reminders on. Try again in a moment."); else S.ntNeedsTap = true; }
   S.ntBusy = false; render();
+}
+/* add this device, or reconnect it: a fresh push address (an old one the push service dropped can't be revived) */
+async function ntFix() {
+  if (!pushCapable()) return;
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") { S.ntBlocked = perm === "denied"; render(); return; }
+  S.ntBusy = true; render();
+  try {
+    const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
+    const old = await reg.pushManager.getSubscription(); if (old && (((S.nt || {}).lost || {})[DEVICE] || !old.endpoint)) await old.unsubscribe().catch(() => {});
+    const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
+    await ntSave({ on: true, optOut: false, sub: sub.toJSON(), subs: { [DEVICE]: subEntry(sub) }, lost: { [DEVICE]: FB.deleteField() } });
+    S.ntNeedsTap = false; toast("Reminders reach this device again");
+  } catch (e) { console.warn(e); toast("Couldn't reconnect. Check that notifications are allowed for Compass, then try again."); }
+  S.ntBusy = false; render();
+}
+/* stop on this device only; the others keep their reminders */
+async function ntDropDevice(dev) {
+  if (dev === DEVICE) { try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {} }
+  const n = S.nt || {}, gone = ((n.subs || {})[dev] || {}).endpoint, patch = { subs: { [dev]: FB.deleteField() } };
+  if (n.sub && n.sub.endpoint && S.nt.sub.endpoint === gone) { const other = ntSubs().find(([k]) => k !== dev); patch.sub = other ? { endpoint: other[1].endpoint, keys: other[1].keys } : null; }
+  await ntSave(patch); toast(dev === DEVICE ? "This device won't get reminders" : "Removed"); render();
 }
 async function ntDisable() {
   try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
-  await ntSave({ on: false, optOut: true, sub: null, nextEve: null, nextRev: null }); toast("Reminders off"); render();
+  await ntSave({ on: false, optOut: true, sub: null, subs: FB.deleteField(), nextEve: null, nextRev: null }); toast("Reminders off"); render();
 }
 function ntSet(kind, value) {
   const n = S.nt || {}; if (!n.on) return;
@@ -1748,8 +1810,30 @@ function ntSet(kind, value) {
   render();
 }
 function reviewedMonday() { const id = thisWk(), w = anyWeek(id); return w && w.r && w.r.done ? id.slice(2) : ""; }
+/* a real test: the reminders service sends one through Apple/Google to every device within about a minute,
+   and writes back what the push service answered, so a broken link shows up here instead of silently */
 async function ntTest() {
+  if (S.ntTest && S.ntTest.busy) return;
+  const at = Date.now(); S.ntTest = { busy: true, at }; render();
+  await ntSave({ nextTest: new Date(at), test: null });
+  for (let i = 0; i < 40 && S.ntTest && S.ntTest.at === at; i++) {
+    await new Promise(r => setTimeout(r, i < 5 ? 2000 : 4000));
+    try { const sn = await FB.getDoc(ntRef()), d = sn.exists() ? sn.data() : {}; const t = d.test, tAt = t && (t.at && t.at.toMillis ? t.at.toMillis() : +new Date(t.at || 0));
+      if (t && tAt >= at - 5000) { S.nt.test = t; Object.assign(S.nt, { subs: d.subs, lost: d.lost }); S.ntTest = { at, res: t }; render(); return; } } catch (e) {}
+  }
+  if (S.ntTest && S.ntTest.at === at) { S.ntTest = { at, none: true }; render(); }
+}
+async function ntLocalTest() {
   try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.showNotification("Psst, it's your compass", { body: "I can't point north if you don't tell me where you went today. (Just a test.)", tag: "compass-test", icon: "/icons/icon-192.png" }); else toast("Turn reminders on first."); } catch (e) { toast("Your browser blocked the test."); }
+}
+const PUSH_WHY = { BadJwtToken: "the reminders service's signature was refused", VapidPkHashMismatch: "the reminders service uses a different key than this device signed up with", BadWebPushTopic: "a header was malformed", PayloadTooLarge: "the message was too long", TooManyRequests: "too many in a row; it'll ease off", gone: "this device's address expired (reconnect it)" };
+function ntTestResult() {
+  const t = S.ntTest; if (!t) return "";
+  if (t.busy) return `<div class="nttest"><span class="thinking"><i></i><i></i><i></i></span><span>Sending a real test through ${isIOS() ? "Apple" : "the push service"}… usually under a minute.</span></div>`;
+  if (t.none) return `<div class="nttest bad"><b>No answer from the reminders service</b><div class="hint">It may be paused or running an older version. If you look after this Compass, redeploy the Worker (<code>cd worker &amp;&amp; npx wrangler deploy</code>).</div></div>`;
+  const res = (t.res && t.res.res) || [];
+  if (!res.length) return `<div class="nttest bad"><b>No device to send to</b><div class="hint">Turn reminders on for this device below.</div></div>`;
+  return `<div class="nttest"><b>${res.every(r => r.ok) ? "Sent ✓" : "Some didn't go through"}</b><ul>${res.map(r => `<li class="${r.ok ? "ok" : "bad"}">${esc(r.dev || "A device")}${r.d === DEVICE ? " (this one)" : ""}: ${r.ok ? "accepted by the push service" : `refused${r.r ? " — " + esc(PUSH_WHY[r.r] || r.r) : r.s ? ` (${r.s})` : ""}`}</li>`).join("")}</ul>${res.some(r => r.ok) ? `<div class="hint">Accepted means it's on its way; it should show within seconds. Nothing on an iPhone? Check Settings → Notifications → Compass, and that Focus isn't hiding it.</div>` : ""}</div>`;
 }
 /* habit fade: once checking in is steady, offer to drop the evening nudge (reminders help repetition, not habits) */
 function activeDays(n = 28) {
@@ -1770,7 +1854,7 @@ function fadeCard() {
 }
 function remindersSection() {
   if (!VAPID()) return "";
-  const n = S.nt || {}, on = !!n.on && !!n.sub;
+  const n = S.nt || {}, on = !!n.on && (ntReaching(n) || !!n.subs || pushCapable() && Notification.permission === "granted");
   const sum = on ? [n.eve ? "Check-in " + t12(n.eve) : "", n.rev ? "Sunday review " + t12(n.rev) : ""].filter(Boolean).join(" · ") || "On, both nudges paused" : n.optOut ? "Off" : "On · needs your OK to notify";
   const why = `<p class="hint" style="margin:0 0 10px">At most one evening check-in, skipped on days you've already opened Compass, plus a Sunday nudge for your review. If a few go unanswered they ease off on their own. Alerts for individual floors come from your calendar export.</p>`;
   /* health: the reminders service moves nextEve/nextRev forward every time it handles someone; one left hours in the past means it has stalled */
@@ -1786,7 +1870,11 @@ function remindersSection() {
     <div class="ntrow"><div><b>Say what's left</b><div class="hint">The evening reminder names what's still open${WORKER() ? ", with buttons to tick one or two of them right there" : ""}. Turn off to keep names off your lock screen.</div></div><button class="switch" role="switch" aria-checked="${n.names !== false}" data-act="ntNames" aria-label="Say what's left"></button></div>
     <div class="ntrow"><div><b>Sunday review</b><div class="hint">Skipped once the week is reviewed.</div></div><button class="switch" role="switch" aria-checked="${!!n.rev}" data-act="ntToggle" data-k="rev" aria-label="Sunday review"></button></div>
     ${n.rev ? `<div class="ntime"><label class="flabel" for="nt-rev">Time on Sunday</label><input type="time" id="nt-rev" data-nt="rev" value="${esc(n.rev)}"></div>` : ""}
-    <div class="row" style="margin-top:12px"><button class="btn" data-act="ntTest">Show a test</button><button class="btn quiet danger" data-act="ntOff">Turn off</button></div>`;
+    <div class="ntdevs"><span class="flabel">Sent to</span>${ntSubs(n).length ? ntSubs(n).map(([k, v]) => `<div class="ntdev"><span>${esc(v.dev || "A device")}${k === DEVICE ? ` <span class="tag">This one</span>` : ""}</span><button class="btn small quiet" data-act="ntDrop" data-k="${esc(k)}" aria-label="Stop reminders on ${esc(v.dev || "this device")}">Remove</button></div>`).join("") : `<p class="hint" style="margin:4px 0">${n.sub && n.sub.endpoint ? "One device (set up before devices were listed)." : "No device yet."}</p>`}
+      ${pushCapable() && !(isIOS() && !isStandalone()) && !(n.subs || {})[DEVICE] && Notification.permission !== "denied" ? `<button class="btn small" data-act="ntFix" ${S.ntBusy ? "disabled" : ""}>Also send to this device</button>` : ""}
+      ${isIOS() && !isStandalone() ? `<p class="hint" style="margin:4px 0 0">To get them on this iPhone, open Compass from your Home Screen and turn them on there.</p>` : ""}</div>
+    ${ntTestResult()}
+    <div class="row" style="margin-top:12px"><button class="btn" data-act="ntTest" ${S.ntTest && S.ntTest.busy ? "disabled" : ""}>Send a test</button><button class="btn quiet danger" data-act="ntOff">Turn off everywhere</button></div>`;
   else if (isIOS() && !isStandalone()) body = `${why}<div class="card pad ntios"><b>On iPhone, add Compass to your Home Screen first</b><div class="hint">In Safari tap Share, then <b>Add to Home Screen</b>. Open Compass from that icon and turn reminders on there.</div></div>`;
   else if (!pushCapable()) body = `${why}<p class="hint" style="margin:0">This browser can't show reminders. Try Chrome, Edge, Firefox or Safari on a recent device.</p>`;
   else if (S.ntBlocked || Notification.permission === "denied") body = `${why}<p class="hint" style="margin:0 0 10px">Notifications are blocked for Compass. Allow them in your browser's site settings (or your phone's settings for the Home Screen app), then try again.</p><button class="btn" data-act="ntOn">Try again</button>`;
@@ -4564,6 +4652,9 @@ document.addEventListener("click", e => {
     case "ntOptOut": ntSave({ optOut: true, on: false }); toast("Reminders off. Turn them on any time in Compass → Reminders."); render(); return;
     case "ntOff": ntDisable(); return;
     case "ntTest": ntTest(); return;
+    case "ntLocal": ntLocalTest(); return;
+    case "ntFix": ntFix(); return;
+    case "ntDrop": ntDropDevice(b.dataset.k); return;
     case "ntToggle": { const k = b.dataset.k, n = S.nt || {}; ntSet(k, n[k] ? "" : (k === "eve" ? defaultEve() : "18:00")); return; }
     case "cSec": { const k = b.dataset.k, o = cOpen(); o.has(k) ? o.delete(k) : o.add(k); try { localStorage.setItem(CSEC_KEY, JSON.stringify([...o])); } catch (e) {} render(); const sec = document.getElementById("csec-" + k); if (sec && o.has(k) && sec.getBoundingClientRect().top < 70) sec.scrollIntoView({ block: "start" }); return; }
     case "editComp": { const c = compById(b.dataset.id); if (c) openComp(c, false); break; }

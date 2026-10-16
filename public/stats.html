@@ -213,7 +213,7 @@ function render() {
     <section class="card"><h2>Reminders</h2><p class="sub">Health of the Cloudflare Worker that sends check-ins.</p>
       <div class="status ${health.c}" role="status"><span class="ic" aria-hidden="true">${health.i}</span><div><b>${esc(health.t)}</b><span>${esc(health.s)}</span></div></div>
       <dl class="kv"><dt>Sent, last 7 days</dt><dd>${n0(sum7("sent"))}</dd><dt>Failed, last 7 days</dt><dd>${n0(sum7("failed"))}</dd><dt>Errors, last 7 days</dt><dd>${n0(sum7("errors"))}</dd>
-      <dt>Last sent</dt><dd>${R ? ago(ms(R.lastSendAt)) : "–"}</dd>${R && R.lastError ? `<dt>Last error</dt><dd><span class="mono">${esc(R.lastError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastErrorAt))}</span></dd>` : ""}</dl></section>
+      <dt>Last sent</dt><dd>${R ? ago(ms(R.lastSendAt)) : "–"}</dd>${R && R.lastPushError ? `<dt>Last refused push</dt><dd><span class="mono">${esc(R.lastPushError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastPushErrorAt))}</span></dd>` : ""}${R && R.lastError ? `<dt>Last error</dt><dd><span class="mono">${esc(R.lastError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastErrorAt))}</span></dd>` : ""}</dl></section>
     <section class="card"><h2>Errors, last 7 days</h2><p class="sub">From people's devices, grouped by message. Count is accounts affected.</p>
       ${errs.length ? `<ul class="list">${errs.map(e => `<li><span class="cnt">${e.n}</span><span class="mono">${esc(e.msg)}</span><div class="meta">${esc((e.where || "").slice(0, 120))} · ${ago(e.last)}</div></li>`).join("")}</ul>` : `<p class="empty">No errors reported. 🎉</p>`}</section>
   </div>

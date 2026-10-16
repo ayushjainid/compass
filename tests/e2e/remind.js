@@ -6,10 +6,14 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
 const VAPID = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
 const fakePush = (perm) => `(() => {
   window.__perm = ${JSON.stringify(perm)}; window.__unsub = 0; window.__subs = 0;
-  window.Notification = class { static get permission() { return window.__permState || "default"; } static async requestPermission() { window.__permState = window.__perm; return window.__perm; } };
+  /* like a real browser, the answer is remembered across reloads */
+  window.Notification = class { static get permission() { return window.__permState || localStorage.getItem("__permState") || "default"; } static async requestPermission() { window.__permState = window.__perm; localStorage.setItem("__permState", window.__perm); return window.__perm; } };
   window.PushManager = function () {};
-  let sub = null;
-  const pm = { getSubscription: async () => sub, subscribe: async o => { window.__subs++; window.__key = o.applicationServerKey && o.applicationServerKey.length; sub = { endpoint: "https://fcm.googleapis.com/fcm/send/xyz" + window.__subs, toJSON() { return { endpoint: this.endpoint, keys: { p256dh: "BPk", auth: "au" } }; }, unsubscribe: async () => { window.__unsub++; sub = null; return true; } }; return sub; } };
+  /* the browser keeps a push subscription across reloads */
+  const mk = ep => ({ endpoint: ep, toJSON() { return { endpoint: this.endpoint, keys: { p256dh: "BPk", auth: "au" } }; }, unsubscribe: async () => { window.__unsub++; sub = null; localStorage.removeItem("__fakeSub"); return true; } });
+  let sub = localStorage.getItem("__fakeSub") ? mk(localStorage.getItem("__fakeSub")) : null;
+  const pm = { getSubscription: async () => sub, subscribe: async o => { if (localStorage.getItem("__gestureOnly") && !(Date.now() - (window.__lastTap || 0) < 1500)) { const e = new Error("needs a tap"); e.name = "NotAllowedError"; throw e; } window.__subs++; window.__key = o.applicationServerKey && o.applicationServerKey.length; const n = +(localStorage.getItem("__fakeSubN") || 0) + 1; localStorage.setItem("__fakeSubN", n); sub = mk("https://fcm.googleapis.com/fcm/send/xyz" + n); localStorage.setItem("__fakeSub", sub.endpoint); return sub; } };
+  addEventListener("click", () => { window.__lastTap = Date.now(); }, true); addEventListener("touchend", () => { window.__lastTap = Date.now(); }, true);
   const reg = { pushManager: pm, showNotification: async (t, o) => { window.__shown = t; } };
   Object.defineProperty(navigator, "serviceWorker", { value: { register: async u => { window.__swurl = u; return reg; }, ready: Promise.resolve(reg), getRegistration: async () => reg, addEventListener() {} }, configurable: true });
 })()`;
@@ -56,8 +60,34 @@ const nt = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') 
     ok("turning it off keeps names off the lock screen", d.names === false && (await p.locator('[data-act=ntNames]').getAttribute('aria-checked')) === 'false', d);
     await tap('[data-act=ntNames]'); await p.waitForTimeout(300); d = await nt(p);
     ok("…and back on", d.names === true, d);
-    await tap('[data-act=ntTest]');
-    ok('test notification shows', await p.evaluate(() => window.__shown) === "Psst, it's your compass");
+    // devices: this one is listed; a second device's address is kept apart, never overwritten
+    const DEV = await p.evaluate(() => localStorage.getItem('compass-device'));
+    d = await nt(p);
+    ok('this device is saved under its own key with a readable name', d.subs && d.subs[DEV] && d.subs[DEV].endpoint === d.sub.endpoint && /Chrome|Safari|Firefox|Edge|iPhone|Android/.test(d.subs[DEV].dev || ''), d.subs);
+    ok('the device list says which one this is', /This one/i.test(await p.locator('#csec-remind .ntdevs').innerText()));
+    await p.evaluate(() => { const n = window.__store['notify/u1']; n.subs.ipad = { endpoint: 'https://web.push.apple.com/abc', keys: { p256dh: 'X', auth: 'Y' }, dev: 'iPhone · Home Screen app', at: 1 }; n.sub = { endpoint: 'https://web.push.apple.com/abc', keys: { p256dh: 'X', auth: 'Y' } }; localStorage.setItem('__mockstore', JSON.stringify(window.__store)); });
+    await p.reload(); await p.waitForTimeout(1500); d = await nt(p);
+    ok('opening Compass on a laptop no longer steals the iPhone\'s reminders', d.sub.endpoint === 'https://web.push.apple.com/abc' && d.subs.ipad && d.subs[DEV], d);
+    await tap('[data-act=tab][data-t=compass]'); if (!(await p.locator('[data-act=ntTest]').count())) await tap('[data-act=cSec][data-k=remind]');
+    ok('both devices are listed', /iPhone · Home Screen app/.test(await p.locator('#csec-remind .ntdevs').innerText()) && await p.locator('#csec-remind [data-act=ntDrop]').count() === 2);
+    // a real test: asks the reminders service, then shows what each push service said
+    await tap('[data-act=ntTest]'); await p.waitForTimeout(300); d = await nt(p);
+    ok('Send a test asks the reminders service to send one now', d.nextTest && Math.abs(Date.parse(d.nextTest) - Date.now()) < 60000 && d.test === null, d.nextTest);
+    ok('…and shows it is sending', /Sending a real test/.test(await p.locator('#csec-remind').innerText()));
+    await p.evaluate(dev => { window.__store['notify/u1'].test = { at: new Date().toISOString(), res: [{ d: dev, dev: 'Linux · Chrome', ok: true, s: 201 }, { d: 'ipad', dev: 'iPhone · Home Screen app', ok: false, s: 403, r: 'BadJwtToken' }] }; window.__store['notify/u1'].nextTest = null; }, DEV);
+    await p.waitForFunction(() => /didn't go through/.test(document.querySelector('#csec-remind').innerText), null, { timeout: 12000 }).catch(() => {});
+    const tt = await p.locator('#csec-remind .nttest').innerText().catch(() => '');
+    ok('the result names each device and why one was refused', /this one/.test(tt) && /accepted/.test(tt) && /iPhone · Home Screen app/.test(tt) && /signature was refused/.test(tt), tt);
+    await p.screenshot({ path: `${S}/remind-test-${W}.png` });
+    await tap('#csec-remind [data-act=ntDrop][data-k=ipad]'); await p.waitForTimeout(300); d = await nt(p);
+    ok('removing a device drops only it (and hands the old single address to a device still on)', !d.subs.ipad && d.subs[DEV] && d.sub.endpoint === d.subs[DEV].endpoint, d);
+    // the reminders service found this device's address gone: Today offers a one-tap reconnect
+    await p.evaluate(dev => { const n = window.__store['notify/u1']; delete n.subs[dev]; n.lost = { [dev]: true }; localStorage.setItem('__mockstore', JSON.stringify(window.__store)); }, DEV);
+    await p.reload(); await p.waitForTimeout(1500); await tap('[data-act=tab][data-t=today]');
+    ok('a device that stopped receiving offers to reconnect', await p.locator('.ntask [data-act=ntFix]').count() === 1 && /stopped reaching/.test(await p.locator('.ntask').innerText()), { nt: await nt(p), today: (await p.locator('#main').innerText()).slice(0, 300) });
+    const unsub0 = await p.evaluate(() => window.__unsub), subs0 = await p.evaluate(() => window.__subs);
+    await tap('.ntask [data-act=ntFix]'); await p.waitForTimeout(500); d = await nt(p);
+    ok('Reconnect drops the dead address and signs up again', await p.evaluate(() => window.__unsub) === unsub0 + 1 && await p.evaluate(() => window.__subs) === subs0 + 1 && d.subs[DEV] && !(d.lost || {})[DEV] && await p.locator('.ntask').count() === 0, d);
     // review done this week → revDone
     await tap('[data-act=tab][data-t=review]'); await tap('[data-act=reviewDone]'); await p.waitForTimeout(400);
     d = await nt(p);
@@ -68,11 +98,11 @@ const nt = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') 
     await p.reload(); await p.waitForTimeout(1500);
     d = await nt(p);
     ok('opening Compass marks today active and resets the ignored count', d.last !== '2020-01-01' && d.ign === 0, d);
-    ok('still on after reload without asking again', d.on && await p.evaluate(() => window.__subs) <= 1);
+    ok('still on after reload without asking again', d.on && await p.evaluate(() => window.__subs) === 0);
     // turn off
     await tap('[data-act=tab][data-t=compass]'); if (!(await p.locator('[data-act=ntOff]').count())) await tap('[data-act=cSec][data-k=remind]');
     await tap('[data-act=ntOff]'); await p.waitForTimeout(400); d = await nt(p);
-    ok('turning off unsubscribes, stops the schedule and remembers the choice', d.on === false && d.optOut === true && d.sub === null && d.nextEve === null && d.nextRev === null, d);
+    ok('turning off unsubscribes, stops the schedule and remembers the choice', d.on === false && d.optOut === true && d.sub === null && !d.subs && d.nextEve === null && d.nextRev === null, d);
     await p.reload(); await p.waitForTimeout(1500); d = await nt(p);
     ok('turned off stays off after reload (no silent re-enable)', d.on === false && d.optOut === true);
     await tap('[data-act=tab][data-t=today]');
@@ -114,6 +144,13 @@ const nt = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') 
     await tap('[data-act=tab][data-t=compass]'); if (!(await p.locator('[data-act=ntToggle]').count())) await tap('[data-act=cSec][data-k=remind]');
     ok('iPhone from the Home Screen: full reminder settings, no Add-to-Home-Screen advice', await p.locator('#csec-remind [data-act=ntToggle]').count() === 2 && !/Add to Home Screen/.test(await p.locator('#csec-remind').innerText()));
     ok('iPhone: the lock-screen names toggle is there', await p.locator('#csec-remind [data-act=ntNames]').count() === 1);
+    // Safari dropped the subscription and only lets a tap make a new one: Today asks for that tap
+    await p.evaluate(() => { localStorage.removeItem('__fakeSub'); localStorage.setItem('__gestureOnly', '1'); });
+    await p.reload(); await p.waitForTimeout(1500); await tap('[data-act=tab][data-t=today]');
+    ok('iPhone: lost subscription that needs a tap shows Reconnect', await p.locator('.ntask [data-act=ntFix]').count() === 1, (await p.locator('#main').innerText()).slice(0, 200));
+    await tap('.ntask [data-act=ntFix]'); await p.waitForTimeout(500);
+    const d2 = await nt(p), dev = await p.evaluate(() => localStorage.getItem('compass-device'));
+    ok('iPhone: one tap reconnects and labels the device', d2.subs && d2.subs[dev] && d2.subs[dev].dev === 'iPhone · Home Screen app' && await p.locator('.ntask').count() === 0, d2.subs);
     ok('no page errors (iOS installed)', errs.length === 0, errs); await ctx.close(); }
   { const { ctx, p, errs, tap } = await setup(b, { vapid: '' });
     await tap('[data-act=tab][data-t=compass]');

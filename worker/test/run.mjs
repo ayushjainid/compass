@@ -17,7 +17,7 @@ function addUser(uid, d) {
   store.set(`${P}/notify/${uid}`, Object.fromEntries(Object.entries(full).map(([k, v]) => [k, toValue(v)])));
 }
 const calls = { query: 0, commit: 0, push: 0 };
-let goneUid = null;
+let goneUid = null; const deadDevs = new Set(), authSeen = [];
 async function fakeFetch(url, init) {
   const u = String(url);
   if (u.includes(":runQuery")) {
@@ -37,7 +37,14 @@ async function fakeFetch(url, init) {
     if (writes.some(w => w.currentDocument && w.currentDocument.exists && !store.has(w.update.name))) return new Response("NOT_FOUND", { status: 404 });
     for (const w of writes) {
       if (!store.has(w.update.name)) store.set(w.update.name, {});
-      const cur = store.get(w.update.name); for (const k of w.updateMask.fieldPaths) cur[k] = w.update.fields[k];
+      const cur = store.get(w.update.name);
+      /* field paths may be `quoted`.`segments`; a path in the mask but not in the data deletes that field */
+      for (const fp of w.updateMask.fieldPaths) {
+        const ss = fp.match(/`(?:[^`\\]|\\.)*`|[^.]+/g).map(x => x.startsWith("`") ? x.slice(1, -1).replace(/\\(.)/g, "$1") : x);
+        let v = { mapValue: { fields: w.update.fields } }; for (const k of ss) v = v && v.mapValue && v.mapValue.fields[k];
+        let o = cur; for (const k of ss.slice(0, -1)) { o[k] = o[k] && o[k].mapValue ? o[k] : { mapValue: { fields: {} } }; o = o[k].mapValue.fields; }
+        if (v === undefined) delete o[ss[ss.length - 1]]; else o[ss[ss.length - 1]] = v;
+      }
       // like Firestore: a dotted path ("sent.d20261006") is a field inside a map
       for (const t of w.updateTransforms || []) {
         const parts = t.fieldPath.split("."); let o = cur;
@@ -50,7 +57,9 @@ async function fakeFetch(url, init) {
   if (u.startsWith("https://push.example/")) {
     calls.push++;
     const uid = u.split("/").pop();
-    if (uid === goneUid) return new Response("", { status: 410 });
+    authSeen.push(init.headers.Authorization);
+    if (uid === goneUid || deadDevs.has(uid)) return new Response("", { status: 410 });
+    if (uid === "applebad") return new Response(JSON.stringify({ reason: "BadJwtToken" }), { status: 403 });
     const x = users[uid];
     const plain = ece.decrypt(Buffer.from(init.body), { version: "aes128gcm", privateKey: x.e, authSecret: x.auth.toString("base64url") });
     x.got.push(JSON.parse(plain.toString()));
@@ -118,5 +127,34 @@ addUser("Z", { tz: "Asia/Kolkata", eve: "21:30", nextEve: new Date("2026-10-07T1
 let threw = false; try { await runOnce({ ...env, VAPID_PRIVATE: "" }, Date.parse("2026-10-07T10:11:00Z"), fakeFetch, () => {}); } catch (e) { threw = true; }
 h = hb();
 ok("an error is recorded with its message", threw && h.ok === false && /VAPID/.test(h.lastError) && h.errors && h.errors.d20261007 === 1, h);
+// ---- several devices: each gets the reminder; a dead one is dropped and marked, the others stay
+function devSub(name) { const e = nc.createECDH("prime256v1"); e.generateKeys(); const a = nc.randomBytes(16); users[name] = { e, auth: a, got: [] }; return { endpoint: `https://push.example/${name}`, keys: { p256dh: b64uEncode(e.getPublicKey()), auth: b64uEncode(a) } }; }
+for (const k of [...store.keys()]) if (k.includes("/notify/")) store.delete(k);
+const phone = devSub("m-phone"), laptop = devSub("m-laptop"), oldTab = devSub("m-old");
+store.set(`${P}/notify/m`, Object.fromEntries(Object.entries({ on: true, tz: "Asia/Kolkata", eve: "21:30", nextEve: new Date("2026-10-08T16:00:00Z"), last: "2026-10-01",
+  sub: laptop, subs: { dPhone: { ...phone, dev: "iPhone · Home Screen app", at: 1 }, dLap: { ...laptop, dev: "Mac · Chrome", at: 2 }, dOld: { ...oldTab, dev: "Windows · Edge", at: 3 } } }).map(([k, v]) => [k, toValue(v)])));
+deadDevs.add("m-old");
+r = await runOnce(env, Date.parse("2026-10-08T16:00:05Z"), fakeFetch, () => {});
+let m = fromFields(store.get(`${P}/notify/m`));
+ok("every device gets the evening reminder (not just the last one opened)", users["m-phone"].got.length === 1 && users["m-laptop"].got.length === 1, r);
+ok("a device whose address is gone is dropped and marked to reconnect; the others stay; still on", m.on === true && !m.subs.dOld && m.subs.dPhone && m.subs.dLap && m.lost && m.lost.dOld === true, m);
+// ---- "Send a test": goes to every device now, and writes back what each push service said
+const bad = devSub("applebad");
+store.set(`${P}/notify/m`, Object.fromEntries(Object.entries({ ...m, nextTest: new Date("2026-10-08T17:00:00Z"), subs: { ...m.subs, dBad: { ...bad, dev: "iPhone · Home Screen app" } } }).map(([k, v]) => [k, toValue(v)])));
+r = await runOnce(env, Date.parse("2026-10-08T17:00:03Z"), fakeFetch, () => {});
+m = fromFields(store.get(`${P}/notify/m`));
+const tr = (m.test || {}).res || [];
+ok("test push goes to every device, whatever the schedule", users["m-phone"].got.some(g => g.tag === "compass-test") && users["m-laptop"].got.some(g => g.tag === "compass-test"), users["m-phone"].got);
+ok("test results written back: accepted ones ok, Apple's refusal reason kept", m.nextTest === null && tr.length === 3 && tr.filter(x => x.ok).length === 2 && tr.some(x => x.d === "dBad" && !x.ok && x.s === 403 && x.r === "BadJwtToken" && x.dev === "iPhone · Home Screen app"), m.test);
+ok("the refusal shows on the health doc for the dashboard", /403 BadJwtToken/.test(fromFields(store.get(`${P}/status/reminders`)).lastPushError || ""), fromFields(store.get(`${P}/status/reminders`)));
+// ---- signed tokens are reused across runs (Apple: not more than one new token an hour), also after a restart
+const { _resetJwtCache } = await import("../src/push.js");
+authSeen.length = 0;
+store.set(`${P}/notify/m`, Object.fromEntries(Object.entries({ ...m, nextTest: new Date("2026-10-08T17:05:00Z"), subs: { dPhone: m.subs.dPhone } }).map(([k, v]) => [k, toValue(v)])));
+await runOnce(env, Date.parse("2026-10-08T17:05:03Z"), fakeFetch, () => {});
+_resetJwtCache();   // a fresh Worker instance
+store.set(`${P}/notify/m`, Object.fromEntries(Object.entries({ ...fromFields(store.get(`${P}/notify/m`)), nextTest: new Date("2026-10-08T17:40:00Z") }).map(([k, v]) => [k, toValue(v)])));
+await runOnce(env, Date.parse("2026-10-08T17:40:03Z"), fakeFetch, () => {});
+ok("a fresh Worker reuses the saved signed token instead of making a new one", authSeen.length === 2 && authSeen[0] === authSeen[1] && store.has(`${P}/status/vapid`), authSeen.length);
 const f = R.filter(x => !x.pass); console.log(`worker: ${R.length - f.length}/${R.length} passed`); f.forEach(x => console.log("  FAIL", x.n, String(JSON.stringify(x.i)).slice(0, 400)));
 process.exit(f.length ? 1 : 0);

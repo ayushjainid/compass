@@ -10,6 +10,12 @@ export function b64uDecode(s) {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
+/** The push service's reason for refusing (Apple sends {"reason":"BadJwtToken"}; others plain text). */
+export async function refusal(res) {
+  let txt = ""; try { txt = await res.text(); } catch (e) {}
+  try { const j = JSON.parse(txt); if (j && (j.reason || j.message || j.error)) return String(j.reason || j.message || (j.error && j.error.message) || j.error).slice(0, 80); } catch (e) {}
+  return txt.replace(/\s+/g, " ").trim().slice(0, 80);
+}
 export function b64uEncode(buf) {
   const b = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   let s = "";
@@ -57,30 +63,39 @@ export async function importVapid(publicB64u, privateB64u) {
   return { key, publicB64u };
 }
 
+/* Apple asks senders not to make a new signed token more than once an hour. Workers start fresh often, so
+   tokens are also kept in `store` (saved by the caller between runs) and reused until an hour before expiry. */
 const jwtCache = new Map();
-async function vapidHeader(vapid, endpoint, subject) {
+export const _resetJwtCache = () => jwtCache.clear();   // tests: a fresh Worker instance
+export const jwtKey = aud => aud.replace(/^https?:\/\//, "").replace(/[^A-Za-z0-9]/g, "_");
+async function vapidHeader(vapid, endpoint, subject, store) {
   const aud = new URL(endpoint).origin, now = Math.floor(Date.now() / 1000);
-  const hit = jwtCache.get(aud);
-  if (hit && hit.exp - now > 600) return hit.h;
+  const fresh = x => x && x.h && x.k === vapid.publicB64u && x.exp - now > 3600;
+  let hit = jwtCache.get(aud);
+  if (!fresh(hit) && store) { const x = store.get(jwtKey(aud)); if (fresh(x)) { hit = x; jwtCache.set(aud, x); } }
+  if (fresh(hit)) return hit.h;
   const exp = now + 12 * 3600;
   const head = b64uEncode(enc.encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
   const body = b64uEncode(enc.encode(JSON.stringify({ aud, exp, sub: subject })));
   const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, vapid.key, enc.encode(head + "." + body));
   const h = `vapid t=${head}.${body}.${b64uEncode(sig)}, k=${vapid.publicB64u}`;
-  jwtCache.set(aud, { h, exp });
+  const rec = { h, exp, k: vapid.publicB64u };
+  jwtCache.set(aud, rec); if (store) store.set(jwtKey(aud), rec);
   return h;
 }
 
 /** Build the fetch() arguments for one push. */
-export async function pushRequest(sub, payload, vapid, { subject = "mailto:hello@life-compass.web.app", ttl = 3600, topic = "" } = {}) {
+export async function pushRequest(sub, payload, vapid, { subject = "mailto:hello@life-compass.web.app", ttl = 3600, topic = "", store = null } = {}) {
   const body = await encryptPayload(sub, JSON.stringify(payload));
   const headers = {
     "Content-Type": "application/octet-stream",
     "Content-Encoding": "aes128gcm",
     TTL: String(ttl),
     Urgency: "normal",
-    Authorization: await vapidHeader(vapid, sub.endpoint, subject),
+    Authorization: await vapidHeader(vapid, sub.endpoint, subject, store),
   };
-  if (topic) headers.Topic = topic;
+  /* Topic: at most 32 characters of the URL-safe base64 alphabet, or Apple refuses the push (BadWebPushTopic) */
+  const t = String(topic || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 32);
+  if (t) headers.Topic = t;
   return [sub.endpoint, { method: "POST", headers, body }];
 }

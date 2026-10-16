@@ -88,7 +88,8 @@ export function client(env, fetchFn = fetch) {
     async setPaths(path, sets = [], incs = [], { mustExist = false, updateTime = null, missing = false } = {}) {
       const q = seg => "`" + String(seg).replace(/\\/g, "\\\\").replace(/`/g, "\\`") + "`";
       const fields = {};
-      for (const [segs, v] of sets) { let o = fields; segs.slice(0, -1).forEach(k => { o[k] = o[k] || { mapValue: { fields: {} } }; o = o[k].mapValue.fields; }); o[segs[segs.length - 1]] = toValue(v); }
+      /* a value of undefined deletes that field (it's in the mask but not in the data) */
+      for (const [segs, v] of sets) { if (v === undefined) continue; let o = fields; segs.slice(0, -1).forEach(k => { o[k] = o[k] || { mapValue: { fields: {} } }; o = o[k].mapValue.fields; }); o[segs[segs.length - 1]] = toValue(v); }
       const write = { update: { name: `${root}/${path}`, fields }, updateMask: { fieldPaths: sets.map(([segs]) => segs.map(q).join(".")) } };
       if (mustExist) write.currentDocument = { exists: true };
       if (updateTime) write.currentDocument = { updateTime };      // unchanged since we read it

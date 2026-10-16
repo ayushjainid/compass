@@ -44,15 +44,29 @@ export function pick(list, uid, n) { return list[(hash(uid) + n) % list.length];
  * Decide for one `notify` document that is due for `kind` ("eve" or "rev").
  * Returns { send: payload|null, fields: {...to write back}, why }.
  */
+/** Where to send: every device in `subs` (one per device), or the single `sub` from before devices were kept apart. */
+export function targets(d) {
+  const out = [], seen = new Set();
+  for (const [dev, s] of Object.entries((d && d.subs) || {})) if (s && s.endpoint && !seen.has(s.endpoint)) { seen.add(s.endpoint); out.push({ dev, label: s.dev || "", endpoint: s.endpoint, keys: s.keys }); }
+  if (!out.length && d && d.sub && d.sub.endpoint) out.push({ dev: "", label: "", endpoint: d.sub.endpoint, keys: d.sub.keys });
+  return out;
+}
+
 export function decide(kind, uid, d, now) {
   const tz = validTz(d.tz) ? d.tz : "UTC";
+  if (kind === "test") {
+    /* "Send a test" in the app: once, to every device, whatever the schedule says */
+    const fields = { nextTest: null };
+    if (!targets(d).length) return { send: null, fields, why: "test: no device" };
+    return { send: { title: "Test reminder ✓", body: "If you can read this, Compass reminders reach this device.", url: "/?tab=compass&from=test", tag: "compass-test" }, fields, why: "test" };
+  }
   const fields = {}, today = localDay(tz, now);
   const dueAt = kind === "eve" ? d.nextEve : d.nextRev;
   // always move the schedule forward first, so a slow or overlapping run can never send twice
   const nx = kind === "eve" ? (d.on && d.eve ? nextAt(tz, d.eve, now) : null) : (d.on && d.rev ? nextAt(tz, d.rev, now, 6) : null);
   fields[kind === "eve" ? "nextEve" : "nextRev"] = nx ? new Date(nx) : null;
   const skip = why => ({ send: null, fields, why });
-  if (!d.on || !d.sub || !d.sub.endpoint) return skip("off");
+  if (!d.on || !targets(d).length) return skip("off");
   if (dueAt && now - dueAt > STALE_MS) return skip("stale");
   if (kind === "eve") {
     if (!d.eve) return skip("off");

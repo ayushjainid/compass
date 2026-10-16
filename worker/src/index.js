@@ -6,8 +6,8 @@
 // requests and 10 ms of CPU per run, so a run handles up to PER_RUN people; anyone left
 // over is picked up by the next minute's run.
 import { client } from "./firestore.js";
-import { decide } from "./plan.js";
-import { importVapid, pushRequest } from "./push.js";
+import { decide, targets } from "./plan.js";
+import { importVapid, pushRequest, refusal } from "./push.js";
 import { localDay, localMonday, validTz } from "./time.js";
 import { openToday, listNames, signAction, weekId } from "./today.js";
 import { handleFeed } from "./feed.js";
@@ -51,6 +51,7 @@ export async function heartbeat(db, now, r, err) {
   const f = { at: new Date(now), ok: !err };
   if (err) { f.lastError = String(err.message || err).slice(0, 300); f.lastErrorAt = new Date(now); }
   if (r && r.sent) f.lastSendAt = new Date(now);
+  if (r && r.lastErr) { f.lastPushError = r.lastErr; f.lastPushErrorAt = new Date(now); }
   const d = day(now).replace(/-/g, "");
   await db.upsert("status/reminders", f, { [`sent.d${d}`]: (r && r.sent) || 0, [`failed.d${d}`]: (r && r.failed) || 0, [`errors.d${d}`]: err ? 1 : 0 });
   return true;
@@ -66,12 +67,12 @@ export async function runOnce(env, now = Date.now(), fetchFn = fetch, log = cons
 }
 
 async function work(env, db, now, fetchFn, log) {
-  const cap = Math.max(2, Math.min(400, +env.PER_RUN || PER_RUN)), revCap = Math.max(1, Math.round(cap / 5));
-  const [eve, rev] = await Promise.all([db.due("notify", "nextEve", now, cap - revCap), db.due("notify", "nextRev", now, revCap)]);
-  const jobs = eve.map(x => ({ kind: "eve", ...x })).concat(rev.map(x => ({ kind: "rev", ...x })));
+  const cap = Math.max(2, Math.min(400, +env.PER_RUN || PER_RUN)), revCap = Math.max(1, Math.round(cap / 5)), testCap = 2;
+  const [eve, rev, test] = await Promise.all([db.due("notify", "nextEve", now, cap - revCap), db.due("notify", "nextRev", now, revCap), db.due("notify", "nextTest", now, testCap)]);
+  const jobs = eve.map(x => ({ kind: "eve", ...x })).concat(rev.map(x => ({ kind: "rev", ...x })), test.map(x => ({ kind: "test", ...x })));
   if (!jobs.length) return { checked: 0, sent: 0, failed: 0 };
 
-  // decide; a person due for both in the same minute gets both updates merged into one write
+  // decide; a person due for several in the same minute gets all updates merged into one write
   const byDoc = new Map(), sends = [];
   for (const j of jobs) {
     const r = decide(j.kind, j.id, j.data, now);
@@ -94,21 +95,55 @@ async function work(env, db, now, fetchFn, log) {
   /* evening reminders say what's left and carry one-tap buttons; if that lookup fails, the plain reminder still goes */
   for (const s of sends) if (s.kind === "eve" && claimed.has(s.name)) { try { s.payload = await enrichEvening(env, db, s.id, s.data, s.payload, now); } catch (e) { log("enrich failed: " + e.message); } }
   const vapid = await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE);
-  const dead = [];
-  let sent = 0, failed = 0;
-  await Promise.all(sends.filter(s => claimed.has(s.name)).map(async s => {
+  /* signed tokens saved between runs (Apple: don't make a new one more than hourly) */
+  const store = await jwtStore(db, log);
+  const results = new Map();   // notify doc name -> [{ d, dev, ok, s, r }]
+  let sent = 0, failed = 0, lastErr = "";
+  const out = [];
+  for (const s of sends.filter(x => claimed.has(x.name))) for (const t of targets(s.data)) out.push({ s, t });
+  await Promise.all(out.map(async ({ s, t }) => {
+    const res = { d: t.dev, dev: t.label, ok: false, s: 0, r: "" };
     try {
-      const [url, init] = await pushRequest(s.data.sub, s.payload, vapid, { subject: env.VAPID_SUBJECT, ttl: s.kind === "eve" ? 3 * 3600 : 12 * 3600, topic: s.payload.tag });
+      const [url, init] = await pushRequest({ endpoint: t.endpoint, keys: t.keys }, s.payload, vapid, { subject: env.VAPID_SUBJECT, ttl: s.kind === "eve" ? 3 * 3600 : s.kind === "test" ? 600 : 12 * 3600, topic: s.payload.tag, store });
       const r = await fetchFn(url, init);
-      if (r.status === 404 || r.status === 410) dead.push(s.name);       // unsubscribed or expired
-      else if (r.ok) sent++;
-      else { failed++; log(`push ${r.status} for ${s.id.slice(0, 6)}…`); }
-    } catch (e) { failed++; log("push failed: " + e.message); }
+      res.s = r.status;
+      if (r.ok) { res.ok = true; sent++; }
+      else {
+        res.r = r.status === 404 || r.status === 410 ? "gone" : await refusal(r);
+        if (r.status !== 404 && r.status !== 410) { failed++; lastErr = `${r.status} ${res.r} (${new URL(t.endpoint).host})`; log(`push ${r.status} ${res.r} for ${s.id.slice(0, 6)}…`); }
+      }
+    } catch (e) { failed++; res.r = String(e.message || e).slice(0, 80); lastErr = res.r; log("push failed: " + e.message); }
+    if (!results.has(s.name)) results.set(s.name, []);
+    results.get(s.name).push(res);
   }));
-  if (dead.length) {
-    try { await db.patch(dead.map(name => ({ name, fields: { on: false, sub: null, nextEve: null, nextRev: null } }))); } catch (e) { log("cleanup failed: " + e.message); }
+  await store.save();
+
+  /* write back: devices whose address is gone are dropped (and marked, so that device offers to reconnect);
+     a test gets its results so the app can say what happened */
+  let dead = 0;
+  const kinds = new Map(); for (const s of sends) { if (!kinds.has(s.name)) kinds.set(s.name, new Set()); kinds.get(s.name).add(s.kind); }
+  for (const [name, list] of results) {
+    const path = name.split("/documents/")[1], sets = [];
+    for (const r of list) if (r.s === 404 || r.s === 410) {
+      dead++;
+      if (r.d) { sets.push([["subs", r.d], undefined], [["lost", r.d], true]); }
+      else sets.push([["sub"], null], [["on"], false], [["nextEve"], null], [["nextRev"], null]);   // the one address from before: off, as before
+    }
+    if (kinds.get(name).has("test")) sets.push([["test"], { at: new Date(now), res: list.map(r => ({ d: r.d, dev: r.dev, ok: r.ok, s: r.s, r: r.r })) }]);
+    if (sets.length) { try { await db.setPaths(path, sets, [], { mustExist: true }); } catch (e) { log("write-back failed: " + e.message); } }
   }
-  return { checked: jobs.length, sent, failed, dead: dead.length };
+  return { checked: jobs.length, sent, failed, dead, lastErr };
+}
+
+/* signed VAPID tokens kept in status/vapid between runs */
+async function jwtStore(db, log) {
+  let saved = {}, dirty = false;
+  try { saved = (await db.getMany(["status/vapid"]))["status/vapid"] || {}; } catch (e) { log("vapid store: " + e.message); }
+  return {
+    get: k => saved[k],
+    set: (k, v) => { saved[k] = v; dirty = true; },
+    async save() { if (!dirty) return; try { await db.upsert("status/vapid", saved); } catch (e) { log("vapid store save: " + e.message); } },
+  };
 }
 
 export default {

@@ -26,7 +26,7 @@ export function fakeFirestore() {
         if (writes.some(w => w.currentDocument && w.currentDocument.updateTime && w.currentDocument.updateTime !== (times.get(w.update.name) || "t0"))) return new Response('{"error":{"status":"FAILED_PRECONDITION"}}', { status: 400 });
         for (const w of writes) {
           const cur = store.get(w.update.name) || {}; store.set(w.update.name, cur); times.set(w.update.name, "t" + (++clock));
-          for (const fp of w.updateMask.fieldPaths) { const ss = segs(fp), v = getIn(w.update.fields, ss); setIn(cur, ss, v); }
+          for (const fp of w.updateMask.fieldPaths) { const ss = segs(fp), v = getIn(w.update.fields, ss); if (v === undefined) { const parent = getIn(cur, ss.slice(0, -1)); if (parent && parent.mapValue) delete parent.mapValue.fields[ss[ss.length - 1]]; } else setIn(cur, ss, v); }
           for (const t of w.updateTransforms || []) { const ss = segs(t.fieldPath), old = getIn(cur, ss); const n = +((old && (old.integerValue ?? old.doubleValue)) || 0) + +(t.increment.integerValue ?? t.increment.doubleValue); setIn(cur, ss, Number.isInteger(n) ? { integerValue: String(n) } : { doubleValue: n }); }
         }
         return new Response("{}", { status: 200 });
