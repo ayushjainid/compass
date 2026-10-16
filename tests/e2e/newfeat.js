@@ -4,10 +4,11 @@ const root = path.join(__dirname, '../../public'), S = process.env.S;
 const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.env.T !== '0', dark = process.env.D === '1';
 const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? undefined : i });
 let VERSION = null;   // what /version.json returns
+const DV = +(/const DATA_V = (\d+);/.exec(fs.readFileSync(path.join(__dirname, '../../public/index.html'), 'utf8')) || [])[1];   // the data version the app is on now
 (async () => { const b = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, channel: process.env.CHROMIUM ? undefined : 'chromium' });
   const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: dark ? 'dark' : 'light', deviceScaleFactor: 2 });
   await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort()); await ctx.route('http://compass.test/**', async route => { const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;
-    if (u.pathname === '/index.html' && VERSION) { let h = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace('const DATA_V = 1;', `const DATA_V = ${VERSION.min}; /* ${VERSION.build} */`); return route.fulfill({ status: 200, body: h, contentType: 'text/html' }); }
+    if (u.pathname === '/index.html' && VERSION) { let h = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/const DATA_V = \d+;/, `const DATA_V = ${VERSION.min}; /* ${VERSION.build} */`); return route.fulfill({ status: 200, body: h, contentType: 'text/html' }); }
     if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type }); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => { if (!/index\.html due to access control checks/.test(e.message)) errs.push(e.message); });  // Safari reports the background update check as cancelled when a reload interrupts it; the app ignores that by design
@@ -89,7 +90,7 @@ let VERSION = null;   // what /version.json returns
   ok('old pause pairs are converted to { from, to } and saved', c.pauses.length === 1 && !Array.isArray(c.pauses[0]) && c.pauses[0].from === '2026-08-03' && c.pauses[0].to === '2026-08-17', c.pauses);
   ok('nothing refused by the database afterwards', !(await p.evaluate(() => window.__nestedRefused)), await p.evaluate(() => window.__nestedRefused));
   // ---- update prompt
-  VERSION = { build: 'newer123', min: 1 };
+  VERSION = { build: 'newer123', min: DV };
   await p.evaluate(() => { Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true }); });
   await p.reload(); await p.waitForTimeout(4200);
   const dbg = await p.evaluate(async () => { const r = await fetch('/index.html', { cache: 'no-store' }); const t = await r.text(); return [r.status, t.includes('newer123'), document.querySelector('script[type="module"]').textContent.includes('newer123')]; });
@@ -98,7 +99,7 @@ let VERSION = null;   // what /version.json returns
   await tap('#updbar [data-act=updLater]');
   ok('update: Later hides it', await p.locator('#updbar').count() === 0);
   // stale data version: stop saving
-  VERSION = { build: 'newer123', min: 2 };
+  VERSION = { build: 'newer123', min: DV + 1 };
   await p.reload(); await p.waitForTimeout(4200);
   ok('stale: bar asks to refresh to keep saving', /keep saving/i.test(await p.locator('#updbar').innerText().catch(() => '')));
   const tx0 = await p.evaluate(() => window.__tx || 0);

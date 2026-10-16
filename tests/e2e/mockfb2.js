@@ -20,10 +20,14 @@ export const persistentLocalCache = () => ({});
 export const persistentMultipleTabManager = () => ({});
 export const terminate = async () => {};
 export const clearIndexedDbPersistence = async () => {};
-export const doc = (fs, ...segs) => ({ path: segs.join("/") });
-export const collection = (fs, ...segs) => ({ path: segs.join("/") });
-export const where = (f, op, v) => ({ f, op, v });
-export const query = (c, w) => ({ c, w });
+export const doc = (fs, ...segs) => ({ path: segs.join("/"), type: "doc" });
+export const collection = (fs, ...segs) => ({ path: segs.join("/"), type: "col" });
+export const where = (f, op, v) => ({ f, op, v, kind: "where" });
+export const limit = n => ({ kind: "limit", n });
+export const query = (c, ...cons) => ({ c, w: cons.find(x => x && x.kind === "where"), cons, type: "query" });
+export const deleteField = () => ({ __del: true });
+export const arrayUnion = (...v) => ({ __au: v });
+export const arrayRemove = (...v) => ({ __ar: v });
 
 const nestedArr = (v, inArr) => Array.isArray(v) ? (inArr || v.some(x => nestedArr(x, true))) : (v && typeof v === "object" ? Object.values(v).some(x => nestedArr(x, false)) : false);
 const refuseNested = d => { if (nestedArr(d, false)) { const e = new Error("Property array contains an invalid nested entity"); e.code = "invalid-argument"; window.__nestedRefused = (window.__nestedRefused || 0) + 1; throw e; } };
@@ -53,19 +57,29 @@ export const getDoc = async r => {
   if (!online()) return snapOf(r.path, cache[r.path]);
   const x = await window.__srv({ op: "get", path: r.path }); cache[r.path] = x.data; return snapOf(r.path, x.data);
 };
-export const onSnapshot = (r, next) => {
+const matchQ = (q, row) => { for (const c of (q.cons || [])) if (c && c.kind === "where") { const v = row.data && row.data[c.f]; if (c.op === "==" && v !== c.v) return false; if (c.op === "array-contains" && !(Array.isArray(v) && v.includes(c.v))) return false; if (c.op === ">=" && !(v >= c.v)) return false; } return true; };
+async function listQ(q) {
+  const base = q.type === "query" ? q.c.path : q.path;
+  const rows = online() ? (await window.__srv({ op: "list", prefix: base + "/" })).rows : Object.entries(cache).filter(([k]) => k.startsWith(base + "/")).map(([path, data]) => ({ path, data }));
+  const docs = rows.filter(r => r.data && r.path.split("/").length === base.split("/").length + 1 && matchQ(q, r)).map(r => ({ id: r.path.split("/").pop(), ref: { path: r.path }, data: () => cp(r.data) }));
+  return { docs, size: docs.length, empty: !docs.length, forEach: f => docs.forEach(f), metadata: { fromCache: !online(), hasPendingWrites: false } };
+}
+export const updateDoc = (r, data) => setDoc(r, data, { merge: true });
+export const onSnapshot = (r, next, err) => {
+  if (r.type === "query" || r.type === "col") { let live = true; const tick = async () => { if (!live) return; try { next(await listQ(r)); } catch (e) {} }; setTimeout(tick, 30); const iv = setInterval(tick, 1500); return () => { live = false; clearInterval(iv); }; }
   (listeners[r.path] = listeners[r.path] || []).push(next);
   window.__srv({ op: "sub", path: r.path });
   setTimeout(async () => { if (online()) { const x = await window.__srv({ op: "get", path: r.path }); if (!queue.some(q => q.path === r.path)) cache[r.path] = x.data; } next(snapOf(r.path, cache[r.path])); }, 20);
   return () => { listeners[r.path] = (listeners[r.path] || []).filter(x => x !== next); };
 };
 export const getDocs = async q => {
+  if (q.type === "query" && (q.cons || []).some(c => c && c.op && c.op !== "==")) return listQ(q);
   const base = q.c ? q.c.path : q.path;
   const rows = online() ? (await window.__srv({ op: "list", prefix: base + "/" })).rows : Object.entries(cache).filter(([k]) => k.startsWith(base + "/")).map(([path, data]) => ({ path, data }));
   return { docs: rows.filter(r => r.data && (!q.w || r.data[q.w.f] === q.w.v)).map(r => ({ id: r.path.split("/").pop(), ref: { path: r.path }, data: () => cp(r.data) })) };
 };
 export const deleteDoc = async r => { delete cache[r.path]; if (online()) await window.__srv({ op: "del", path: r.path }); };
-export const writeBatch = () => { const ops = []; return { delete: r => ops.push(r), commit: async () => { for (const r of ops) await deleteDoc(r); } }; };
+export const writeBatch = () => { const ops = []; return { delete: r => ops.push(["d", r]), set: (r, d, o) => ops.push(["s", r, d, o]), update: (r, d) => ops.push(["s", r, d, { merge: true }]), commit: async () => { for (const [k, r, d, o] of ops) { if (k === "d") await deleteDoc(r); else await setDoc(r, d, o); } } }; };
 export const runTransaction = async (fs, fn) => {
   for (let attempt = 0; attempt < 5; attempt++) {
     if (!online()) throw unavailable();

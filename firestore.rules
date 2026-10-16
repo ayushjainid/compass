@@ -79,6 +79,130 @@ service cloud.firestore {
       allow get, delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
+    // ---- Lists (tasks). One document per list; its items in lists/{id}/items. Your Inbox is a list only you are in
+    // (id in-<your uid>). Other lists can be shared: everyone in `members` can read and edit the list and its items.
+    function isMember(lid) {
+      return request.auth != null && request.auth.uid in get(/databases/$(database)/documents/lists/$(lid)).data.members;
+    }
+    function listShape(d) {
+      return d.keys().hasOnly(['owner', 'members', 'people', 'name', 'kind', 'at', 'up', 'via', 'color'])
+        && d.owner is string && d.members is list && d.members.size() >= 1 && d.members.size() <= 20 && d.owner in d.members
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 80
+        && d.kind in ['inbox', 'list']
+        && (!('people' in d) || (d.people is map && d.people.size() <= 21));
+    }
+    // only your own entry in `people` (your name as others see it) may change, unless you're removing someone as owner
+    function onlyMyPerson() {
+      return !('people' in request.resource.data) || !('people' in resource.data)
+        || request.resource.data.people.diff(resource.data.people).affectedKeys().hasOnly([request.auth.uid]);
+    }
+    function validListInvite(lid) {
+      let inv = get(/databases/$(database)/documents/invites/$(request.resource.data.via));
+      return inv != null && inv.data.kind == 'list' && inv.data.list == lid && inv.data.exp > request.time.toMillis();
+    }
+    match /lists/{lid} {
+      allow get: if request.auth != null && (resource == null || request.auth.uid in resource.data.members);
+      allow list: if request.auth != null && request.auth.uid in resource.data.members;
+      allow create: if request.auth != null && listShape(request.resource.data)
+        && request.resource.data.owner == request.auth.uid && request.resource.data.members == [request.auth.uid]
+        && (request.resource.data.kind == 'list' || lid == 'in-' + request.auth.uid);
+      allow update: if request.auth != null && listShape(request.resource.data)
+        && request.resource.data.kind == resource.data.kind
+        && (
+          // a member edits the name, colour or their own name tag; membership unchanged
+          (request.auth.uid in resource.data.members && request.resource.data.members == resource.data.members
+            && request.resource.data.owner == resource.data.owner && onlyMyPerson())
+          // joining with a valid invite: add exactly yourself
+          || (!(request.auth.uid in resource.data.members) && resource.data.kind == 'list'
+            && request.resource.data.members.hasAll(resource.data.members)
+            && request.resource.data.members.size() == resource.data.members.size() + 1
+            && request.auth.uid in request.resource.data.members
+            && request.resource.data.owner == resource.data.owner
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'people', 'via', 'up'])
+            && onlyMyPerson() && validListInvite(lid))
+          // leaving: remove exactly yourself (the owner hands the list on first, or deletes it)
+          || (request.auth.uid in resource.data.members && request.auth.uid != resource.data.owner
+            && resource.data.members.hasAll(request.resource.data.members)
+            && request.resource.data.members.size() == resource.data.members.size() - 1
+            && !(request.auth.uid in request.resource.data.members)
+            && request.resource.data.owner == resource.data.owner
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'people', 'up']))
+          // the owner removes people, or hands the list to another member
+          || (request.auth.uid == resource.data.owner
+            && resource.data.members.hasAll(request.resource.data.members)
+            && request.resource.data.owner in resource.data.members)
+        );
+      allow delete: if request.auth != null && resource.data.owner == request.auth.uid;
+
+      match /items/{iid} {
+        allow read, delete: if isMember(lid);
+        allow create, update: if isMember(lid)
+          && request.resource.data.keys().hasOnly(['t', 'n', 'open', 'st', 'due', 'tm', 'rep', 'wk', 'sub', 'by', 'who', 'at', 'up', 'upBy', 'doneAt', 'doneBy', 'ord', 'moves', 'v', 'was'])
+          && request.resource.data.t is string && request.resource.data.t.size() >= 1 && request.resource.data.t.size() <= 500
+          && request.resource.data.open is bool
+          && (!('n' in request.resource.data) || request.resource.data.n == null || (request.resource.data.n is string && request.resource.data.n.size() <= 4000))
+          && (!('sub' in request.resource.data) || request.resource.data.sub == null || (request.resource.data.sub is list && request.resource.data.sub.size() <= 50));
+      }
+    }
+
+    // ---- Invites: a long random link id. Anyone holding the link may read it (even before signing in, to see who
+    // invited them); only its maker writes or deletes it. Kinds: a list, being someone's watcher, or just the app.
+    match /invites/{tok} {
+      allow get: if true;
+      allow create: if request.auth != null && tok.matches('^[A-Za-z0-9_-]{20,64}$')
+        && request.resource.data.keys().hasOnly(['kind', 'from', 'name', 'list', 'listName', 'watch', 'exp', 'at'])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.exp is int && request.resource.data.exp <= request.time.toMillis() + 31 * 86400000
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && (request.resource.data.kind == 'app'
+          || (request.resource.data.kind == 'watch' && request.resource.data.watch == request.auth.uid)
+          || (request.resource.data.kind == 'list' && isMember(request.resource.data.list)
+              && get(/databases/$(database)/documents/lists/$(request.resource.data.list)).data.kind == 'list'));
+      allow delete: if request.auth != null && resource.data.from == request.auth.uid;
+    }
+
+    // ---- Watchers (accountability partners): watch/{uid} is a summary of that person's week that they publish
+    // for the people they invited. Watchers can read it, leave, and send a cheer; nothing else.
+    function validWatchInvite(owner) {
+      let inv = get(/databases/$(database)/documents/invites/$(request.resource.data.via));
+      return inv != null && inv.data.kind == 'watch' && inv.data.watch == owner && inv.data.exp > request.time.toMillis();
+    }
+    match /watch/{owner} {
+      allow get: if request.auth != null && (request.auth.uid == owner || resource == null || request.auth.uid in resource.data.watchers);
+      allow list: if request.auth != null && request.auth.uid in resource.data.watchers;
+      allow create: if signedIn(owner)
+        && request.resource.data.keys().hasOnly(['watchers', 'people', 'name', 'week', 'prev', 'share', 'up', 'via', 'paused'])
+        && request.resource.data.watchers is list && request.resource.data.watchers.size() <= 5;
+      allow update: if request.auth != null && (
+          (request.auth.uid == owner
+            && request.resource.data.keys().hasOnly(['watchers', 'people', 'name', 'week', 'prev', 'share', 'up', 'via', 'paused'])
+            && request.resource.data.watchers is list && request.resource.data.watchers.size() <= 5
+            && resource.data.watchers.hasAll(request.resource.data.watchers))
+          || (!(request.auth.uid in resource.data.watchers)
+            && request.resource.data.watchers.hasAll(resource.data.watchers)
+            && request.resource.data.watchers.size() == resource.data.watchers.size() + 1
+            && request.resource.data.watchers.size() <= 5
+            && request.auth.uid in request.resource.data.watchers
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['watchers', 'people', 'via'])
+            && onlyMyPerson() && validWatchInvite(owner))
+          || (request.auth.uid in resource.data.watchers
+            && resource.data.watchers.hasAll(request.resource.data.watchers)
+            && request.resource.data.watchers.size() == resource.data.watchers.size() - 1
+            && !(request.auth.uid in request.resource.data.watchers)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['watchers', 'people']))
+        );
+      allow delete: if signedIn(owner);
+
+      match /cheers/{cid} {
+        allow create: if request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/watch/$(owner)).data.watchers
+          && request.resource.data.keys().hasOnly(['from', 'name', 'text', 'at', 'k'])
+          && request.resource.data.from == request.auth.uid
+          && request.resource.data.text is string && request.resource.data.text.size() <= 280;
+        allow read, delete: if signedIn(owner);
+      }
+    }
+
     // Anonymous usage tallies: numbers only, one per day (d-YYYY-MM-DD) and per week (w-<Monday>).
     // Anyone signed in may add exactly 1 to exactly one known counter per write; only the owner can read them.
     match /stats/{id} {

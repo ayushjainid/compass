@@ -352,6 +352,101 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .vtile .vstar[aria-pressed="false"]{color:var(--muted)}
 .vlinks{display:flex;justify-content:space-between;gap:12px;margin-top:14px}
 .vlinks .linkish{padding:8px 0;font-size:14px}
+
+/* ---- Tasks: lists ---- */
+.lwrap{display:flex;flex-direction:column}
+.ltop{display:flex;align-items:baseline;justify-content:space-between}
+.qadd{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 14px;margin:4px 0 0}
+.qadd:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.qadd textarea{flex:1;min-width:0;border:0;border-radius:0;background:transparent;padding:9px 0;resize:none;min-height:40px;height:auto;max-height:160px;font:inherit;font-size:16px;line-height:1.4;box-shadow:none;outline:none;field-sizing:content}
+.qchips{display:flex;flex-wrap:wrap;gap:6px;min-height:6px;margin:6px 0 4px}
+.qchip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:3px 6px 3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);min-height:26px}
+.qchip span{font-size:14px;opacity:.6;padding:0 2px}
+.qchip.focus{background:var(--brass-soft);color:var(--brass)}.qchip.list{background:var(--sunk);color:var(--ink2)}.qchip.rep{background:var(--good-soft);color:var(--good)}
+.qchip.ctx{background:transparent;border:1px dashed var(--line);color:var(--muted);padding-right:10px}
+.qchip.off{background:transparent;color:var(--muted);text-decoration:underline;padding:3px 4px}
+.capbox .qchips{margin:2px 0 8px}
+.tnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px -16px 14px;padding:2px 16px 4px;scroll-snap-type:x proximity}
+.tnav::-webkit-scrollbar{display:none}
+.tpill{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:500;color:var(--ink2);min-height:38px;scroll-snap-align:start;white-space:nowrap}
+.tpill .n{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
+.tpill.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}.tpill.on .n{color:var(--bg);opacity:.75}
+.tpill.add{border-style:dashed;color:var(--accent)}
+.avs{display:inline-flex;align-items:center}
+.avs i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:600;letter-spacing:0;background:var(--brass-soft);color:var(--brass);border:2px solid var(--surface);margin-left:-6px}
+.avs i:first-child{margin-left:0}
+.tpill .avs i{width:20px;height:20px;font-size:9.5px}.tpill.on .avs i{border-color:var(--ink)}
+.avs.big i{width:44px;height:44px;font-size:16px;border:0}
+.lday{display:flex;align-items:baseline;gap:10px;margin:2px 0 12px}
+.ldate{font:500 30px/1.1 var(--display);letter-spacing:-.015em}.ldsub{color:var(--muted);font-size:14px}
+.focus{border-top:3px solid var(--brass);background:var(--surface);border-radius:4px 4px 14px 14px;padding:10px 12px 12px;margin:0 0 18px;box-shadow:0 1px 0 var(--line)}
+.fhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}.fhead b{font:600 17px var(--display)}.fhead span{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.fslots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fslot{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:10px;border-radius:10px;background:var(--brass-soft);min-height:84px;min-width:0;font-size:14px;line-height:1.3}
+.fslot .ftx{text-align:left;overflow-wrap:anywhere;color:var(--ink);font-weight:500}
+.fslot>span{overflow-wrap:anywhere}
+.fslot.done{background:var(--good-soft)}.fslot.done span{color:var(--muted);text-decoration:line-through}
+.fslot.empty{border:1.5px dashed var(--line);border:1.5px dashed color-mix(in srgb,var(--brass) 45%,transparent);background:transparent;color:var(--muted);justify-content:center;align-items:center;font-size:13px}
+.fslot.going{opacity:.4;transition:opacity .3s}
+.fnote{margin:8px 0 0}
+.focus.empty{padding-bottom:12px}.focus.empty .fhead{margin-bottom:4px}
+@media (max-width:360px){.fslots{grid-template-columns:1fr}.fslot{min-height:0;flex-direction:row;align-items:center}}
+.lsh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:14px 0 6px}.lsh b{font-weight:600}.lsh span{font-size:12.5px;color:var(--muted)}
+.lrow{display:flex;align-items:center;gap:6px;padding:0 8px 0 14px;min-height:52px;transition:opacity .3s,transform .3s}
+.lrow + .lrow{border-top:1px solid var(--line)}
+.lrow.going{opacity:0;transform:translateX(12px)}
+.ltx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 6px;color:var(--ink)}
+.ltx .tt{overflow-wrap:anywhere;line-height:1.35}
+.lrow.closed .tt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}
+.lrow.let .tt{text-decoration:none;font-style:italic}
+.tick.core{border-color:var(--brass)}
+.ldue{color:var(--ink2);font-weight:500}.ldue.today{color:var(--good)}.ldue.late{color:var(--warn)}
+.ltm{color:var(--ink2)}.lrep{color:var(--good)}.llist{color:var(--muted)}.lfocus{color:var(--brass);font-weight:500}.lsub{font-variant-numeric:tabular-nums}
+.lwho{color:var(--accent);font-weight:500}
+.uday{margin:0 0 4px}.uday.none .udh b{color:var(--ink2)}
+.udh{display:flex;align-items:baseline;gap:8px;padding:12px 0 6px;border-bottom:1px solid var(--line)}.udh b{font:600 17px var(--display)}.udh span{color:var(--muted);font-size:13px;flex:1}
+.uday:not(.none) .udh{border-bottom:0}
+.uadd{width:32px;height:32px;border-radius:50%;color:var(--accent);font-size:20px;line-height:1}.uadd:hover{background:var(--accent-soft)}
+.lhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:2px 0 12px}
+.lname{font:500 26px/1.15 var(--display);letter-spacing:-.01em;margin:0 0 2px;text-transform:none;color:var(--ink)}
+.lhead .hint{display:block}
+.lhact{display:flex;align-items:center;gap:6px;flex:none}
+.item .ihead{display:flex;align-items:flex-start;gap:12px;padding-right:44px}
+.item .ihead .tick{margin-top:6px}
+.ititle{flex:1;min-width:0;border:0;background:transparent;font:500 21px/1.3 var(--display);resize:none;padding:2px 0;field-sizing:content;min-height:36px;outline:none}
+.ititle:focus{box-shadow:0 2px 0 var(--accent)}
+.inote{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical;background:var(--bg);min-height:56px;field-sizing:content;max-height:240px}
+.ifield{display:flex;flex-direction:column;gap:8px}
+.irow{display:flex;flex-wrap:wrap;gap:8px}.irow input,.irow select{flex:1 1 120px;min-width:0}
+.ifocus{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:12px 14px;border:1px dashed var(--brass);border-radius:12px;color:var(--ink)}
+.ifocus b{font-weight:600;color:var(--brass)}.ifocus small{color:var(--muted);font-size:12.5px}
+.ifocus.on{border-style:solid;background:var(--brass-soft)}
+.isubs{display:flex;flex-direction:column;gap:2px}
+.isub{display:flex;align-items:center;gap:10px;min-height:40px}.isub span{flex:1;min-width:0;overflow-wrap:anywhere}.isub span.dn{color:var(--muted);text-decoration:line-through}
+.isub .x{width:30px;height:30px;color:var(--muted);font-size:18px;border-radius:50%}
+.isubadd{display:flex;gap:8px}.isubadd input{flex:1;min-width:0}
+.iacts{display:flex;flex-wrap:wrap;gap:8px;padding-top:6px;border-top:1px solid var(--line)}
+.ifoot{margin:0}
+.sdate input{border:0;padding:0;background:transparent;font-size:13px;color:var(--muted);min-height:0;width:100%}
+.lrisk{padding-top:10px;border-top:1px solid var(--line)}.lrisk p{margin:0 0 8px}
+.invbox{display:flex;flex-direction:column;gap:8px}
+.invlink input{width:100%;font-family:var(--mono);font-size:12.5px;color:var(--ink2);background:var(--sunk);border-color:transparent}
+.invbanner{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:0 0 18px;border-radius:14px;background:var(--brass-soft);text-align:left}
+.invbanner div{display:flex;flex-direction:column;gap:2px}.invbanner .avs i{background:var(--surface)}.invbanner span:not(.avs){color:var(--ink2);font-size:14px}
+.invfriend{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.people{padding:2px 0}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 12px;min-height:48px}.prow + .prow{border-top:1px solid var(--line)}
+.prow .pn{flex:1;min-width:0}.prow .avs i{width:30px;height:30px;font-size:11.5px;border:0}
+.wname{display:flex;flex-direction:column;gap:6px}
+.cheers{border-color:var(--brass);margin:4px 0 14px}.cheer{display:flex;align-items:center;gap:10px;margin-top:8px}
+.wrow{align-items:center;gap:12px}.wrow .avs i{width:32px;height:32px;font-size:12px;border:0}
+.wbar{flex:none;width:64px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}.wbar i{display:block;height:100%;background:var(--good);border-radius:3px}
+.whero{display:flex;align-items:center;gap:12px;padding-right:44px}
+.whead{font-size:14.5px;color:var(--ink2)}.whead b{color:var(--ink);font-size:16px}
+.wfloors{padding:2px 0}.wf{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px}.wf + .wf{border-top:1px solid var(--line)}
+.wf span:first-child{display:flex;flex-direction:column;min-width:0}.wf small{color:var(--muted);font-size:12px}
+.wn{font-variant-numeric:tabular-nums;color:var(--muted);flex:none}.wf.ok .wn{color:var(--good);font-weight:600}
+}
 .vqcta{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;margin:2px 0 14px;border:1px dashed var(--accent);border-radius:var(--r);background:var(--accent-soft);color:var(--ink)}
 .vqcta .glyph{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--surface);color:var(--accent);font:600 16px var(--display)}
 .vqcta>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.vqcta b{font-weight:600}.vqcta small{font-size:12.5px;color:var(--ink2)}
@@ -1150,7 +1245,7 @@ function themePicker() {
 const S = {
   weekView: "floors", planPick: null,
   loaded: {}, loadErr: false, base: {}, waiting: {}, late: {}, force: {},
-  sortSkip: new Set(), sortCount: 0, sortTotal: 0, sortTally: {}, sortProj: null, stepFor: null, capMsg: "", migrated: false, noFocus: false,
+  sortSkip: new Set(), sortCount: 0, sortTotal: 0, sortTally: {}, qIgnore: new Set(), qDraft: "", tv: null, capMsg: "", migrated: false, noFocus: false,
   authState: "loading", user: null, authBusy: false, authErr: "", importMsg: "",
   tab: "today", viewMon: monday(new Date()), selDay: todayKey(),
   docs: {}, hist: {}, mode: "connecting", last: {}, confirm: null, pendingRender: false,
@@ -1386,7 +1481,8 @@ async function flushAll() {
 }
 function teardown() {
   Object.keys(ST.subs).forEach(unsubscribe);
-  S.docs = {}; S.hist = {}; S.isAdmin = false; S.delPw = false; S.pwResetSent = false; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.stepFor = null; S.sortProj = null; S.coach = null; S.prevClear = {}; S.calMsg = {};
+  resetShared();
+  S.docs = {}; S.hist = {}; S.isAdmin = false; S.delPw = false; S.pwResetSent = false; S.ob = null; S.obChecked = false; S.sheet = null; S.migrated = false; S.qDraft = ""; S.qIgnore = new Set(); S.coach = null; S.prevClear = {}; S.calMsg = {};
   S.base = {}; S.waiting = {}; S.late = {}; S.force = {}; S.last = {};
   Object.keys(T).forEach(k => { clearTimeout(T[k]); T[k] = null; });
   ST.uid = null; S.mode = "connecting"; profileReady = false; S.loaded = {}; S.loadErr = false; S.tab = "today"; S.viewMon = monday(new Date()); S.selDay = todayKey();
@@ -1496,6 +1592,7 @@ async function deleteAccount(confirmed) {
     Object.keys(ST.subs).forEach(unsubscribe);
     step("Deleting your data…");
     try { const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
+    try { await within(deleteSharedData(), 30000, "timeout"); } catch (e) {}
     try { await within(FB.deleteDoc(FB.doc(ST.fs, "notify", ST.uid)), 10000, "timeout"); } catch (e) {}
     try { await within(FB.deleteDoc(FB.doc(ST.fs, "errors", ST.uid)), 10000, "timeout"); } catch (e) {}
     try { const ct = settings().calFeed; if (ct) await within(FB.deleteDoc(FB.doc(ST.fs, "calfeeds", ct)), 10000, "timeout"); } catch (e) {}
@@ -1548,7 +1645,9 @@ function exportData() {
   const docs = {};
   Object.entries(S.hist).forEach(([k, v]) => { docs[k] = v; });
   Object.entries(S.docs).forEach(([k, v]) => { if (v) docs[k] = v; });
-  const blob = new Blob([JSON.stringify({ app: "compass", version: 2, exportedAt: new Date().toISOString(), docs }, null, 2)], { type: "application/json" });
+  /* lists you're in, with their open tasks and the last month's finished ones */
+  const lists = Object.entries(L.meta).map(([id, m]) => Object.assign({ id }, m, { items: Object.assign({}, L.done[id] || {}, L.open[id] || {}) }));
+  const blob = new Blob([JSON.stringify({ app: "compass", version: 3, exportedAt: new Date().toISOString(), docs, lists }, null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "compass-" + todayKey() + ".json";
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
@@ -1602,8 +1701,9 @@ async function loadCore(uid) {
 }
 /* DATA_V goes up only when the shape of saved data changes. A copy of the app that finds a newer DATA_V on the
    server stops saving (edits stay on this device) until it reloads, so old code can't write old-shaped data. */
-const DATA_V = 1;
+const DATA_V = 2;   /* 2: tasks live in lists/ (shared lists); older copies stop saving and ask for a reload */
 async function init() {
+  captureInvite();
   render();
   /* keep a copy of the app on this device so it opens offline (and receives reminders) */
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) { try { navigator.serviceWorker.register("/sw.js").catch(() => {}); } catch (e) {} }
@@ -1621,7 +1721,7 @@ async function init() {
   catch (e) { ST.fs = FB.initializeFirestore(app, {}); }
   FB.getRedirectResult(ST.auth).catch(e => { S.authErr = authMessage(e); render(); });
   FB.onAuthStateChanged(ST.auth, async u => {
-    if (!u) { try { localStorage.removeItem("compass-was-signed-in"); } catch (e) {} if (ST.uid) teardown(); S.authState = "signedOut"; S.user = null; S.authBusy = false; render(); return; }
+    if (!u) { try { localStorage.removeItem("compass-was-signed-in"); } catch (e) {} if (ST.uid) teardown(); S.authState = "signedOut"; S.user = null; S.authBusy = false; render(); peekInvite(); return; }
     if (ST.uid === u.uid) return;
     teardown();
     ST.uid = u.uid; S.user = { name: u.displayName || "", email: u.email || "", photo: u.photoURL || "" };
@@ -1631,6 +1731,7 @@ async function init() {
     if (!(await loadCore(u.uid))) return;
     profileReady = true;
     ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe);
+    subscribeLists(); afterSignIn();
     stat(onboarded() ? "active" : "obStart");
     setTimeout(calFeedTz, 4000);
     /* the owner (a document at admins/{uid}, made by hand in the console) gets a link to the usage dashboard */
@@ -2117,11 +2218,9 @@ function suggestions() {
   });
   const inN = inboxItems().length;
   if (inN >= 10) out.push({ icon: "star", title: `${inN} unsorted thoughts in your inbox.`, body: "Sorting takes about a minute per ten. Once each has a home and a time, it stops circling.", src: "Masicampo & Baumeister 2011", act: { label: "Sort now", do: "sort" } });
-  const noNext = projectsList().find(p => !p.next);
-  if (noNext) out.push({ icon: "down", title: `“${noNext.t}” has no next step.`, body: "Big goals stall without a concrete first action. Write the very next physical step, even a tiny one.", src: "Allen 2001, Getting Things Done", act: { label: "Add a next step", do: "gotoTasks" } });
-  const slipped = titems().filter(i => i.s === "errand" && (i.moves || 0) >= 2).sort((a, b) => b.moves - a.moves)[0];
-  if (slipped) out.push({ icon: "scale", title: `“${slipped.t}” has slipped ${slipped.moves} weeks.`, body: "Shrink it to a 10-minute version, give it a fixed time, or move it to Someday. Carrying it costs more than deciding.", src: "Gollwitzer & Sheeran 2006", act: { label: "Open Tasks", do: "gotoTasks" } });
-  if (weekErrands().length > ERRAND_CAP) out.push({ icon: "scale", title: `${weekErrands().length} errands this week.`, body: `Around ${ERRAND_CAP} is what fits beside your floors. Move the extras to Next up; they'll still be there.`, src: "Schwartz et al. 2002, satisficing", act: { label: "Open Tasks", do: "gotoTasks" } });
+  const slipped = liveItems().filter(i => (i.moves || 0) >= 3).sort((a, b) => b.moves - a.moves)[0];
+  if (slipped) out.push({ icon: "scale", title: `“${slipped.t}” has been moved ${slipped.moves} times.`, body: "Shrink it to a 10-minute version, give it a fixed time, or move it to Someday. Carrying it costs more than deciding.", src: "Gollwitzer & Sheeran 2006", act: { label: "Open Tasks", do: "gotoTasks" } });
+  if (weekErrands().length > ERRAND_CAP) out.push({ icon: "scale", title: `${weekErrands().length} tasks in this week's three.`, body: `Around ${ERRAND_CAP} is what fits beside your floors. Give the extras a later day; they'll still be there.`, src: "Schwartz et al. 2002, satisficing", act: { label: "Open Tasks", do: "gotoTasks" } });
   if (!all.some(c => c.fun)) out.push({ icon: "heart", title: "You have no fun menu.", body: "List a few things you do purely for joy. Compass never scores them; scheduling fun precisely makes it feel like work.", src: "Tonietto & Malkoc 2016", act: { label: "Add fun things", do: "gotoCompass" } });
   if (!scored.some(c => c.mvw)) out.push({ icon: "shield", title: "Nothing survives a hard week.", body: "Pick two or three things that stay on during illness, travel or crunch. Everything else pauses without guilt.", src: "Gollwitzer & Sheeran 2006", act: { label: "Choose them", do: "gotoCompass" } });
   if (!all.some(c => c.value === "time") && !(p.values || []).includes("time")) out.push({ icon: "shield", title: "No time is protected from the plan.", body: "One empty block a week keeps the system from filling every hour.", src: "Deci & Ryan, autonomy", act: { label: "Add an empty block", do: "addLib", id: "recovery" } });
@@ -2191,43 +2290,287 @@ function weekForm(w, prefix) {
       <p class="hint" style="margin:8px 0 0">Compass suggests about half. The rest stays unplanned for rest, people and surprises, which is what makes a plan survivable.</p></div>`;
 }
 
-/* ============ tasks: capture, sort, place ============ */
-const ERRAND_CAP = 3;
-const tasksDoc = () => { const t = S.docs.tasks || (S.docs.tasks = {}); t.items = t.items || []; return t; };
-const titems = () => tasksDoc().items;
+/* ============ lists: tasks, Todoist-style, the Compass way ============
+   Every list is a document in lists/{id} with its items in lists/{id}/items. Your Inbox is the list in-<uid> that only
+   you are in; any other list can be shared. Items are separate documents, so two people ticking at once never clash.
+   Compass's rules of thumb stay: three focus items a week ("this week's three"), Someday to park without guilt, Let go
+   instead of delete, and anything that repeats can become a floor.
+   Open items are always live; finished ones from the last month or so are too (for Today, the review and the look-back). */
+const FOCUS_CAP = 3;
+const ERRAND_CAP = FOCUS_CAP;   // older name, used by the review and suggestions
 const thisWk = () => wid(monday(new Date()));
 const nextWkId = () => wid(addDays(monday(new Date()), 7));
-const inboxItems = () => titems().filter(i => i.s === "inbox");
-const weekErrands = (wk = thisWk()) => titems().filter(i => i.s === "errand" && i.wk === wk);
-const laterErrands = () => titems().filter(i => i.s === "errand" && (!i.wk || i.wk < thisWk()));
-const projectsList = () => titems().filter(i => i.s === "project");
-const somedays = () => titems().filter(i => i.s === "someday");
-const doneErrandsThisWeek = () => titems().filter(i => i.s === "done" && i.was === "errand" && i.wk === thisWk());
-function editTasks(fn) {
-  fn(tasksDoc());
-  const t = tasksDoc(), closed = t.items.filter(i => i.s === "done" || i.s === "dropped" || i.s === "component");
-  if (closed.length > 300) { const cut = new Set(closed.sort((a, b) => ((a.doneAt || "") < (b.doneAt || "") ? -1 : 1)).slice(0, closed.length - 300).map(i => i.id)); t.items = t.items.filter(i => !cut.has(i.id)); }
-  touch("tasks");
+const L = { meta: {}, open: {}, done: {}, ready: false, server: false, inboxAsked: false, migrating: false, queue: [] };
+const inboxId = () => "in-" + ST.uid;
+function resetShared() { Object.assign(L, { meta: {}, open: {}, done: {}, ready: false, server: false, inboxAsked: false, migrating: false, queue: [] }); S.tv = null; if (typeof W8 !== "undefined") Object.assign(W8, { mine: null, watching: {}, cheers: [], ready: false }); }
+const myName = () => { const p = profile() || {}; const n = (p.name || (S.user && S.user.name) || "").trim(); return n || ((S.user && S.user.email) || "").split("@")[0] || "Someone"; };
+const firstName = n => String(n || "").trim().split(/\s+/)[0] || "Someone";
+const initials = n => { const w = String(n || "?").trim().split(/\s+/); return ((w[0] || "?")[0] + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase(); };
+const recentCut = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() - 1, 1).getTime(); };
+const itemKey = (lid, id) => lid + "/" + id;
+const listMeta = lid => L.meta[lid] || null;
+const isInbox = lid => lid === inboxId();
+const isSharedList = m => !!m && (m.members || []).length > 1;
+const listName = lid => isInbox(lid) ? "Inbox" : ((L.meta[lid] || {}).name || "List");
+function listsArr() {
+  const ord = (settings().listOrd || []);
+  return Object.entries(L.meta).map(([id, m]) => Object.assign({ id }, m)).filter(m => m.id !== inboxId())
+    .sort((a, b) => { const ia = ord.indexOf(a.id), ib = ord.indexOf(b.id); return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib) || (a.at || 0) - (b.at || 0); });
 }
-const taskById = id => titems().find(i => i.id === id);
-function setTask(id, patch) { editTasks(t => { const i = t.items.find(x => x.id === id); if (i) Object.assign(i, patch); }); }
+const withL = (lid, map) => Object.entries(map || {}).map(([id, it]) => Object.assign({}, it, { id, lid }));
+const itemsIn = lid => withL(lid, L.open[lid]);
+const allOpen = () => Object.keys(L.meta).flatMap(lid => itemsIn(lid));
+const allDone = () => Object.keys(L.meta).flatMap(lid => withL(lid, L.done[lid])).filter(i => !i.open);
+const findItem = (lid, id) => { const o = (L.open[lid] || {})[id] || (L.done[lid] || {})[id]; return o ? Object.assign({}, o, { id, lid }) : null; };
+const liveItems = () => allOpen().filter(i => i.st !== "some");
+const somedayItems = lid => itemsIn(lid).filter(i => i.st === "some");
+/* "unsorted": in the Inbox with no day, no focus week and not parked */
+const inboxItems = () => L.ready ? itemsIn(inboxId()).filter(i => i.st !== "some" && !i.due && !i.wk) : [];
+const weekErrands = (wk = thisWk()) => allOpen().filter(i => i.st !== "some" && i.wk === wk);
+const doneErrandsThisWeek = () => allDone().filter(i => i.st === "done" && i.wk === thisWk());
+const laterErrands = () => allOpen().filter(i => i.st !== "some" && (!i.wk || i.wk < thisWk()));
+const overdue = (tk = todayKey()) => liveItems().filter(i => i.due && i.due < tk).sort((a, b) => a.due < b.due ? -1 : a.due > b.due ? 1 : 0);
+const dueOn = day => liveItems().filter(i => i.due === day).sort(byTimeThenOrd);
+const doneOn = day => allDone().filter(i => i.st === "done" && i.doneAt && dkey(new Date(i.doneAt)) === day);
+const byTimeThenOrd = (a, b) => (a.tm ? 0 : 1) - (b.tm ? 0 : 1) || (a.tm || "").localeCompare(b.tm || "") || (a.ord || a.at || 0) - (b.ord || b.at || 0);
+const listOrder = (a, b) => (a.due ? 0 : 1) - (b.due ? 0 : 1) || (a.due || "").localeCompare(b.due || "") || byTimeThenOrd(a, b);
+const fmtWhen = due => { if (!due) return ""; const tk = todayKey(), n = daysBetween(tk, due); return n === 0 ? "Today" : n === 1 ? "Tomorrow" : n === -1 ? "Yesterday" : n > 1 && n < 7 ? WD[(parse(due).getDay() + 6) % 7] : fmtShort(parse(due)) + (parse(due).getFullYear() !== new Date().getFullYear() ? " " + parse(due).getFullYear() : ""); };
+const REP_LABEL = { day: "Every day", wkday: "Every weekday", week: "Every week", month: "Every month", year: "Every year" };
+const repWords = r => !r ? "" : r.u === "week" && r.d !== undefined && r.d !== null ? "Every " + ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][r.d] : REP_LABEL[r.u] || "Repeats";
+function nextDue(it) {
+  const r = it.rep; if (!r) return null;
+  const from = it.due && it.due > todayKey() ? parse(it.due) : parse(todayKey());
+  let d = new Date(from);
+  if (r.u === "day") d = addDays(from, 1);
+  else if (r.u === "wkday") { d = addDays(from, 1); while ([0, 6].includes(d.getDay())) d = addDays(d, 1); }
+  else if (r.u === "week") { d = addDays(from, 7); if (r.d !== undefined && r.d !== null) { d = addDays(from, 1); while ((d.getDay() + 6) % 7 !== r.d) d = addDays(d, 1); } }
+  else if (r.u === "month") { const base = it.due ? parse(it.due) : from; d = new Date(base.getFullYear(), base.getMonth() + 1, Math.min(base.getDate(), 28)); while (dkey(d) <= todayKey()) d = new Date(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+  else if (r.u === "year") { const base = it.due ? parse(it.due) : from; d = new Date(base.getFullYear() + 1, base.getMonth(), base.getDate()); }
+  return dkey(d);
+}
+
+/* ---- live data ---- */
+/* a change from the database redraws a moment later, once any focus change (a tap into another field) has settled */
+const soonRender = () => { clearTimeout(S.soonT); S.soonT = setTimeout(scheduleRender, 30); };
+function subscribeLists() {
+  if (S.mode !== "db" || ST.subs.__lists || !ST.uid) return;
+  const q = FB.query(FB.collection(ST.fs, "lists"), FB.where("members", "array-contains", ST.uid));
+  ST.subs.__lists = FB.onSnapshot(q, snap => {
+    const seen = new Set(), before = clone(L.meta);
+    snap.docs.forEach(d => { seen.add(d.id); L.meta[d.id] = d.data(); subscribeItems(d.id); });
+    Object.keys(L.meta).filter(id => !seen.has(id)).forEach(id => { delete L.meta[id]; delete L.open[id]; delete L.done[id]; unsubscribe("it:" + id); unsubscribe("dn:" + id); if (S.tv === id) S.tv = "today"; });
+    if (L.ready) noticeListChanges(before);
+    L.ready = true; if (!(snap.metadata && snap.metadata.fromCache)) L.server = true;
+    afterListsReady(); soonRender();
+  }, err => { delete ST.subs.__lists; if (!(err && err.code === "permission-denied")) setTimeout(subscribeLists, 4000); });
+  /* offline on a new device: carry on with what's here after a moment */
+  setTimeout(() => { if (!L.server) { L.server = "assumed"; afterListsReady(); soonRender(); } }, 5000);
+}
+function subscribeItems(lid) {
+  if (ST.subs["it:" + lid]) return;
+  const col = FB.collection(ST.fs, "lists", lid, "items");
+  ST.subs["it:" + lid] = FB.onSnapshot(FB.query(col, FB.where("open", "==", true)), snap => {
+    L.open[lid] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()])); soonRender();
+  }, () => { unsubscribe("it:" + lid); });
+  ST.subs["dn:" + lid] = FB.onSnapshot(FB.query(col, FB.where("doneAt", ">=", recentCut())), snap => {
+    L.done[lid] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]).filter(([, x]) => !x.open)); soonRender();
+  }, () => { unsubscribe("dn:" + lid); });
+}
+/* someone joined or left a shared list: say so, quietly */
+function noticeListChanges(before) {
+  for (const [lid, m] of Object.entries(L.meta)) {
+    const was = before[lid]; if (!was || isInbox(lid)) continue;
+    const added = (m.members || []).filter(u => !(was.members || []).includes(u) && u !== ST.uid);
+    if (added.length) toast(`${added.map(u => firstName(((m.people || {})[u] || {}).n)).join(" and ")} joined “${m.name}”`);
+  }
+}
+function afterListsReady() {
+  if (!L.ready || !L.server || !ST.uid) return;
+  if (!L.meta[inboxId()] && !L.inboxAsked) {
+    L.inboxAsked = true;
+    const m = { owner: ST.uid, members: [ST.uid], people: { [ST.uid]: { n: myName() } }, name: "Inbox", kind: "inbox", at: Date.now() };
+    L.meta[inboxId()] = m;
+    FB.setDoc(FB.doc(ST.fs, "lists", inboxId()), m, { merge: true }).catch(listErr);
+  }
+  if (L.meta[inboxId()]) { migrateTasks(); const q = L.queue.splice(0); q.forEach(f => f()); }
+}
+const whenInbox = fn => { if (L.ready && L.meta[inboxId()]) fn(); else L.queue.push(fn); };
+function listErr(e) {
+  const c = fsCode(e);
+  if (c === "permission_denied") toast("That list isn't shared with you any more.");
+  else if (c !== "unavailable") toast("Couldn't save that change (" + (e && e.code || "error") + "). Try again.");
+}
+const iref = (lid, id) => FB.doc(ST.fs, "lists", lid, "items", id);
+const cleanObj = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
+function putLocal(lid, id, data) {
+  if (data && data.open) { (L.open[lid] = L.open[lid] || {})[id] = data; if (L.done[lid]) delete L.done[lid][id]; }
+  else if (data) { (L.done[lid] = L.done[lid] || {})[id] = data; if (L.open[lid]) delete L.open[lid][id]; }
+  else { if (L.open[lid]) delete L.open[lid][id]; if (L.done[lid]) delete L.done[lid][id]; }
+}
+function addItem(lid, fields) {
+  const id = uidGen() + uidGen().slice(0, 4), now = Date.now();
+  const data = cleanObj(Object.assign({ t: "", open: true, st: "open", by: ST.uid, at: now, up: now, ord: now }, fields));
+  data.t = String(data.t).slice(0, 500);
+  putLocal(lid, id, data); stat("tasks");
+  FB.setDoc(iref(lid, id), data).catch(listErr);
+  return id;
+}
+function updItem(lid, id, patch) {
+  const cur = findItem(lid, id); if (!cur) return;
+  const p = Object.assign({}, patch, { up: Date.now(), upBy: ST.uid }), next = Object.assign({}, cur);
+  delete next.id; delete next.lid;
+  for (const [k, v] of Object.entries(p)) { if (v === undefined || v === null) delete next[k]; else next[k] = v; }
+  putLocal(lid, id, next);
+  const out = {}; for (const [k, v] of Object.entries(p)) out[k] = v === undefined || v === null ? FB.deleteField() : v;
+  FB.updateDoc(iref(lid, id), out).catch(listErr);
+}
+function setItemWhole(lid, id, data) { putLocal(lid, id, data); FB.setDoc(iref(lid, id), cleanObj(data)).catch(listErr); }
+function delItem(lid, id) { putLocal(lid, id, null); FB.deleteDoc(iref(lid, id)).catch(listErr); }
+function moveItem(from, id, to) {
+  const cur = findItem(from, id); if (!cur || from === to) return;
+  const data = Object.assign({}, cur); delete data.id; delete data.lid; data.up = Date.now(); data.upBy = ST.uid;
+  if (!(listMeta(to) && isSharedList(listMeta(to)))) delete data.who;
+  putLocal(from, id, null); putLocal(to, id, data);
+  const b = FB.writeBatch(ST.fs); b.set(iref(to, id), cleanObj(data)); b.delete(iref(from, id)); b.commit().catch(listErr);
+}
+/* snapshot for undo */
+const undoItem = (lid, id, after) => { const snap = findItem(lid, id); return () => { if (snap) { const d = Object.assign({}, snap); delete d.id; delete d.lid; setItemWhole(lid, id, d); } if (after) after(); render(); }; };
+function completeItem(lid, id) {
+  const it = findItem(lid, id); if (!it) return null;
+  if (it.rep) {
+    const nx = nextDue(it); updItem(lid, id, { due: nx, last: undefined, moves: undefined, wk: it.wk === thisWk() ? undefined : it.wk });
+    bumpMonthDone(1); return { repeat: nx };
+  }
+  updItem(lid, id, { open: false, st: "done", doneAt: Date.now(), doneBy: ST.uid });
+  bumpMonthDone(1); return {};
+}
+function reopenItem(lid, id) { const it = findItem(lid, id); if (!it) return; bumpMonthDone(it.st === "done" ? -1 : 0); updItem(lid, id, { open: true, st: "open", doneAt: null, doneBy: null }); }
+/* a month's finished tasks, for the look-back (repeating ones finish many times, so they are counted here) */
+function bumpMonthDone(n) { if (!n) return; editSettings(s => { s.months = s.months || {}; const m = s.months[monthKey(new Date())] = s.months[monthKey(new Date())] || {}; m.td = Math.max(0, (m.td || 0) + n); }); }
+function createList(name, extra = {}) {
+  const lid = "l-" + uidGen() + uidGen().slice(0, 4), m = cleanObj(Object.assign({ owner: ST.uid, members: [ST.uid], people: { [ST.uid]: { n: myName() } }, name: String(name).trim().slice(0, 80) || "New list", kind: "list", at: Date.now() }, extra));
+  L.meta[lid] = m; subscribeItems(lid);
+  FB.setDoc(FB.doc(ST.fs, "lists", lid), m).catch(listErr);
+  return lid;
+}
+function updList(lid, patch) { const m = L.meta[lid]; if (!m) return; Object.assign(m, patch); FB.updateDoc(FB.doc(ST.fs, "lists", lid), Object.assign({}, patch, { up: Date.now() })).catch(listErr); }
+async function deleteList(lid, evenInbox) {
+  const m = L.meta[lid]; if (!m || m.owner !== ST.uid || (isInbox(lid) && !evenInbox)) return;
+  try {
+    const snap = await FB.getDocs(FB.collection(ST.fs, "lists", lid, "items"));
+    for (let i = 0; i < snap.docs.length; i += 400) { const b = FB.writeBatch(ST.fs); snap.docs.slice(i, i + 400).forEach(d => b.delete(iref(lid, d.id))); await b.commit(); }
+    await FB.deleteDoc(FB.doc(ST.fs, "lists", lid));
+  } catch (e) { listErr(e); }
+}
+async function leaveList(lid) {
+  const m = L.meta[lid]; if (!m) return;
+  const members = (m.members || []).filter(u => u !== ST.uid), people = Object.assign({}, m.people || {}); delete people[ST.uid];
+  if (m.owner === ST.uid) {
+    if (!members.length) return deleteList(lid);
+    /* the owner hands the list to the next person, then leaves */
+    try { await FB.updateDoc(FB.doc(ST.fs, "lists", lid), { owner: members[0], up: Date.now() }); } catch (e) { listErr(e); return; }
+  }
+  try { await FB.updateDoc(FB.doc(ST.fs, "lists", lid), { members, people, up: Date.now() }); } catch (e) { listErr(e); }
+}
+
+/* the tasks from before lists (users/{uid}/docs/tasks) move into the Inbox once; the old document stays as it was */
+function migrateTasks() {
+  const t = S.docs.tasks; if (!t || t.moved || L.migrating || !Array.isArray(t.items) || !profileReady) return;
+  L.migrating = true;
+  const lid = inboxId(), now = Date.now(), wkNow = thisWk();
+  const keep = t.items.filter(i => i && i.t && !["done", "dropped", "component"].includes(i.s))
+    .concat(t.items.filter(i => i && i.t && i.s === "done").slice(-60));
+  const toMs = d => { const x = d && parse(String(d).slice(0, 10)); return x && !isNaN(x) ? x.getTime() + 12 * 3600e3 : now; };
+  const docs = keep.map((i, n) => {
+    const d = { t: String(i.t).slice(0, 500), open: true, st: "open", by: ST.uid, at: i.at ? toMs(i.at) : now, up: now, ord: now - (keep.length - n) };
+    if (i.v) d.v = i.v;
+    if (i.moves) d.moves = i.moves;
+    if (i.s === "errand" && i.wk && i.wk >= wkNow) d.wk = i.wk;
+    if (i.s === "someday") d.st = "some";
+    if (i.s === "project") { d.n = "Project"; if (i.next) d.sub = [{ id: uidGen(), t: String(i.next).slice(0, 200), d: false }]; }
+    if (i.s === "done") { d.open = false; d.st = "done"; d.doneAt = toMs(i.doneAt); d.doneBy = ST.uid; if (i.wk) d.wk = i.wk; }
+    return [String(i.id || uidGen()).replace(/[^\w-]/g, "").slice(0, 40) || uidGen(), d];
+  });
+  (async () => {
+    try {
+      for (let k = 0; k < docs.length; k += 400) { const b = FB.writeBatch(ST.fs); docs.slice(k, k + 400).forEach(([id, d]) => { putLocal(lid, id, d); b.set(iref(lid, id), d); }); await b.commit(); }
+      editTasks(x => { x.moved = todayKey(); });
+    } catch (e) { L.migrating = false; return; }
+    scheduleRender();
+  })();
+}
+const tasksDoc = () => { const t = S.docs.tasks || (S.docs.tasks = {}); t.items = t.items || []; return t; };
+function editTasks(fn) { fn(tasksDoc()); touch("tasks"); }
+
+/* ---- quick add: "Call mom tomorrow 6pm #family" ---- */
+const DAYW = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+const dayWIdx = w => DAYW.indexOf(String(w).slice(0, 3).toLowerCase());
+const MONW = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const nextWeekday = (from, di, strict) => { let d = new Date(from); if (strict) d = addDays(d, 1); while ((d.getDay() + 6) % 7 !== di) d = addDays(d, 1); return d; };
+const normName = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+function parseQuick(raw, opts = {}) {
+  const ign = opts.ignore || new Set(), base = parse(todayKey());
+  let t = " " + String(raw || "").replace(/\s+/g, " ") + " ";
+  const out = { chips: [] };
+  const take = (kind, re, fn) => { if (ign.has(kind)) return; const m = t.match(re); if (!m) return; if (fn(m) === false) return; t = t.slice(0, m.index) + " " + t.slice(m.index + m[0].length); };
+  const DN = "(mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)";
+  take("rep", new RegExp(`\\s(?:every\\s+(day|weekday|week|month|year|${DN})|(daily|weekdays|weekly|monthly|yearly))(?=\\s)`, "i"), m => {
+    const w = (m[1] || m[2]).toLowerCase(), map = { day: "day", daily: "day", weekday: "wkday", weekdays: "wkday", week: "week", weekly: "week", month: "month", monthly: "month", year: "year", yearly: "year" };
+    if (map[w]) out.rep = { u: map[w] }; else { const di = dayWIdx(w); out.rep = { u: "week", d: di }; }
+  });
+  take("list", /\s#([\p{L}\p{N}_-]{1,40})(?=\s)/u, m => {
+    const want = normName(m[1]), all = [{ id: inboxId(), name: "Inbox" }].concat(listsArr());
+    const hit = all.find(l => normName(l.name) === want) || all.find(l => normName(l.name).startsWith(want));
+    if (hit) out.lid = hit.id; else out.newList = m[1].replace(/[-_]+/g, " ");
+  });
+  take("focus", /\s(?:\*|!!)(?=\s)/, () => { out.focus = true; });
+  take("time", /\s(?:at\s+)?(\d{1,2})(?::([0-5]\d))?\s?(am|pm)(?=\s)/i, m => { let h = +m[1] % 12; if (m[3].toLowerCase() === "pm") h += 12; if (+m[1] > 12) return false; out.tm = pad(h) + ":" + (m[2] || "00"); });
+  take("time", /\s(?:at\s+)?([01]?\d|2[0-3]):([0-5]\d)(?=\s)/, m => { out.tm = pad(+m[1]) + ":" + m[2]; });
+  take("due", new RegExp(`\\s(today|tod|tonight|tomorrow|tmrw?|next week|this weekend|weekend|in (\\d{1,3}) (days?|weeks?)|(?:next |on )?${DN}|(\\d{1,2}) (${MONW.join("|")})[a-z]*|(${MONW.join("|")})[a-z]* (\\d{1,2}))(?=\\s)`, "i"), m => {
+    const w = m[1].toLowerCase(); let d = null;
+    if (w === "today" || w === "tod") d = base;
+    else if (w === "tonight") { d = base; if (!out.tm) out.tm = "20:00"; }
+    else if (/^tom|^tmr/.test(w)) d = addDays(base, 1);
+    else if (w === "next week") d = nextWeekday(base, 0, true);
+    else if (/weekend/.test(w)) d = nextWeekday(base, 5, false);
+    else if (m[2]) d = addDays(base, +m[2] * (/^week/.test(m[3]) ? 7 : 1));
+    else if (m[4]) { const di = dayWIdx(m[4]); d = nextWeekday(base, di, /^next /.test(w) || (base.getDay() + 6) % 7 === di ? /^next /.test(w) : false); if (/^next /.test(w) && daysBetween(dkey(base), dkey(d)) < 7 && (base.getDay() + 6) % 7 < di) d = addDays(d, 7); }
+    else if (m[5] || m[8]) {
+      const day = +(m[5] || m[8]), mo = MONW.indexOf((m[6] || m[7]).slice(0, 3)); if (day < 1 || day > 31) return false;
+      d = new Date(base.getFullYear(), mo, day); if (d < base) d = new Date(base.getFullYear() + 1, mo, day);
+    }
+    if (!d) return false; out.due = dkey(d);
+  });
+  if (out.rep && !out.due) out.due = out.rep.u === "week" && out.rep.d !== undefined && out.rep.d !== null ? dkey(nextWeekday(base, out.rep.d, false)) : todayKey();
+  if (out.tm && !out.due) out.due = out.tm > tstrNow() ? todayKey() : dkey(addDays(base, 1));
+  out.t = t.replace(/\s+/g, " ").trim();
+  if (out.due) out.chips.push({ k: "due", label: fmtWhen(out.due) });
+  if (out.tm) out.chips.push({ k: "time", label: t12(out.tm) });
+  if (out.rep) out.chips.push({ k: "rep", label: repWords(out.rep) });
+  if (out.lid || out.newList) out.chips.push({ k: "list", label: out.lid ? listName(out.lid) : `New list “${out.newList}”` });
+  if (out.focus) out.chips.push({ k: "focus", label: "This week's three" });
+  return out;
+}
+const tstrNow = () => { const d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); };
 const cleanLine = l => l.replace(/^\s*(?:[-*•·–—>]|\d+[.)]|\[[ xX]?\]|☐|☑)\s*/, "").trim();
-function addCaptured(text) {
-  const lines = String(text || "").split(/\n+/).map(cleanLine).filter(Boolean).map(t => t.slice(0, 200));
-  if (!lines.length) return 0;
-  editTasks(t => { lines.forEach(l => t.items.push({ id: uidGen(), t: l, s: "inbox", at: todayKey() })); }); stat("tasks");
-  return lines.length;
-}
-const KIND_RX = {
-  recurring: /\b(every|daily|weekly|monthly|each (day|week|month)|regularly|routine|habit)\b/i,
-  project: /\b(learn|study|start|build|plan|prepare|research|organi[sz]e|set ?up|figure out|apply|find time)\b/i,
-  errand: /\b(call|email|text|message|buy|order|book|pay|return|renew|change|replace|fix|cancel|schedule|reply|send|pick up|drop off|submit|file|print|sign|install)\b/i,
-};
-function guessKind(t) {
-  if (KIND_RX.recurring.test(t)) return "recurring";
-  if (KIND_RX.errand.test(t) && !(KIND_RX.project.test(t) && t.length > 40)) return "errand";
-  if (KIND_RX.project.test(t)) return "project";
-  return null;
+/** add one or more lines; returns [{lid,id}] */
+function quickAdd(text, ctx = {}) {
+  const lines = String(text || "").split(/\n+/).map(cleanLine).filter(Boolean);
+  const added = [];
+  for (const line of lines) {
+    const q = parseQuick(line, { ignore: lines.length === 1 ? S.qIgnore : new Set() });
+    if (!q.t) continue;
+    let lid = q.lid || ctx.lid || inboxId();
+    if (q.newList) lid = createList(q.newList);
+    const f = { t: q.t };
+    if (q.due) f.due = q.due; else if (ctx.due) f.due = ctx.due;
+    if (q.tm) f.tm = q.tm;
+    if (q.rep) f.rep = q.rep;
+    if (q.focus || ctx.focus) f.wk = thisWk();
+    const v = guessValue(q.t); if (v) f.v = v;
+    added.push({ lid, id: addItem(lid, f) });
+  }
+  return added;
 }
 const VAL_RX = {
   rel: /\b(mom|mum|dad|parents?|family|friends?|brother|sister|partner|dating|wedding|birthday|grandma|grandpa)\b/i,
@@ -2241,182 +2584,508 @@ const VAL_RX = {
   mind: /\b(therapy|therapist|meditat|journal)\b/i,
 };
 function guessValue(t) { const vs = (profile() || {}).values || []; for (const v of vs) if (VAL_RX[v] && VAL_RX[v].test(t)) return v; return null; }
-function migrateInbox() {
-  const st = S.docs.settings;
-  if (st && Array.isArray(st.inbox) && st.inbox.length) {
-    const old = st.inbox.slice();
-    editTasks(t => old.forEach(x => { if (x && x.t && !t.items.some(i => i.id === x.id)) t.items.push({ id: x.id || uidGen(), t: String(x.t).slice(0, 200), s: "inbox", at: todayKey() }); }));
-    editSettings(s2 => { s2.inbox = []; });
-  }
+const KIND_RX = { recurring: /\b(every|daily|weekly|monthly|each (day|week|month)|regularly|routine|habit)\b/i };
+
+/* ---- the Tasks tab ---- */
+function tvState() { if (!S.tv) { try { S.tv = localStorage.getItem("compass-tv") || "today"; } catch (e) { S.tv = "today"; } } if (!["today", "upcoming", "inbox"].includes(S.tv) && !L.meta[S.tv]) S.tv = "today"; return S.tv; }
+function setTv(v) { S.tv = v; try { localStorage.setItem("compass-tv", v); } catch (e) {} }
+function avatars(m, max = 3) {
+  const others = (m.members || []).filter(u => u !== ST.uid), ppl = m.people || {};
+  if (!others.length) return "";
+  return `<span class="avs" aria-label="Shared with ${esc(others.map(u => firstName((ppl[u] || {}).n)).join(", "))}">${others.slice(0, max).map(u => `<i>${esc(initials((ppl[u] || {}).n))}</i>`).join("")}${others.length > max ? `<i>+${others.length - max}</i>` : ""}</span>`;
 }
-function restoreTask(snap) { editTasks(t => { const i = t.items.findIndex(x => x.id === snap.id); if (i >= 0) t.items[i] = snap; else t.items.push(snap); }); }
-function undoTaskFn(id, after) { const snap = clone(taskById(id)); return () => { if (snap) restoreTask(snap); if (after) after(); render(); }; }
-function startSort() { S.sortSkip = new Set(); S.sortCount = 0; S.sortTotal = inboxItems().length; S.sortProj = null; S.sortTally = {}; S.sheet = { type: "sort" }; }
-function sortPick(kind) {
-  const it = inboxItems().find(i => !S.sortSkip.has(i.id)); if (!it) return;
-  const tally = k => { S.sortTally[k] = (S.sortTally[k] || 0) + 1; S.sortCount++; };
-  if (kind === "done") { setTask(it.id, { s: "done", was: "quick", doneAt: todayKey() }); tally("done"); }
-  else if (kind === "week") { if (weekErrands().length >= ERRAND_CAP) toast(`That's ${weekErrands().length + 1} this week. Three is the sweet spot; consider moving one to later.`); setTask(it.id, { s: "errand", wk: thisWk(), v: guessValue(it.t) || undefined }); tally("week"); }
-  else if (kind === "later") { setTask(it.id, { s: "errand", wk: null, v: guessValue(it.t) || undefined }); tally("later"); }
-  else if (kind === "someday") { setTask(it.id, { s: "someday" }); tally("someday"); }
-  else if (kind === "drop") { setTask(it.id, { s: "dropped", doneAt: todayKey() }); tally("drop"); }
-  else if (kind === "skip") { S.sortSkip.add(it.id); }
-  else if (kind === "project") {
-    const cores = ((profile() || {}).cores || []).map(c => c.value);
-    S.sortProj = { id: it.id, v: guessValue(it.t) || cores[0] || (valueList()[0] || {}).id, next: "" };
-  }
-  else if (kind === "recurring") {
-    const v = guessValue(it.t) || ((profile() || {}).cores || [])[0]?.value || (valueList()[0] || {}).id;
-    S.sheet = { type: "comp", isNew: true, fromTask: it.id, draft: { id: "c-" + uidGen(), value: v, name: it.t.slice(0, 60), cadence: "weekly", target: 1, hours: 0.5 } };
-    return;
-  }
-  if (kind !== "project") S.sortProj = null;
+function lnav() {
+  const tv = tvState(), tk = todayKey(), nToday = overdue(tk).length + dueOn(tk).length, nIn = inboxItems().length;
+  const pill = (v, label, n, extra = "") => `<button class="tpill${tv === v ? " on" : ""}" data-act="tv" data-v="${esc(v)}" aria-pressed="${tv === v}">${label}${n ? `<span class="n">${n}</span>` : ""}${extra}</button>`;
+  return `<nav class="tnav" aria-label="Task views">${pill("today", "Today", nToday)}${pill("upcoming", "Upcoming", 0)}${pill("inbox", "Inbox", nIn)}
+    ${listsArr().map(m => pill(m.id, esc(m.name), itemsIn(m.id).filter(i => i.st !== "some").length, avatars(m, 2))).join("")}
+    <button class="tpill add" data-act="lNew" aria-label="New list">+ List</button></nav>`;
 }
-function saveSortProject() {
-  const sp = S.sortProj; if (!sp) return;
-  const nx = (($("#sp-next") || {}).value || "").trim();
-  setTask(sp.id, { s: "project", v: sp.v, next: nx || "" });
-  S.sortTally.project = (S.sortTally.project || 0) + 1; S.sortCount++; S.sortProj = null;
+function qaddBox() {
+  const q = S.qDraft ? parseQuick(S.qDraft, { ignore: S.qIgnore }) : { chips: [] };
+  const tv = tvState(), here = L.meta[tv] ? `in ${esc(L.meta[tv].name)}` : tv === "upcoming" ? "" : "";
+  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}… try “call mom fri 6pm”" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="btn primary small" data-act="capAdd" data-src="qAdd">Add</button></div>
+    <div class="qchips" id="qChips" aria-live="polite">${q.chips.map(c => `<button class="qchip ${c.k}" data-act="qIgnore" data-k="${c.k}" aria-label="${esc(c.label)}: tap to keep it as text">${esc(c.label)}<span aria-hidden="true">×</span></button>`).join("")}${S.qIgnore && S.qIgnore.size ? `<button class="qchip off" data-act="qIgnoreReset">Read dates again</button>` : ""}</div>`;
 }
-function capBox(id, placeholder) {
-  return `<div class="capbox"><textarea id="${id}" rows="3" placeholder="${esc(placeholder || "Dump everything on your mind. One thing per line; paste a whole list if you like.")}" aria-label="Capture thoughts"></textarea>
-    <div class="row"><span class="hint">Ctrl/⌘ + Enter to add</span><button class="btn primary small" data-act="capAdd" data-src="${id}">Add to inbox</button></div></div>`;
+function lmeta(it, opts = {}) {
+  const tk = todayKey(), m = listMeta(it.lid), out = [];
+  if (it.due && !opts.noDue) out.push(`<span class="ldue${it.due < tk ? " late" : it.due === tk ? " today" : ""}">${esc(fmtWhen(it.due))}</span>`);
+  if (it.tm) out.push(`<span class="ltm">${esc(t12(it.tm))}</span>`);
+  if (it.rep) out.push(`<span class="lrep" title="${esc(repWords(it.rep))}">↻ ${esc(repWords(it.rep).replace("Every ", ""))}</span>`);
+  if (opts.showList && !isInbox(it.lid)) out.push(`<span class="llist">${esc(listName(it.lid))}</span>`);
+  if (it.wk === thisWk() && !opts.noFocus) out.push(`<span class="lfocus">This week</span>`);
+  if (it.v && !opts.noVal) out.push(`<span class="tval${isCore(it.v) ? " iscore" : ""}">${esc(valueName(it.v))}</span>`);
+  if (it.sub && it.sub.length) out.push(`<span class="lsub">${it.sub.filter(x => x.d).length}/${it.sub.length}</span>`);
+  if (it.n) out.push(`<span class="lnote" aria-label="Has a note">✎</span>`);
+  if ((it.moves || 0) >= 3) out.push(`<span class="tslip">Moved ${it.moves}×</span>`);
+  if (it.who && m && isSharedList(m)) out.push(`<span class="lwho" title="${esc(((m.people || {})[it.who] || {}).n || "")}">${it.who === ST.uid ? "You" : esc(firstName(((m.people || {})[it.who] || {}).n))}</span>`);
+  return out.join("");
 }
-function inboxCta() {
-  const n = inboxItems().length; if (!n) return "";
-  return `<div class="inboxcta"><div><b>${n} unsorted</b><div class="hint">About ${Math.max(1, Math.round(n / 10))} min. Each one gets a home, so it stops circling.</div></div><button class="btn primary" data-act="sortStart">Sort now</button></div>`;
+function lrow(it, opts = {}) {
+  const closed = !it.open, meta = lmeta(it, opts);
+  const tick = closed ? `<button class="tick on" data-act="iUndo" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" aria-label="Not done: ${esc(it.t)}"></button>`
+    : `<button class="tick${it.v && isCore(it.v) ? " core" : ""}" data-act="iDone" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" aria-label="Done: ${esc(it.t)}"></button>`;
+  const by = closed && it.doneBy && it.doneBy !== ST.uid && listMeta(it.lid) ? `<span class="lwho">${esc(firstName(((listMeta(it.lid).people || {})[it.doneBy] || {}).n))} did it</span>` : "";
+  return `<div class="lrow${closed ? " closed" : ""}${it.st === "let" ? " let" : ""}" data-k="${esc(itemKey(it.lid, it.id))}">${tick}<button class="ltx" data-act="iOpen" data-l="${esc(it.lid)}" data-id="${esc(it.id)}"><span class="tt">${esc(it.t)}</span>${meta || by ? `<span class="tm">${meta}${by}</span>` : ""}</button></div>`;
 }
-function taskRow(i, opts = {}) {
-  const tags = [i.v ? `<span class="tag ${isCore(i.v) ? "core" : ""}">${esc(valueName(i.v))}</span>` : "", i.moves >= 2 ? `<span class="tag warn">Slipped ${i.moves}×</span>` : i.wk && i.wk < thisWk() && i.s === "errand" ? `<span class="tag">From last week</span>` : ""].join("");
-  return `<div class="task"><button class="tick ${i.s === "done" ? "on" : ""}" data-act="tDone" data-id="${i.id}" aria-label="Mark “${esc(i.t)}” done"></button>
-    <div class="tx"><span>${esc(i.t)}</span>${tags ? `<span class="tags" style="margin-top:3px">${tags}</span>` : ""}</div>${opts.actions || ""}</div>`;
+const card = rows => rows.length ? `<div class="card tl">${rows.join("")}</div>` : "";
+function focusStrip() {
+  const wk = weekErrands(), done = doneErrandsThisWeek(), slots = [];
+  if (!wk.length && !done.length) return `<section class="focus empty" aria-label="This week's three"><div class="fhead"><b>This week's three</b></div><p class="hint" style="margin:0">Pick up to three tasks that would make this week feel done. Open a task and tap ☆, or type * when you add one.</p></section>`;
+  done.slice(0, FOCUS_CAP).forEach(i => slots.push(`<div class="fslot done"><button class="tick on" data-act="iUndo" data-l="${esc(i.lid)}" data-id="${esc(i.id)}" aria-label="Not done: ${esc(i.t)}"></button><span>${esc(i.t)}</span></div>`));
+  wk.forEach(i => slots.push(`<div class="fslot"><button class="tick" data-act="iDone" data-l="${esc(i.lid)}" data-id="${esc(i.id)}" aria-label="Done: ${esc(i.t)}"></button><button class="ftx" data-act="iOpen" data-l="${esc(i.lid)}" data-id="${esc(i.id)}">${esc(i.t)}</button></div>`));
+  for (let n = slots.length; n < FOCUS_CAP; n++) slots.push(`<button class="fslot empty" data-act="fPick">Pick one</button>`);
+  const over = wk.length + done.length > FOCUS_CAP;
+  return `<section class="focus" aria-label="This week's three"><div class="fhead"><b>This week's three</b><span>${done.length} of ${wk.length + done.length || FOCUS_CAP} done</span></div>
+    <div class="fslots">${slots.join("")}</div>${over ? `<p class="hint fnote">That's ${wk.length + done.length}. Three is what fits beside your floors; move one to later if it's heavy.</p>` : ""}</section>`;
 }
-/* ---- Tasks: one quick-add line, one "Do next", then short lists you can fold. Row tap opens its actions. ---- */
-const T_OPEN_DEF = { week: true, inbox: true, proj: true, later: true, some: false, done: false };
+function vToday() {
+  const tk = todayKey(), od = overdue(tk), td = dueOn(tk), dn = doneOn(tk), d = new Date();
+  const wk = weekErrands().filter(i => i.due !== tk && !(i.due && i.due < tk));
+  const empty = !od.length && !td.length;
+  return `<div class="lday"><span class="ldate">${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]}</span><span class="ldsub">${MONTHS[d.getMonth()]} ${d.getDate()}</span></div>
+    ${focusStrip()}
+    ${od.length ? `<div class="lsh"><b>Still open from before</b><button class="linkish" data-act="odToday">Move ${od.length > 1 ? "all " : ""}to today</button></div>${card(od.map(i => lrow(i, { showList: true })))}` : ""}
+    ${td.length ? `<div class="lsh"><b>Today</b><span>${td.length}</span></div>${card(td.map(i => lrow(i, { showList: true, noDue: true })))}` : ""}
+    ${empty ? `<div class="tempty"><b>${dn.length ? "Today's list is clear." : "Nothing due today."}</b><span>${inboxItems().length ? `${inboxItems().length} in your Inbox wait for a day. ` : ""}Give a task a day by typing it, like “pay rent fri”.</span></div>` : ""}
+    ${wk.length ? "" : ""}
+    ${dn.length ? tSec("dtoday", "Done today", dn.length, card(dn.map(i => lrow(i, { showList: true })))) : ""}`;
+}
+function vUpcoming() {
+  const tk = todayKey(), base = parse(tk), days = [];
+  for (let i = 0; i < 14; i++) days.push(dkey(addDays(base, i)));
+  const later = liveItems().filter(i => i.due && i.due > days[days.length - 1]).sort(listOrder);
+  return `${overdue(tk).length ? `<div class="lsh"><b>Overdue</b><button class="linkish" data-act="odToday">Move to today</button></div>${card(overdue(tk).map(i => lrow(i, { showList: true })))}` : ""}
+    ${days.map((k, i) => { const its = dueOn(k), dd = parse(k);
+      return `<div class="uday${its.length ? "" : " none"}"><div class="udh"><b>${i === 0 ? "Today" : i === 1 ? "Tomorrow" : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dd.getDay()]}</b><span>${MON[dd.getMonth()]} ${dd.getDate()}</span><button class="uadd" data-act="qOn" data-due="${k}" aria-label="Add a task for ${esc(fmtWhen(k))}">+</button></div>
+        ${its.length ? card(its.map(x => lrow(x, { showList: true, noDue: true }))) : ""}</div>`; }).join("")}
+    ${later.length ? `<div class="lsh"><b>Later</b><span>${later.length}</span></div>${card(later.map(i => lrow(i, { showList: true })))}` : ""}`;
+}
+function vList(lid) {
+  const m = listMeta(lid); if (!m) return "";
+  const open = itemsIn(lid).filter(i => i.st !== "some").sort(listOrder), some = somedayItems(lid), done = withL(lid, L.done[lid]).filter(i => !i.open).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  const unsorted = isInbox(lid) ? inboxItems().length : 0;
+  const shared = isSharedList(m), val = (settings().listV || {})[lid];
+  const head = isInbox(lid) ? `<div class="lhead"><div><h3 class="lname">Inbox</h3><span class="hint">Everything you add without a list lands here.</span></div>${unsorted >= 2 ? `<button class="btn small primary" data-act="sortStart">Sort ${unsorted}</button>` : ""}</div>`
+    : `<div class="lhead"><div><h3 class="lname">${esc(m.name)}</h3><span class="hint">${shared ? `Shared with ${esc((m.members || []).filter(u => u !== ST.uid).map(u => firstName(((m.people || {})[u] || {}).n)).join(", "))}` : "Only you"}${val ? ` · ${esc(valueName(val))}` : ""}</span></div>
+      <div class="lhact">${avatars(m)}<button class="btn small" data-act="lShare" data-l="${esc(lid)}">${shared ? "People" : "Share"}</button><button class="btn small quiet" data-act="lEdit" data-l="${esc(lid)}" aria-label="List settings">⋯</button></div></div>`;
+  return `${head}
+    ${open.length ? card(open.map(i => lrow(i))) : `<div class="tempty"><b>${isInbox(lid) ? "A clear head starts here." : "Nothing here yet."}</b><span>${isInbox(lid) ? "Write down whatever's circling: errands, ideas, things to buy. Give each a day or a list when you're ready." : shared ? "Add the first thing. Everyone in the list sees it straight away." : "Add the first thing above."}</span></div>`}
+    ${some.length ? tSec("some-" + lid, "Someday", some.length, card(some.map(i => lrow(i)))) : ""}
+    ${done.length ? tSec("done-" + lid, "Done & let go", done.length, card(done.slice(0, 50).map(i => lrow(i)))) : ""}`;
+}
+const T_OPEN_DEF = { "dtoday": false };
 function tOpen() { if (!S.tOpen) { S.tOpen = Object.assign({}, T_OPEN_DEF); try { Object.assign(S.tOpen, JSON.parse(localStorage.getItem("compass-topen") || "{}")); } catch (e) {} } return S.tOpen; }
 function tSec(k, title, n, body, right = "") {
   const open = !!tOpen()[k];
-  return `<section class="tsec${open ? " open" : ""}" id="tsec-${k}"><div class="tsh"><button class="tst" data-act="tFold" data-k="${k}" aria-expanded="${open}"><span class="chev" aria-hidden="true"></span><b>${title}</b>${n !== "" ? `<span class="tcount">${n}</span>` : ""}</button>${right}</div>${open ? body : ""}</section>`;
+  return `<section class="tsec${open ? " open" : ""}" id="tsec-${esc(k)}"><div class="tsh"><button class="tst" data-act="tFold" data-k="${esc(k)}" aria-expanded="${open}"><span class="chev" aria-hidden="true"></span><b>${title}</b>${n !== "" ? `<span class="tcount">${n}</span>` : ""}</button>${right}</div>${open ? body : ""}</section>`;
 }
-function tMeta(i) {
-  return [i.v ? `<span class="tval${isCore(i.v) ? " iscore" : ""}">${esc(valueName(i.v))}</span>` : "", i.moves >= 2 ? `<span class="tslip">Slipped ${i.moves}×</span>` : i.s === "errand" && i.wk && i.wk < thisWk() ? `<span class="tslip">From last week</span>` : ""].filter(Boolean).join("");
+function rTasks() {
+  if (!L.ready) return `<h2>Tasks</h2><div class="tempty"><b>Loading your lists…</b></div>`;
+  const tv = tvState();
+  return `<div class="lwrap"><div class="ltop"><h2>Tasks</h2></div>
+    ${qaddBox()}
+    ${lnav()}
+    <div class="lview" id="lview">${tv === "today" ? vToday() : tv === "upcoming" ? vUpcoming() : tv === "inbox" ? vList(inboxId()) : vList(tv)}</div></div>`;
 }
-function tRow(i, opts = {}) {
-  const done = i.s === "done", gone = i.s === "dropped", meta = opts.meta ?? tMeta(i);
-  const tick = gone ? `<span class="tick ghost" aria-hidden="true"></span>` : `<button class="tick${done ? " on" : ""}" data-act="${done ? "tUndo" : "tDone"}" data-id="${i.id}" aria-label="${done ? "Mark not done" : "Done"}: ${esc(i.t)}"></button>`;
-  return `<div class="trow${done || gone ? " closed" : ""}">${tick}<button class="ttx" data-act="tMenu" data-id="${i.id}" aria-label="${esc(i.t)}: options"><span class="tt">${esc(i.t)}</span>${meta ? `<span class="tm">${meta}</span>` : ""}</button>${opts.right || `<span class="tmore" aria-hidden="true"></span>`}</div>`;
+
+/* ---- one task, opened ---- */
+function rItemSheet() {
+  const sh = S.sheet, it = findItem(sh.l, sh.id); if (!it) { S.sheet = null; return ""; }
+  const m = listMeta(it.lid), tk = todayKey(), shared = isSharedList(m);
+  const when = [["Today", tk], ["Tomorrow", dkey(addDays(parse(tk), 1))], ["This weekend", dkey(nextWeekday(parse(tk), 5, false))], ["Next week", dkey(nextWeekday(parse(tk), 0, true))]];
+  const lists = [{ id: inboxId(), name: "Inbox" }].concat(listsArr());
+  const vals = valueList();
+  return `<div class="in item"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <div class="ihead"><button class="tick big${it.open ? "" : " on"}" data-act="${it.open ? "iDone" : "iUndo"}" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" data-close="1" aria-label="${it.open ? "Done" : "Not done"}"></button>
+      <textarea id="iTitle" class="ititle" rows="1" maxlength="500" data-iv="t" aria-label="Task">${esc(it.t)}</textarea></div>
+    <textarea id="iNote" class="inote" rows="2" maxlength="4000" data-iv="n" placeholder="Add a note" aria-label="Note">${esc(it.n || "")}</textarea>
+    <div class="ifield"><span class="flabel">When</span><div class="chips">${when.map(([l, k]) => `<button class="chip ${it.due === k ? "sel" : ""}" data-act="iDue" data-v="${k}">${l}</button>`).join("")}<button class="chip ${it.due ? "" : "sel"}" data-act="iDue" data-v="">No date</button></div>
+      <div class="irow"><label class="sr" for="iDate">Date</label><input type="date" id="iDate" data-iv="due" value="${esc(it.due || "")}"><label class="sr" for="iTime">Time</label><input type="time" id="iTime" data-iv="tm" value="${esc(it.tm || "")}" ${it.due ? "" : "disabled"}>
+      <select id="iRep" data-iv="rep" aria-label="Repeat"><option value="">Doesn't repeat</option>${["day", "wkday", "week", "month", "year"].map(u => `<option value="${u}" ${it.rep && it.rep.u === u ? "selected" : ""}>${REP_LABEL[u]}</option>`).join("")}</select></div>
+      ${it.rep ? `<p class="hint" style="margin:0">Repeats? If it's something you want to keep doing for its own sake, a floor tracks it better. <button class="linkish" data-act="iFloor" data-l="${esc(it.lid)}" data-id="${esc(it.id)}">Make it a floor</button></p>` : ""}</div>
+    <div class="ifield"><button class="ifocus${it.wk === thisWk() ? " on" : ""}" data-act="iFocus" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" aria-pressed="${it.wk === thisWk()}"><b>${it.wk === thisWk() ? "★ One of this week's three" : "☆ Make it one of this week's three"}</b><small>${weekErrands().length} of ${FOCUS_CAP} picked</small></button></div>
+    <div class="ifield"><label class="flabel" for="iList">List</label><select id="iList" data-iv="lid">${lists.map(l => `<option value="${esc(l.id)}" ${l.id === it.lid ? "selected" : ""}>${esc(l.name)}${isSharedList(listMeta(l.id)) ? " (shared)" : ""}</option>`).join("")}</select></div>
+    ${shared ? `<div class="ifield"><span class="flabel">Who's doing it</span><div class="chips"><button class="chip ${it.who ? "" : "sel"}" data-act="iWho" data-v="">Anyone</button>${(m.members || []).map(u => `<button class="chip ${it.who === u ? "sel" : ""}" data-act="iWho" data-v="${esc(u)}">${u === ST.uid ? "Me" : esc(firstName(((m.people || {})[u] || {}).n))}</button>`).join("")}</div></div>` : ""}
+    <div class="ifield"><span class="flabel">Serves</span><div class="chips">${vals.map(v => `<button class="chip ${it.v === v.id ? "sel" : ""}" data-act="iVal" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div></div>
+    <div class="ifield"><span class="flabel">Steps</span>
+      <div class="isubs">${(it.sub || []).map(x => `<div class="isub"><button class="tick${x.d ? " on" : ""}" data-act="iSubTick" data-k="${esc(x.id)}" aria-label="${x.d ? "Not done" : "Done"}: ${esc(x.t)}"></button><span class="${x.d ? "dn" : ""}">${esc(x.t)}</span><button class="x" data-act="iSubDel" data-k="${esc(x.id)}" aria-label="Remove step">×</button></div>`).join("")}
+      <form class="isubadd" id="iSubForm"><input type="text" id="iSubIn" maxlength="200" placeholder="${(it.sub || []).length ? "Add a step" : "Big? Break it into a first small step"}" aria-label="Add a step"><button class="btn small" type="submit">Add</button></form></div></div>
+    <div class="iacts">
+      ${it.st === "some" ? `<button class="btn" data-act="iSome" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" data-v="0">Bring back from Someday</button>` : `<button class="btn" data-act="iSome" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" data-v="1">Someday</button>`}
+      ${it.rep ? "" : `<button class="btn" data-act="iFloor" data-l="${esc(it.lid)}" data-id="${esc(it.id)}">Make it a floor</button>`}
+      ${it.open ? `<button class="btn quiet danger" data-act="iLet" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" data-close="1">Let it go</button>` : `<button class="btn quiet danger" data-act="iDel" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" data-close="1">Delete for good</button>`}
+    </div>
+    <p class="hint ifoot">${it.by && shared ? `Added by ${it.by === ST.uid ? "you" : esc(firstName(((m.people || {})[it.by] || {}).n))} · ` : ""}${it.at ? "Added " + esc(fmtWhen(dkey(new Date(it.at))).toLowerCase().replace(/^(mon|tue|wed|thu|fri|sat|sun)$/, x => x[0].toUpperCase() + x.slice(1))) : ""}</p></div>`;
 }
-function projBlock(p) {
-  const editing = S.stepFor === p.id || !p.next;
-  const step = editing
-    ? `<div class="pstep edit"><input type="text" id="step-${p.id}" placeholder="What's the very next step?" maxlength="140" aria-label="Next step for ${esc(p.t)}" value="${esc(S.stepFor === p.id ? "" : p.next || "")}"><button class="btn small primary" data-act="tStepSave" data-id="${p.id}">Save</button></div>`
-    : `<div class="pstep"><button class="tick" data-act="tStep" data-id="${p.id}" aria-label="Step done: ${esc(p.next)}"></button><span class="pnext"><small>Next step</small>${esc(p.next)}</span></div>`;
-  return `<div class="proj"><button class="ttx ph" data-act="tMenu" data-id="${p.id}" aria-label="${esc(p.t)}: options"><span class="tt">${esc(p.t)}</span>${p.v ? `<span class="tm"><span class="tval${isCore(p.v) ? " iscore" : ""}">${esc(valueName(p.v))}</span></span>` : ""}<span class="tmore" aria-hidden="true"></span></button>${step}</div>`;
+/* an edit typed into the open task: saved as you go */
+function itemField(el) {
+  const sh = S.sheet; if (!sh || sh.type !== "item") return false;
+  const it = findItem(sh.l, sh.id); if (!it) return false;
+  const k = el.dataset.iv, v = el.value;
+  if (k === "t") { const t = v.trim().slice(0, 500); if (t && t !== it.t) updItem(it.lid, it.id, { t }); return true; }
+  if (k === "n") { const n = v.slice(0, 4000); if (n !== (it.n || "")) updItem(it.lid, it.id, { n: n.trim() ? n : null }); return true; }
+  if (k === "due") { setDue(it, v || null); renderSheet(); return true; }
+  if (k === "tm") { updItem(it.lid, it.id, { tm: v || null }); renderSheet(); return true; }
+  if (k === "rep") { updItem(it.lid, it.id, { rep: v ? { u: v } : null, due: v && !it.due ? todayKey() : it.due }); renderSheet(); return true; }
+  if (k === "lid") { if (v !== it.lid) { moveItem(it.lid, it.id, v); S.sheet = { type: "item", l: v, id: it.id }; toast(`Moved to ${listName(v)}`); renderSheet(); render(); } return true; }
+  return false;
 }
-function doNext(wk, projs, inbox, later) {
-  const cores = ((profile() || {}).cores || []).map(c => c.value);
-  const first = wk.slice().sort((a, b) => (b.moves || 0) - (a.moves || 0))[0];
-  if (first) return `<div class="donext"><span class="dnl">Do next</span><div class="dnrow">
-      <button class="tick big" data-act="tDone" data-id="${first.id}" aria-label="Done: ${esc(first.t)}"></button>
-      <button class="ttx" data-act="tMenu" data-id="${first.id}"><span class="tt">${esc(first.t)}</span><span class="tm">${wk.length > 1 ? `${wk.length - 1} more this week` : "Last one this week"}</span></button></div></div>`;
-  const p = projs.filter(x => x.next).sort((a, b) => cores.includes(b.v) - cores.includes(a.v))[0];
-  if (p) return `<div class="donext"><span class="dnl">Do next</span><div class="dnrow">
-      <button class="tick big" data-act="tStep" data-id="${p.id}" aria-label="Step done: ${esc(p.next)}"></button>
-      <button class="ttx" data-act="tMenu" data-id="${p.id}"><span class="tt">${esc(p.next)}</span><span class="tm">Next step · ${esc(p.t)}</span></button></div></div>`;
-  if (inbox.length) return `<div class="donext"><span class="dnl">Do next</span><div class="dnrow">
-      <span class="dnic" aria-hidden="true">↧</span><span class="ttx"><span class="tt">Sort ${inbox.length} new ${inbox.length > 1 ? "items" : "item"}</span><span class="tm">About ${Math.max(1, Math.round(inbox.length / 10))} min. Each gets a home.</span></span>
-      <button class="btn primary small" data-act="sortStart">Sort</button></div></div>`;
-  if (later.length) return `<div class="donext"><span class="dnl">Do next</span><div class="dnrow">
-      <span class="dnic" aria-hidden="true">→</span><span class="ttx"><span class="tt">Pick this week's errands</span><span class="tm">Up to ${ERRAND_CAP} from Next up.</span></span></div></div>`;
-  return "";
+/* moving a date later counts as a slip (after three, Compass suggests shrinking it or letting go) */
+function setDue(it, due) {
+  const slip = it.due && due && due > it.due && it.due <= todayKey();
+  updItem(it.lid, it.id, { due, tm: due ? it.tm : null, moves: slip ? (it.moves || 0) + 1 : it.moves });
 }
-function rTasks(id) {
-  const wk = weekErrands(), doneWk = doneErrandsThisWeek(), later = laterErrands(), projs = projectsList(), some = somedays(), inbox = inboxItems();
-  const done = titems().filter(i => i.s === "done" || i.s === "dropped").sort((a, b) => ((a.doneAt || "") < (b.doneAt || "") ? 1 : -1));
-  const mvw = isMvw(anyWeek(thisWk()), thisWk()), cores = ((profile() || {}).cores || []).map(c => c.value);
-  const used = wk.length + doneWk.length, empty = !wk.length && !doneWk.length && !later.length && !projs.length && !some.length && !inbox.length;
-  const add = `<div class="tadd"><textarea id="tQuick" rows="1" placeholder="Add a task…" aria-label="Add a task"></textarea><button class="btn primary small" data-act="capAdd" data-src="tQuick">Add</button></div>`;
-  const weekBody = used ? `<div class="card tl">${wk.map(i => tRow(i)).join("")}${doneWk.map(i => tRow(i, { meta: "" })).join("")}</div>${used > ERRAND_CAP ? `<p class="hint tnote">That's ${used}. Three a week is the sweet spot; move one to Next up if it's heavy.</p>` : ""}`
-    : `<p class="hint tnote">${later.length ? `Nothing picked yet. Choose up to ${ERRAND_CAP} from Next up.` : "Nothing this week."}</p>`;
-  return `
-  <h2>Tasks</h2>
-  ${add}
-  ${empty ? `<div class="tempty"><b>A clear head starts here.</b><span>Add whatever's circling: errands, ideas, big projects. Then sort them once and do three errands a week.</span></div>` : doNext(wk, projs, inbox, later)}
-  ${mvw && wk.length ? `<p class="hint tnote">Minimum Viable Week: errands are optional this week.</p>` : ""}
-  ${inbox.length ? tSec("inbox", "Inbox", inbox.length, `<div class="card tl">${inbox.map(i => tRow(i)).join("")}</div>`, inbox.length > 1 ? `<button class="btn small" data-act="sortStart">Sort all</button>` : "") : ""}
-  ${empty ? "" : tSec("week", "This week", used ? `${doneWk.length}/${used}` : "", weekBody)}
-  ${projs.length ? tSec("proj", "Projects", projs.length, `<div class="card tl">${projs.slice().sort((a, b) => cores.includes(b.v) - cores.includes(a.v)).map(projBlock).join("")}</div>`) : ""}
-  ${later.length ? tSec("later", "Next up", later.length, `<div class="card tl">${later.slice().sort((a, b) => (b.moves || 0) - (a.moves || 0)).map(i => tRow(i, { right: `<button class="tquick" data-act="tWeek" data-id="${i.id}" aria-label="Do “${esc(i.t)}” this week">This week</button>` })).join("")}</div>`) : ""}
-  ${some.length ? tSec("some", "Someday", some.length, `<div class="card tl">${some.map(i => tRow(i)).join("")}</div>`) : ""}
-  ${done.length ? tSec("done", "Done & let go", done.length, `<div class="card tl">${done.slice(0, 40).map(i => tRow(i, { meta: i.s === "dropped" ? "Let go" : "" })).join("")}</div>`) : ""}`;
-}
-/* the actions for one task, by where it is now */
-function rTaskMenu() {
-  const it = taskById(S.sheet.id); if (!it) { S.sheet = null; return ""; }
-  const thisW = it.s === "errand" && it.wk === thisWk();
-  const A = (act, label, sub, extra = "") => `<button class="tmact ${extra}" data-act="${act}" data-id="${it.id}" data-close="1"><b>${label}</b>${sub ? `<small>${sub}</small>` : ""}</button>`;
-  let acts = [];
-  if (it.s === "done" || it.s === "dropped") acts = [it.s === "done" ? A("tUndo", "Not done after all", "Puts it back where it was") : A("tBack", "Bring it back", "Back to your inbox")];
-  else if (it.s === "project") acts = [A("tStepEdit", "Change the next step", ""), A("tProjDone", "Project finished", "", "good"), A("tSomeday", "Someday", "Park it without guilt"), A("tDrop", "Let it go", "", "danger")];
-  else {
-    if (!thisW) acts.push(A("tWeek", "Do this week", weekErrands().length >= ERRAND_CAP ? `You already have ${weekErrands().length}` : `${weekErrands().length} of ${ERRAND_CAP} picked`));
-    if (thisW || it.s === "inbox" || it.s === "someday") acts.push(A("tLater", it.s === "errand" ? "Move to Next up" : "Next up", "Not this week, but soon"));
-    if (it.s !== "someday") acts.push(A("tProj", "Make it a project", "Big? Give it one next step"));
-    acts.push(A("tRoutine", "Make it a routine", "Repeats? Turn it into a floor"));
-    if (it.s !== "someday") acts.push(A("tSomeday", "Someday", "Park it without guilt"));
-    acts.push(A("tDrop", "Let it go", "", "danger"));
+
+/* ---- sorting the Inbox, one at a time ---- */
+function startSort() { S.sortSkip = new Set(); S.sortCount = 0; S.sortTotal = inboxItems().length; S.sortTally = {}; S.sortList = false; S.sheet = { type: "sort" }; }
+function sortPick(kind, arg) {
+  const it = inboxItems().find(i => !S.sortSkip.has(i.id)); if (!it) return;
+  const tally = k => { S.sortTally[k] = (S.sortTally[k] || 0) + 1; S.sortCount++; };
+  const tk = todayKey();
+  if (kind === "done") { completeItem(it.lid, it.id); tally("done"); }
+  else if (kind === "today") { updItem(it.lid, it.id, { due: tk }); tally("today"); }
+  else if (kind === "tomorrow") { updItem(it.lid, it.id, { due: dkey(addDays(parse(tk), 1)) }); tally("today"); }
+  else if (kind === "week") { if (weekErrands().length >= FOCUS_CAP) toast(`That's ${weekErrands().length + 1} this week. Three is the sweet spot.`); updItem(it.lid, it.id, { wk: thisWk() }); tally("week"); }
+  else if (kind === "date") { if (arg) { updItem(it.lid, it.id, { due: arg }); tally("today"); } }
+  else if (kind === "list") { if (arg) { moveItem(it.lid, it.id, arg); tally("list"); S.sortList = false; } else { S.sortList = !S.sortList; return; } }
+  else if (kind === "someday") { updItem(it.lid, it.id, { st: "some" }); tally("someday"); }
+  else if (kind === "drop") { updItem(it.lid, it.id, { open: false, st: "let", doneAt: Date.now() }); tally("drop"); }
+  else if (kind === "skip") { S.sortSkip.add(it.id); }
+  else if (kind === "recurring") {
+    const v = it.v || guessValue(it.t) || ((profile() || {}).cores || [])[0]?.value || (valueList()[0] || {}).id;
+    S.sheet = { type: "comp", isNew: true, fromTask: { l: it.lid, id: it.id }, draft: { id: "c-" + uidGen(), value: v, name: it.t.slice(0, 60), cadence: "weekly", target: 1, hours: 0.5 } };
+    return;
   }
-  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
-    <div class="tmedit"><label class="flabel" for="tm-text">Task</label><div class="tmrow"><input type="text" id="tm-text" value="${esc(it.t)}" maxlength="200"><button class="btn small" data-act="tRename" data-id="${it.id}">Save</button></div></div>
-    <div class="tmacts">${acts.join("")}</div></div>`;
+  S.sortList = false;
 }
 function rSortSheet() {
-  const list = inboxItems().filter(i => !S.sortSkip.has(i.id));
-  const T = S.sortTally || {};
+  const list = inboxItems().filter(i => !S.sortSkip.has(i.id)), T = S.sortTally || {};
   if (!list.length) {
-    const parts = [["week", "this week"], ["later", "later"], ["project", "projects"], ["recurring", "new components"], ["someday", "someday"], ["done", "done on the spot"], ["drop", "let go"]].filter(([k]) => T[k]).map(([k, l]) => `${T[k]} ${l}`);
+    const parts = [["today", "got a day"], ["week", "this week's three"], ["list", "into lists"], ["recurring", "new floors"], ["someday", "someday"], ["done", "done on the spot"], ["drop", "let go"]].filter(([k]) => T[k]).map(([k, l]) => `${T[k]} ${l}`);
     return `<div class="in"><div class="grab"></div><div class="hero" style="padding:0">${bigCompass()}</div>
       <h2 style="margin:0;text-align:center">${S.sortCount ? "Inbox sorted." : "Nothing left to sort."}</h2>
       ${parts.length ? `<p class="lede" style="text-align:center;margin-inline:auto">${esc(parts.join(" · "))}</p>` : ""}
-      ${S.sortSkip && S.sortSkip.size ? `<p class="hint" style="text-align:center">${S.sortSkip.size} skipped for now. They stay in your inbox.</p>` : ""}
+      ${S.sortSkip && S.sortSkip.size ? `<p class="hint" style="text-align:center">${S.sortSkip.size} skipped for now. They stay in your Inbox.</p>` : ""}
       <button class="btn primary" data-act="closeSheet">Done</button></div>`;
   }
-  const it = list[0], g = guessKind(it.t), pos = (S.sortCount || 0) + 1, total = Math.max(S.sortTotal || 0, pos + list.length - 1);
-  const wkN = weekErrands().length;
-  const btn = (k, key, title, sub, extra = "") => `<button class="sbtn ${extra}${g === k || (g === "errand" && k === "week" && wkN < ERRAND_CAP) || (g === "errand" && k === "later" && wkN >= ERRAND_CAP) ? " sug" : ""}" data-act="sortPick" data-k="${k}"><kbd>${key}</kbd><b>${title}</b><small>${sub}</small></button>`;
-  let body;
-  if (S.sortProj && S.sortProj.id === it.id) {
-    const cores = ((profile() || {}).cores || []).map(c => c.value);
-    const vals = valueList().slice().sort((a, b) => cores.includes(b.id) - cores.includes(a.id));
-    body = `<div class="flabel">Which value does it serve?</div>
-      <div class="chips">${vals.map(v => `<button class="chip ${S.sortProj.v === v.id ? "sel" : ""}" data-act="sortProjV" data-v="${esc(v.id)}">${esc(v.name)}${cores.includes(v.id) ? " · Core" : ""}</button>`).join("")}</div>
-      <label class="flabel" for="sp-next">The very next physical step</label>
-      <input type="text" id="sp-next" maxlength="140" placeholder="e.g. Email Sam to ask for the course link">
-      <div class="row"><button class="btn quiet" data-act="sortProjBack">Back</button><button class="btn primary" data-act="sortProjSave">Save project</button></div>
-      <p class="hint" style="margin:0">Big goals stall without a concrete first action. One next step is enough.</p>`;
-  } else {
-    body = `<div class="sortgrid">
-      ${btn("done", "1", "Done already", "Under 2 minutes? Do it now.")}
-      ${btn("week", "2", "Errand · this week", wkN >= ERRAND_CAP ? `${wkN} of ${ERRAND_CAP} slots used` : `${wkN} of ${ERRAND_CAP} slots used`)}
-      ${btn("later", "3", "Errand · later", "Waits in Next up")}
-      ${btn("recurring", "4", "Recurring", "Becomes a component with a floor")}
-      ${btn("project", "5", "Project", "Needs several steps; pick one next step")}
-      ${btn("someday", "6", "Someday", "Not this season. Parked.")}
-      ${btn("drop", "7", "Let it go", "It doesn't matter anymore", "")}
-      <button class="sbtn" data-act="sortPick" data-k="skip"><kbd>S</kbd><b>Skip for now</b><small>Stays in the inbox</small></button></div>`;
-  }
+  const it = list[0], pos = (S.sortCount || 0) + 1, total = Math.max(S.sortTotal || 0, pos + list.length - 1), wkN = weekErrands().length;
+  const rec = KIND_RX.recurring.test(it.t);
+  const btn = (k, key, title, sub, sug) => `<button class="sbtn${sug ? " sug" : ""}" data-act="sortPick" data-k="${k}"><kbd>${key}</kbd><b>${title}</b><small>${sub}</small></button>`;
+  const lists = listsArr();
   return `<div class="in"><div class="grab"></div>
     <div class="row"><span class="flabel">Sorting ${pos} of ${total}</span><button class="btn quiet small" data-act="closeSheet">Stop</button></div>
     <div class="vbar" style="height:5px;border-radius:3px;background:var(--sunk)"><i style="display:block;height:100%;width:${Math.round((pos - 1) / total * 100)}%;background:var(--accent);border-radius:3px;transition:width .3s"></i></div>
-    <div class="sortcard" id="sortCard"><div class="q">${esc(it.t)}</div>${it.at ? `<div class="hint" style="margin-top:6px">Captured ${it.at === todayKey() ? "today" : daysBetween(it.at, todayKey()) + " days ago"}</div>` : ""}</div>
-    ${body}</div>`;
+    <div class="sortcard" id="sortCard"><div class="q">${esc(it.t)}</div>${it.at ? `<div class="hint" style="margin-top:6px">Added ${daysBetween(dkey(new Date(it.at)), todayKey()) ? daysBetween(dkey(new Date(it.at)), todayKey()) + " days ago" : "today"}</div>` : ""}</div>
+    <div class="sortgrid">
+      ${btn("done", "1", "Done already", "Under 2 minutes? Do it now.")}
+      ${btn("today", "2", "Today", "On today's list")}
+      ${btn("week", "3", "This week's three", `${wkN} of ${FOCUS_CAP} picked`, !rec && wkN < FOCUS_CAP)}
+      <label class="sbtn sdate"><kbd>4</kbd><b>Pick a day</b><input type="date" id="sortDate" aria-label="Pick a day" min="${todayKey()}"></label>
+      ${lists.length ? btn("list", "5", "Into a list", S.sortList ? "Choose one below" : lists.slice(0, 2).map(l => l.name).join(", ") + (lists.length > 2 ? "…" : "")) : ""}
+      ${btn("recurring", "6", "Make it a floor", "Repeats? Track it with a weekly floor", rec)}
+      ${btn("someday", "7", "Someday", "Not this season. Parked.")}
+      ${btn("drop", "8", "Let it go", "It doesn't matter anymore")}
+      <button class="sbtn" data-act="sortPick" data-k="skip"><kbd>S</kbd><b>Skip for now</b><small>Stays in the Inbox</small></button></div>
+    ${S.sortList ? `<div class="chips">${lists.map(l => `<button class="chip" data-act="sortPick" data-k="list" data-v="${esc(l.id)}">${esc(l.name)}</button>`).join("")}</div>` : ""}</div>`;
 }
 function rCaptureSheet() {
+  const q = S.capDraft ? parseQuick(S.capDraft) : { chips: [] };
   return `<div class="in"><div class="grab"></div><h2 style="margin:0">What's on your mind?</h2>
-    <p class="hint" style="margin:0">Write it down and let it go. You'll sort it on Sunday, or now if you like.</p>
-    <div class="card">${capBox("capSheet")}</div>
+    <p class="hint" style="margin:0">Write it down and let it go. Add a day (“tomorrow”, “fri 6pm”) or a list (“#groceries”) if you like.</p>
+    <div class="card"><div class="capbox"><textarea id="capSheet" rows="3" placeholder="One thing per line; paste a whole list if you like." aria-label="Capture thoughts">${esc(S.capDraft || "")}</textarea>
+      <div class="qchips">${q.chips.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join("")}</div>
+      <div class="row"><span class="hint">Ctrl/⌘ + Enter to add</span><button class="btn primary small" data-act="capAdd" data-src="capSheet">Add</button></div></div></div>
     ${S.capMsg ? `<p class="hint" style="margin:0">${esc(S.capMsg)}</p>` : ""}
     <div class="row">${inboxItems().length ? `<button class="btn" data-act="sortStart">Sort ${inboxItems().length} now</button>` : "<span></span>"}<button class="btn quiet" data-act="closeSheet">Close</button></div></div>`;
+}
+/* the list sheet: rename, value, colour order, leave or delete */
+function rListSheet() {
+  const lid = S.sheet.l, m = listMeta(lid); if (!m) { S.sheet = null; return ""; }
+  const own = m.owner === ST.uid, val = (settings().listV || {})[lid], shared = isSharedList(m);
+  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <h2 style="margin:0">List</h2>
+    <div class="field"><label class="flabel" for="lName">Name</label><input type="text" id="lName" maxlength="80" value="${esc(m.name)}"></div>
+    <div class="field"><span class="flabel">Serves (only you see this)</span><div class="chips"><button class="chip ${val ? "" : "sel"}" data-act="lVal" data-l="${esc(lid)}" data-v="">Nothing in particular</button>${valueList().map(v => `<button class="chip ${val === v.id ? "sel" : ""}" data-act="lVal" data-l="${esc(lid)}" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div></div>
+    <div class="row"><button class="btn primary" data-act="lSave" data-l="${esc(lid)}">Save</button></div>
+    <div class="lrisk">${S.lConfirm === lid ? `<p><b>${own && !shared ? `Delete “${esc(m.name)}” and its ${itemsIn(lid).length} open tasks?` : `Leave “${esc(m.name)}”?`}</b> ${own && !shared ? "This can't be undone." : own ? "You made it, so it passes to the next person. You can be invited back." : "You can be invited back."}</p><div class="row"><button class="btn quiet" data-act="lRiskNo">Keep it</button><button class="btn danger" data-act="lRiskYes" data-l="${esc(lid)}">${own && !shared ? "Delete list" : "Leave list"}</button></div>`
+      : `<button class="btn quiet danger" data-act="lRisk" data-l="${esc(lid)}">${own && !shared ? "Delete this list" : "Leave this list"}</button>`}</div></div>`;
+}
+function rNewListSheet() {
+  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <h2 style="margin:0">New list</h2>
+    <p class="hint" style="margin:0">Groceries, a trip, a project, a home to run with someone. You can share it next.</p>
+    <form id="newListForm" class="field"><label class="flabel" for="nlName">Name</label><input type="text" id="nlName" maxlength="80" placeholder="e.g. Groceries" autocomplete="off">
+      <div class="chips" style="margin-top:8px">${["Groceries", "Home", "Trip", "Gifts", "Work"].filter(n => !listsArr().some(l => l.name.toLowerCase() === n.toLowerCase())).map(n => `<button type="button" class="chip" data-act="nlPick" data-v="${n}">${n}</button>`).join("")}</div>
+      <div class="row" style="margin-top:12px"><span></span><button class="btn primary" type="submit">Create list</button></div></form></div>`;
+}
+/* the Today tab's slice: what's due today and this week's three */
+function todayTasks(id) {
+  if (id !== thisWk() || !L.ready) return "";
+  const tk = todayKey(), od = overdue(tk), td = dueOn(tk), wk = weekErrands().filter(i => !(i.due && i.due <= tk)), n = inboxItems().length;
+  const doneWk = doneErrandsThisWeek();
+  if (!od.length && !td.length && !wk.length && !n && !doneWk.length) return "";
+  const mvw = isMvw(anyWeek(id), id);
+  const rows = od.concat(td).slice(0, 6).map(i => lrow(i, { showList: true, noVal: true })).concat(wk.map(i => lrow(i, { showList: true, noVal: true, noFocus: true })));
+  return `<h3>Tasks · ${doneOn(tk).length ? `${doneOn(tk).length} done today` : `${od.length + td.length} today`}${wk.length + doneWk.length ? ` · this week's three ${doneWk.length}/${wk.length + doneWk.length}` : ""}</h3>
+    ${mvw ? `<p class="hint" style="margin:0 0 6px">Optional during a Minimum Viable Week.</p>` : ""}
+    <div class="card">${rows.join("")}
+      ${od.length + td.length > 6 ? `<button class="comp" data-act="gotoTasks"><span class="lbl"><span>${od.length + td.length - 6} more today</span></span><span class="chev">›</span></button>` : ""}
+      ${n ? `<button class="comp" data-act="sortStart"><span class="lbl"><span>${n} in your Inbox without a day</span><small>Sort them so they stop circling</small></span><span class="chev">›</span></button>` : ""}
+      ${!rows.length && !n ? `<p class="hint pad" style="margin:0">All done for today.</p>` : ""}</div>`;
+}
+/* where a quick-add lands: the list you're looking at, or the day you tapped + on */
+const qCtx = () => { const tv = tvState(), c = {}; if (L.meta[tv]) c.lid = tv; if (S.qDue) c.due = S.qDue; else if (tv === "today") c.due = todayKey(); return c; };
+function refreshChips() {
+  const box = $("#qChips"); if (!box) return;
+  const f = $("#qAdd"); S.qDraft = f ? f.value : S.qDraft;
+  const q = S.qDraft ? parseQuick(S.qDraft, { ignore: S.qIgnore || new Set() }) : { chips: [] };
+  const ctx = qCtx(), extra = !q.due && ctx.due ? [{ k: "due ctx", label: fmtWhen(ctx.due) }] : [];
+  box.innerHTML = extra.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join("") + q.chips.map(c => `<button class="qchip ${c.k}" data-act="qIgnore" data-k="${c.k}" aria-label="${esc(c.label)}: tap to keep it as text">${esc(c.label)}<span aria-hidden="true">×</span></button>`).join("") + (S.qIgnore && S.qIgnore.size ? `<button class="qchip off" data-act="qIgnoreReset">Read dates again</button>` : "");
+}
+function capBox(id, placeholder) {
+  return `<div class="capbox"><textarea id="${id}" rows="3" placeholder="${esc(placeholder || "Dump everything on your mind. One thing per line; paste a whole list if you like.")}" aria-label="Capture thoughts"></textarea>
+    <div class="row"><span class="hint">Ctrl/⌘ + Enter to add</span><button class="btn primary small" data-act="capAdd" data-src="${id}">Add to Inbox</button></div></div>`;
+}
+function inboxCta() {
+  const n = inboxItems().length; if (!n) return "";
+  return `<div class="inboxcta"><div><b>${n} unsorted</b><div class="hint">About ${Math.max(1, Math.round(n / 10))} min. Each one gets a day or a home, so it stops circling.</div></div><button class="btn primary" data-act="sortStart">Sort now</button></div>`;
+}
+
+/* ============ people together: invites, shared lists, watchers ============
+   An invite is a long random link (invites/{token}) that says who sent it and to what: a list, being their watcher, or
+   just Compass. Anyone with the link can see who sent it; joining needs signing in, and the database only lets someone
+   in while the link is valid. Links last 14 days and can be stopped any time. */
+const INV_DAYS = 14;
+const randTok = () => { const a = new Uint8Array(24); crypto.getRandomValues(a); return btoa(String.fromCharCode(...a)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const inviteUrl = tok => location.origin + "/?invite=" + tok;
+/* my live links, by purpose: a list id, "watch" or "app" */
+function myInvite(key) { const x = (settings().inv || {})[key]; return x && x.exp > Date.now() + 864e5 ? x : null; }
+async function makeInvite(key) {
+  const have = myInvite(key); if (have) return have.t;
+  const tok = randTok(), exp = Date.now() + INV_DAYS * 864e5;
+  const d = { kind: key === "watch" ? "watch" : key === "app" ? "app" : "list", from: ST.uid, name: myName().slice(0, 60), exp, at: Date.now() };
+  if (d.kind === "list") { d.list = key; d.listName = listName(key).slice(0, 80); }
+  if (d.kind === "watch") d.watch = ST.uid;
+  if (d.kind === "watch" && !W8.mine) await ensureWatchDoc();
+  await FB.setDoc(FB.doc(ST.fs, "invites", tok), d);
+  editSettings(st => { st.inv = st.inv || {}; st.inv[key] = { t: tok, exp }; });
+  return tok;
+}
+async function stopInvite(key) {
+  const x = (settings().inv || {})[key]; if (!x) return;
+  try { await FB.deleteDoc(FB.doc(ST.fs, "invites", x.t)); } catch (e) {}
+  editSettings(st => { if (st.inv) delete st.inv[key]; });
+}
+const INVITE_TEXT = {
+  list: (n, ln) => `${n} invited you to the list “${ln}” on Compass. Join to add and tick things together:`,
+  watch: n => `${n} would like you as their accountability partner on Compass: you'd see how their week is going and can cheer them on.`,
+  app: n => `${n} uses Compass to keep a few small weekly floors for what matters. Try it:`,
+};
+async function shareInvite(key, btn) {
+  if (btn) btn.disabled = true;
+  let tok; try { tok = await makeInvite(key); } catch (e) { if (btn) btn.disabled = false; toast("Couldn't make the link (" + (e && e.code || "error") + "). Try again."); return; }
+  if (btn) btn.disabled = false;
+  const url = inviteUrl(tok), kind = key === "watch" ? "watch" : key === "app" ? "app" : "list";
+  const text = INVITE_TEXT[kind](firstName(myName()), listName(key));
+  renderSheet(); render();
+  if (navigator.share && matchMedia("(pointer:coarse)").matches) { try { await navigator.share({ title: "Compass", text, url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+  copyText(text + " " + url, "Invite link copied. Paste it in a message.");
+}
+async function copyText(t, msg) {
+  try { await navigator.clipboard.writeText(t); toast(msg || "Copied"); }
+  catch (e) { S.copyFallback = t; toast("Select the link and copy it"); renderSheet(); }
+}
+function inviteBox(key, what) {
+  const x = myInvite(key);
+  if (!x) return `<button class="btn primary" data-act="invMake" data-k="${esc(key)}">${what}</button>`;
+  const left = Math.max(1, Math.round((x.exp - Date.now()) / 864e5));
+  return `<div class="invbox"><div class="invlink"><input type="text" readonly value="${esc(inviteUrl(x.t))}" aria-label="Invite link" onfocus="this.select()"></div>
+    <div class="row" style="justify-content:flex-start;gap:8px"><button class="btn primary small" data-act="invMake" data-k="${esc(key)}">${navigator.share && matchMedia("(pointer:coarse)").matches ? "Share link" : "Copy link"}</button><button class="btn small quiet danger" data-act="invStop" data-k="${esc(key)}">Stop this link</button></div>
+    <p class="hint" style="margin:0">Works for ${left} more day${left === 1 ? "" : "s"}. Anyone with the link can ${key === "watch" ? "become your watcher" : key === "app" ? "see that you invited them" : "join this list"}, so send it only to who you mean.</p></div>`;
+}
+
+/* ---- opening an invite link ---- */
+function captureInvite() {
+  try {
+    const q = new URLSearchParams(location.search), tok = q.get("invite");
+    if (tok && /^[A-Za-z0-9_-]{20,64}$/.test(tok)) { sessionStorage.setItem("compass-invite", tok); history.replaceState(null, "", location.pathname); }
+  } catch (e) {}
+}
+/* kept for this tab (through signing in or making an account) until accepted or declined */
+const pendingInvite = () => { try { return sessionStorage.getItem("compass-invite") || ""; } catch (e) { return ""; } };
+const dropInvite = () => { try { sessionStorage.removeItem("compass-invite"); } catch (e) {} S.invInfo = null; };
+/* before signing in: who invited me, for the landing page */
+async function peekInvite() {
+  const tok = pendingInvite(); if (!tok || S.invPeeked === tok || !ST.fs) return;
+  S.invPeeked = tok;
+  try { const sn = await FB.getDoc(FB.doc(ST.fs, "invites", tok)); S.invInfo = sn.exists() ? Object.assign({ tok }, sn.data()) : { tok, gone: true }; }
+  catch (e) { S.invInfo = null; }
+  if (S.authState !== "in") render();
+}
+function inviteBanner() {
+  const i = S.invInfo; if (!i || i.gone || i.exp < Date.now()) return "";
+  const what = i.kind === "list" ? `invited you to the list “${esc(i.listName || "a list")}”` : i.kind === "watch" ? "would like you as their accountability partner" : "invited you to Compass";
+  return `<div class="invbanner"><span class="avs big"><i>${esc(initials(i.name))}</i></span><div><b>${esc(firstName(i.name))} ${what}.</b><span>Sign in or create an account to ${i.kind === "app" ? "get started" : "join"}.</span></div></div>`;
+}
+/* after signing in: say what it is and ask */
+async function afterSignIn() {
+  subscribeWatch();
+  const tok = pendingInvite(); if (!tok) return;
+  let inv = null;
+  try { const sn = await FB.getDoc(FB.doc(ST.fs, "invites", tok)); inv = sn.exists() ? sn.data() : null; } catch (e) { return; }
+  if (!inv || inv.exp < Date.now()) { dropInvite(); toast("That invitation has expired. Ask for a new link."); return; }
+  if (inv.from === ST.uid) { dropInvite(); toast("That's your own invite link. Send it to someone else."); return; }
+  if (inv.kind === "app") { dropInvite(); toast(`Welcome! ${firstName(inv.name)} invited you.`); return; }
+  S.sheet = { type: "invite", tok, inv }; render();
+}
+function rInviteSheet() {
+  const { inv } = S.sheet, n = firstName(inv.name);
+  const body = inv.kind === "list"
+    ? `<h2 style="margin:0">Join “${esc(inv.listName || "the list")}”?</h2><p class="lede" style="margin:0">${esc(n)} shared this list with you. You'll both see it in Tasks and can add, tick and change things together.</p>`
+    : `<h2 style="margin:0">Be ${esc(n)}'s watcher?</h2><p class="lede" style="margin:0">${esc(n)} asked you to keep an eye on their week. You'll see how many of their floors they hold each week (only what they choose to share) and can send a cheer. Nothing about your own week is shared.</p>`;
+  return `<div class="in"><div class="grab"></div><span class="avs big"><i>${esc(initials(inv.name))}</i></span>${body}
+    <p class="hint" style="margin:0">You appear to them as <b>${esc(myName())}</b>. You can change your name in the next step, and leave any time.</p>
+    <div class="row"><button class="btn quiet" data-act="invNo">Not now</button><button class="btn primary" data-act="invYes" ${S.invBusy ? "disabled" : ""}>${S.invBusy ? "Joining…" : inv.kind === "list" ? "Join list" : "Yes, I'll watch"}</button></div></div>`;
+}
+async function acceptInvite() {
+  const { tok, inv } = S.sheet; S.invBusy = true; renderSheet();
+  try {
+    if (inv.kind === "list") {
+      await FB.updateDoc(FB.doc(ST.fs, "lists", inv.list), { members: FB.arrayUnion(ST.uid), ["people." + ST.uid]: { n: myName() }, via: tok, up: Date.now() });
+      setTv(inv.list); S.tab = "tasks"; toast(`You joined “${inv.listName || "the list"}”`);
+    } else {
+      await FB.updateDoc(FB.doc(ST.fs, "watch", inv.watch), { watchers: FB.arrayUnion(ST.uid), ["people." + ST.uid]: { n: myName() }, via: tok });
+      S.tab = "today"; toast(`You're now ${firstName(inv.name)}'s watcher`);
+    }
+    dropInvite(); S.sheet = null;
+  } catch (e) {
+    const c = fsCode(e);
+    toast(c === "permission_denied" ? "That link no longer works (it was stopped or expired). Ask for a new one." : c === "not_found" ? "That list or week doesn't exist any more." : "Couldn't join (" + (e && e.code || "error") + "). Try again.");
+    if (c === "permission_denied" || c === "not_found") { dropInvite(); S.sheet = null; }
+  }
+  S.invBusy = false; render();
+}
+/* your name as others see it, everywhere you're shared */
+function publishName(n) {
+  for (const [lid, m] of Object.entries(L.meta)) if ((m.members || []).includes(ST.uid)) FB.updateDoc(FB.doc(ST.fs, "lists", lid), { ["people." + ST.uid]: { n } }).catch(() => {});
+  if (W8.mine) FB.setDoc(FB.doc(ST.fs, "watch", ST.uid), { name: n }, { merge: true }).catch(() => {});
+}
+const nameForm = () => `<form class="wname" id="wNameForm"><label class="flabel" for="wName">Your name as others see it</label><div class="tmrow"><input type="text" id="wName" maxlength="60" value="${esc(myName())}" autocomplete="name"><button class="btn small" type="submit">Save</button></div></form>`;
+
+/* ---- sharing a list ---- */
+function rShareSheet() {
+  const lid = S.sheet.l, m = listMeta(lid); if (!m) { S.sheet = null; return ""; }
+  const own = m.owner === ST.uid, ppl = m.people || {};
+  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <h2 style="margin:0">Share “${esc(m.name)}”</h2>
+    <p class="hint" style="margin:0">Everyone in a list can add, tick, assign and change its tasks. Your other lists, floors and weeks stay private.</p>
+    <div class="card people">${(m.members || []).map(u => `<div class="prow"><span class="avs"><i>${esc(initials((ppl[u] || {}).n))}</i></span><span class="pn">${u === ST.uid ? `${esc(myName())} <small>(you)</small>` : esc((ppl[u] || {}).n || "Someone")}${u === m.owner ? ` <span class="tag">Made it</span>` : ""}</span>${own && u !== ST.uid ? `<button class="btn small quiet danger" data-act="lRemove" data-l="${esc(lid)}" data-u="${esc(u)}">Remove</button>` : ""}</div>`).join("")}</div>
+    <div class="ifield"><span class="flabel">Invite someone</span>${inviteBox(lid, "Make an invite link")}</div>
+    ${nameForm()}
+    ${S.copyFallback ? `<p class="hint">Copy this: <input type="text" readonly value="${esc(S.copyFallback)}" onfocus="this.select()" aria-label="Invitation message to copy"></p>` : ""}</div>`;
+}
+async function removeMember(lid, u) {
+  const m = listMeta(lid); if (!m || m.owner !== ST.uid) return;
+  const people = Object.assign({}, m.people || {}); delete people[u];
+  try { await FB.updateDoc(FB.doc(ST.fs, "lists", lid), { members: (m.members || []).filter(x => x !== u), people, up: Date.now() }); toast(`${firstName(((m.people || {})[u] || {}).n)} removed`); } catch (e) { listErr(e); }
+}
+
+/* ---- watchers: an accountability partner sees your week ----
+   Monitoring progress helps more when it's reported to someone (Harkin et al. 2016). You choose who, and how much:
+   each floor with its count, or only how many held. watch/{you} is rewritten when your week changes. */
+const W8 = { mine: null, watching: {}, cheers: [], ready: false };
+function subscribeWatch() {
+  if (S.mode !== "db" || ST.subs.__watch || !ST.uid) return;
+  ST.subs.__watch = FB.onSnapshot(FB.doc(ST.fs, "watch", ST.uid), sn => { W8.mine = sn.exists() ? sn.data() : null; W8.ready = true; soonRender(); schedulePublish(); }, () => { unsubscribe("__watch"); });
+  ST.subs.__watching = FB.onSnapshot(FB.query(FB.collection(ST.fs, "watch"), FB.where("watchers", "array-contains", ST.uid)), snap => {
+    const before = Object.keys(W8.watching); W8.watching = Object.fromEntries(snap.docs.map(d => [d.id, d.data()])); soonRender();
+  }, () => { unsubscribe("__watching"); });
+  ST.subs.__cheers = FB.onSnapshot(FB.collection(ST.fs, "watch", ST.uid, "cheers"), snap => { W8.cheers = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => (b.at || 0) - (a.at || 0)); soonRender(); }, () => { unsubscribe("__cheers"); });
+}
+async function ensureWatchDoc() {
+  if (W8.mine) return;
+  const d = { watchers: [], people: {}, name: myName(), share: "floors", up: Date.now() };
+  W8.mine = d; await FB.setDoc(FB.doc(ST.fs, "watch", ST.uid), d);
+  schedulePublish(true);
+}
+function watchWeek(id) {
+  const share = (W8.mine && W8.mine.share) || "floors", F = floorsFor(id), vals = valueList(), st = vals.map(v => valueStatus(v.id, F, id)), w = anyWeek(id);
+  const out = { id, cleared: st.filter(x => x.s === "clear").length, vals: vals.length, held: F.filter(f => f.have >= f.need).length, total: F.length, mvw: isMvw(w, id), rev: !!(w && w.r && w.r.done) };
+  if (share === "floors") out.floors = F.slice(0, 30).map(f => ({ n: String(f.c.name).slice(0, 60), v: valueName(f.v), h: Math.round(f.have * 10) / 10, need: f.need, u: f.c.unit || "", m: f.c.cadence === "monthly" ? 1 : 0 }));
+  return out;
+}
+function schedulePublish(now) { clearTimeout(S.pubT); S.pubT = setTimeout(publishWatch, now ? 0 : 1500); }
+function publishWatch() {
+  if (!W8.mine || !ST.uid || !profileReady || !onboarded() || W8.mine.paused) return;
+  const cur = thisWk(), prev = wid(addDays(monday(new Date()), -7));
+  const data = { name: myName(), week: watchWeek(cur), prev: anyWeek(prev) ? watchWeek(prev) : null, share: W8.mine.share || "floors" };
+  const sig = JSON.stringify(data); if (sig === S.pubSig) return; S.pubSig = sig;
+  /* update, not merge: each field is replaced whole, so floors don't linger after switching to "only how many held" */
+  FB.updateDoc(FB.doc(ST.fs, "watch", ST.uid), Object.assign({}, data, { up: Date.now() })).catch(() => { S.pubSig = null; });
+}
+function watchSection() {
+  const m = W8.mine, ws = (m && m.watchers) || [], ppl = (m && m.people) || {};
+  const sum = ws.length ? `${ws.map(u => firstName((ppl[u] || {}).n)).join(", ")} ${ws.length > 1 ? "see" : "sees"} your week` : "Nobody yet";
+  return cSec("watch", "Accountability partner", esc(sum), `
+    <p class="hint" style="margin:0 0 10px">Someone you trust sees how your week is going and can cheer you on. Telling someone how you're doing is one of the simplest ways to keep going. <span class="src">Harkin et al. 2016</span></p>
+    ${ws.length ? `<div class="card people">${ws.map(u => `<div class="prow"><span class="avs"><i>${esc(initials((ppl[u] || {}).n))}</i></span><span class="pn">${esc((ppl[u] || {}).n || "Someone")}</span><button class="btn small quiet danger" data-act="wRemove" data-u="${esc(u)}">Remove</button></div>`).join("")}</div>` : ""}
+    ${m ? `<div class="ifield" style="margin:12px 0"><span class="flabel">What they see</span><div class="seg" role="radiogroup"><button role="radio" aria-pressed="${(m.share || "floors") === "floors"}" aria-checked="${(m.share || "floors") === "floors"}" data-act="wShare" data-v="floors">Each floor and its count</button><button role="radio" aria-pressed="${m.share === "summary"}" aria-checked="${m.share === "summary"}" data-act="wShare" data-v="summary">Only how many held</button></div></div>
+    <div class="ntrow"><div><b>Pause sharing</b><div class="hint">They keep seeing last week's numbers until you turn it back on.</div></div><button class="switch" role="switch" aria-checked="${!!m.paused}" data-act="wPause" aria-label="Pause sharing"></button></div>` : ""}
+    <div class="ifield" style="margin:12px 0"><span class="flabel">${ws.length ? "Invite another" : "Invite a watcher"}</span>${inviteBox("watch", "Make an invite link")}</div>
+    ${nameForm()}`);
+}
+/* on Today: cheers you got, and the people you watch */
+function cheersCard() {
+  const c = W8.cheers.slice(0, 3); if (!c.length) return "";
+  return `<div class="card pad cheers"><b>${c.length > 1 ? "Cheers from your watchers" : `A cheer from ${esc(firstName(c[0].name))}`}</b>${c.map(x => `<div class="cheer"><span class="avs"><i>${esc(initials(x.name))}</i></span><span><b>${esc(firstName(x.name))}</b> ${esc(x.text)}</span></div>`).join("")}
+    <div class="row" style="justify-content:flex-start;margin-top:8px"><button class="btn small" data-act="cheerSeen">Thanks</button></div></div>`;
+}
+function watchingCard() {
+  const ws = Object.entries(W8.watching); if (!ws.length) return "";
+  return `<h3>You're cheering on</h3><div class="card">${ws.map(([u, d]) => { const w = d.week || {}, fresh = w.id === thisWk(), pct = w.total ? w.held / w.total : 0;
+    return `<button class="comp wrow" data-act="wOpen" data-u="${esc(u)}"><span class="avs"><i>${esc(initials(d.name))}</i></span><span class="lbl"><span>${esc(d.name || "Someone")}</span><small>${fresh ? `${w.held} of ${w.total} floors held this week${w.mvw ? " · a lighter week" : ""}` : d.prev ? "No update yet this week" : "Nothing shared yet"}</small></span><span class="wbar" aria-hidden="true"><i style="width:${Math.round(pct * 100)}%"></i></span></button>`; }).join("")}</div>`;
+}
+const CHEERS = ["👏 Nice going this week", "💪 You've got this", "🌱 Small steps count", "☕ Proud of you"];
+function rWatchingSheet() {
+  const u = S.sheet.u, d = W8.watching[u]; if (!d) { S.sheet = null; return ""; }
+  const blk = (w, title) => !w ? "" : `<div class="field"><span class="flabel">${title}</span><div class="whead"><b>${w.held} of ${w.total}</b> floors held · ${w.cleared} of ${w.vals} values cleared${w.mvw ? " · Minimum Viable Week" : ""}${w.rev ? " · reviewed" : ""}</div>
+    ${(w.floors || []).length ? `<div class="card wfloors">${w.floors.map(f => `<div class="wf ${f.h >= f.need ? "ok" : ""}"><span>${esc(f.n)}<small>${esc(f.v)}${f.m ? " · this month" : ""}</small></span><span class="wn">${f.h}${esc(f.u)}/${f.need}${esc(f.u)}</span></div>`).join("")}</div>` : ""}</div>`;
+  const fresh = d.week && d.week.id === thisWk();
+  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <div class="whero"><span class="avs big"><i>${esc(initials(d.name))}</i></span><h2 style="margin:0">${esc(d.name || "Someone")}'s week</h2></div>
+    ${fresh ? blk(d.week, "This week") : `<p class="hint">${esc(firstName(d.name))} hasn't opened Compass yet this week.</p>`}
+    ${blk(d.prev, "Last week")}
+    <div class="field"><span class="flabel">Send a cheer</span><div class="chips">${CHEERS.map(t => `<button class="chip" data-act="cheer" data-u="${esc(u)}" data-v="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+      <form class="tmrow" id="cheerForm" data-u="${esc(u)}" style="margin-top:8px"><input type="text" id="cheerText" maxlength="280" placeholder="Or write your own" aria-label="Your cheer"><button class="btn small" type="submit">Send</button></form></div>
+    <p class="hint" style="margin:0">Keep it kind: a watcher is there to notice and encourage, not to judge.</p>
+    <button class="btn quiet danger" data-act="wLeave" data-u="${esc(u)}">Stop watching</button></div>`;
+}
+async function sendCheer(u, text) {
+  text = String(text || "").trim().slice(0, 280); if (!text) return;
+  try { await FB.setDoc(FB.doc(ST.fs, "watch", u, "cheers", uidGen() + uidGen()), { from: ST.uid, name: myName(), text, at: Date.now() }); toast(`Sent to ${firstName((W8.watching[u] || {}).name)}`); S.sheet = null; render(); }
+  catch (e) { toast("Couldn't send (" + (e && e.code || "error") + ")."); }
+}
+async function leaveWatch(u) {
+  const d = W8.watching[u]; if (!d) return;
+  const people = Object.assign({}, d.people || {}); delete people[ST.uid];
+  try { await FB.updateDoc(FB.doc(ST.fs, "watch", u), { watchers: (d.watchers || []).filter(x => x !== ST.uid), people }); toast(`You stopped watching ${firstName(d.name)}`); } catch (e) { toast("Couldn't do that (" + (e && e.code || "error") + ")."); }
+  S.sheet = null; render();
+}
+async function removeWatcher(u) {
+  const m = W8.mine; if (!m) return;
+  const people = Object.assign({}, m.people || {}); delete people[u];
+  try { await FB.setDoc(FB.doc(ST.fs, "watch", ST.uid), { watchers: (m.watchers || []).filter(x => x !== u), people }, { merge: true }); toast("Removed"); } catch (e) { toast("Couldn't remove (" + (e && e.code || "error") + ")."); }
+}
+/* account deletion: your lists, invites, watch page and cheers go; shared lists you're in carry on without you */
+async function deleteSharedData() {
+  for (const [lid, m] of Object.entries(L.meta)) {
+    try { if (m.owner === ST.uid && !isSharedList(m)) await deleteList(lid, true); else await leaveList(lid); } catch (e) {}
+  }
+  try { const inv = settings().inv || {}; for (const x of Object.values(inv)) await FB.deleteDoc(FB.doc(ST.fs, "invites", x.t)).catch(() => {}); } catch (e) {}
+  for (const u of Object.keys(W8.watching)) { try { const d = W8.watching[u], people = Object.assign({}, d.people || {}); delete people[ST.uid]; await FB.updateDoc(FB.doc(ST.fs, "watch", u), { watchers: (d.watchers || []).filter(x => x !== ST.uid), people }); } catch (e) {} }
+  try { const cs = await FB.getDocs(FB.collection(ST.fs, "watch", ST.uid, "cheers")); for (const c of cs.docs) await FB.deleteDoc(FB.doc(ST.fs, "watch", ST.uid, "cheers", c.id)); } catch (e) {}
+  try { await FB.deleteDoc(FB.doc(ST.fs, "watch", ST.uid)); } catch (e) {}
 }
 
 /* ============ edits ============ */
@@ -2446,10 +3115,17 @@ function burst(el, color, n = 8) {
     document.body.appendChild(d); setTimeout(() => d.remove(), 700);
   }
 }
-function toast(t) {
+/* a short message; with `undo`, an Undo button and a little longer to reach it */
+function toast(t, undo) {
   S.toast = t; const old = $(".toast"); if (old) old.remove(); clearTimeout(S.toastT);
-  const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.textContent = t;
-  document.body.appendChild(el); S.toastT = setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 240); }, 2400);
+  const el = document.createElement("div"); el.className = "toast" + (undo ? " withundo" : ""); el.setAttribute("role", "status");
+  const span = document.createElement("span"); span.textContent = t; el.appendChild(span);
+  if (typeof undo === "function") {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = "Undo";
+    b.addEventListener("click", ev => { ev.stopPropagation(); clearTimeout(S.toastT); el.remove(); try { undo(); } catch (e) {} });
+    el.appendChild(b);
+  }
+  document.body.appendChild(el); S.toastT = setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 240); }, undo ? 5000 : 2400);
 }
 function setNeedle(frac) {
   const n = $("#hneedle"); if (!n) return;
@@ -2466,7 +3142,11 @@ const bigCompass = (settle = true) => `<svg viewBox="0 0 200 200" aria-hidden="t
 /* ============ render root ============ */
 function scheduleRender() {
   const a = document.activeElement;
-  if (a && a.closest && (a.closest("#main") || a.closest("#sheetRoot")) && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) { S.pendingRender = true; return; }
+  if (a && a.closest && (a.closest("#main") || a.closest("#sheetRoot")) && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) {
+    /* an empty field with the cursor in it (say, the quick-add after adding): redraw now and put the cursor back */
+    if (a.id && a.tagName !== "SELECT" && a.value === "" && a.closest("#main")) { const id = a.id; render(); const b = document.getElementById(id); if (b && b !== document.activeElement) b.focus({ preventScroll: true }); return; }
+    S.pendingRender = true; return;
+  }
   render();
 }
 /* A render held back while typing must not land mid-tap: tapping a button blurs the field first, and redrawing
@@ -2632,7 +3312,7 @@ function rLanding() {
 
   <section class="lhero" id="top">
     <div>
-      <span class="eyebrow">A weekly compass for your life</span>
+      ${inviteBanner()}<span class="eyebrow">A weekly compass for your life</span>
       <h1>Know where your life is heading.</h1>
       <p class="big">Compass turns what matters to you into a few small weekly floors. Clear them and the week counts. Miss them and you see the drift early, while it's still easy to correct.</p>
       <div class="ctas">${btn("Start with Google")}<button class="textlink emaillink" data-act="authOpen" data-v="up">Use email instead</button></div>
@@ -2768,11 +3448,11 @@ function renderGate() {
   try { wasIn = localStorage.getItem("compass-was-signed-in") === "1"; } catch (e) {}
   const landing = S.authState === "signedOut" || (S.authState === "loading" && !wasIn);
   document.body.classList.toggle("landing", landing);
-  if (landing) { const had = !!$("#demo"); if (!had || S.gateKey !== (S.authBusy + S.authErr)) { stopTour(); $("#main").innerHTML = rLanding(); startDemo(); startTour(); } S.gateKey = S.authBusy + S.authErr; updSync(); return; }
+  if (landing) { const had = !!$("#demo"); if (!had || S.gateKey !== (S.authBusy + S.authErr + (S.invInfo ? "i" : ""))) { stopTour(); $("#main").innerHTML = rLanding(); startDemo(); startTour(); } S.gateKey = S.authBusy + S.authErr + (S.invInfo ? "i" : ""); updSync(); return; }
   stopDemo(); S.gateKey = null;
   if (S.authState === "loading") body = `<div class="hero">${bigCompass()}</div>`;
   else if (S.authState === "noconfig") body = `<div class="signin"><div class="hero">${bigCompass(false)}</div><h1>Almost there.</h1><p class="lede">Compass needs your Firebase project's settings. Paste them into <b>firebase-config.js</b>, then deploy again. The README walks through it.</p></div>`;
-  else body = `<div class="signin"><div class="hero">${bigCompass()}</div>
+  else body = `<div class="signin">${inviteBanner()}<div class="hero">${bigCompass()}</div>
       <h1>Know where your life is heading.</h1>
       <p class="lede">Compass turns what matters to you into a few small floors, checks them once a week, and tells you when you're drifting.</p>
       <button class="gbtn" data-act="signin" ${S.authBusy ? "disabled" : ""}>${GLOGO}<span>${S.authBusy ? "Signing in…" : "Sign in with Google"}</span></button>
@@ -2815,7 +3495,7 @@ function render() {
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
   let tabsHtml = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
-  if (!S.migrated && profileReady) { S.migrated = true; migrateInbox(); migrateAlt(); migratePauses(); }
+  if (!S.migrated && profileReady) { S.migrated = true; migrateAlt(); migratePauses(); }
   tabsHtml = tabsHtml.replace('>Tasks<', '>Tasks' + (inboxItems().length ? `<span class="dot" style="background:var(--brass)" aria-label="${inboxItems().length} unsorted"></span>` : "") + '<');
   /* only touch the tab bar when it changes: replacing it mid-tap swallowed the tap */
   if (S.tabsHtml !== tabsHtml) { $("#tabs").innerHTML = tabsHtml; S.tabsHtml = tabsHtml; }
@@ -2823,6 +3503,7 @@ function render() {
   $("#main").innerHTML = `<h1 class="sr">${TAB_TITLE[S.tab] || "Compass"}</h1>` + ({ today: rToday, week: rWeek, tasks: rTasks, people: rPeople, review: rReview, compass: rCompass })[S.tab](id, F, trips, sugg);
   $("#fab").hidden = false;
   renderSheet(); updSync();
+  if (W8.mine) schedulePublish();
 }
 
 /* ============ TODAY ============ */
@@ -2832,19 +3513,6 @@ function countChip(c, v) {
 }
 function funChip(c, v) {
   return `<span class="cpair fun"><button class="chip" data-act="fun" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><b>♥</b>${esc(c.name)}${v ? `<span class="n">${v}</span>` : ""}</button>${v > 0 ? `<button class="cminus" data-act="funDec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</span>`;
-}
-function todayTasks(id) {
-  if (id !== thisWk()) return "";
-  const wk = weekErrands(), doneWk = doneErrandsThisWeek(), n = inboxItems().length;
-  const steps = projectsList().filter(p => p.next && isCore(p.v));
-  if (!wk.length && !doneWk.length && !n && !steps.length) return "";
-  const mvw = isMvw(anyWeek(id), id);
-  return `<h3>Errands & next steps · ${doneWk.length}/${wk.length + doneWk.length}</h3>
-    ${mvw ? `<p class="hint" style="margin:0 0 6px">Optional during a Minimum Viable Week.</p>` : ""}
-    <div class="card">${wk.map(i => taskRow(i)).join("")}
-      ${steps.map(p => `<div class="task"><button class="tick" data-act="tStep" data-id="${p.id}" aria-label="Next step done"></button><div class="tx"><span>${esc(p.next)}</span><span class="tags" style="margin-top:3px"><span class="tag core">${esc(p.t)}</span></span></div></div>`).join("")}
-      ${n ? `<button class="comp" data-act="sortStart"><span class="lbl"><span>${n} thought${n > 1 ? "s" : ""} in your inbox</span><small>Sort them so they stop circling</small></span><span class="chev">›</span></button>` : ""}
-      ${!wk.length && !steps.length && !n && doneWk.length ? `<p class="hint pad" style="margin:0">All of this week's errands are done.</p>` : ""}</div>`;
 }
 /* ticking a row: show the check, let it fold down into "done", then redraw */
 function settleRow(b, on) {
@@ -2898,12 +3566,13 @@ function rToday(id) {
   const jc = daily.find(c => c.auto === "journal");
   const hr = new Date().getHours(), part = hr < 5 ? "evening" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
   const first = ((S.user && S.user.name) || "").split(" ")[0];
-  return `${introCard()}${ntAskCard()}
+  return `${introCard()}${ntAskCard()}${S.selDay === tk ? cheersCard() : ""}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
   <p class="lede">${S.selDay === tk ? `<span class="greetin">Good ${part}${first ? ", " + esc(first) : ""}.</span> ` : ""}${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
   ${dayHtml}
   ${todayTasks(id)}
+  ${S.selDay === tk ? watchingCard() : ""}
   ${weekly.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="chips">${weekly.map(chip).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
   ${monthly.length ? `<h3>This month</h3><div class="chips">${monthly.map(chip).join("")}</div>` : ""}
   ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => funChip(c, (w.c || {})[c.id] || 0)).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it, − to take one back.</p>` : ""}
@@ -3363,10 +4032,10 @@ function rWeekFloors(id, F, trips, sugg) {
   <div class="card pad"><div class="row"><div><b>Minimum Viable Week</b><div class="hint">For illness, travel, crunch or a hard stretch. Only your safety-net components count.</div></div>
     <button class="switch" role="switch" aria-checked="${mvw}" data-act="mvw" aria-label="Minimum Viable Week"></button></div></div>
   ${offs.length ? `<p class="hint" style="margin:8px 0 0">Resting this week: ${offs.map(c => `${esc(c.name)} (${everyText(c)})`).join(", ")}.</p>` : ""}
-  ${id === thisWk() && (titems().length) ? `<h3>Open loops</h3><div class="card pad"><ul class="floors" style="margin:0">
-    <li class="${weekErrands().length === 0 && doneErrandsThisWeek().length ? "ok" : ""}"><span>Errands this week</span><span class="f">${doneErrandsThisWeek().length}/${weekErrands().length + doneErrandsThisWeek().length}</span></li>
-    <li class="${inboxItems().length ? "" : "ok"}"><span>Unsorted in inbox</span><span class="f">${inboxItems().length}</span></li>
-    <li class="${projectsList().some(p => !p.next) ? "" : "ok"}"><span>Projects without a next step</span><span class="f">${projectsList().filter(p => !p.next).length}</span></li></ul>
+  ${id === thisWk() && L.ready && (allOpen().length || allDone().length) ? `<h3>Open loops</h3><div class="card pad"><ul class="floors" style="margin:0">
+    <li class="${weekErrands().length === 0 && doneErrandsThisWeek().length ? "ok" : ""}"><span>This week's three</span><span class="f">${doneErrandsThisWeek().length}/${weekErrands().length + doneErrandsThisWeek().length}</span></li>
+    <li class="${overdue().length ? "" : "ok"}"><span>Past their day</span><span class="f">${overdue().length}</span></li>
+    <li class="${inboxItems().length ? "" : "ok"}"><span>Unsorted in Inbox</span><span class="f">${inboxItems().length}</span></li></ul>
     <div style="margin-top:10px"><button class="btn small" data-act="tab" data-t="tasks">Open Tasks</button></div></div>` : ""}
   ${ctrs ? `<h3>Counts</h3><div class="card">${ctrs}</div>` : ""}
   ${(() => { const fun = comps().filter(c => c.fun); if (!fun.length) return ""; const wc = (w && w.c) || {};
@@ -3504,7 +4173,7 @@ function rLookback(ym) {
   const best = closed.slice().sort((a, b) => b.pct - a.pct)[0];
   /* in your own words */
   const words = dkeys.slice().reverse().map(k => { const j = (dayRec(k) || {}).j || {}; return (j.win || "").trim() ? { k, t: j.win.trim() } : null; }).filter(Boolean).slice(0, 5);
-  const tasksDone = titems().filter(i => i.s === "done" && (i.doneAt || "").slice(0, 7) === ym).length;
+  const tasksDone = Math.max((((settings().months || {})[ym] || {}).td) || 0, allDone().filter(i => i.st === "done" && (!i.doneBy || i.doneBy === ST.uid) && i.doneAt && monthKey(new Date(i.doneAt)) === ym).length);
   const funN = W.reduce((a, x) => a + comps().filter(c => c.fun).reduce((s2, c) => s2 + (((x.w.c || {})[c.id]) || 0), 0), 0);
   const adjust = (((settings().months || {})[ymPrev(ym)] || {}).adjust || "").trim();
   const mon = (settings().months || {})[ym] || {}, mfloors = comps().filter(c => !c.fun && c.cadence === "monthly");
@@ -3564,7 +4233,7 @@ function rReview(id, F, trips, sugg) {
   ${inboxCta() ? `<div style="margin-top:10px">${inboxCta()}</div>` : ""}
   ${(() => { const nx = nextWkId(), picked = weekErrands(nx), cands = laterErrands().concat(weekErrands()).filter(i => i.wk !== nx);
     if (!picked.length && !cands.length) return "";
-    return `<p class="hint" style="margin:12px 0 6px">Next week's errands · ${picked.length} of ${ERRAND_CAP}</p><div class="chips">${picked.map(i => `<button class="chip sel" data-act="tNext" data-id="${i.id}">✓ ${esc(i.t)}</button>`).join("")}${cands.slice(0, 20).map(i => `<button class="chip" data-act="tNext" data-id="${i.id}">${esc(i.t)}</button>`).join("")}</div>`; })()}
+    return `<p class="hint" style="margin:12px 0 6px">Next week's three · ${picked.length} of ${ERRAND_CAP}</p><div class="chips">${picked.map(i => `<button class="chip sel" data-act="iNext" data-l="${esc(i.lid)}" data-id="${esc(i.id)}">✓ ${esc(i.t)}</button>`).join("")}${cands.slice(0, 20).map(i => `<button class="chip" data-act="iNext" data-l="${esc(i.lid)}" data-id="${esc(i.id)}">${esc(i.t)}</button>`).join("")}</div>`; })()}
   <div style="margin-top:16px"><button class="btn primary" data-act="reviewDone" id="reviewDoneBtn">${r.done ? "Reviewed ✓" : "Mark review done"}</button></div>
   ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
   ${coachCard()}
@@ -3672,6 +4341,7 @@ function rCompass(id, F, trips, sugg) {
     <div class="impcard"><span class="glyph">${ICON.cal}</span><div style="flex:1"><div class="hint" style="margin:0">${left ? `${left} session${left > 1 ? "s" : ""} still to place. ` : ""}Plan days and times in Week → Plan, then export them to Apple or Google Calendar in one file.</div></div></div>
     <div class="calbtns"><button class="btn" data-act="gotoPlan">Plan my week</button><button class="btn primary" data-act="icsOpen" ${placed.length || buildIcs().n ? "" : "disabled"}>Export to calendar</button></div>`)}
   ${remindersSection()}
+  ${watchSection()}
   ${cSec("app", "Settings", "Colours, backup, run setup again", `
     <span class="flabel">Colours</span>
     <div style="margin:6px 0 16px">${themePicker()}</div>
@@ -3693,12 +4363,25 @@ function calRow(c) {
 }
 
 /* ============ component editor sheet ============ */
+/* redraws that would produce the same sheet leave it alone, so nothing under the finger or cursor is swapped out */
+(() => {
+  const root = document.getElementById("sheetRoot"), d = Object.getOwnPropertyDescriptor(Element.prototype, "innerHTML");
+  if (!root || !d) return;
+  Object.defineProperty(root, "innerHTML", { configurable: true, get() { return d.get.call(this); }, set(v) { if (v === this.__last && this.firstChild) return; this.__last = v; d.set.call(this, v); } });
+})();
 function renderSheet() {
   /* re-rendering an open sheet (a toggle, a stepper) swaps it in place: no slide-in replay, same scroll position */
   const prev = $("#sheetRoot .sheet"), prevType = S.shType, top = prev ? prev.scrollTop : 0;
+  /* what's typed but not yet saved (and where the cursor is) survives the redraw */
+  const typed = prev ? [...prev.querySelectorAll("input[id]:not([type=checkbox]):not([type=radio]):not([type=file]),textarea[id]")].filter(el => el.value !== el.defaultValue).map(el => [el.id, el.value]) : [];
+  const act = document.activeElement && prev && prev.contains(document.activeElement) && document.activeElement.id ? document.activeElement : null, sel = act && act.selectionStart != null ? [act.selectionStart, act.selectionEnd] : null;
   renderSheetBody();
   const sheet = $("#sheetRoot .sheet");
-  if (sheet && prev && prevType === (S.sheet && S.sheet.type)) { sheet.classList.add("still"); const sc = $("#sheetRoot .scrim"); if (sc) sc.classList.add("still"); sheet.scrollTop = top; }
+  if (sheet && prev && prevType === (S.sheet && S.sheet.type)) {
+    sheet.classList.add("still"); const sc = $("#sheetRoot .scrim"); if (sc) sc.classList.add("still"); sheet.scrollTop = top;
+    typed.forEach(([id, v]) => { const el = sheet.querySelector("#" + CSS.escape(id)); if (el && el.value === el.defaultValue && !el.readOnly) el.value = v; });
+    if (act) { const el = sheet.querySelector("#" + CSS.escape(act.id)); if (el && el !== act) { el.focus({ preventScroll: true }); if (sel) try { el.setSelectionRange(sel[0], sel[1]); } catch (e) {} } }
+  }
   S.shType = S.sheet ? S.sheet.type : null;
   document.documentElement.classList.toggle("sheet-open", !!sheet);
   if (sheet && !sheet.querySelector(".sheetx")) sheet.insertAdjacentHTML("afterbegin", `<button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>`);
@@ -3768,9 +4451,10 @@ function renderSheetBody() {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Find your values">${html}</div>`;
     return;
   }
-  if (sh.type === "tmenu") {
-    const html = rTaskMenu(); if (!html) { root.innerHTML = ""; return; }
-    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Task">${html}</div>`;
+  if (sh.type === "item" || sh.type === "list" || sh.type === "newlist" || sh.type === "share" || sh.type === "invite" || sh.type === "watch" || sh.type === "watching") {
+    const html = sh.type === "item" ? rItemSheet() : sh.type === "list" ? rListSheet() : sh.type === "newlist" ? rNewListSheet() : sh.type === "share" ? rShareSheet() : sh.type === "invite" ? rInviteSheet() : sh.type === "watch" ? rWatchSheet() : rWatchingSheet();
+    if (!html) { root.innerHTML = ""; return; }
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${{ item: "Task", list: "List", newlist: "New list", share: "Share list", invite: "Invitation", watch: "Watchers", watching: "Watching" }[sh.type]}">${html}</div>`;
     return;
   }
   if (sh.type === "sort" || sh.type === "capture") {
@@ -3784,6 +4468,7 @@ function renderSheetBody() {
       <div class="acct"><span class="avatar">${u.photo ? `<img src="${esc(u.photo)}" alt="" referrerpolicy="no-referrer">` : esc((u.name || u.email || "?").charAt(0).toUpperCase())}</span><div><b>${esc(u.name || "Signed in")}</b><div class="hint">${esc(u.email)}</div></div></div>
       <p class="hint" style="margin:0">${usesPassword(ST.auth && ST.auth.currentUser) && !usesGoogle(ST.auth && ST.auth.currentUser) ? "Signed in with your email and password." : "Signed in with Google."} Your Compass syncs to every device where you sign in with this account.</p>
       ${S.isAdmin ? `<a class="btn admlink" href="/stats"><span>Usage dashboard</span><small>Only you see this</small></a>` : ""}
+      <div class="invfriend"><b>Invite a friend</b><span class="hint">Send a link to Compass. To plan or shop together, share a list from Tasks; to have someone keep you on track, add a watcher in Compass → Accountability partner.</span>${inviteBox("app", "Make an invite link")}</div>
       <button class="btn" data-act="export">Export my data</button>
       ${usesPassword(ST.auth && ST.auth.currentUser) ? `<button class="btn" data-act="pwReset">${S.pwResetSent ? "Reset link sent to your email" : "Change password"}</button>` : ""}
       <button class="btn" data-act="signout">Sign out</button>
@@ -4396,8 +5081,8 @@ function finishOnboarding() {
   touch("profile"); clearTimeout(T.profile); T.profile = null; flush("profile");
   if (d.impPeople && d.impPeople.length) editPeople(p => { d.impPeople.forEach(x => { if (!p.list.some(y => y.name.toLowerCase() === x.name.toLowerCase())) p.list.push({ id: uidGen(), name: x.name, tier: x.tier, last: null }); }); });
   const it = d.impTasks || {}, nT = (it.inbox || []).length + (it.someday || []).length;
-  if (nT) editTasks(t => { const have = new Set(t.items.map(i => (i.t || "").toLowerCase())); [["inbox", it.inbox || []], ["someday", it.someday || []]].forEach(([s, list]) => list.forEach(x => { if (!have.has(x.t.toLowerCase())) { have.add(x.t.toLowerCase()); t.items.push(Object.assign({ id: uidGen(), t: x.t.slice(0, 200), s, at: todayKey() }, x.v ? { v: x.v } : {})); } })); });
-  S.ob = null; S.tab = nT && (it.inbox || []).length ? "tasks" : "today"; render();
+  if (nT) { const inbox = (it.inbox || []).slice(), some = (it.someday || []).slice(); whenInbox(() => { const have = new Set(itemsIn(inboxId()).map(i => (i.t || "").toLowerCase())); [["open", inbox], ["some", some]].forEach(([st, list]) => list.forEach(x => { if (!have.has(x.t.toLowerCase())) { have.add(x.t.toLowerCase()); addItem(inboxId(), Object.assign({ t: x.t.slice(0, 500), st }, x.v ? { v: x.v } : {})); } })); scheduleRender(); }); }
+  S.ob = null; S.tab = nT && (it.inbox || []).length ? "tasks" : "today"; if (S.tab === "tasks") setTv("inbox"); render();
   if (!redo) { stat("obDone"); stat("active"); }
   toast(nT && (it.inbox || []).length ? `Your compass is set. ${it.inbox.length} imported tasks are waiting to be sorted.` : "Your compass is set");
   const btn = $("#hneedle"); if (btn) burst(btn.closest("svg"), "var(--brass)", 14);
@@ -4506,7 +5191,7 @@ document.addEventListener("click", e => {
     case "pwReset": { const u = ST.auth && ST.auth.currentUser; if (!u || !u.email) return; FB.sendPasswordResetEmail(ST.auth, u.email).then(() => { S.pwResetSent = true; toast("Check your email for a link to set a new password"); renderSheet(); }, e => toast(emailAuthMessage(e))); return; }
     case "delPwGo": confirmPasswordThenDelete(); return;
     case "delPwNo": S.delPw = false; S.delMsg = ""; S.confirm = null; renderSheet(); return;
-    case "retryLoad": { const uid = ST.uid; S.loadErr = false; render(); loadCore(uid).then(ok => { if (ok) { profileReady = true; ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe); loadHistory(); render(); } }); return; }
+    case "retryLoad": { const uid = ST.uid; S.loadErr = false; render(); loadCore(uid).then(ok => { if (ok) { profileReady = true; ["profile", "settings", "people", "tasks", curWid()].forEach(subscribe); subscribeLists(); afterSignIn(); loadHistory(); render(); } }); return; }
     case "reloadApp": { b.textContent = "Saving…"; b.disabled = true;
       const go = () => location.replace(location.pathname + "?v=" + Date.now());
       if (S.tooOld) return go();
@@ -4537,65 +5222,88 @@ document.addEventListener("click", e => {
       if (S.ob) { const c = S.ob.d.comps.find(x => x.id === id); if (c) stepDur(c, dir); updateOb(); return; }
       editProfile(p => { const c = p.components.find(x => x.id === id); if (c) stepDur(c, dir); }); break;
     }
-    case "capture": S.capMsg = ""; S.sheet = { type: "capture" }; break;
+    case "capture": S.capMsg = ""; S.capDraft = ""; S.sheet = { type: "capture" }; break;
     case "capAdd": {
-      const ta = $("#" + b.dataset.src), beforeIds = new Set(titems().map(i => i.id)); const n = addCaptured(ta && ta.value);
-      if (!n) { toast("Write something first."); return; }
-      const added = titems().filter(i => !beforeIds.has(i.id)).map(i => i.id), text = ta.value;
-      S.capMsg = `Added ${n} to your inbox.`;
-      toast(`Added ${n} to your inbox`, () => { editTasks(t => { t.items = t.items.filter(i => !added.includes(i.id)); }); S.capMsg = ""; render(); const f = $("#" + b.dataset.src); if (f) f.value = text; });
+      const ta = $("#" + b.dataset.src), text = ta ? ta.value : "";
+      if (!L.ready) { toast("Your lists are still loading. Try again in a moment."); return; }
+      const added = quickAdd(text, b.dataset.src === "qAdd" ? qCtx() : {});
+      if (!added.length) { toast("Write something first."); return; }
+      const n = added.length, where = [...new Set(added.map(x => listName(x.lid)))];
+      S.capMsg = `Added ${n} to ${where.join(", ")}.`; S.capDraft = ""; if (b.dataset.src === "qAdd") { S.qDraft = ""; S.qIgnore = new Set(); }
+      toast(`Added ${n === 1 ? `“${findItem(added[0].lid, added[0].id).t.slice(0, 36)}”` : n} to ${where.join(", ")}`, () => { added.forEach(x => delItem(x.lid, x.id)); S.capMsg = ""; render(); const f = $("#" + b.dataset.src); if (f) f.value = text; });
       if (S.sheet && S.sheet.type === "capture") { renderSheet(); render(); return; }
-      if (b.dataset.src === "tQuick") { tOpen().inbox = true; render(); const f = $("#tQuick"); if (f && !matchMedia("(pointer:coarse)").matches) f.focus(); return; }
-      break;
-    }
-    case "sortStart": startSort(); break;
-    case "sortPick": {
-      const k = b.dataset.k, card = $("#sortCard"), cur = inboxItems().find(i => !S.sortSkip.has(i.id));
-      if (k === "done") burst(b, "var(--good)", 10); else if (k !== "skip" && k !== "project" && k !== "recurring") burst(b, "var(--accent)", 6);
-      sortPick(k);
-      if (card && !reduced() && !["project", "recurring"].includes(k)) { card.style.transition = "transform .22s ease, opacity .22s ease"; card.style.transform = k === "drop" ? "translateX(-110%) rotate(-6deg)" : "translateX(110%) rotate(6deg)"; card.style.opacity = "0"; setTimeout(() => { S.noFocus = true; render(); }, 200); return; }
-      break;
-    }
-    case "sortProjV": if (S.sortProj) { const nx = ($("#sp-next") || {}).value; S.sortProj.v = b.dataset.v; renderSheet(); const f = $("#sp-next"); if (f && nx) f.value = nx; return; } break;
-    case "sortProjBack": S.sortProj = null; break;
-    case "sortProjSave": {
-      const id = S.sortProj && S.sortProj.id, snap = id && clone(taskById(id));
-      saveSortProject(); burst(b, "var(--brass)", 8);
-      if (snap) toast(`Saved as a project: “${snap.t.slice(0, 40)}”`, () => { restoreTask(snap); S.sortCount = Math.max(0, (S.sortCount || 1) - 1); if (S.sortTally.project) S.sortTally.project--; if (!S.sheet || S.sheet.type !== "sort") S.sheet = { type: "sort" }; render(); });
-      break;
-    }
-    case "tDone": {
-      const it = taskById(b.dataset.id); if (!it) return; const undo = undoTaskFn(it.id);
-      if (it.s === "done") setTask(it.id, { s: it.was || "errand", doneAt: null });
-      else { setTask(it.id, { s: "done", was: it.s, wk: it.wk || thisWk(), doneAt: todayKey() }); burst(b, "var(--good)", 10); toast(`Done: “${it.t.slice(0, 40)}”`, undo); }
-      setTimeout(render, 180); return;
-    }
-    case "tUndo": { const it = taskById(b.dataset.id); if (it) setTask(it.id, { s: it.was && it.was !== "quick" ? it.was : "errand", doneAt: null, wk: it.was === "errand" ? it.wk : null }); break; }
-    case "tLater": { const it = taskById(b.dataset.id); if (!it) return; setTask(it.id, { s: "errand", wk: null, v: it.v || guessValue(it.t) || undefined }); toast("Moved to Next up"); break; }
-    case "tWeek": { const it = taskById(b.dataset.id); if (!it) return; const u = undoTaskFn(it.id); toast(weekErrands().length >= ERRAND_CAP ? `That makes ${weekErrands().length + 1}. Three is the sweet spot.` : "Added to this week", u); setTask(it.id, { s: "errand", wk: thisWk(), v: it.v || guessValue(it.t) || undefined, moves: it.wk && it.wk < thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); break; }
-    case "tNext": { const it = taskById(b.dataset.id), nx = nextWkId(); if (!it) return; const u = undoTaskFn(it.id); if (it.wk === nx) setTask(it.id, { wk: null }); else { toast(weekErrands(nx).length >= ERRAND_CAP ? `That makes ${weekErrands(nx).length + 1} for next week. Three is the sweet spot.` : "Picked for next week", u); setTask(it.id, { wk: nx, moves: it.wk && it.wk <= thisWk() ? (it.moves || 0) + 1 : (it.moves || 0) }); } break; }
-    case "tSomeday": { const u = undoTaskFn(b.dataset.id); setTask(b.dataset.id, { s: "someday" }); toast("Moved to Someday", u); break; }
-    case "tBack": { const u = undoTaskFn(b.dataset.id); setTask(b.dataset.id, { s: "inbox" }); toast("Back in your inbox", u); break; }
-    case "tDrop": { const u = undoTaskFn(b.dataset.id); setTask(b.dataset.id, { s: "dropped", doneAt: tk }); toast("Let go", u); break; }
-    case "tStep": { const it = taskById(b.dataset.id); if (!it) return; const u = undoTaskFn(it.id, () => { S.stepFor = null; }); burst(b, "var(--good)", 8); editTasks(t => { const x = t.items.find(y => y.id === it.id); x.log = (x.log || []).concat({ step: x.next, at: tk }).slice(-30); x.next = ""; }); S.stepFor = it.id; if (S.tab !== "tasks") { S.tab = "tasks"; } toast("Step done. What's next?", u); setTimeout(() => { render(); const f = $("#step-" + it.id); if (f) f.focus(); }, 160); return; }
-    case "tStepSave": { const f = $("#step-" + b.dataset.id), v = (f && f.value || "").trim(); if (!v) { toast("Write the next step first."); return; } setTask(b.dataset.id, { next: v }); S.stepFor = null; toast("Next step set"); break; }
-    case "tMenu": S.sheet = { type: "tmenu", id: b.dataset.id }; break;
-    case "tFold": { const o = tOpen(); o[k] = !o[k]; try { localStorage.setItem("compass-topen", JSON.stringify(o)); } catch (e) {} break; }
-    case "tRename": { const f = $("#tm-text"), v = (f && f.value || "").trim().slice(0, 200); if (!v) { toast("Write something first."); return; } setTask(b.dataset.id, { t: v }); S.sheet = null; toast("Saved"); break; }
-    case "tProj": case "tStepEdit": {
-      const it = taskById(b.dataset.id); if (!it) return;
-      if (act === "tProj") { const cores = ((profile() || {}).cores || []).map(c => c.value); setTask(it.id, { s: "project", v: it.v || guessValue(it.t) || cores[0] || undefined, next: "", wk: null }); }
-      S.stepFor = it.id; tOpen().proj = true; render();
-      setTimeout(() => { const f = $("#step-" + it.id); if (f) { f.value = act === "tStepEdit" ? it.next || "" : ""; f.focus(); f.scrollIntoView({ block: "center" }); } }, 60);
+      render(); const f = $("#" + b.dataset.src); if (f && !matchMedia("(pointer:coarse)").matches) f.focus();
       return;
     }
-    case "tRoutine": {
-      const it = taskById(b.dataset.id); if (!it) return;
-      const v = it.v || guessValue(it.t) || ((profile() || {}).cores || [])[0]?.value || (valueList()[0] || {}).id;
-      S.sheet = { type: "comp", isNew: true, fromTask: it.id, fromMenu: true, draft: { id: "c-" + uidGen(), value: v, name: it.t.slice(0, 60), cadence: "weekly", target: 1, hours: 0.5 } };
+    case "qIgnore": { S.qIgnore = S.qIgnore || new Set(); S.qIgnore.add(b.dataset.k); refreshChips(); return; }
+    case "qIgnoreReset": S.qIgnore = new Set(); refreshChips(); return;
+    case "qOn": { S.qDue = b.dataset.due || null; const f = $("#qAdd"); if (f) { f.focus(); f.scrollIntoView({ block: "center" }); } toast(`New task for ${fmtWhen(S.qDue)}: type it above`); return; }
+    case "tv": setTv(b.dataset.v); S.qDue = null; window.scrollTo(0, 0); break;
+    case "sortStart": startSort(); break;
+    case "sortPick": {
+      const k = b.dataset.k, card = $("#sortCard");
+      if (k === "done") burst(b, "var(--good)", 10); else if (!["skip", "recurring", "list"].includes(k)) burst(b, "var(--accent)", 6);
+      sortPick(k, b.dataset.v);
+      if (card && !reduced() && !["recurring"].includes(k) && !(k === "list" && !b.dataset.v)) { card.style.transition = "transform .22s ease, opacity .22s ease"; card.style.transform = k === "drop" ? "translateX(-110%) rotate(-6deg)" : "translateX(110%) rotate(6deg)"; card.style.opacity = "0"; setTimeout(() => { S.noFocus = true; render(); }, 200); return; }
       break;
     }
-    case "tProjDone": { const u = undoTaskFn(b.dataset.id); burst(b, "var(--brass)", 12); setTask(b.dataset.id, { s: "done", was: "project", doneAt: tk }); S.stepFor = null; toast("Project finished", u); break; }
+    case "iDone": {
+      const lid = b.dataset.l, id = b.dataset.id, it = findItem(lid, id); if (!it) return;
+      const u = undoItem(lid, id); burst(b, "var(--good)", 10);
+      const r = completeItem(lid, id);
+      toast(r && r.repeat ? `Done. Next: ${fmtWhen(r.repeat)}` : `Done: “${it.t.slice(0, 40)}”`, () => { bumpMonthDone(-1); u(); });
+      if (b.dataset.close) S.sheet = null;
+      const row = b.closest(".lrow,.fslot"); if (row && !reduced() && !(r && r.repeat)) { row.classList.add("going"); setTimeout(render, 320); return; }
+      setTimeout(render, 160); return;
+    }
+    case "iUndo": { const lid = b.dataset.l, id = b.dataset.id; reopenItem(lid, id); if (b.dataset.close) S.sheet = null; break; }
+    case "iOpen": S.sheet = { type: "item", l: b.dataset.l, id: b.dataset.id }; break;
+    case "iDue": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; setDue(it, b.dataset.v || null); renderSheet(); render(); return; }
+    case "iFocus": {
+      const it = findItem(b.dataset.l, b.dataset.id); if (!it) return;
+      if (it.wk === thisWk()) updItem(it.lid, it.id, { wk: null });
+      else { if (weekErrands().length >= FOCUS_CAP) toast(`That makes ${weekErrands().length + 1}. Three is the sweet spot.`); updItem(it.lid, it.id, { wk: thisWk() }); }
+      renderSheet(); render(); return;
+    }
+    case "iNext": { const it = findItem(b.dataset.l, b.dataset.id), nx = nextWkId(); if (!it) return; if (it.wk === nx) updItem(it.lid, it.id, { wk: null }); else { if (weekErrands(nx).length >= FOCUS_CAP) toast(`That makes ${weekErrands(nx).length + 1} for next week. Three is the sweet spot.`); updItem(it.lid, it.id, { wk: nx }); } break; }
+    case "iWho": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; updItem(it.lid, it.id, { who: b.dataset.v || null }); renderSheet(); render(); return; }
+    case "iVal": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; updItem(it.lid, it.id, { v: it.v === b.dataset.v ? null : b.dataset.v }); renderSheet(); render(); return; }
+    case "iSubTick": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; const sub = (it.sub || []).map(x => x.id === b.dataset.k ? Object.assign({}, x, { d: !x.d }) : x); updItem(it.lid, it.id, { sub }); if (sub.every(x => x.d) && sub.length) toast("Every step done. Tick the task when it's finished."); renderSheet(); render(); return; }
+    case "iSubDel": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; const sub = (it.sub || []).filter(x => x.id !== b.dataset.k); updItem(it.lid, it.id, { sub: sub.length ? sub : null }); renderSheet(); render(); return; }
+    case "iSome": { const lid = b.dataset.l, id = b.dataset.id, u = undoItem(lid, id); updItem(lid, id, b.dataset.v === "1" ? { st: "some", wk: null, due: null, tm: null } : { st: "open" }); toast(b.dataset.v === "1" ? "Parked in Someday" : "Back on the list", u); S.sheet = null; break; }
+    case "iLet": { const lid = b.dataset.l, id = b.dataset.id, u = undoItem(lid, id); updItem(lid, id, { open: false, st: "let", doneAt: Date.now(), doneBy: ST.uid }); toast("Let go", u); S.sheet = null; break; }
+    case "iDel": { const lid = b.dataset.l, id = b.dataset.id, u = undoItem(lid, id); delItem(lid, id); toast("Deleted", u); S.sheet = null; break; }
+    case "iFloor": {
+      const it = findItem(b.dataset.l, b.dataset.id); if (!it) return;
+      const v = it.v || guessValue(it.t) || ((profile() || {}).cores || [])[0]?.value || (valueList()[0] || {}).id;
+      S.sheet = { type: "comp", isNew: true, fromTask: { l: it.lid, id: it.id }, fromMenu: true, draft: { id: "c-" + uidGen(), value: v, name: it.t.slice(0, 60), cadence: it.rep && it.rep.u === "day" ? "daily" : "weekly", target: 1, hours: 0.5 } };
+      break;
+    }
+    case "odToday": { const tk2 = todayKey(), od = overdue(tk2); od.forEach(i => setDue(i, tk2)); toast(od.length > 1 ? `${od.length} moved to today` : "Moved to today"); break; }
+    case "fPick": { setTv("inbox"); S.tab = "tasks"; toast("Open a task and tap “Make it one of this week's three”"); window.scrollTo(0, 0); break; }
+    case "tFold": { const o = tOpen(); o[k] = !o[k]; try { localStorage.setItem("compass-topen", JSON.stringify(o)); } catch (e) {} break; }
+    case "lNew": S.sheet = { type: "newlist" }; break;
+    case "lShare": S.copyFallback = null; S.sheet = { type: "share", l: b.dataset.l }; break;
+    case "lRemove": removeMember(b.dataset.l, b.dataset.u); return;
+    case "invMake": shareInvite(b.dataset.k, b); return;
+    case "invStop": stopInvite(b.dataset.k).then(() => { toast("That link no longer works"); renderSheet(); render(); }); return;
+    case "invYes": acceptInvite(); return;
+    case "invNo": dropInvite(); S.sheet = null; if (S.ob) { renderSheet(); return; } break;
+    case "inviteFriend": S.sheet = { type: "account", invite: true }; if (S.ob) { renderSheet(); return; } break;
+    case "wShare": FB.setDoc(FB.doc(ST.fs, "watch", ST.uid), { share: b.dataset.v }, { merge: true }).then(() => schedulePublish(true)).catch(() => {}); if (W8.mine) W8.mine.share = b.dataset.v; S.pubSig = null; break;
+    case "wPause": { const on = !(W8.mine && W8.mine.paused); FB.setDoc(FB.doc(ST.fs, "watch", ST.uid), { paused: on }, { merge: true }).catch(() => {}); if (W8.mine) W8.mine.paused = on; if (!on) { S.pubSig = null; schedulePublish(true); } toast(on ? "Sharing paused" : "Sharing again"); break; }
+    case "wRemove": removeWatcher(b.dataset.u); return;
+    case "wOpen": S.sheet = { type: "watching", u: b.dataset.u }; break;
+    case "wLeave": leaveWatch(b.dataset.u); return;
+    case "cheer": sendCheer(b.dataset.u, b.dataset.v); return;
+    case "cheerSeen": { const ids = W8.cheers.map(c => c.id); W8.cheers = []; ids.forEach(id => FB.deleteDoc(FB.doc(ST.fs, "watch", ST.uid, "cheers", id)).catch(() => {})); break; }
+    case "nlPick": { const f = $("#nlName"); if (f) { f.value = b.dataset.v; f.focus(); } return; }
+    case "lEdit": S.lConfirm = null; S.sheet = { type: "list", l: b.dataset.l }; break;
+    case "lVal": { const lid = b.dataset.l; editSettings(st2 => { st2.listV = st2.listV || {}; if (b.dataset.v) st2.listV[lid] = b.dataset.v; else delete st2.listV[lid]; }); renderSheet(); return; }
+    case "lSave": { const lid = b.dataset.l, f = $("#lName"), v = (f && f.value || "").trim().slice(0, 80); if (!v) { toast("Give the list a name."); return; } if (v !== listName(lid)) updList(lid, { name: v }); S.sheet = null; toast("Saved"); break; }
+    case "lRisk": S.lConfirm = b.dataset.l; renderSheet(); return;
+    case "lRiskNo": S.lConfirm = null; renderSheet(); return;
+    case "lRiskYes": { const lid = b.dataset.l, m = listMeta(lid), own = m && m.owner === ST.uid && !isSharedList(m); S.sheet = null; S.lConfirm = null; if (S.tv === lid) setTv("today"); if (own) { deleteList(lid); toast(`Deleted “${m.name}”`); } else { leaveList(lid); toast(`You left “${m && m.name}”`); } break; }
     case "delAcct": S.confirm = "delacct"; S.delPw = false; break;
     case "delAcctNo": S.confirm = null; break;
     case "delAcctYes": deleteAccount(false); return;
@@ -4787,7 +5495,8 @@ document.addEventListener("click", e => {
       openComp(c, true); S.sheet.dup = true; S.shType = null; break;
     }
     case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
-    case "closeSheet": if (S.sheet && S.sheet.type === "auth") { S.sheet = null; renderSheet(); return; } { const back = S.sheet && S.sheet.fromTask && !S.sheet.fromMenu && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
+    case "closeSheet": if (S.sheet && S.sheet.type === "item") { clearTimeout(S.ivT); ["iTitle", "iNote"].forEach(x => { const el = $("#" + x); if (el) itemField(el); }); }
+      if (S.sheet && S.sheet.type === "auth") { S.sheet = null; renderSheet(); return; } { const back = S.sheet && S.sheet.fromTask && !S.sheet.fromMenu && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
     case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
     case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.every; delete c.from; c.people = false; } break; }
     case "cTarget": { const c = S.sheet.draft, max = c.cadence === "monthly" ? 4 : c.cadence === "daily" ? 7 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, (c.target || 0) + (+b.dataset.d) * st)); break; }
@@ -4799,9 +5508,9 @@ document.addEventListener("click", e => {
       c.name = c.name.trim();
       editProfile(p => { const i = p.components.findIndex(x => x.id === c.id); if (i >= 0) p.components[i] = c; else p.components.push(c); if (c.value && !p.values.includes(c.value)) p.values.push(c.value); });
       if (sh.fromTask) {
-        const snap = clone(taskById(sh.fromTask)), cid = c.id;
-        setTask(sh.fromTask, { s: "component", comp: c.id, doneAt: todayKey() }); S.sortTally = S.sortTally || {}; S.sortTally.recurring = (S.sortTally.recurring || 0) + 1; S.sortCount = (S.sortCount || 0) + 1; S.sheet = sh.fromMenu ? null : { type: "sort" };
-        toast(`“${c.name}” is now a component`, () => { editProfile(p => { p.components = p.components.filter(x => x.id !== cid); }); if (snap) restoreTask(snap); S.sortCount = Math.max(0, S.sortCount - 1); if (S.sortTally.recurring) S.sortTally.recurring--; S.sheet = { type: "sort" }; render(); });
+        const ft = sh.fromTask, cid = c.id, undo = undoItem(ft.l, ft.id);
+        updItem(ft.l, ft.id, { open: false, st: "floor", doneAt: Date.now(), doneBy: ST.uid }); S.sortTally = S.sortTally || {}; S.sortTally.recurring = (S.sortTally.recurring || 0) + 1; S.sortCount = (S.sortCount || 0) + 1; S.sheet = sh.fromMenu ? null : { type: "sort" };
+        toast(`“${c.name}” is now a floor`, () => { editProfile(p => { p.components = p.components.filter(x => x.id !== cid); }); undo(); S.sortCount = Math.max(0, S.sortCount - 1); if (S.sortTally.recurring) S.sortTally.recurring--; if (!sh.fromMenu) S.sheet = { type: "sort" }; render(); });
         break;
       }
       S.sheet = null; toast(sh.isNew ? `Added “${c.name}”` : "Saved"); break;
@@ -4844,6 +5553,10 @@ document.addEventListener("drop", e => { const z = e.target.closest && e.target.
 document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
   if (f.id === "authForm") { emailAuth(); return; }
+  if (f.id === "iSubForm") { const inp = $("#iSubIn"), v = (inp && inp.value || "").trim().slice(0, 200); const it = S.sheet && findItem(S.sheet.l, S.sheet.id); if (!v || !it) return; inp.value = ""; updItem(it.lid, it.id, { sub: (it.sub || []).concat({ id: uidGen(), t: v, d: false }) }); renderSheet(); render(); const n = $("#iSubIn"); if (n) n.focus(); return; }
+  if (f.id === "cheerForm") { const ct = $("#cheerText"), v = ct ? ct.value : ""; if (ct) ct.value = ""; sendCheer(f.dataset.u, v); return; }
+  if (f.id === "newListForm") { const v = ($("#nlName").value || "").trim(); if (!v) { toast("Give the list a name."); return; } const lid = createList(v); setTv(lid); S.tab = "tasks"; S.sheet = null; toast(`Made “${v.slice(0, 40)}”. Add tasks above, or share it.`); render(); return; }
+  if (f.id === "wNameForm") { const v = ($("#wName").value || "").trim().slice(0, 60); if (v) { editProfile(p => { p.name = v; }); publishName(v); toast("Saved"); } renderSheet(); return; }
   if (f.id === "pForm") { const name = $("#pName").value.trim(); if (!name) return; editPeople(p => { p.list.push({ id: uidGen(), name, tier: $("#pTier").value, last: null }); }); render(); const n = $("#pName"); if (n) n.focus(); }
   else if (f.id === "inForm") { const t = $("#inText").value.trim(); if (!t) return; editSettings(s => { s.inbox = (s.inbox || []).concat({ id: uidGen(), t }); }); render(); const n = $("#inText"); if (n) n.focus(); }
   else if (f.id === "obCustomValue") { const n = $("#obCv").value.trim(); if (!n) return; const id = "v-" + uidGen(); S.ob.d.custom.push({ id, name: n }); S.ob.d.values.push(id); updateOb(); }
@@ -4853,6 +5566,9 @@ document.addEventListener("submit", e => {
 });
 document.addEventListener("input", e => {
   const t = e.target, ds = t.dataset;
+  if (t.id === "qAdd") { S.qDraft = t.value; if (!t.value) S.qIgnore = new Set(); refreshChips(); return; }
+  if (t.id === "capSheet") { S.capDraft = t.value; const q = parseQuick(t.value), box = t.parentElement.querySelector(".qchips"); if (box) box.innerHTML = q.chips.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join(""); return; }
+  if (ds.iv === "t" || ds.iv === "n") { clearTimeout(S.ivT); S.ivT = setTimeout(() => itemField(t), 500); return; }
   if (ds.mplan && !t.value) { setMonthPlan(ds.ym, ds.mplan, () => null); t.blur(); render(); return; }
   if (ds.j) editWeek(w => { dayObj(w, S.selDay).j[ds.j] = t.value; });
   else if (ds.r) editWeek(w => { w.r[ds.r] = t.value; });
@@ -4878,6 +5594,8 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   if (e.target && e.target.dataset && e.target.dataset.nt) { ntSet(e.target.dataset.nt, e.target.value); return; }
+  if (e.target && e.target.dataset && e.target.dataset.iv) { clearTimeout(S.ivT); itemField(e.target); return; }   // title and note: the list behind redraws when the sheet closes
+  if (e.target && e.target.id === "sortDate" && e.target.value) { sortPick("date", e.target.value); burst(e.target, "var(--accent)", 6); render(); return; }
   const t = e.target, ds = t.dataset;
   if (ds.mplan) {
     const cid = ds.mplan, v = t.value, oldYm = ds.ym, newYm = v ? v.slice(0, 7) : oldYm;
@@ -4903,16 +5621,15 @@ document.addEventListener("change", e => {
 });
 document.addEventListener("keydown", e => {
   const t = e.target, typing = t && /^(TEXTAREA|INPUT|SELECT)$/.test(t.tagName);
-  if (typing && t.id === "tQuick" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); const btn = document.querySelector('[data-act="capAdd"][data-src="tQuick"]'); if (btn) btn.click(); return; }
-  if (typing && t.id === "tm-text" && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="tRename"]'); if (btn) btn.click(); return; }
+  if (typing && t.id === "qAdd" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); const btn = document.querySelector('[data-act="capAdd"][data-src="qAdd"]'); if (btn) btn.click(); return; }
+  if (typing && t.id === "iTitle" && e.key === "Enter") { e.preventDefault(); t.blur(); return; }
   if (typing && t.tagName === "TEXTAREA" && t.closest(".capbox") && e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); const btn = t.closest(".capbox").querySelector('[data-act="capAdd"]'); if (btn) btn.click(); return; }
   if (typing && (t.dataset.tgt || t.dataset.dur) && e.key === "Enter") { e.preventDefault(); t.blur(); return; }
   if (typing && (t.id === "obe-name" || t.id === "obe-note") && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="obEditDone"]'); if (btn) btn.click(); return; }
-  if (typing && t.id === "sp-next" && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector('[data-act="sortProjSave"]'); if (btn) btn.click(); return; }
-  if (typing && t.id && t.id.startsWith("step-") && e.key === "Enter") { e.preventDefault(); const btn = document.querySelector(`[data-act="tStepSave"][data-id="${t.id.slice(5)}"]`); if (btn) btn.click(); return; }
-  if (e.key === "Escape" && S.sheet) { S.sheet = null; if (S.ob) renderSheet(); else render(); return; }
-  if (!typing && S.sheet && S.sheet.type === "sort" && !S.sortProj) {
-    const map = { "1": "done", "2": "week", "3": "later", "4": "recurring", "5": "project", "6": "someday", "7": "drop", s: "skip", S: "skip" };
+  if (e.key === "Escape" && S.sheet) { if (S.sheet.type === "item") { clearTimeout(S.ivT); ["iTitle", "iNote"].forEach(x => { const el = $("#" + x); if (el) itemField(el); }); } S.sheet = null; if (S.ob) renderSheet(); else render(); return; }
+  if (!typing && S.sheet && S.sheet.type === "sort") {
+    if (e.key === "4") { const d = $("#sortDate"); if (d) { e.preventDefault(); d.focus(); try { d.showPicker(); } catch (x) {} } return; }
+    const map = { "1": "done", "2": "today", "3": "week", "5": "list", "6": "recurring", "7": "someday", "8": "drop", s: "skip", S: "skip" };
     const k = map[e.key]; if (k) { const btn = document.querySelector(`[data-act="sortPick"][data-k="${k}"]`); if (btn) { e.preventDefault(); btn.click(); } }
   }
 });

@@ -24,7 +24,8 @@ async function newPage(ctx, { user = null } = {}) {
   if (user) await p.addInitScript(u => { if (!sessionStorage.getItem('__mockuserTab')) sessionStorage.setItem('__mockuserTab', JSON.stringify(u)); }, user);
   const tap = async (sel, o = {}) => {
     const l = typeof sel === 'string' ? p.locator(sel).first() : sel;
-    await l.evaluate(e => e.scrollIntoView({ block: 'center', behavior: 'instant' })).catch(() => {});
+    /* a toast floating over the target would take the tap (a person would wait a second); clear it unless it's the target */
+    await l.evaluate(e => { if (!e.closest('.toast')) document.querySelectorAll('.toast').forEach(t => t.remove()); e.scrollIntoView({ block: 'center', behavior: 'instant' }); }).catch(() => {});
     try { touch ? await l.tap(Object.assign({ timeout: 8000 }, o)) : await l.click(Object.assign({ timeout: 8000 }, o)); }
     catch (e) { throw new Error('tap ' + sel + ': ' + e.message.split('\n').slice(0, 6).join(' | ')); }
     await p.waitForTimeout(220);

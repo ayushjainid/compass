@@ -27,12 +27,20 @@ const VAPID = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBk
   await tap('[data-act=tab][data-t=week]'); await scan('week-floors');
   await tap('[data-act=weekView][data-v=plan]'); await scan('plan');
   await tap('.ptray .pchip').catch(() => {}); await scan('place-sheet'); await tap('.sheet [data-act=closeSheet] >> nth=0').catch(() => {});
-  await tap('[data-act=tab][data-t=tasks]'); await scan('tasks');
+  await tap('[data-act=tab][data-t=tasks]'); await p.waitForTimeout(500);
+  await p.locator('#qAdd').fill('Call mom tomorrow 6pm'); await scan('tasks-quickadd'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+  await tap('[data-act=tv][data-v=upcoming]'); await scan('tasks-upcoming');
+  await tap('.lrow .ltx'); await scan('task-sheet'); await tap('.sheet .sheetx');
+  await tap('[data-act=lNew]'); await scan('new-list-sheet'); await p.locator('#nlName').fill('Groceries'); await p.locator('#nlName').press('Enter'); await p.waitForTimeout(400);
+  await scan('tasks-list');
+  await tap('.lhead [data-act=lShare]'); await tap('.sheet [data-act=invMake]').catch(() => {}); await scan('share-sheet'); await tap('.sheet .sheetx');
+  await tap('[data-act=tv][data-v=today]'); await scan('tasks');
   await tap('[data-act=tab][data-t=review]'); await scan('review');
   await tap('[data-act=tab][data-t=compass]');
-  for (const k of ['goal', 'week', 'load', 'values', 'season', 'people', 'ifthen', 'cal', 'remind', 'app']) { if (await p.locator(`[data-act=cSec][data-k=${k}][aria-expanded=false]`).count()) await tap(`[data-act=cSec][data-k=${k}]`); }
+  for (const k of ['goal', 'week', 'load', 'values', 'season', 'people', 'ifthen', 'cal', 'remind', 'watch', 'app']) { if (await p.locator(`[data-act=cSec][data-k=${k}][aria-expanded=false]`).count()) await tap(`[data-act=cSec][data-k=${k}]`); }
   await scan('compass-all-open');
   await tap('[data-act=editComp]'); await scan('component-sheet'); await tap('.sheet .sheetx');
+  await tap('#csec-values [data-act=vqStart]'); await tap('.sheet .vqopt[data-v="4"]'); await scan('values-quiz'); await tap('.sheet .sheetx');
   await tap('[data-act=fbOpen]'); await scan('feedback-sheet'); await tap('.sheet .sheetx');
   await tap('#csec-cal [data-act=icsOpen]'); await scan('export-sheet'); await tap('.sheet .sheetx');
   await tap('#acctBtn'); await scan('account-sheet');
