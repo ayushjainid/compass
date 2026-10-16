@@ -127,6 +127,12 @@ await run(t0 + 9000e3 + 30e3);
 store.has = realHas;
 ok("a note another run already took isn't sent again; the rest still go", got("priya-phone").length === before + 1 && got("priya-phone").slice(-1)[0].body === "fine", got("priya-phone").slice(before));
 
+// a note from days ago (the Worker wasn't deployed yet) is dropped, not sent late
+const nb = got("priya-phone").length;
+put("pings/old1", { to: "u2", from: "u1", k: "cheer", n: "Ayush", x: "ancient", at: t0 + 9500e3 - 3 * 864e5, due: new Date(t0 + 9500e3 - 3 * 864e5) });
+await run(t0 + 9500e3);
+ok("a note from 3 days ago is dropped, not sent", got("priya-phone").length === nb && !get("pings/old1"));
+
 // ---- the Sunday note
 put("notify/w1", { tz: "Asia/Kolkata", on: true, subs: { d1: device("watcher-1") } });
 put("notify/w2", { tz: "Asia/Kolkata", on: true, subs: { d1: device("watcher-2") } });

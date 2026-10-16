@@ -12,7 +12,7 @@ import { localDay, localMonday, validTz } from "./time.js";
 import { openToday, listNames, signAction, weekId } from "./today.js";
 import { handleFeed } from "./feed.js";
 import { handleAction } from "./act.js";
-import { pingText, digestText, nextDigest, quietUntil, hourKey, PER_HOUR, STALE_DIGEST_MS } from "./social.js";
+import { pingText, digestText, nextDigest, quietUntil, hourKey, PER_HOUR, STALE_DIGEST_MS, STALE_PING_MS } from "./social.js";
 
 /** The evening reminder says what's left today and, when it's one or two things, offers to tick them
     right from the notification; otherwise "Remind me in an hour". Hidden names → only the snooze button. */
@@ -158,7 +158,7 @@ export async function socialWork(db, now, room, log = () => {}) {
   const send = (u, payload, kind, claim) => { used.set(u, usedBy(u) + 1); sends.push({ kind, id: u, name: db.full("notify/" + u), data: nd["notify/" + u], payload, claim }); };
   for (const p of pings) {
     const d = p.data, n = reach(d.to), txt = pingText(d);
-    if (!n || !txt) { writes.push({ del: p.name }); log(`ping ${p.id.slice(0, 6)}… dropped (${txt ? "no device" : "unknown"})`); continue; }
+    if (!n || !txt || (typeof d.at === "number" && now - d.at > STALE_PING_MS)) { writes.push({ del: p.name }); log(`ping ${p.id.slice(0, 6)}… dropped (${!txt ? "unknown" : !n ? "no device" : "too old"})`); continue; }
     const q = quietUntil(n.tz, now);
     if (q) { writes.push({ name: p.name, fields: { due: new Date(q) } }); log(`ping ${p.id.slice(0, 6)}… after quiet hours`); continue; }
     writes.push({ del: p.name });

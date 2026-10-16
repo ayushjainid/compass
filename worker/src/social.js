@@ -8,6 +8,7 @@ export const QUIET_FROM = 22, QUIET_TO = 8;   // no social notes between 10 pm a
 export const PER_HOUR = 6;                     // at most this many social notes per person per hour; more are dropped
 export const DIGEST_AT = "18:00";               // Sunday, the watched person's time
 export const STALE_DIGEST_MS = 6 * 3600e3;      // a digest more than 6 h late is skipped (the Worker was down)
+export const STALE_PING_MS = 48 * 3600e3;       // a note written more than 2 days ago is dropped, not sent late
 
 const str = (x, n) => String(x == null ? "" : x).replace(/\s+/g, " ").trim().slice(0, n);
 const first = n => str(n, 60).split(" ")[0] || "Someone";
