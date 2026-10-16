@@ -26,4 +26,4 @@ self.COMPASS_APPCHECK_SITE_KEY = "6LfMu90tAAAAANaiYHolKCpG9UgV-Ml0BL3mCiJ4";
 // Your reminders Worker's address (it also serves the live calendar feed and the buttons on reminders),
 // e.g. "https://compass-reminders.yourname.workers.dev". Shown by `cd worker && npx wrangler deploy`.
 // Empty hides the live calendar option and the reminder buttons.
-self.COMPASS_WORKER_URL = "";
+self.COMPASS_WORKER_URL = "https://compass-reminders.ayush-compass.workers.dev";
