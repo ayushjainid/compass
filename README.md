@@ -150,8 +150,10 @@ People can replace or turn off their link at any time (the old one stops working
 - **Sharing a list:** a list's **Share** button makes an invite link (valid 14 days, can be stopped). Whoever opens it and signs in joins the list; everyone in it sees changes live, can assign tasks to each other and see who did what. Only the person who made a list can remove people.
 - **Watchers (accountability partner):** Compass → **Accountability partner** makes a link; the person who accepts sees how many of your floors you held each week (and their names and counts, unless you choose "Only how many held") and can send a cheer that shows on your Today screen.
 - **Invite a friend:** the account menu has a link to Compass itself.
+- **Notes to people you share with:** joining someone's list or becoming their watcher, giving someone a task, and cheers become a notification on the other person's devices (`pings/*`, written by the app, sent and deleted by the reminders Worker, never between 10 pm and 8 am their time, at most 6 an hour). Watchers also get a note at 6 pm Sunday (the watched person's time) with that week's summary. This needs the Worker from section 8 to be redeployed once; each person can switch notes off in Compass → Reminders.
+- **12-week goals** (Compass → Season), **Plan tomorrow** (an evening card on Today and Tasks; `/?plan=tomorrow` opens it), a gentle question on tasks that keep getting moved, and **Where your month went** in the monthly look-back need nothing set up. Tasks given a time also appear in the live calendar (section 8b).
 
-All of it lives in Firestore (`lists/`, `lists/*/items/`, `invites/`, `watch/`) and is protected by `firestore.rules`, which the CI tests against the emulator. Deleting an account removes the lists the person made, their links and their watch page; shared lists made by others carry on.
+All of it lives in Firestore (`lists/`, `lists/*/items/`, `invites/`, `watch/`, `pings/`) and is protected by `firestore.rules`, which the CI tests against the emulator. Deleting an account removes the lists the person made, their links and their watch page; shared lists made by others carry on.
 
 ## 9. Protect your free quota (recommended once others use it)
 

@@ -45,8 +45,9 @@ const icsDay = d => d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
  * @param {string} [o.refresh] suggested refresh interval for subscribed feeds (e.g. "PT6H")
  * @param {boolean} [o.notes] include floor notes (the private feed leaves them out)
  * @param {number} [o.weeksBack] start repeating events this many weeks back, so a subscribed calendar keeps recent history
+ * @param {Array}  [o.tasks]   tasks with a day and a time: [{ i: id, t: title, d: "YYYY-MM-DD", m: "HH:MM" }], 30-minute events
  */
-export function buildIcs({ profile, settings, today = new Date(), now = new Date(), zone = "", alert = 0, daily = "each", name = "Compass", refresh = "", notes = true, weeksBack = 0 }) {
+export function buildIcs({ profile, settings, today = new Date(), now = new Date(), zone = "", alert = 0, daily = "each", name = "Compass", refresh = "", notes = true, weeksBack = 0, tasks = [] }) {
   const comps = ((profile || {}).components || []).filter(c => c && !c.fun && !c.paused);
   const valName = valueNameIn(profile), start = addDays(monday(today), -7 * weeksBack), L = [];
   const push = (...xs) => xs.forEach(x => L.push(icsFold(x)));
@@ -86,6 +87,15 @@ export function buildIcs({ profile, settings, today = new Date(), now = new Date
       else push("DTSTART;VALUE=DATE:" + icsDay(d), "DTEND;VALUE=DATE:" + icsDay(addDays(d, 1)), "TRANSP:TRANSPARENT");
       push("SUMMARY:" + icsEsc(c.name), "DESCRIPTION:" + icsEsc(`Compass · ${valName(c.value)}. Monthly floor.`)); if (pl.time) alarm(c.name); push("END:VEVENT"); n++;
     });
+  });
+  /* tasks given a day and a time (from today on): one-off half-hour events */
+  const day0 = dkey(today);
+  (Array.isArray(tasks) ? tasks : []).slice(0, 60).forEach(x => {
+    if (!x || typeof x.d !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(x.d) || x.d < day0 || typeof x.m !== "string" || !/^\d{1,2}:\d{2}$/.test(x.m)) return;
+    const d = parse(x.d), [h, m] = x.m.split(":").map(Number); d.setHours(h, m, 0, 0);
+    const id = String(x.i || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40) || "x", nm = String(x.t || "Task").slice(0, 120);
+    push("BEGIN:VEVENT", `UID:compass-task-${id}@life-compass.web.app`, "DTSTAMP:" + icsStamp(now), `DTSTART${tzid}:${icsLocal(d)}`, `DTEND${tzid}:${icsLocal(new Date(d.getTime() + 30 * 60000))}`, "SUMMARY:" + icsEsc(nm), "DESCRIPTION:" + icsEsc("Compass task."));
+    alarm(nm); push("END:VEVENT"); n++;
   });
   push("END:VCALENDAR");
   return { text: L.filter(x => x !== "").join("\r\n") + "\r\n", n };

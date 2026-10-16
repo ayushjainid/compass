@@ -20,6 +20,6 @@ export async function handleFeed(request, env, fetchFn = fetch, now = Date.now()
   /* only the link Compass currently shows works; one left behind by a reset or a lost delete is dead */
   if (settings.calFeed !== m[1]) return gone();
   const prefs = Object.assign({ alert: 0, daily: "each" }, settings.cal || {});
-  const { text } = buildIcs({ profile, settings, today: parse(localDay(zone, now)), now: new Date(now), zone, alert: +prefs.alert, daily: prefs.daily, refresh: "PT6H", notes: false, weeksBack: 8 });
+  const { text } = buildIcs({ profile, settings, today: parse(localDay(zone, now)), now: new Date(now), zone, alert: +prefs.alert, daily: prefs.daily, refresh: "PT6H", notes: false, weeksBack: 8, tasks: settings.calTasks || [] });
   return new Response(request.method === "HEAD" ? null : text, { headers: { "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "private, max-age=900", "Content-Disposition": 'inline; filename="compass.ics"', "X-Robots-Tag": "noindex" } });
 }

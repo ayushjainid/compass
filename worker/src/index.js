@@ -12,6 +12,7 @@ import { localDay, localMonday, validTz } from "./time.js";
 import { openToday, listNames, signAction, weekId } from "./today.js";
 import { handleFeed } from "./feed.js";
 import { handleAction } from "./act.js";
+import { pingText, digestText, nextDigest, quietUntil, hourKey, PER_HOUR, STALE_DIGEST_MS } from "./social.js";
 
 /** The evening reminder says what's left today and, when it's one or two things, offers to tick them
     right from the notification; otherwise "Remind me in an hour". Hidden names → only the snooze button. */
@@ -70,41 +71,48 @@ async function work(env, db, now, fetchFn, log) {
   const cap = Math.max(2, Math.min(400, +env.PER_RUN || PER_RUN)), revCap = Math.max(1, Math.round(cap / 5)), testCap = 2;
   const [eve, rev, test] = await Promise.all([db.due("notify", "nextEve", now, cap - revCap), db.due("notify", "nextRev", now, revCap), db.due("notify", "nextTest", now, testCap)]);
   const jobs = eve.map(x => ({ kind: "eve", ...x })).concat(rev.map(x => ({ kind: "rev", ...x })), test.map(x => ({ kind: "test", ...x })));
-  if (!jobs.length) return { checked: 0, sent: 0, failed: 0 };
-
-  // decide; a person due for several in the same minute gets all updates merged into one write
-  const byDoc = new Map(), sends = [];
-  for (const j of jobs) {
-    const r = decide(j.kind, j.id, j.data, now);
-    const cur = byDoc.get(j.name) || { name: j.name, fields: {} };
-    Object.assign(cur.fields, r.fields);
-    byDoc.set(j.name, cur);
-    if (r.send) sends.push({ ...j, payload: r.send });
-    log(`${j.kind} ${j.id.slice(0, 6)}… ${r.why}`);
+  const sends = [];
+  if (jobs.length) {
+    // decide; a person due for several in the same minute gets all updates merged into one write
+    const byDoc = new Map(), mine = [];
+    for (const j of jobs) {
+      const r = decide(j.kind, j.id, j.data, now);
+      const cur = byDoc.get(j.name) || { name: j.name, fields: {} };
+      Object.assign(cur.fields, r.fields);
+      byDoc.set(j.name, cur);
+      if (r.send) mine.push({ ...j, payload: r.send });
+      log(`${j.kind} ${j.id.slice(0, 6)}… ${r.why}`);
+    }
+    const updates = [...byDoc.values()];
+    let claimed = new Set(updates.map(u => u.name));
+    try { await db.patch(updates); }
+    catch (e) {
+      // one document vanished mid-run (account deleted): claim the rest one by one
+      claimed = new Set();
+      for (const u of updates) { try { await db.patch([u]); claimed.add(u.name); } catch (e2) { log("skip " + u.name.split("/").pop()); } }
+    }
+    sends.push(...mine.filter(s => claimed.has(s.name)));
   }
-  const updates = [...byDoc.values()];
-  let claimed = new Set(updates.map(u => u.name));
-  try { await db.patch(updates); }
-  catch (e) {
-    // one document vanished mid-run (account deleted): claim the rest one by one
-    claimed = new Set();
-    for (const u of updates) { try { await db.patch([u]); claimed.add(u.name); } catch (e2) { log("skip " + u.name.split("/").pop()); } }
-  }
+  /* notes between people (a join, a task, a cheer, the Sunday note to watchers): with what's left of this minute's budget */
+  let soc = { checked: 0, sends: [] };
+  if (cap - sends.length >= 2) { try { soc = await socialWork(db, now, cap - sends.length, log); } catch (e) { log("social: " + e.message); } }
+  sends.push(...soc.sends);
+  if (!jobs.length && !soc.checked) return { checked: 0, sent: 0, failed: 0 };
 
   if (!env.VAPID_PUBLIC || !env.VAPID_PRIVATE) throw new Error("VAPID keys are not set");
   /* evening reminders say what's left and carry one-tap buttons; if that lookup fails, the plain reminder still goes */
-  for (const s of sends) if (s.kind === "eve" && claimed.has(s.name)) { try { s.payload = await enrichEvening(env, db, s.id, s.data, s.payload, now); } catch (e) { log("enrich failed: " + e.message); } }
+  for (const s of sends) if (s.kind === "eve") { try { s.payload = await enrichEvening(env, db, s.id, s.data, s.payload, now); } catch (e) { log("enrich failed: " + e.message); } }
   const vapid = await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE);
   /* signed tokens saved between runs (Apple: don't make a new one more than hourly) */
   const store = await jwtStore(db, log);
   const results = new Map();   // notify doc name -> [{ d, dev, ok, s, r }]
   let sent = 0, failed = 0, lastErr = "";
   const out = [];
-  for (const s of sends.filter(x => claimed.has(x.name))) for (const t of targets(s.data)) out.push({ s, t });
+  for (const s of sends) for (const t of targets(s.data)) out.push({ s, t });
   await Promise.all(out.map(async ({ s, t }) => {
     const res = { d: t.dev, dev: t.label, ok: false, s: 0, r: "" };
     try {
-      const [url, init] = await pushRequest({ endpoint: t.endpoint, keys: t.keys }, s.payload, vapid, { subject: env.VAPID_SUBJECT, ttl: s.kind === "eve" ? 3 * 3600 : s.kind === "test" ? 600 : 12 * 3600, topic: s.payload.tag, store });
+      const [url, init] = await pushRequest({ endpoint: t.endpoint, keys: t.keys }, s.payload, vapid, { subject: env.VAPID_SUBJECT, ttl: s.kind === "eve" ? 3 * 3600 : s.kind === "test" ? 600 : s.kind === "social" ? 6 * 3600 : 12 * 3600, topic: s.payload.tag, store });
       const r = await fetchFn(url, init);
       res.s = r.status;
       if (r.ok) { res.ok = true; sent++; }
@@ -132,7 +140,47 @@ async function work(env, db, now, fetchFn, log) {
     if (kinds.get(name).has("test")) sets.push([["test"], { at: new Date(now), res: list.map(r => ({ d: r.d, dev: r.dev, ok: r.ok, s: r.s, r: r.r })) }]);
     if (sets.length) { try { await db.setPaths(path, sets, [], { mustExist: true }); } catch (e) { log("write-back failed: " + e.message); } }
   }
-  return { checked: jobs.length, sent, failed, dead, lastErr };
+  return { checked: jobs.length + soc.checked, sent, failed, dead, lastErr };
+}
+
+/** Pings and Sunday notes due now: claimed (deleted, moved past quiet hours, or rescheduled) in one commit before
+    anything is sent, so an overlapping run can't send them twice. Returns sends shaped like the reminders'. */
+export async function socialWork(db, now, room, log = () => {}) {
+  const [pings, digs] = await Promise.all([db.due("pings", "due", now, Math.min(6, room)), room >= 4 ? db.due("watch", "nextDigest", now, 1) : Promise.resolve([])]);
+  if (!pings.length && !digs.length) return { checked: 0, sends: [] };
+  const who = new Set();
+  pings.forEach(p => { if (typeof p.data.to === "string" && p.data.to) who.add(p.data.to); });
+  digs.forEach(d => (Array.isArray(d.data.watchers) ? d.data.watchers : []).slice(0, 5).forEach(u => { if (typeof u === "string" && u) who.add(u); }));
+  const nd = who.size ? await db.getMany([...who].map(u => "notify/" + u)) : {};
+  const reach = u => { const n = nd["notify/" + u]; return n && n.social !== false && targets(n).length ? n : null; };
+  const used = new Map(), usedBy = u => { if (!used.has(u)) { const n = nd["notify/" + u]; used.set(u, n && n.socH === hourKey(n.tz, now) ? +n.socN || 0 : 0); } return used.get(u); };
+  const writes = [], sends = [];
+  const send = (u, payload, kind, claim) => { used.set(u, usedBy(u) + 1); sends.push({ kind, id: u, name: db.full("notify/" + u), data: nd["notify/" + u], payload, claim }); };
+  for (const p of pings) {
+    const d = p.data, n = reach(d.to), txt = pingText(d);
+    if (!n || !txt) { writes.push({ del: p.name }); log(`ping ${p.id.slice(0, 6)}… dropped (${txt ? "no device" : "unknown"})`); continue; }
+    const q = quietUntil(n.tz, now);
+    if (q) { writes.push({ name: p.name, fields: { due: new Date(q) } }); log(`ping ${p.id.slice(0, 6)}… after quiet hours`); continue; }
+    writes.push({ del: p.name });
+    if (usedBy(d.to) >= PER_HOUR) { log(`ping ${p.id.slice(0, 6)}… dropped (too many this hour)`); continue; }
+    send(d.to, txt, "social", writes.length - 1);
+  }
+  for (const g of digs) {
+    const w = g.data, nx = nextDigest(w, now);
+    writes.push({ name: g.name, fields: { nextDigest: nx ? new Date(nx) : null } });
+    const claim = writes.length - 1;
+    if (w.paused || !Array.isArray(w.watchers) || !w.watchers.length) { log(`digest ${g.id.slice(0, 6)}… nobody to tell`); continue; }
+    if (w.nextDigest && now - w.nextDigest > STALE_DIGEST_MS) { log(`digest ${g.id.slice(0, 6)}… stale`); continue; }
+    const txt = digestText(g.id, w, now);
+    for (const u of w.watchers.slice(0, 5)) { if (typeof u !== "string" || !reach(u) || quietUntil(reach(u).tz, now) || usedBy(u) >= PER_HOUR) continue; send(u, txt, "digest", claim); }
+    log(`digest ${g.id.slice(0, 6)}… to ${sends.filter(s => s.claim === claim).length}`);
+  }
+  /* the hourly count rides along in the same commit (a counter, not a claim) */
+  for (const u of new Set(sends.map(s => s.id))) { const n = nd["notify/" + u]; writes.push({ name: db.full("notify/" + u), fields: { socH: hourKey(n.tz, now), socN: used.get(u) } }); }
+  let ok = new Set(writes.map((_, i) => i));
+  try { await db.commit(writes); }
+  catch (e) { ok = new Set(); for (const [i, w] of writes.entries()) { try { await db.commit([w]); ok.add(i); } catch (e2) { log("social: skipped one (gone)"); } } }
+  return { checked: pings.length + digs.length, sends: sends.filter(s => ok.has(s.claim)) };
 }
 
 /* signed VAPID tokens kept in status/vapid between runs */

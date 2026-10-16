@@ -121,6 +121,23 @@ await t("join: without an invite, refused", assertFails(updateDoc(doc(other, "li
 await t("join: with a valid invite, add exactly yourself", assertSucceeds(updateDoc(doc(other, "lists/l-0001"), { members: arrayUnion("bob"), "people.bob": { n: "Bob" }, via: TOK, up: now })));
 await t("join: now Bob reads the list and its items", assertSucceeds(getDoc(doc(other, "lists/l-0001/items/i1"))));
 await t("join: and adds to it", assertSucceeds(setDoc(doc(other, "lists/l-0001/items/i5"), { t: "Bread", open: true, st: "open", by: "bob", at: 2 })));
+// notes to the other person (turned into notifications by the reminders service)
+const PG = n => "pings/" + "P".repeat(20) + n;
+const ping = (from, o) => Object.assign({ from, n: "Alice", due: new Date(), at: now }, o);
+await t("ping: a list member tells another they joined", assertSucceeds(setDoc(doc(other, PG(1)), ping("bob", { to: "alice", k: "join", l: "l-0001", ln: "Groceries", n: "Bob" }))));
+await t("ping: give a list member a task", assertSucceeds(setDoc(doc(me, PG(2)), ping("alice", { to: "bob", k: "assign", l: "l-0001", ln: "Groceries", t: "Milk", i: "i1" }))));
+await t("ping: not to someone outside the list", assertFails(setDoc(doc(me, PG(3)), ping("alice", { to: "carol", k: "assign", l: "l-0001", t: "x" }))));
+await t("ping: not from someone outside the list", assertFails(setDoc(doc(carol, PG(4)), ping("carol", { to: "alice", k: "join", l: "l-0001", n: "Carol" }))));
+await t("ping: not in someone else's name", assertFails(setDoc(doc(me, PG(5)), ping("bob", { to: "bob", k: "assign", l: "l-0001", t: "x" }))));
+await t("ping: not to yourself", assertFails(setDoc(doc(me, PG(6)), ping("alice", { to: "alice", k: "assign", l: "l-0001", t: "x" }))));
+await t("ping: not scheduled for later", assertFails(setDoc(doc(me, PG(7)), ping("alice", { to: "bob", k: "assign", l: "l-0001", t: "x", due: new Date(Date.now() + 3600e3) }))));
+await t("ping: no extra fields", assertFails(setDoc(doc(me, PG(8)), ping("alice", { to: "bob", k: "assign", l: "l-0001", t: "x", url: "https://evil" }))));
+await t("ping: unknown kinds refused", assertFails(setDoc(doc(me, PG(9)), ping("alice", { to: "bob", k: "spam", l: "l-0001" }))));
+await t("ping: long text refused", assertFails(setDoc(doc(me, PG(10)), ping("alice", { to: "bob", k: "assign", l: "l-0001", t: "x".repeat(121) }))));
+await t("ping: short ids refused", assertFails(setDoc(doc(me, "pings/short"), ping("alice", { to: "bob", k: "assign", l: "l-0001", t: "x" }))));
+await t("ping: nobody reads them, not even the sender", assertFails(getDoc(doc(me, PG(2)))));
+await t("ping: or changes them", assertFails(setDoc(doc(me, PG(2)), ping("alice", { to: "bob", k: "assign", l: "l-0001", t: "changed" }))));
+await t("item: the slipping and goal marks are allowed", assertSucceeds(updateDoc(doc(me, "lists/l-0001/items/i1"), { nz: 3, g: "g-abc" })));
 await t("join: can't bring a friend along", assertFails(updateDoc(doc(carol, "lists/l-0001"), { members: ["alice", "bob", "carol", "dave"], via: TOK })));
 await t("member: can rename the list", assertSucceeds(updateDoc(doc(other, "lists/l-0001"), { name: "Weekly shop", up: now })));
 await t("member: can't change someone else's name tag", assertFails(updateDoc(doc(other, "lists/l-0001"), { "people.alice": { n: "Mallory" } })));
@@ -150,6 +167,10 @@ await t("watch: invite for your own page", assertSucceeds(setDoc(doc(me, "invite
 await t("watch: invite for someone else's page refused", assertFails(setDoc(doc(other, "invites/" + "X".repeat(32)), { kind: "watch", from: "bob", name: "Bob", watch: "alice", exp: now + 864e5, at: now })));
 await t("watch: others can't read it", assertFails(getDoc(doc(other, "watch/alice"))));
 await t("watch: accept with the invite", assertSucceeds(updateDoc(doc(other, "watch/alice"), { watchers: arrayUnion("bob"), "people.bob": { n: "Bob" }, via: TOKW })));
+await t("ping: a watcher's cheer note", assertSucceeds(setDoc(doc(other, PG(20)), ping("bob", { to: "alice", k: "cheer", x: "Nice going", n: "Bob" }))));
+await t("ping: a new watcher's join note", assertSucceeds(setDoc(doc(other, PG(21)), ping("bob", { to: "alice", k: "join", w: true, n: "Bob" }))));
+await t("ping: strangers can't cheer", assertFails(setDoc(doc(carol, PG(22)), ping("carol", { to: "alice", k: "cheer", x: "hi", n: "Carol" }))));
+await t("watch: owner keeps the time zone and next Sunday note", assertSucceeds(updateDoc(doc(me, "watch/alice"), { tz: "Asia/Kolkata", nextDigest: new Date(Date.now() + 864e5) })));
 await t("watch: the watcher reads it", assertSucceeds(getDoc(doc(other, "watch/alice"))));
 await t("watch: the watcher can find who they watch", assertSucceeds(getDocs(query(collection(other, "watch"), where("watchers", "array-contains", "bob")))));
 await t("watch: the watcher can't change the numbers", assertFails(updateDoc(doc(other, "watch/alice"), { week: { held: 99 } })));
@@ -165,6 +186,7 @@ await t("watch: the old link no longer works", assertFails(updateDoc(doc(other, 
 await t("watch: removed watcher can't read", assertFails(getDoc(doc(other, "watch/alice"))));
 
 // ---- owner-only docs
+await t("notify: notes from people can be switched off", assertSucceeds(setDoc(doc(me, "notify/alice"), { social: false }, { merge: true })));
 await t("status: owner reads", assertSucceeds(getDoc(doc(owner, "status/reminders"))));
 await t("status: others can't", assertFails(getDoc(doc(me, "status/reminders"))));
 await t("status: nobody writes from the app", assertFails(setDoc(doc(owner, "status/reminders"), { ok: false })));

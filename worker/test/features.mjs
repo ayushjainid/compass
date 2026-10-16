@@ -102,7 +102,11 @@ ok("CORS preflight answered", r.status === 204 && r.headers.get("access-control-
 // ---- calendar feed
 const token = nc.randomBytes(32).toString("base64url");
 fs.put(`calfeeds/${token}`, { uid: "alice", tz: "Asia/Kolkata", at: 1 });
-fs.put("users/alice/docs/settings", { ...settings, calFeed: token });
+fs.put("users/alice/docs/settings", { ...settings, calFeed: token, calTasks: [
+  { i: "t1", t: "Dentist; bring card", d: "2026-10-05", m: "09:30" },     // two days after the feed's today
+  { i: "t0", t: "Old thing", d: "2020-01-01", m: "09:00" },               // long past: left out
+  { i: "../x", t: "No time", d: "2026-10-01" },                            // no time: left out
+] });
 fs.put("users/alice/docs/profile", { ...profile, components: profile.components.map(c => c.id === "sleep" ? { ...c, note: "private: insomnia meds" } : c) });
 const feed = path => handleFeed(new Request("https://w" + path), env, fetchFn, now);
 r = await feed(`/cal/${token}.ics`); let txt = await r.text();
@@ -113,6 +117,8 @@ ok("feed: every-2-weeks keeps its interval", /RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY
 ok("feed: monthly dated floor, untimed daily as all-day", /SUMMARY:Budget review/.test(txt) && /SUMMARY:Slept 7\+ hours/.test(txt) && /RRULE:FREQ=DAILY/.test(txt));
 ok("feed: their alert choice (10 min) and a refresh hint", /TRIGGER:-PT10M/.test(txt) && /REFRESH-INTERVAL;VALUE=DURATION:PT6H/.test(txt));
 ok("feed: not cached by shared caches", /private/.test(r.headers.get("cache-control")));
+ok("feed: tasks with a time, as half-hour events in their zone", /UID:compass-task-t1@/.test(txt) && /SUMMARY:Dentist\\; bring card/.test(txt) && /DTSTART;TZID=Asia\/Kolkata:20261005T093000/.test(txt) && /DTEND;TZID=Asia\/Kolkata:20261005T100000/.test(txt), (txt.match(/BEGIN:VEVENT[\s\S]*?compass-task[\s\S]*?END:VEVENT/) || [""])[0]);
+ok("feed: past tasks and ones without a time are left out", !/Old thing/.test(txt) && !/No time/.test(txt));
 ok("feed: floor notes never published", !/insomnia/.test(txt));
 ok("feed: keeps recent history (starts 8 weeks back)", /DTSTART;TZID=Asia\/Kolkata:202608\d\dT070000/.test(txt), (txt.match(/DTSTART[^\r]*/g) || []).slice(0, 4));
 const old = nc.randomBytes(32).toString("base64url"); fs.put(`calfeeds/${old}`, { uid: "alice", tz: "Asia/Kolkata", at: 1 });
