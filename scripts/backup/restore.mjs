@@ -1,7 +1,7 @@
 // Put documents back from a backup file. Safe by default: it only shows what it would do.
 //
 //   BACKUP_PASSPHRASE=… node scripts/backup/restore.mjs compass-2026-10-03.cbk                    # look inside
-//   … restore.mjs FILE --uid <uid>                  # one person's data (users/<uid>/…, notify/<uid>), dry run
+//   … restore.mjs FILE --uid <uid>                  # one person's data (users/<uid>/…, notify/<uid>, lists they made), dry run
 //   … restore.mjs FILE --only stats/ --only status/ # any path prefixes, dry run
 //   … restore.mjs FILE --uid <uid> --yes            # actually write
 //   … restore.mjs FILE --all --yes                  # everything
@@ -16,8 +16,12 @@ import { open, load } from "./lib.mjs";
 const args = process.argv.slice(2), file = args.find(a => !a.startsWith("--") && !args[args.indexOf(a) - 1]?.match(/^--(uid|only)$/));
 if (!file) { console.log("Usage: restore.mjs FILE [--uid UID | --only PREFIX ... | --all] [--yes]"); process.exit(1); }
 const opt = n => args.flatMap((a, i) => (a === n ? [args[i + 1]] : []));
-const uid = opt("--uid")[0], only = uid ? [`users/${uid}/`, `notify/${uid}`, `errors/${uid}`] : opt("--only"), all = args.includes("--all"), yes = args.includes("--yes");
+const uid = opt("--uid")[0], all = args.includes("--all"), yes = args.includes("--yes");
 const b = open(readFileSync(file), process.env.BACKUP_PASSPHRASE || "");
+/* one person: their documents, plus the lists they made (with their tasks) and their watch page.
+   Shared lists they only joined belong to someone else, so they're left out. */
+const owned = uid ? b.docs.filter(d => /^lists\/[^/]+$/.test(d.path) && d.data && d.data.owner === uid).map(d => d.path) : [];
+const only = uid ? [`users/${uid}/`, `notify/${uid}`, `errors/${uid}`, `watch/${uid}`, ...owned] : opt("--only");
 console.log(`Backup of ${b.project} taken ${b.at}: ${b.count} documents.`);
 const pick = only.length ? b.docs.filter(d => only.some(p => d.path === p || d.path.startsWith(p.endsWith("/") ? p : p + "/"))) : b.docs;
 const top = pick.reduce((m, d) => (m[d.path.split("/").slice(0, 2).join("/")] = (m[d.path.split("/").slice(0, 2).join("/")] || 0) + 1, m), {});

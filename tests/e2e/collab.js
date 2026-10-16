@@ -1,6 +1,6 @@
 // Together: share a list by invite link, work on it from two accounts live, assign, remove; watchers (accountability
 // partners) see your week and cheer; the invite banner before signing in; stopped links; leaving; account deletion
-const { chromium } = require('./engine');
+const { chromium, NAME } = require('./engine');
 const { newCtx, newPage, onboard, report, launch, W, dark, S } = require('./harness');
 const R = []; const ok = (n, c, i) => R.push({ n, pass: !!c, i: c ? undefined : i });
 const U = (uid, name, email) => ({ uid, displayName: name, email, photoURL: '', providerData: [{ providerId: 'google.com' }], metadata: { lastSignInTime: new Date().toUTCString() } });
@@ -18,7 +18,7 @@ const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Sha
   await A.p.locator('#qAdd').fill('Book flights fri'); await A.p.keyboard.press('Enter'); await settle(A, 300);
   await A.tap('.lhead [data-act=lShare]');
   ok('Share sheet: just you so far, and a way to invite', /Share “Trip to Goa”/.test(await A.text('.sheet')) && await A.p.locator('.sheet .prow').count() === 1 && await A.p.locator('.sheet [data-act=invMake]').count() === 1);
-  await A.p.context().grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
+  if (NAME === 'chromium') await A.p.context().grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});   // other engines don't have these permissions
   await A.tap('.sheet [data-act=invMake]'); await settle(A);
   const link = await A.p.locator('.sheet .invlink input').inputValue().catch(() => '');
   const tok = (link.match(/invite=([\w-]+)/) || [])[1];

@@ -21,6 +21,8 @@ const seed = {
   "notify/alice": { on: true, nextEve: ts, sub: { endpoint: "https://push.example/x", keys: { p256dh: "k", auth: "a" } } },
   "stats/d-2026-10-02": { active: 5, logged: 3 }, "status/reminders": { ok: true, at: ts, sent: { d20261002: 41 } },
   "feedback/bob-1": { uid: "bob", text: "nice", at: ts }, "admins/alice": { at: 1 },
+  "lists/l-a": { owner: "alice", members: ["alice", "bob"], name: "Trip", kind: "list" }, "lists/l-a/items/i1": { t: "Book flights", open: true, sub: [{ id: "s1", t: "Compare", d: false }] },
+  "lists/l-b": { owner: "bob", members: ["bob", "alice"], name: "Bob's", kind: "list" }, "watch/alice": { watchers: ["bob"], week: { held: 3 } },
 };
 for (const [p, d] of Object.entries(seed)) await db.doc(p).set(d);
 const before = await dump(db, F);
@@ -31,11 +33,11 @@ ok("backup file written", /compass-\d{4}-\d{2}-\d{2}\.cbk$/.test(file), file);
 // wipe everything, then a dry run must not write
 for (const p of Object.keys(seed)) await db.doc(p).delete();
 const dry = execFileSync(process.execPath, ["scripts/backup/restore.mjs", file], { env, stdio: "pipe" }).toString();
-ok("dry run lists contents and writes nothing", /8 documents/.test(dry) && /Dry run/.test(dry) && (await dump(db, F)).length === 0, dry);
+ok("dry run lists contents and writes nothing", /12 documents/.test(dry) && /Dry run/.test(dry) && (await dump(db, F)).length === 0, dry);
 // one person
 execFileSync(process.execPath, ["scripts/backup/restore.mjs", file, "--uid", "alice", "--yes"], { env, stdio: "pipe" });
 const one = (await dump(db, F)).map(d => d.path);
-ok("--uid restores just that person", one.join() === "notify/alice,users/alice/docs/profile,users/alice/docs/w-2026-09-28", one);
+ok("--uid restores just that person, with the lists they made and their watch page", one.join() === "lists/l-a,lists/l-a/items/i1,notify/alice,users/alice/docs/profile,users/alice/docs/w-2026-09-28,watch/alice", one);
 let refused = false; try { execFileSync(process.execPath, ["scripts/backup/restore.mjs", file, "--yes"], { env, stdio: "pipe" }); } catch (e) { refused = true; }
 ok("everything needs --all", refused);
 execFileSync(process.execPath, ["scripts/backup/restore.mjs", file, "--all", "--yes"], { env, stdio: "pipe" });

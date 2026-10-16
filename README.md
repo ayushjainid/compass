@@ -130,6 +130,8 @@ Then give the Worker read/write access to the `notify` collection with a Firebas
 
 Open Compass → **Compass** tab → **Reminders** → **Turn on reminders**. On iPhone, add Compass to your Home Screen first (Safari → Share → Add to Home Screen) and turn reminders on from that icon; iPhone only allows notifications for web apps opened that way. Watch the scheduler with `cd worker && npm run tail`.
 
+**Several devices, and testing it.** Each device you turn reminders on for gets them (Compass → Reminders lists them, with Remove). **Send a test** asks the Worker to send one right away to every device and shows what Apple, Google or Mozilla answered for each, so a broken link shows up there (for example Apple's `BadJwtToken` or an expired device). A device whose address was dropped offers **Reconnect** on its Today screen. The last refused push also shows on your dashboard. These need the Worker from October 16, 2026 or later: after pulling, run `cd worker && npx wrangler deploy`.
+
 **How far the free plan goes.** Each run may use 10 ms of CPU, which is about 8 reminders a minute, or roughly 11,000 a day. People who pick the same minute are served over the following minutes, so a few hundred people sharing one time still get theirs within about a minute or two each. The other ceiling is Firestore's free quota (50,000 reads and 20,000 writes a day), which the app itself already uses: reminders add only about 2 reads and 2 writes per person per day, so the app's own use will run out first. Beyond either limit, Workers Paid ($5/month) lets you set `PER_RUN = "200"` in `wrangler.toml`, and extra Firestore use costs cents per 100,000 operations.
 
 ## 8b. Live calendar and reminder buttons (uses the same Worker)
@@ -141,6 +143,15 @@ The reminders Worker also serves each person's **live calendar** (a private `web
 3. In Compass: **Week → Plan → Add to calendar** now offers **Get my calendar link** with Apple and Google buttons. Reminder buttons appear on Android and desktop; iPhone shows the reminder without buttons.
 
 People can replace or turn off their link at any time (the old one stops working at once), and turn off **Say what's left** under Reminders to keep floor names off their lock screen. Each calendar refresh costs three database reads; Apple checks every few hours, Google once or twice a day.
+
+## 8c. Lists, sharing and watchers (nothing to set up)
+
+- **Tasks are lists.** Everyone has an Inbox; type tasks the way you'd say them ("call mom fri 6pm", "pay rent every month", "bread #groceries", `*` for this week's three). Views: Today, Upcoming (two weeks), Inbox and each list. Tasks from before October 16, 2026 move into the Inbox automatically the first time the new version opens.
+- **Sharing a list:** a list's **Share** button makes an invite link (valid 14 days, can be stopped). Whoever opens it and signs in joins the list; everyone in it sees changes live, can assign tasks to each other and see who did what. Only the person who made a list can remove people.
+- **Watchers (accountability partner):** Compass → **Accountability partner** makes a link; the person who accepts sees how many of your floors you held each week (and their names and counts, unless you choose "Only how many held") and can send a cheer that shows on your Today screen.
+- **Invite a friend:** the account menu has a link to Compass itself.
+
+All of it lives in Firestore (`lists/`, `lists/*/items/`, `invites/`, `watch/`) and is protected by `firestore.rules`, which the CI tests against the emulator. Deleting an account removes the lists the person made, their links and their watch page; shared lists made by others carry on.
 
 ## 9. Protect your free quota (recommended once others use it)
 
