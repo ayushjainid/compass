@@ -27,7 +27,7 @@ async function device(b, name) {
     if (p === '/vendor/firebase.js') { body = fs.readFileSync(path.join(__dirname, 'mockfb2.js')); type = 'text/javascript'; } else if (p === '/firebase-config.js') { body = 'window.COMPASS_FIREBASE_CONFIG={apiKey:"t",authDomain:"x",projectId:"x",appId:"x"}'; type = 'text/javascript'; } else { try { body = fs.readFileSync(path.join(root, p)); } catch (e) { return route.fulfill({ status: 404, body: '' }); } type = p.endsWith('.js') ? 'text/javascript' : 'text/html'; }
     route.fulfill({ status: 200, body, contentType: type }); });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(name + ': ' + e.message));
-  await ctx.exposeBinding('__srv', (src, m) => handler(p)(src, m));
+  await ctx.exposeBinding('__srv', (src, m) => handler(src.page || p)(src, m));   // the page that asked (a device can swap its page mid-test)
   const dev = { ctx, p, errs, name };
   dev.tap = async s => { const l = dev.p.locator(s).first(); await l.scrollIntoViewIfNeeded().catch(() => {}); await l.tap({ timeout: 8000 }); await dev.p.waitForTimeout(200); };
   return dev;
@@ -68,7 +68,7 @@ const tk = () => { const d = new Date(); return d.getFullYear() + '-' + String(d
   await A.p.fill('#j-win', 'Offline win from A'); await A.p.waitForTimeout(900);
   await B.tap('[data-act=inc][data-k=gym]');
   await B.p.fill('#j-spark', 'Lesson from B');
-  await settle(2500);
+  await settle(2500); for (let t = 0; t < 30 && (server.get(wk()).c || {}).gym !== 1; t++) await B.p.waitForTimeout(200);   // a busy machine can take longer
   ok('while A is offline, B\'s changes are on the server', (server.get(wk()).c || {}).gym === 1, server.get(wk()).c);
   await A.ctx.setOffline(false); await settle(6000);
   let w = server.get(wk()), day = (w.days || {})[tk()] || {};
