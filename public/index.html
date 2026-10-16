@@ -2339,16 +2339,23 @@ const REP_LABEL = { day: "Every day", wkday: "Every weekday", week: "Every week"
 const repWords = r => !r ? "" : r.u === "week" && r.d !== undefined && r.d !== null ? "Every " + ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][r.d] : REP_LABEL[r.u] || "Repeats";
 function nextDue(it) {
   const r = it.rep; if (!r) return null;
-  const from = it.due && it.due > todayKey() ? parse(it.due) : parse(todayKey());
-  let d = new Date(from);
+  const tk = todayKey(), from = it.due && it.due > tk ? parse(it.due) : parse(tk);
+  const daysIn = (y, m) => new Date(y, m + 1, 0).getDate();
+  let d;
   if (r.u === "day") d = addDays(from, 1);
   else if (r.u === "wkday") { d = addDays(from, 1); while ([0, 6].includes(d.getDay())) d = addDays(d, 1); }
-  else if (r.u === "week") { d = addDays(from, 7); if (r.d !== undefined && r.d !== null) { d = addDays(from, 1); while ((d.getDay() + 6) % 7 !== r.d) d = addDays(d, 1); } }
-  else if (r.u === "month") { const base = it.due ? parse(it.due) : from; d = new Date(base.getFullYear(), base.getMonth() + 1, Math.min(base.getDate(), 28)); while (dkey(d) <= todayKey()) d = new Date(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
-  else if (r.u === "year") { const base = it.due ? parse(it.due) : from; d = new Date(base.getFullYear() + 1, base.getMonth(), base.getDate()); }
-  return dkey(d);
+  else if (r.u === "week") {
+    const wd = r.d !== undefined && r.d !== null ? r.d : it.due ? (parse(it.due).getDay() + 6) % 7 : (from.getDay() + 6) % 7;
+    d = nextWeekday(from, wd, true);
+  }
+  else if (r.u === "month" || r.u === "year") {
+    /* keep the day of the month it started on (the 31st stays the 31st, or the month's last day) */
+    const anchor = it.due ? parse(it.due) : from, dom = r.dom || anchor.getDate(), step = r.u === "month" ? 1 : 12;
+    let y = anchor.getFullYear(), m = anchor.getMonth();
+    do { m += step; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; d = new Date(y, m, Math.min(dom, daysIn(y, m))); } while (dkey(d) <= tk);
+  }
+  return d ? dkey(d) : null;
 }
-
 /* ---- live data ---- */
 /* a change from the database redraws a moment later, once any focus change (a tap into another field) has settled */
 const soonRender = () => { clearTimeout(S.soonT); S.soonT = setTimeout(scheduleRender, 30); };
@@ -2366,15 +2373,17 @@ function subscribeLists() {
   /* offline on a new device: carry on with what's here after a moment */
   setTimeout(() => { if (!L.server) { L.server = "assumed"; afterListsReady(); soonRender(); } }, 5000);
 }
-function subscribeItems(lid) {
-  if (ST.subs["it:" + lid]) return;
+function subscribeItems(lid, tries = 0) {
   const col = FB.collection(ST.fs, "lists", lid, "items");
-  ST.subs["it:" + lid] = FB.onSnapshot(FB.query(col, FB.where("open", "==", true)), snap => {
+  /* a brand-new list can be read a moment before the database has it, and a refused read stops listening:
+     try again shortly, for as long as the list is still ours */
+  const retry = key => { unsubscribe(key); if (tries < 6) setTimeout(() => { if (L.meta[lid] && ST.uid) subscribeItems(lid, tries + 1); }, 1500 * (tries + 1)); };
+  if (!ST.subs["it:" + lid]) ST.subs["it:" + lid] = FB.onSnapshot(FB.query(col, FB.where("open", "==", true)), snap => {
     L.open[lid] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()])); soonRender();
-  }, () => { unsubscribe("it:" + lid); });
-  ST.subs["dn:" + lid] = FB.onSnapshot(FB.query(col, FB.where("doneAt", ">=", recentCut())), snap => {
+  }, () => retry("it:" + lid));
+  if (!ST.subs["dn:" + lid]) ST.subs["dn:" + lid] = FB.onSnapshot(FB.query(col, FB.where("doneAt", ">=", recentCut())), snap => {
     L.done[lid] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]).filter(([, x]) => !x.open)); soonRender();
-  }, () => { unsubscribe("dn:" + lid); });
+  }, () => retry("dn:" + lid));
 }
 /* someone joined or left a shared list: say so, quietly */
 function noticeListChanges(before) {
@@ -2397,7 +2406,7 @@ function afterListsReady() {
 const whenInbox = fn => { if (L.ready && L.meta[inboxId()]) fn(); else L.queue.push(fn); };
 function listErr(e) {
   const c = fsCode(e);
-  if (c === "permission_denied") toast("That list isn't shared with you any more.");
+  if (c === "permission_denied") toast("That change wasn't allowed. The list may no longer be shared with you, or the task is too long.");
   else if (c !== "unavailable") toast("Couldn't save that change (" + (e && e.code || "error") + "). Try again.");
 }
 const iref = (lid, id) => FB.doc(ST.fs, "lists", lid, "items", id);
@@ -2444,13 +2453,17 @@ function completeItem(lid, id) {
   updItem(lid, id, { open: false, st: "done", doneAt: Date.now(), doneBy: ST.uid });
   bumpMonthDone(1); return {};
 }
-function reopenItem(lid, id) { const it = findItem(lid, id); if (!it) return; bumpMonthDone(it.st === "done" ? -1 : 0); updItem(lid, id, { open: true, st: "open", doneAt: null, doneBy: null }); }
+function reopenItem(lid, id) {
+  const it = findItem(lid, id); if (!it) return;
+  if (it.st === "done" && (!it.doneBy || it.doneBy === ST.uid)) bumpMonthDone(-1, it.doneAt ? monthKey(new Date(it.doneAt)) : undefined);   // the month it was counted in
+  updItem(lid, id, { open: true, st: "open", doneAt: null, doneBy: null });
+}
 /* a month's finished tasks, for the look-back (repeating ones finish many times, so they are counted here) */
-function bumpMonthDone(n) { if (!n) return; editSettings(s => { s.months = s.months || {}; const m = s.months[monthKey(new Date())] = s.months[monthKey(new Date())] || {}; m.td = Math.max(0, (m.td || 0) + n); }); }
+function bumpMonthDone(n, ym = monthKey(new Date())) { if (!n) return; editSettings(s => { s.months = s.months || {}; const m = s.months[ym] = s.months[ym] || {}; m.td = Math.max(0, (m.td || 0) + n); }); }
 function createList(name, extra = {}) {
   const lid = "l-" + uidGen() + uidGen().slice(0, 4), m = cleanObj(Object.assign({ owner: ST.uid, members: [ST.uid], people: { [ST.uid]: { n: myName() } }, name: String(name).trim().slice(0, 80) || "New list", kind: "list", at: Date.now() }, extra));
-  L.meta[lid] = m; subscribeItems(lid);
-  FB.setDoc(FB.doc(ST.fs, "lists", lid), m).catch(listErr);
+  L.meta[lid] = m;
+  FB.setDoc(FB.doc(ST.fs, "lists", lid), m).then(() => subscribeItems(lid)).catch(listErr);
   return lid;
 }
 function updList(lid, patch) { const m = L.meta[lid]; if (!m) return; Object.assign(m, patch); FB.updateDoc(FB.doc(ST.fs, "lists", lid), Object.assign({}, patch, { up: Date.now() })).catch(listErr); }
@@ -2475,7 +2488,7 @@ async function leaveList(lid) {
 
 /* the tasks from before lists (users/{uid}/docs/tasks) move into the Inbox once; the old document stays as it was */
 function migrateTasks() {
-  const t = S.docs.tasks; if (!t || t.moved || L.migrating || !Array.isArray(t.items) || !profileReady) return;
+  const t = S.docs.tasks; if (!t || t.moved || L.migrating || !Array.isArray(t.items) || !profileReady || L.server !== true || !S.loaded.tasks) return;   // not from a device that's offline or hasn't heard from the server
   L.migrating = true;
   const lid = inboxId(), now = Date.now(), wkNow = thisWk();
   const keep = t.items.filter(i => i && i.t && !["done", "dropped", "component"].includes(i.s))
@@ -2490,11 +2503,11 @@ function migrateTasks() {
     if (i.s === "project") { d.n = "Project"; if (i.next) d.sub = [{ id: uidGen(), t: String(i.next).slice(0, 200), d: false }]; }
     if (i.s === "done") { d.open = false; d.st = "done"; d.doneAt = toMs(i.doneAt); d.doneBy = ST.uid; if (i.wk) d.wk = i.wk; }
     return [String(i.id || uidGen()).replace(/[^\w-]/g, "").slice(0, 40) || uidGen(), d];
-  });
+  }).filter(([id]) => !(L.open[lid] || {})[id] && !(L.done[lid] || {})[id]);   // already moved (by another device): never overwrite later edits
   (async () => {
     try {
       for (let k = 0; k < docs.length; k += 400) { const b = FB.writeBatch(ST.fs); docs.slice(k, k + 400).forEach(([id, d]) => { putLocal(lid, id, d); b.set(iref(lid, id), d); }); await b.commit(); }
-      editTasks(x => { x.moved = todayKey(); });
+      editTasks(x => { x.moved = todayKey(); }); clearTimeout(T.tasks); T.tasks = null; flush("tasks");   // saved now, not after the usual pause
     } catch (e) { L.migrating = false; return; }
     scheduleRender();
   })();
@@ -2502,48 +2515,74 @@ function migrateTasks() {
 const tasksDoc = () => { const t = S.docs.tasks || (S.docs.tasks = {}); t.items = t.items || []; return t; };
 function editTasks(fn) { fn(tasksDoc()); touch("tasks"); }
 
-/* ---- quick add: "Call mom tomorrow 6pm #family" ---- */
+/* ---- quick add: "Call mom tomorrow 6pm #family" ----
+   Words are only read as dates when they stand alone (punctuation after them is fine). Full weekday names always
+   count; short ones too, except "sun" and "sat" (as in sun cream), which need "on", "this" or "next" before them. */
 const DAYW = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const dayWIdx = w => DAYW.indexOf(String(w).slice(0, 3).toLowerCase());
 const MONW = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const MON_RX = "jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?";
+const DAY_FULL = "monday|tuesday|wednesday|thursday|friday|saturday|sunday";
+const DAY_SHORT = "mon|tues?|wed|thu(?:rs?)?|fri";
+const END = "(?=[\\s,.;:!?)]|$)";
 const nextWeekday = (from, di, strict) => { let d = new Date(from); if (strict) d = addDays(d, 1); while ((d.getDay() + 6) % 7 !== di) d = addDays(d, 1); return d; };
 const normName = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 function parseQuick(raw, opts = {}) {
-  const ign = opts.ignore || new Set(), base = parse(todayKey());
+  const ign = opts.ignore || new Set(), base = parse(todayKey()), todayIdx = (base.getDay() + 6) % 7;
   let t = " " + String(raw || "").replace(/\s+/g, " ") + " ";
   const out = { chips: [] };
-  const take = (kind, re, fn) => { if (ign.has(kind)) return; const m = t.match(re); if (!m) return; if (fn(m) === false) return; t = t.slice(0, m.index) + " " + t.slice(m.index + m[0].length); };
-  const DN = "(mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)";
-  take("rep", new RegExp(`\\s(?:every\\s+(day|weekday|week|month|year|${DN})|(daily|weekdays|weekly|monthly|yearly))(?=\\s)`, "i"), m => {
-    const w = (m[1] || m[2]).toLowerCase(), map = { day: "day", daily: "day", weekday: "wkday", weekdays: "wkday", week: "week", weekly: "week", month: "month", monthly: "month", year: "year", yearly: "year" };
-    if (map[w]) out.rep = { u: map[w] }; else { const di = dayWIdx(w); out.rep = { u: "week", d: di }; }
+  const take = (kind, re, fn) => { if (ign.has(kind)) return false; const m = t.match(re); if (!m) return false; if (fn(m) === false) return false; t = t.slice(0, m.index) + " " + t.slice(m.index + m[0].length); return true; };
+  take("rep", new RegExp(`\\s(?:every\\s+(day|weekday|week|weekend|month|year|${DAY_FULL}|${DAY_SHORT}|sat|sun)|(daily|weekdays|weekly|monthly|yearly|annually))${END}`, "i"), m => {
+    const w = (m[1] || m[2]).toLowerCase(), map = { day: "day", daily: "day", weekday: "wkday", weekdays: "wkday", week: "week", weekly: "week", month: "month", monthly: "month", year: "year", yearly: "year", annually: "year" };
+    if (w === "weekend") out.rep = { u: "week", d: 5 };
+    else if (map[w]) out.rep = { u: map[w] };
+    else out.rep = { u: "week", d: dayWIdx(w) };
   });
-  take("list", /\s#([\p{L}\p{N}_-]{1,40})(?=\s)/u, m => {
+  take("list", new RegExp(`\\s#([\\p{L}\\p{N}_-]{1,40})${END}`, "u"), m => {
     const want = normName(m[1]), all = [{ id: inboxId(), name: "Inbox" }].concat(listsArr());
     const hit = all.find(l => normName(l.name) === want) || all.find(l => normName(l.name).startsWith(want));
     if (hit) out.lid = hit.id; else out.newList = m[1].replace(/[-_]+/g, " ");
   });
-  take("focus", /\s(?:\*|!!)(?=\s)/, () => { out.focus = true; });
-  take("time", /\s(?:at\s+)?(\d{1,2})(?::([0-5]\d))?\s?(am|pm)(?=\s)/i, m => { let h = +m[1] % 12; if (m[3].toLowerCase() === "pm") h += 12; if (+m[1] > 12) return false; out.tm = pad(h) + ":" + (m[2] || "00"); });
-  take("time", /\s(?:at\s+)?([01]?\d|2[0-3]):([0-5]\d)(?=\s)/, m => { out.tm = pad(+m[1]) + ":" + m[2]; });
-  take("due", new RegExp(`\\s(today|tod|tonight|tomorrow|tmrw?|next week|this weekend|weekend|in (\\d{1,3}) (days?|weeks?)|(?:next |on )?${DN}|(\\d{1,2}) (${MONW.join("|")})[a-z]*|(${MONW.join("|")})[a-z]* (\\d{1,2}))(?=\\s)`, "i"), m => {
+  take("focus", new RegExp(`\\s(?:\\*|!!)${END}`), () => { out.focus = true; });
+  take("time", new RegExp(`\\s(?:at\\s+)?(\\d{1,2})(?::([0-5]\\d))?\\s?(am|pm)${END}`, "i"), m => { if (+m[1] < 1 || +m[1] > 12) return false; let h = +m[1] % 12; if (m[3].toLowerCase() === "pm") h += 12; out.tm = pad(h) + ":" + (m[2] || "00"); })
+    || take("time", new RegExp(`\\s(?:at\\s+)?([01]?\\d|2[0-3]):([0-5]\\d)${END}`), m => { out.tm = pad(+m[1]) + ":" + m[2]; });
+  const D = `today|tod|tonight|tomorrow|tmrw?|next week|(?:this |next )?weekend|in (\\d{1,3}) (days?|weeks?|months?)|(?:(next|this|on) )?(${DAY_FULL}|${DAY_SHORT}|sat|sun)|(\\d{1,2})(?:st|nd|rd|th)? (${MON_RX})|(${MON_RX}) (\\d{1,2})(?:st|nd|rd|th)?`;
+  take("due", new RegExp(`\\s(${D})${END}`, "i"), m => {
     const w = m[1].toLowerCase(); let d = null;
     if (w === "today" || w === "tod") d = base;
     else if (w === "tonight") { d = base; if (!out.tm) out.tm = "20:00"; }
     else if (/^tom|^tmr/.test(w)) d = addDays(base, 1);
     else if (w === "next week") d = nextWeekday(base, 0, true);
-    else if (/weekend/.test(w)) d = nextWeekday(base, 5, false);
-    else if (m[2]) d = addDays(base, +m[2] * (/^week/.test(m[3]) ? 7 : 1));
-    else if (m[4]) { const di = dayWIdx(m[4]); d = nextWeekday(base, di, /^next /.test(w) || (base.getDay() + 6) % 7 === di ? /^next /.test(w) : false); if (/^next /.test(w) && daysBetween(dkey(base), dkey(d)) < 7 && (base.getDay() + 6) % 7 < di) d = addDays(d, 7); }
-    else if (m[5] || m[8]) {
-      const day = +(m[5] || m[8]), mo = MONW.indexOf((m[6] || m[7]).slice(0, 3)); if (day < 1 || day > 31) return false;
-      d = new Date(base.getFullYear(), mo, day); if (d < base) d = new Date(base.getFullYear() + 1, mo, day);
+    else if (/weekend$/.test(w)) { d = todayIdx >= 5 && !/^next/.test(w) ? base : nextWeekday(base, 5, false); if (/^next/.test(w)) d = addDays(nextWeekday(base, 5, todayIdx >= 5), todayIdx >= 5 ? 0 : 7); }
+    else if (m[2]) { const n = +m[2], u = m[3].toLowerCase(); d = /^month/.test(u) ? new Date(base.getFullYear(), base.getMonth() + n, base.getDate()) : addDays(base, n * (/^week/.test(u) ? 7 : 1)); }
+    else if (m[5]) {
+      const pre = (m[4] || "").toLowerCase(), word = m[5].toLowerCase();
+      if (/^(sat|sun)$/.test(word) && !pre) return false;   // "sun cream", "sat nav"
+      const di = dayWIdx(word);
+      d = nextWeekday(base, di, false);                      // the coming one (today if it's today)
+      if (pre === "next" && di <= todayIdx) d = nextWeekday(base, di, true);
+      else if (pre === "next") d = addDays(d, 7);
+    }
+    else if (m[6] || m[9]) {
+      const day = +(m[6] || m[9]), mo = MONW.indexOf((m[7] || m[8]).slice(0, 3).toLowerCase()); if (mo < 0 || day < 1 || day > 31) return false;
+      d = new Date(base.getFullYear(), mo, day); if (d.getMonth() !== mo) return false;   // "feb 30"
+      if (d < base) { d = new Date(base.getFullYear() + 1, mo, day); if (d.getMonth() !== mo) return false; }
     }
     if (!d) return false; out.due = dkey(d);
   });
-  if (out.rep && !out.due) out.due = out.rep.u === "week" && out.rep.d !== undefined && out.rep.d !== null ? dkey(nextWeekday(base, out.rep.d, false)) : todayKey();
-  if (out.tm && !out.due) out.due = out.tm > tstrNow() ? todayKey() : dkey(addDays(base, 1));
-  out.t = t.replace(/\s+/g, " ").trim();
+  const later = out.tm && out.tm <= tstrNow();
+  if (out.rep && !out.due) {
+    const r = out.rep, wk = r.u === "week" && r.d !== undefined && r.d !== null;
+    let d = wk ? nextWeekday(base, r.d, false) : base;
+    if (r.u === "wkday") while ([0, 6].includes(d.getDay())) d = addDays(d, 1);
+    if (later && dkey(d) === todayKey()) { d = wk ? addDays(d, 7) : addDays(d, 1); if (r.u === "wkday") while ([0, 6].includes(d.getDay())) d = addDays(d, 1); }
+    out.due = dkey(d);
+  }
+  if (out.tm && !out.due) out.due = later ? dkey(addDays(base, 1)) : todayKey();
+  if (out.rep && out.rep.u === "week" && (out.rep.d === undefined || out.rep.d === null) && out.due) out.rep.d = (parse(out.due).getDay() + 6) % 7;
+  if (out.rep && ["month", "year"].includes(out.rep.u) && out.due) out.rep.dom = parse(out.due).getDate();
+  /* punctuation left behind by a taken word: "call mom tomorrow, 6pm." → "call mom" */
+  out.t = t.replace(/\s+[,.;:]+(?=\s*$)/, "").replace(/\s+([,;:])(?=\s)/g, "$1").replace(/\s+/g, " ").trim().replace(/[,;:]+$/, "").trim();
   if (out.due) out.chips.push({ k: "due", label: fmtWhen(out.due) });
   if (out.tm) out.chips.push({ k: "time", label: t12(out.tm) });
   if (out.rep) out.chips.push({ k: "rep", label: repWords(out.rep) });
@@ -2727,7 +2766,7 @@ function itemField(el) {
   if (k === "n") { const n = v.slice(0, 4000); if (n !== (it.n || "")) updItem(it.lid, it.id, { n: n.trim() ? n : null }); return true; }
   if (k === "due") { setDue(it, v || null); renderSheet(); return true; }
   if (k === "tm") { updItem(it.lid, it.id, { tm: v || null }); renderSheet(); return true; }
-  if (k === "rep") { updItem(it.lid, it.id, { rep: v ? { u: v } : null, due: v && !it.due ? todayKey() : it.due }); renderSheet(); return true; }
+  if (k === "rep") { const due = v && !it.due ? todayKey() : it.due, r = v ? { u: v } : null; if (r && r.u === "week") r.d = (parse(due).getDay() + 6) % 7; if (r && (r.u === "month" || r.u === "year")) r.dom = parse(due).getDate(); updItem(it.lid, it.id, { rep: r, due }); renderSheet(); return true; }
   if (k === "lid") { if (v !== it.lid) { moveItem(it.lid, it.id, v); S.sheet = { type: "item", l: v, id: it.id }; toast(`Moved to ${listName(v)}`); renderSheet(); render(); } return true; }
   return false;
 }
@@ -2782,7 +2821,7 @@ function rSortSheet() {
       ${btn("today", "2", "Today", "On today's list")}
       ${btn("week", "3", "This week's three", `${wkN} of ${FOCUS_CAP} picked`, !rec && wkN < FOCUS_CAP)}
       <label class="sbtn sdate"><kbd>4</kbd><b>Pick a day</b><input type="date" id="sortDate" aria-label="Pick a day" min="${todayKey()}"></label>
-      ${lists.length ? btn("list", "5", "Into a list", S.sortList ? "Choose one below" : lists.slice(0, 2).map(l => l.name).join(", ") + (lists.length > 2 ? "…" : "")) : ""}
+      ${lists.length ? btn("list", "5", "Into a list", S.sortList ? "Choose one below" : esc(lists.slice(0, 2).map(l => l.name).join(", ")) + (lists.length > 2 ? "…" : "")) : ""}
       ${btn("recurring", "6", "Make it a floor", "Repeats? Track it with a weekly floor", rec)}
       ${btn("someday", "7", "Someday", "Not this season. Parked.")}
       ${btn("drop", "8", "Let it go", "It doesn't matter anymore")}
@@ -2865,9 +2904,8 @@ async function makeInvite(key) {
   const have = myInvite(key); if (have) return have.t;
   const tok = randTok(), exp = Date.now() + INV_DAYS * 864e5;
   const d = { kind: key === "watch" ? "watch" : key === "app" ? "app" : "list", from: ST.uid, name: myName().slice(0, 60), exp, at: Date.now() };
-  if (d.kind === "list") { d.list = key; d.listName = listName(key).slice(0, 80); }
-  if (d.kind === "watch") d.watch = ST.uid;
-  if (d.kind === "watch" && !W8.mine) await ensureWatchDoc();
+  if (d.kind === "list") { d.list = key; d.listName = listName(key).slice(0, 80); d.gen = (L.meta[key] || {}).gen || 0; }
+  if (d.kind === "watch") { d.watch = ST.uid; if (!W8.mine) await ensureWatchDoc(); d.gen = (W8.mine || {}).gen || 0; }
   await FB.setDoc(FB.doc(ST.fs, "invites", tok), d);
   editSettings(st => { st.inv = st.inv || {}; st.inv[key] = { t: tok, exp }; });
   return tok;
@@ -2985,10 +3023,11 @@ function rShareSheet() {
     ${nameForm()}
     ${S.copyFallback ? `<p class="hint">Copy this: <input type="text" readonly value="${esc(S.copyFallback)}" onfocus="this.select()" aria-label="Invitation message to copy"></p>` : ""}</div>`;
 }
+/* removing someone also retires every invite link to the list (a new generation), so they can't come back by
+   reopening an old link; make a new one for anyone else */
 async function removeMember(lid, u) {
   const m = listMeta(lid); if (!m || m.owner !== ST.uid) return;
-  const people = Object.assign({}, m.people || {}); delete people[u];
-  try { await FB.updateDoc(FB.doc(ST.fs, "lists", lid), { members: (m.members || []).filter(x => x !== u), people, up: Date.now() }); toast(`${firstName(((m.people || {})[u] || {}).n)} removed`); } catch (e) { listErr(e); }
+  try { await FB.updateDoc(FB.doc(ST.fs, "lists", lid), { members: (m.members || []).filter(x => x !== u), ["people." + u]: FB.deleteField(), gen: (m.gen || 0) + 1, up: Date.now() }); toast(`${firstName(((m.people || {})[u] || {}).n)} removed. Old invite links to this list no longer work.`); await stopInvite(lid); renderSheet(); } catch (e) { listErr(e); }
 }
 
 /* ---- watchers: an accountability partner sees your week ----
@@ -3005,6 +3044,8 @@ function subscribeWatch() {
 }
 async function ensureWatchDoc() {
   if (W8.mine) return;
+  /* check the server first: never replace a watch page (and its watchers) we just haven't heard about yet */
+  const sn = await FB.getDoc(FB.doc(ST.fs, "watch", ST.uid)); if (sn.exists()) { W8.mine = sn.data(); return; }
   const d = { watchers: [], people: {}, name: myName(), share: "floors", up: Date.now() };
   W8.mine = d; await FB.setDoc(FB.doc(ST.fs, "watch", ST.uid), d);
   schedulePublish(true);
@@ -3043,14 +3084,17 @@ function cheersCard() {
 }
 function watchingCard() {
   const ws = Object.entries(W8.watching); if (!ws.length) return "";
-  return `<h3>You're cheering on</h3><div class="card">${ws.map(([u, d]) => { const w = d.week || {}, fresh = w.id === thisWk(), pct = w.total ? w.held / w.total : 0;
-    return `<button class="comp wrow" data-act="wOpen" data-u="${esc(u)}"><span class="avs"><i>${esc(initials(d.name))}</i></span><span class="lbl"><span>${esc(d.name || "Someone")}</span><small>${fresh ? `${w.held} of ${w.total} floors held this week${w.mvw ? " · a lighter week" : ""}` : d.prev ? "No update yet this week" : "Nothing shared yet"}</small></span><span class="wbar" aria-hidden="true"><i style="width:${Math.round(pct * 100)}%"></i></span></button>`; }).join("")}</div>`;
+  const num = x => { const n = Number(x); return isFinite(n) ? Math.round(n * 10) / 10 : 0; };
+  return `<h3>You're cheering on</h3><div class="card">${ws.map(([u, d]) => { const w = d.week || {}, fresh = w.id === thisWk(), pct = Number(w.total) > 0 ? Math.min(1, Math.max(0, Number(w.held) / Number(w.total))) || 0 : 0;
+    return `<button class="comp wrow" data-act="wOpen" data-u="${esc(u)}"><span class="avs"><i>${esc(initials(d.name))}</i></span><span class="lbl"><span>${esc(d.name || "Someone")}</span><small>${fresh ? `${num(w.held)} of ${num(w.total)} floors held this week${w.mvw ? " · a lighter week" : ""}` : d.prev ? "No update yet this week" : "Nothing shared yet"}</small></span><span class="wbar" aria-hidden="true"><i style="width:${Math.round(pct * 100)}%"></i></span></button>`; }).join("")}</div>`;
 }
 const CHEERS = ["👏 Nice going this week", "💪 You've got this", "🌱 Small steps count", "☕ Proud of you"];
 function rWatchingSheet() {
   const u = S.sheet.u, d = W8.watching[u]; if (!d) { S.sheet = null; return ""; }
-  const blk = (w, title) => !w ? "" : `<div class="field"><span class="flabel">${title}</span><div class="whead"><b>${w.held} of ${w.total}</b> floors held · ${w.cleared} of ${w.vals} values cleared${w.mvw ? " · Minimum Viable Week" : ""}${w.rev ? " · reviewed" : ""}</div>
-    ${(w.floors || []).length ? `<div class="card wfloors">${w.floors.map(f => `<div class="wf ${f.h >= f.need ? "ok" : ""}"><span>${esc(f.n)}<small>${esc(f.v)}${f.m ? " · this month" : ""}</small></span><span class="wn">${f.h}${esc(f.u)}/${f.need}${esc(f.u)}</span></div>`).join("")}</div>` : ""}</div>`;
+  /* everything here was written by the other person: numbers are made numbers, text is escaped */
+  const num = x => { const n = Number(x); return isFinite(n) ? Math.round(n * 10) / 10 : 0; };
+  const blk = (w, title) => !w || typeof w !== "object" ? "" : `<div class="field"><span class="flabel">${title}</span><div class="whead"><b>${num(w.held)} of ${num(w.total)}</b> floors held · ${num(w.cleared)} of ${num(w.vals)} values cleared${w.mvw ? " · Minimum Viable Week" : ""}${w.rev ? " · reviewed" : ""}</div>
+    ${Array.isArray(w.floors) && w.floors.length ? `<div class="card wfloors">${w.floors.slice(0, 30).map(f => `<div class="wf ${num(f.h) >= num(f.need) ? "ok" : ""}"><span>${esc(f.n)}<small>${esc(f.v)}${f.m ? " · this month" : ""}</small></span><span class="wn">${num(f.h)}${esc(f.u)}/${num(f.need)}${esc(f.u)}</span></div>`).join("")}</div>` : ""}</div>`;
   const fresh = d.week && d.week.id === thisWk();
   return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
     <div class="whero"><span class="avs big"><i>${esc(initials(d.name))}</i></span><h2 style="margin:0">${esc(d.name || "Someone")}'s week</h2></div>
@@ -3074,8 +3118,7 @@ async function leaveWatch(u) {
 }
 async function removeWatcher(u) {
   const m = W8.mine; if (!m) return;
-  const people = Object.assign({}, m.people || {}); delete people[u];
-  try { await FB.setDoc(FB.doc(ST.fs, "watch", ST.uid), { watchers: (m.watchers || []).filter(x => x !== u), people }, { merge: true }); toast("Removed"); } catch (e) { toast("Couldn't remove (" + (e && e.code || "error") + ")."); }
+  try { await FB.updateDoc(FB.doc(ST.fs, "watch", ST.uid), { watchers: (m.watchers || []).filter(x => x !== u), ["people." + u]: FB.deleteField(), gen: (m.gen || 0) + 1 }); await stopInvite("watch"); toast("Removed. Your old watcher link no longer works."); } catch (e) { toast("Couldn't remove (" + (e && e.code || "error") + ")."); }
 }
 /* account deletion: your lists, invites, watch page and cheers go; shared lists you're in carry on without you */
 async function deleteSharedData() {
@@ -5553,7 +5596,7 @@ document.addEventListener("drop", e => { const z = e.target.closest && e.target.
 document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
   if (f.id === "authForm") { emailAuth(); return; }
-  if (f.id === "iSubForm") { const inp = $("#iSubIn"), v = (inp && inp.value || "").trim().slice(0, 200); const it = S.sheet && findItem(S.sheet.l, S.sheet.id); if (!v || !it) return; inp.value = ""; updItem(it.lid, it.id, { sub: (it.sub || []).concat({ id: uidGen(), t: v, d: false }) }); renderSheet(); render(); const n = $("#iSubIn"); if (n) n.focus(); return; }
+  if (f.id === "iSubForm") { const inp = $("#iSubIn"), v = (inp && inp.value || "").trim().slice(0, 200); const it = S.sheet && findItem(S.sheet.l, S.sheet.id); if (!v || !it) return; if ((it.sub || []).length >= 50) { toast("That's 50 steps. Make it a list instead?"); return; } inp.value = ""; updItem(it.lid, it.id, { sub: (it.sub || []).concat({ id: uidGen(), t: v, d: false }) }); renderSheet(); render(); const n = $("#iSubIn"); if (n) n.focus(); return; }
   if (f.id === "cheerForm") { const ct = $("#cheerText"), v = ct ? ct.value : ""; if (ct) ct.value = ""; sendCheer(f.dataset.u, v); return; }
   if (f.id === "newListForm") { const v = ($("#nlName").value || "").trim(); if (!v) { toast("Give the list a name."); return; } const lid = createList(v); setTv(lid); S.tab = "tasks"; S.sheet = null; toast(`Made “${v.slice(0, 40)}”. Add tasks above, or share it.`); render(); return; }
   if (f.id === "wNameForm") { const v = ($("#wName").value || "").trim().slice(0, 60); if (v) { editProfile(p => { p.name = v; }); publishName(v); toast("Saved"); } renderSheet(); return; }

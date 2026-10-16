@@ -107,6 +107,11 @@ const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Sha
   await A.tap('[data-act=tab][data-t=tasks]'); await A.tap(`[data-act=tv][data-v="${lid}"]`); await A.tap('.lhead [data-act=lShare]');
   await A.tap('.sheet [data-act=lRemove]'); await settle(B, 1000);
   ok('Ayush removes Priya from the list: it disappears for her', JSON.stringify((await store())['lists/' + lid].members) === '["u1"]' && await B.p.locator(`.tnav [data-v="${lid}"]`).count() === 0);
+  /* she can't come back with a link from before */
+  await A.tap('.sheet [data-act=invMake]'); await settle(A); const link2 = await A.p.locator('.sheet .invlink input').inputValue();
+  await A.p.evaluate(() => { const st = JSON.parse(localStorage.getItem('__mockstore')); for (const k of Object.keys(st)) if (k.startsWith('invites/')) st[k].gen = 0; localStorage.setItem('__mockstore', JSON.stringify(st)); });   // an old link (made before the removal)
+  await B.p.goto(link2); await B.p.waitForTimeout(1500); if (await B.p.locator('.sheet [data-act=invYes]').count()) { await B.tap('.sheet [data-act=invYes]'); await settle(B, 800); }
+  ok('a removed person can\'t rejoin with an old link', JSON.stringify((await store())['lists/' + lid].members) === '["u1"]');
   await A.tap('.sheet [data-act=closeSheet] >> nth=0');
   // account deletion takes his lists, links and watch page
   await A.tap('#acctBtn'); await A.tap('[data-act=delAcct]'); await A.tap('[data-act=delAcctYes]'); await A.p.waitForTimeout(3000);

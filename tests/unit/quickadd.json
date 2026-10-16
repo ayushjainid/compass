@@ -1,0 +1,432 @@
+[
+ {
+  "pq": [
+   [
+    "pay rent monthly",
+    {
+     "t": "pay rent",
+     "due": "2026-10-16",
+     "rep": "{\"u\":\"month\",\"dom\":16}"
+    }
+   ],
+   [
+    "water plants daily",
+    {
+     "t": "water plants",
+     "rep": "{\"u\":\"day\"}"
+    }
+   ],
+   [
+    "standup weekdays",
+    {
+     "t": "standup",
+     "rep": "{\"u\":\"wkday\"}",
+     "due": "2026-10-16"
+    }
+   ],
+   [
+    "review weekly",
+    {
+     "t": "review",
+     "rep": "{\"u\":\"week\",\"d\":4}"
+    }
+   ],
+   [
+    "Dentist Oct 20",
+    {
+     "t": "Dentist",
+     "due": "2026-10-20"
+    }
+   ],
+   [
+    "meet 5 Oct",
+    {
+     "t": "meet",
+     "due": "2027-10-05"
+    }
+   ],
+   [
+    "Meet May 5",
+    {
+     "t": "Meet",
+     "due": "2027-05-05"
+    }
+   ],
+   [
+    "party 3rd November",
+    {
+     "t": "party",
+     "due": "2026-11-03"
+    }
+   ],
+   [
+    "call mom tomorrow, 6pm",
+    {
+     "t": "call mom",
+     "due": "2026-10-17",
+     "tm": "18:00"
+    }
+   ],
+   [
+    "call mom tomorrow 6pm.",
+    {
+     "t": "call mom",
+     "due": "2026-10-17",
+     "tm": "18:00"
+    }
+   ],
+   [
+    "Buy 2 decorations",
+    {
+     "t": "Buy 2 decorations"
+    }
+   ],
+   [
+    "Read 3 novels",
+    {
+     "t": "Read 3 novels"
+    }
+   ],
+   [
+    "Sell junk 3 boxes",
+    {
+     "t": "Sell junk 3 boxes"
+    }
+   ],
+   [
+    "buy sun cream",
+    {
+     "t": "buy sun cream"
+    }
+   ],
+   [
+    "fix sat nav",
+    {
+     "t": "fix sat nav"
+    }
+   ],
+   [
+    "picnic on sun",
+    {
+     "t": "picnic",
+     "due": "2026-10-18"
+    }
+   ],
+   [
+    "picnic sunday",
+    {
+     "t": "picnic",
+     "due": "2026-10-18"
+    }
+   ],
+   [
+    "gym mon",
+    {
+     "t": "gym",
+     "due": "2026-10-19"
+    }
+   ],
+   [
+    "gym fri",
+    {
+     "t": "gym",
+     "due": "2026-10-16"
+    }
+   ],
+   [
+    "gym next fri",
+    {
+     "t": "gym",
+     "due": "2026-10-23"
+    }
+   ],
+   [
+    "gym next mon",
+    {
+     "t": "gym",
+     "due": "2026-10-19"
+    }
+   ],
+   [
+    "clean this weekend",
+    {
+     "t": "clean",
+     "due": "2026-10-17"
+    }
+   ],
+   [
+    "clean next weekend",
+    {
+     "t": "clean",
+     "due": "2026-10-24"
+    }
+   ],
+   [
+    "feb 30 thing",
+    {
+     "t": "feb 30 thing"
+    }
+   ],
+   [
+    "in 3 days do x",
+    {
+     "t": "do x",
+     "due": "2026-10-19"
+    }
+   ],
+   [
+    "in 2 weeks x",
+    {
+     "due": "2026-10-30"
+    }
+   ],
+   [
+    "at 18:30 call",
+    {
+     "t": "call",
+     "tm": "18:30",
+     "due": "2026-10-16"
+    }
+   ],
+   [
+    "call 9am",
+    {
+     "t": "call",
+     "tm": "09:00",
+     "due": "2026-10-17"
+    }
+   ],
+   [
+    "every day at 6pm meds",
+    {
+     "t": "meds",
+     "tm": "18:00",
+     "due": "2026-10-16",
+     "rep": "{\"u\":\"day\"}"
+    }
+   ],
+   [
+    "every mon team sync",
+    {
+     "t": "team sync",
+     "due": "2026-10-19",
+     "rep": "{\"u\":\"week\",\"d\":0}"
+    }
+   ],
+   [
+    "every weekend hike",
+    {
+     "t": "hike",
+     "due": "2026-10-17",
+     "rep": "{\"u\":\"week\",\"d\":5}"
+    }
+   ],
+   [
+    "bread #groc",
+    {
+     "t": "bread",
+     "lid": "l-g"
+    }
+   ],
+   [
+    "bread #new-stuff",
+    {
+     "t": "bread",
+     "newList": "new stuff"
+    }
+   ],
+   [
+    "Plan friday dinner",
+    {
+     "t": "Plan dinner",
+     "due": "2026-10-16"
+    }
+   ],
+   [
+    "tonight movie",
+    {
+     "t": "movie",
+     "due": "2026-10-16",
+     "tm": "20:00"
+    }
+   ],
+   [
+    "wedding gift",
+    {
+     "t": "wedding gift"
+    }
+   ],
+   [
+    "13pm",
+    {
+     "t": "13pm"
+    }
+   ],
+   [
+    "call mom tomorrow, 6pm.",
+    {
+     "t": "call mom"
+    }
+   ],
+   [
+    "Call Dr. Smith fri",
+    {
+     "t": "Call Dr. Smith",
+     "due": "2026-10-16"
+    }
+   ],
+   [
+    "milk, eggs tomorrow",
+    {
+     "t": "milk, eggs",
+     "due": "2026-10-17"
+    }
+   ]
+  ],
+  "nd": [
+   [
+    {
+     "rep": {
+      "u": "month",
+      "dom": 31
+     },
+     "due": "2026-10-31"
+    },
+    "2026-11-30"
+   ],
+   [
+    {
+     "rep": {
+      "u": "month",
+      "dom": 31
+     },
+     "due": "2026-11-30"
+    },
+    "2026-12-31"
+   ],
+   [
+    {
+     "rep": {
+      "u": "month"
+     },
+     "due": "2026-08-15"
+    },
+    "2026-11-15"
+   ],
+   [
+    {
+     "rep": {
+      "u": "year"
+     },
+     "due": "2025-10-01"
+    },
+    "2027-10-01"
+   ],
+   [
+    {
+     "rep": {
+      "u": "year",
+      "dom": 29
+     },
+     "due": "2024-02-29"
+    },
+    "2027-02-28"
+   ],
+   [
+    {
+     "rep": {
+      "u": "week"
+     },
+     "due": "2026-10-12"
+    },
+    "2026-10-19"
+   ],
+   [
+    {
+     "rep": {
+      "u": "week",
+      "d": 0
+     },
+     "due": "2026-10-12"
+    },
+    "2026-10-19"
+   ],
+   [
+    {
+     "rep": {
+      "u": "week",
+      "d": 4
+     },
+     "due": "2026-10-16"
+    },
+    "2026-10-23"
+   ],
+   [
+    {
+     "rep": {
+      "u": "day"
+     },
+     "due": "2026-10-10"
+    },
+    "2026-10-17"
+   ],
+   [
+    {
+     "rep": {
+      "u": "wkday"
+     },
+     "due": "2026-10-16"
+    },
+    "2026-10-19"
+   ]
+  ],
+  "now": "2026-10-16T10:00:00"
+ },
+ {
+  "pq": [
+   [
+    "clean this weekend",
+    {
+     "due": "2026-10-18"
+    }
+   ],
+   [
+    "clean next weekend",
+    {
+     "due": "2026-10-24"
+    }
+   ],
+   [
+    "every day at 6pm meds",
+    {
+     "due": "2026-10-19"
+    }
+   ],
+   [
+    "gym sun",
+    {
+     "t": "gym sun"
+    }
+   ],
+   [
+    "gym on sun",
+    {
+     "due": "2026-10-18"
+    }
+   ],
+   [
+    "gym next sun",
+    {
+     "due": "2026-10-25"
+    }
+   ],
+   [
+    "gym mon",
+    {
+     "due": "2026-10-19"
+    }
+   ]
+  ],
+  "now": "2026-10-18T21:00:00"
+ }
+]

@@ -23,6 +23,7 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - run: node tests/unit/quickadd.js
       - run: node tests/e2e/run.js
         env: { JOBS: "3" }
       - if: failure()

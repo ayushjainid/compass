@@ -78,23 +78,23 @@ function allowed(op, path, before, after) {
   }
   if (seg[0] === "lists" && seg.length === 2) {
     if (op === "delete") return before && before.owner === uid;
-    if (!before) return after.owner === uid && JSON.stringify(after.members) === JSON.stringify([uid]) && (after.kind !== "inbox" || seg[1] === "in-" + uid);
+    if (!before) return after.owner === uid && JSON.stringify(after.members) === JSON.stringify([uid]) && (after.kind === "inbox" ? seg[1] === "in-" + uid : /^l-[\w-]{4,40}$/.test(seg[1]));
     const was = before.members || [], now = after.members || [];
     if (after.owner !== before.owner && !(before.owner === uid && now.includes(after.owner))) return false;
-    if (JSON.stringify(was) === JSON.stringify(now)) return was.includes(uid);
+    if (JSON.stringify(was) === JSON.stringify(now)) return was.includes(uid) && (before.owner === uid || (after.gen || 0) === (before.gen || 0));
     if (!was.includes(uid) && now.length === was.length + 1 && now.includes(uid) && was.every(x => now.includes(x))) {
-      const inv = store["invites/" + after.via]; return before.kind === "list" && !!inv && inv.kind === "list" && inv.list === seg[1] && inv.exp > Date.now() && now.length <= 20;
+      const inv = store["invites/" + after.via]; return before.kind === "list" && !!inv && inv.kind === "list" && inv.list === seg[1] && inv.exp > Date.now() && now.length <= 20 && was.includes(inv.from) && (inv.gen || 0) === (before.gen || 0);
     }
     if (was.includes(uid) && now.length < was.length && now.every(x => was.includes(x))) return before.owner === uid || (now.length === was.length - 1 && !now.includes(uid));
     return false;
   }
   if (seg[0] === "lists" && seg[2] === "items") { const l = store["lists/" + seg[1]]; return !!l && (l.members || []).includes(uid); }
   if (seg[0] === "watch" && seg.length === 2) {
-    if (seg[1] === uid) return true;
+    if (seg[1] === uid) return before || op === "delete" ? true : (after.watchers || []).length === 0;
     if (!before) return false;
     const was = before.watchers || [], now = after ? after.watchers || [] : [];
     if (op === "delete") return false;
-    if (!was.includes(uid) && now.length === was.length + 1 && now.includes(uid)) { const inv = store["invites/" + after.via]; return !!inv && inv.kind === "watch" && inv.watch === seg[1] && inv.exp > Date.now(); }
+    if (!was.includes(uid) && now.length === was.length + 1 && now.includes(uid)) { const inv = store["invites/" + after.via]; return !!inv && inv.kind === "watch" && inv.watch === seg[1] && inv.from === seg[1] && inv.exp > Date.now() && (inv.gen || 0) === (before.gen || 0); }
     if (was.includes(uid) && !now.includes(uid) && now.length === was.length - 1) return true;
     return false;
   }
