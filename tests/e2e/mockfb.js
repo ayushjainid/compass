@@ -99,11 +99,18 @@ function allowed(op, path, before, after) {
     return false;
   }
   if (seg[0] === "watch" && seg[2] === "cheers") { const w = store["watch/" + seg[1]]; if (op === "delete") return seg[1] === uid; return !before && !!w && (w.watchers || []).includes(uid) && after.from === uid; }
+  if (seg[0] === "pings" && seg.length === 2) {
+    if (before || op === "delete" || !after || after.from !== uid || !after.to || after.to === uid) return false;
+    if (after.k === "cheer" || (after.k === "join" && after.w === true)) { const w = store["watch/" + after.to]; return !!w && (w.watchers || []).includes(uid); }
+    if (after.k !== "join" && after.k !== "assign") return false;
+    const l = store["lists/" + after.l]; return !!l && (l.members || []).includes(uid) && (l.members || []).includes(after.to);
+  }
   return false;
 }
 function readable(path) {
   const uid = me(), seg = path.split("/"); const d = store[path];
   if (!uid) return seg[0] === "invites";
+  if (seg[0] === "pings") return false;
   if (seg[0] === "lists" && seg.length === 2) return !d || (d.members || []).includes(uid);
   if (seg[0] === "lists" && seg[2] === "items") { const l = store["lists/" + seg[1]]; return !!l && (l.members || []).includes(uid); }
   if (seg[0] === "watch" && seg.length === 2) return seg[1] === uid || !d || (d.watchers || []).includes(uid);

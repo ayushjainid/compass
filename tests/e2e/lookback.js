@@ -31,6 +31,10 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
       st['users/u1/docs/w-' + w] = { kind: 'week', start: w, days, c, r: i === 0 ? { felt: 4 } : {} };
     });
     st['users/u1/docs/settings'] = Object.assign(st['users/u1/docs/settings'] || {}, { months: { [dk(new Date(lm.getFullYear(), lm.getMonth() - 1, 1)).slice(0, 7)]: { adjust: 'Gym before work' } } });
+    /* tasks done last month: three for Relationships, one with no value */
+    if (!st['lists/in-u1']) st['lists/in-u1'] = { owner: 'u1', members: ['u1'], people: { u1: { n: 'Me' } }, name: 'Inbox', kind: 'inbox', at: 1 };
+    const mid = new Date(lm.getFullYear(), lm.getMonth(), 12, 10).getTime();
+    ['Call Mum', 'Dinner with Sam', 'Write to Grandma', 'Sort the garage'].forEach((t, i) => { st['lists/in-u1/items/done' + i] = { t, open: false, st: 'done', by: 'u1', at: mid - 864e5, doneAt: mid + i, doneBy: 'u1', ...(i < 3 ? { v: 'rel' } : {}) }; });
     localStorage.setItem('__mockstore', JSON.stringify(st));
     Object.keys(localStorage).filter(k => /:(settings|profile)$|:w-/.test(k) && k !== '__mockstore').forEach(k => localStorage.removeItem(k));
     return { ym, weeks, monthName: lm.toLocaleString('en', { month: 'long' }), early: now.getDate() <= 10, daysInMonth: new Date(lm.getFullYear(), lm.getMonth() + 1, 0).getDate() };
@@ -53,6 +57,12 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
   ok('tied values: no false "strongest"', /Your values moved together this month/.test(txt) && !/Strongest/.test(txt));
   ok('dots sit on the same line as the value name', await p.evaluate(() => { const li = document.querySelector('.lkvals li'); const a = li.querySelector('.nm').getBoundingClientRect(), d = li.querySelector('.lkdots').getBoundingClientRect(); return Math.abs((a.top + a.bottom) / 2 - (d.top + d.bottom) / 2) < 14; }));
   ok("last month's chosen adjustment shown", /Gym before work/.test(txt));
+  const went = await p.locator('.went').innerText().catch(() => '');
+  const pcts = (await p.locator('.wentl .n').allInnerTexts()).map(x => parseInt(x, 10));
+  ok('where the month went: a bar per value, adding up to 100%', await p.locator('.wentl li').count() === 2 && Math.abs(pcts.reduce((a, b) => a + b, 0) - 100) <= 1, pcts);
+  ok('…counting floors met and tasks done for each value', await p.locator('.wentl li:has-text("Deep relationships") .n').getAttribute('aria-label').then(x => /3 tasks done/.test(x)), await p.locator('.wentl li .n').first().getAttribute('aria-label'));
+  ok('…names the leader, and suggests Cores when there are none', /got the most of your month/.test(went) && /Star up to two Cores/.test(went), went);
+  ok('…and says how many done tasks had no value', /1 done task had no value/.test(went), went);
   await p.screenshot({ path: `${S}/lookback-${W}${dark ? 'd' : ''}.png`, fullPage: true });
   const st = await p.evaluate(() => new Promise(r => setTimeout(() => r(JSON.parse(localStorage.getItem('__mockstore'))), 900)));
   ok('opening it is counted (anonymously) and remembered as seen', Object.keys(st).some(k => /^stats\/d-/.test(k) && st[k].lookback === 1) && (st['users/u1/docs/settings'].lookSeen || {})[info.ym] === 1, st['users/u1/docs/settings'].lookSeen);

@@ -6,7 +6,8 @@ const R = []; const ok = (n, c, i) => R.push({ n, pass: !!c, i: c ? undefined : 
 const U = (uid, name, email) => ({ uid, displayName: name, email, photoURL: '', providerData: [{ providerId: 'google.com' }], metadata: { lastSignInTime: new Date().toUTCString() } });
 const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Shah', 'p@example.com'), SAM = U('u3', 'Sam Lee', 's@example.com');
 (async () => { const b = await launch(chromium);
-  const ctx = await newCtx(b);
+  const ctx = await newCtx(b, { config: 'self.COMPASS_VAPID_PUBLIC="BPtestkey";' });   // notifications configured, so notes to the other person are written
+  const pings = async (k, to) => Object.entries(await store()).filter(([key, v]) => key.startsWith('pings/') && v.k === k && v.to === to).map(([, v]) => v);
   const A = await newPage(ctx, { user: AYUSH }), B = await newPage(ctx, { user: PRIYA });
   const store = () => A.p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') || '{}'));
   const items = async lid => Object.entries(await store()).filter(([k]) => k.startsWith(`lists/${lid}/items/`)).map(([k, v]) => Object.assign({ id: k.split('/').pop() }, v));
@@ -45,12 +46,16 @@ const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Sha
   ok('her list header says who it\'s shared with', /Shared with Ayush/.test(await B.text('.lhead')));
   await settle(A, 800);
   ok('Ayush sees she joined', /Shared with Priya/.test(await A.text('.lhead')) && await A.p.locator('.lhead .avs i').count() === 1);
+  const pj = await pings('join', 'u1');
+  ok('…and gets a note: who joined which list', pj.length === 1 && pj[0].from === 'u2' && pj[0].l === lid && pj[0].ln === 'Trip to Goa' && pj[0].n === 'Priya Shah' && !pj[0].w, pj);
   // live, both ways
   await B.p.locator('#qAdd').fill('Pack sunscreen'); await B.p.keyboard.press('Enter'); await settle(B, 800);
   ok('Priya adds a task: it appears for Ayush without reloading', /Pack sunscreen/.test(await A.text('.lview')));
   await A.tap('.lrow .ltx:has-text("Pack sunscreen")');
   ok('a shared task can be given to someone', await A.p.locator('.sheet [data-act=iWho]').count() === 3);
   await A.tap('.sheet [data-act=iWho]:has-text("Priya")'); await A.tap('.sheet [data-act=closeSheet] >> nth=0'); await settle(B, 800);
+  const pa = await pings('assign', 'u2');
+  ok('giving her a task sends her a note with a link to it', pa.length === 1 && pa[0].from === 'u1' && pa[0].l === lid && pa[0].t === 'Pack sunscreen' && (await items(lid)).some(x => x.id === pa[0].i && x.t === 'Pack sunscreen'), pa);
   ok('Priya sees it is hers', /Pack sunscreen[\s\S]*You/.test(await B.text('.lview')), { b: await B.text('.lview'), who: (await items(lid)).map(x => x.t + ':' + x.who) });
   await B.tap('.lrow:has-text("Book flights") [data-act=iDone]'); await settle(A, 900);
   const bf = (await items(lid)).find(x => /Book flights/.test(x.t));
@@ -82,6 +87,8 @@ const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Sha
   await B.tap('.sheet [data-act=invYes]'); await settle(B, 900);
   st = await store();
   ok('she becomes a watcher', JSON.stringify(st['watch/u1'].watchers) === '["u2"]' && st['watch/u1'].people.u2.n === 'Priya Shah');
+  ok('…and Ayush gets a note that she is', (await pings('join', 'u1')).some(x => x.w === true && x.from === 'u2'));
+  ok('his watch page carries his time zone and the next Sunday note', typeof st['watch/u1'].tz === 'string' && !!st['watch/u1'].nextDigest && new Date(st['watch/u1'].nextDigest).getDay() === 0 && new Date(st['watch/u1'].nextDigest).getHours() === 18, [st['watch/u1'].tz, st['watch/u1'].nextDigest]);
   await B.tap('[data-act=tab][data-t=today]'); await settle(B);
   ok('her Today shows who she\'s cheering on, with this week\'s count', /You're cheering on/i.test(await B.text('#main')) && /Ayush Jain[\s\S]*floors held this week/.test(await B.text('#main')));
   await B.tap('[data-act=wOpen]');
@@ -90,6 +97,7 @@ const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Sha
   await B.tap('.sheet [data-act=cheer] >> nth=0'); await settle(A, 900);
   st = await store(); const ch = Object.entries(st).filter(([k]) => k.startsWith('watch/u1/cheers/'));
   ok('a cheer is sent', ch.length === 1 && ch[0][1].from === 'u2' && /Nice going/.test(ch[0][1].text));
+  ok('…with a note to Ayush', (await pings('cheer', 'u1')).some(x => /Nice going/.test(x.x)));
   await A.tap('[data-act=tab][data-t=today]'); await settle(A);
   ok('Ayush sees the cheer on Today', /A cheer from Priya/.test(await A.text('.cheers')) && /Nice going/.test(await A.text('.cheers')));
   await A.p.screenshot({ path: `${S}/collab-cheer-${W}${dark ? 'd' : ''}.png` });

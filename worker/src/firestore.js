@@ -105,6 +105,17 @@ export function client(env, fetchFn = fetch) {
       if (t.length) write.updateTransforms = t;
       await call(":commit", { writes: [write] });
     },
+    /** Full resource name of a document path. */
+    full: path => `${root}/${path}`,
+    /** One atomic commit of patches ({ name, fields }) and deletes ({ del: name }), each only if the document still exists. */
+    async commit(writes) {
+      if (!writes.length) return;
+      await call(":commit", { writes: writes.map(w => w.del ? { delete: w.del, currentDocument: { exists: true } } : {
+        update: { name: w.name, fields: Object.fromEntries(Object.entries(w.fields).map(([k, v]) => [k, toValue(v)])) },
+        updateMask: { fieldPaths: Object.keys(w.fields) },
+        currentDocument: { exists: true },
+      }) });
+    },
     /** Patch fields on several documents in one atomic commit. */
     async patch(updates) {
       if (!updates.length) return;

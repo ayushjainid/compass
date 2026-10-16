@@ -10,3 +10,4 @@ key.json
 worker/.dev.vars
 backups/
 *.cbk
+undefined/

@@ -1065,6 +1065,57 @@ details.fold[open] summary::before{content:"▾ ";}
 .alldone{color:var(--ink2);text-align:center}
 .acct{display:flex;align-items:center;gap:12px}
 .acct .avatar{width:44px;height:44px;font-size:18px}
+/* a task that keeps moving */
+.slipcard{padding:12px 14px;margin:0 0 16px;border-radius:14px;background:var(--warn-soft);border-left:3px solid var(--warn)}
+.slipcard p{margin:0 0 10px;font-size:14px;line-height:1.45;color:var(--ink2)}.slipcard p b{color:var(--ink);font-weight:600}
+.slipcard .chip{background:var(--surface)}
+.islip{margin:0;padding:8px 12px;border-radius:10px;background:var(--warn-soft);color:var(--ink2);font-size:13.5px}
+/* 12-week goals: twelve marks, one per week */
+.lgoal{color:var(--brass)}
+.gtrack{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;width:100%}
+.gtrack i{height:6px;border-radius:2px;background:var(--sunk)}
+.gtrack.big i{height:12px;border-radius:3px}
+.gtrack i.y{background:var(--brass)}
+.gtrack i.h{background:linear-gradient(to top,var(--brass) 50%,var(--brass-soft) 50%)}
+.gtrack i.n{background:var(--line);opacity:.7}
+.gtrack i.now{box-shadow:0 0 0 1.5px var(--surface),0 0 0 3px var(--brass)}
+.gtrack i.ahead{opacity:.55}
+.gsec{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.gsech{display:flex;align-items:center;justify-content:space-between;gap:10px}.gsech b{font:600 17px var(--display)}
+.goal{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.gtop{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.gtop b{font-weight:600;line-height:1.3}.gtop small{flex:none;color:var(--brass);font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums}
+.gsub{font-size:12.5px;color:var(--muted)}
+.gstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 18px}
+.gchip{display:flex;flex-direction:column;gap:7px;text-align:left;padding:9px 11px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0}
+.gct{display:flex;flex-direction:column;gap:1px;min-width:0}.gct b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gct small{font-size:12px;color:var(--muted)}
+.gpast summary{font-size:13px;color:var(--muted);cursor:pointer}
+.gprow{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.gprow>span{display:flex;flex-direction:column}.gprow small{color:var(--muted);font-size:12.5px}.gprow .gtrack{grid-column:1/-1;grid-row:2}
+.gwhen{margin:0;font-size:14px;color:var(--ink2)}
+.gover{padding:12px 14px;border-radius:12px;background:var(--brass-soft)}.gover .row{margin-top:10px;justify-content:flex-start;gap:8px;flex-wrap:wrap}
+.grev{display:flex;flex-direction:column;gap:16px}
+.grow{display:flex;flex-direction:column;gap:8px}.grh{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.grh .linkish{color:var(--ink);text-align:left}.grh small{flex:none;color:var(--muted);font-size:12.5px}
+/* plan tomorrow: an evening card, then a sheet */
+.plancard{display:flex;align-items:center;gap:12px;padding:12px 8px 12px 14px;margin:0 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent)}
+.plancard>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.plancard b{font:600 17px var(--display)}.plancard small{font-size:13px;color:var(--ink2)}
+.planx{flex:none;width:32px;height:32px;border-radius:50%;color:var(--muted);font-size:18px}.planx:hover{background:var(--surface)}
+.plfloors{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.5}.plfloors small{color:var(--muted)}
+.plg{display:flex;flex-direction:column;gap:6px}
+.plrow{display:flex;align-items:center;gap:8px;padding-right:8px}
+.plrow + .plrow{border-top:1px solid var(--line)}
+.plpick{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:12px 6px 12px 14px;text-align:left;color:var(--ink)}
+.plbox{flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--muted);display:grid;place-items:center;transition:background .15s,border-color .15s}
+.plrow.on .plbox{background:var(--accent);border-color:var(--accent)}
+.plrow.on .plbox::after{content:"";width:6px;height:11px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.pltx{display:flex;flex-direction:column;gap:2px;min-width:0}.pltx span{overflow-wrap:anywhere}.pltx small{color:var(--muted);font-size:12.5px}
+.pltime{flex:none;width:auto;max-width:118px;padding:6px 8px;font-size:13.5px}
+.plfoot{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 2px;background:var(--surface);border-top:1px solid var(--line)}
+/* where the month went */
+.wentl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.wentl li{display:grid;grid-template-columns:minmax(0,8.5em) 1fr 3em;align-items:center;gap:10px;font-size:14px}
+.wentl .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wbar2{height:10px;border-radius:5px;background:var(--sunk);overflow:hidden}.wbar2 i{display:block;height:100%;border-radius:5px}
+.wentl .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.went-how{margin:6px 0 0;font-size:12px}
 </style>
 </head>
 <body>
@@ -1997,6 +2048,7 @@ function remindersSection() {
     <div class="ntrow"><div><b>Say what's left</b><div class="hint">The evening reminder names what's still open${WORKER() ? ", with buttons to tick one or two of them right there" : ""}. Turn off to keep names off your lock screen.</div></div><button class="switch" role="switch" aria-checked="${n.names !== false}" data-act="ntNames" aria-label="Say what's left"></button></div>
     <div class="ntrow"><div><b>Sunday review</b><div class="hint">Skipped once the week is reviewed.</div></div><button class="switch" role="switch" aria-checked="${!!n.rev}" data-act="ntToggle" data-k="rev" aria-label="Sunday review"></button></div>
     ${n.rev ? `<div class="ntime"><label class="flabel" for="nt-rev">Time on Sunday</label><input type="time" id="nt-rev" data-nt="rev" value="${esc(n.rev)}"></div>` : ""}
+    <div class="ntrow"><div><b>From people you share with</b><div class="hint">When someone joins your list, gives you a task or cheers you on, and a Sunday note about anyone you watch. Never between 10 pm and 8 am.</div></div><button class="switch" role="switch" aria-checked="${n.social !== false}" data-act="ntSocial" aria-label="From people you share with"></button></div>
     <div class="ntdevs"><span class="flabel">Sent to</span>${ntSubs(n).length ? ntSubs(n).map(([k, v]) => `<div class="ntdev"><span>${esc(v.dev || "A device")}${k === DEVICE ? ` <span class="tag">This one</span>` : ""}</span><button class="btn small quiet" data-act="ntDrop" data-k="${esc(k)}" aria-label="Stop reminders on ${esc(v.dev || "this device")}">Remove</button></div>`).join("") : `<p class="hint" style="margin:4px 0">${n.sub && n.sub.endpoint ? "One device (set up before devices were listed)." : "No device yet."}</p>`}
       ${pushCapable() && !(isIOS() && !isStandalone()) && !(n.subs || {})[DEVICE] && Notification.permission !== "denied" ? `<button class="btn small" data-act="ntFix" ${S.ntBusy ? "disabled" : ""}>Also send to this device</button>` : ""}
       ${isIOS() && !isStandalone() ? `<p class="hint" style="margin:4px 0 0">To get them on this iPhone, open Compass from your Home Screen and turn them on there.</p>` : ""}</div>
@@ -2010,11 +2062,15 @@ function remindersSection() {
 }
 /* opened from a reminder: jump to the right tab */
 function openFromUrl(u) {
-  try { const q = new URL(u, location.origin).searchParams, tab = q.get("tab"); if (tab && ["today", "week", "tasks", "review", "compass"].includes(tab)) { S.tab = tab; window.scrollTo(0, 0); } } catch (e) {}
+  try {
+    const q = new URL(u, location.origin).searchParams, tab = q.get("tab"); if (tab && ["today", "week", "tasks", "review", "compass"].includes(tab)) { S.tab = tab; window.scrollTo(0, 0); }
+    const id = k => { const v = q.get(k); return v && /^[A-Za-z0-9_-]{1,128}$/.test(v) ? v : null; };
+    if (id("list") || id("watch") || q.get("plan") === "tomorrow") { S.openReq = { l: id("list"), i: id("item"), w: id("watch"), plan: q.get("plan") === "tomorrow" }; applyOpenReq(); }
+  } catch (e) {}
 }
 if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => { if (e.data && e.data.type === "open") { openFromUrl(e.data.url); render(); } });
 const START_URL = location.href;
-if (/[?&](tab|from)=/.test(location.search)) history.replaceState(null, "", location.pathname);
+if (/[?&](tab|from|list|watch|plan)=/.test(location.search)) history.replaceState(null, "", location.pathname);
 /* no pinch zoom on phones and tablets: iOS ignores user-scalable=no, so cancel its gesture events */
 if (matchMedia("(pointer:coarse)").matches) ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
@@ -2379,7 +2435,7 @@ function subscribeItems(lid, tries = 0) {
      try again shortly, for as long as the list is still ours */
   const retry = key => { unsubscribe(key); if (tries < 6) setTimeout(() => { if (L.meta[lid] && ST.uid) subscribeItems(lid, tries + 1); }, 1500 * (tries + 1)); };
   if (!ST.subs["it:" + lid]) ST.subs["it:" + lid] = FB.onSnapshot(FB.query(col, FB.where("open", "==", true)), snap => {
-    L.open[lid] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()])); soonRender();
+    L.open[lid] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()])); queueCalTasks(); soonRender();
   }, () => retry("it:" + lid));
   if (!ST.subs["dn:" + lid]) ST.subs["dn:" + lid] = FB.onSnapshot(FB.query(col, FB.where("doneAt", ">=", recentCut())), snap => {
     L.done[lid] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]).filter(([, x]) => !x.open)); soonRender();
@@ -2402,6 +2458,7 @@ function afterListsReady() {
     FB.setDoc(FB.doc(ST.fs, "lists", inboxId()), m, { merge: true }).catch(listErr);
   }
   if (L.meta[inboxId()]) { migrateTasks(); const q = L.queue.splice(0); q.forEach(f => f()); }
+  applyOpenReq();
 }
 const whenInbox = fn => { if (L.ready && L.meta[inboxId()]) fn(); else L.queue.push(fn); };
 function listErr(e) {
@@ -2412,6 +2469,7 @@ function listErr(e) {
 const iref = (lid, id) => FB.doc(ST.fs, "lists", lid, "items", id);
 const cleanObj = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
 function putLocal(lid, id, data) {
+  queueCalTasks();
   if (data && data.open) { (L.open[lid] = L.open[lid] || {})[id] = data; if (L.done[lid]) delete L.done[lid][id]; }
   else if (data) { (L.done[lid] = L.done[lid] || {})[id] = data; if (L.open[lid]) delete L.open[lid][id]; }
   else { if (L.open[lid]) delete L.open[lid][id]; if (L.done[lid]) delete L.done[lid][id]; }
@@ -2447,7 +2505,7 @@ const undoItem = (lid, id, after) => { const snap = findItem(lid, id); return ()
 function completeItem(lid, id) {
   const it = findItem(lid, id); if (!it) return null;
   if (it.rep) {
-    const nx = nextDue(it); updItem(lid, id, { due: nx, last: undefined, moves: undefined, wk: it.wk === thisWk() ? undefined : it.wk });
+    const nx = nextDue(it); updItem(lid, id, { due: nx, last: undefined, moves: undefined, nz: undefined, wk: it.wk === thisWk() ? undefined : it.wk });
     bumpMonthDone(1); return { repeat: nx };
   }
   updItem(lid, id, { open: false, st: "done", doneAt: Date.now(), doneBy: ST.uid });
@@ -2625,6 +2683,125 @@ const VAL_RX = {
 function guessValue(t) { const vs = (profile() || {}).values || []; for (const v of vs) if (VAL_RX[v] && VAL_RX[v].test(t)) return v; return null; }
 const KIND_RX = { recurring: /\b(every|daily|weekly|monthly|each (day|week|month)|regularly|routine|habit)\b/i };
 
+/* ============ 12-week goals ============
+   One to three things to have done in the next 12 weeks, each serving a value. Twelve weeks is long enough to matter
+   and short enough to stay close; each Sunday asks whether the week moved them, and tasks can be next steps toward
+   one. Kept in settings.goals: { id, t, v, when, start (a Monday), st: on | done | stopped, wk: { weekId: 0|1|2 }, end }. */
+const GOAL_WEEKS = 12, GOAL_MAX = 3;
+const goals = () => (settings().goals || []).filter(g => g && g.id && g.t);
+const activeGoals = () => goals().filter(g => g.st === "on");
+const goalById = id => goals().find(g => g.id === id) || null;
+const goalWeekN = (g, mon = monday(new Date())) => Math.floor(daysBetween(g.start, dkey(mon)) / 7) + 1;
+const goalWids = g => [...Array(GOAL_WEEKS)].map((_, i) => wid(addDays(parse(g.start), 7 * i)));
+const goalEnd = g => addDays(parse(g.start), 7 * GOAL_WEEKS - 1);
+const goalTasks = id => allOpen().filter(i => i.g === id && i.st !== "some");
+const goalDone = id => allDone().filter(i => i.g === id && i.st === "done");
+function editGoal(id, fn) { editSettings(s => { const g = (s.goals || []).find(x => x.id === id); if (g) fn(g); }); }
+/* twelve marks, one per week: filled when that week moved it, half when a little, a line when it didn't */
+function goalTrack(g, big) {
+  const n = goalWeekN(g), w = g.wk || {};
+  return `<span class="gtrack${big ? " big" : ""}" role="img" aria-label="${g.st === "on" ? `Week ${Math.min(n, GOAL_WEEKS)} of ${GOAL_WEEKS}` : "12 weeks"}: moved ${Object.values(w).filter(v => v === 2).length}, a little ${Object.values(w).filter(v => v === 1).length}">${goalWids(g).map((id, i) => { const v = w[id]; return `<i class="${v === 2 ? "y" : v === 1 ? "h" : v === 0 ? "n" : ""}${g.st === "on" && i + 1 === n ? " now" : ""}${g.st === "on" && i + 1 > n ? " ahead" : ""}"></i>`; }).join("")}</span>`;
+}
+function goalCard(g) {
+  const n = goalWeekN(g), open = goalTasks(g.id).length;
+  return `<button class="goal" data-act="gOpen" data-id="${esc(g.id)}"><span class="gtop"><b>${esc(g.t)}</b><small>${n > GOAL_WEEKS ? "12 weeks are up" : n < 1 ? "Starts Monday" : `Week ${n} of ${GOAL_WEEKS}`}</small></span>${goalTrack(g)}<span class="gsub">${esc(valueName(g.v))} · ${open ? `${open} next step${open > 1 ? "s" : ""}` : "no next step yet"}</span></button>`;
+}
+/* on Tasks → Today: the goals, small, so the week's tasks can be weighed against them */
+function goalStrip() {
+  const ag = activeGoals(); if (!ag.length) return "";
+  return `<section class="gstrip" aria-label="Your 12-week goals">${ag.map(g => { const n = goalWeekN(g), open = goalTasks(g.id).length;
+    return `<button class="gchip" data-act="gOpen" data-id="${esc(g.id)}"><span class="gct"><b>${esc(g.t)}</b><small>${n > GOAL_WEEKS ? "Done?" : n < 1 ? "Next week" : `wk ${n}/12`}${open ? "" : " · needs a step"}</small></span>${goalTrack(g)}</button>`; }).join("")}</section>`;
+}
+function goalsBlock() {
+  const ag = activeGoals(), past = goals().filter(g => g.st !== "on");
+  return `<div class="gsec"><div class="gsech"><b>12-week goals</b>${ag.length < GOAL_MAX ? `<button class="btn quiet small" data-act="gNew">+ New goal</button>` : ""}</div>
+    ${ag.length ? ag.map(goalCard).join("") : `<p class="hint" style="margin:0">What would you be glad to have done by ${esc(fmtShort(addDays(monday(new Date()), 7 * GOAL_WEEKS - 1)))}? One to three goals, each serving a value. Each Sunday you'll mark whether the week moved them.</p>`}
+    ${past.length ? `<details class="fold gpast"><summary>${past.length} earlier goal${past.length > 1 ? "s" : ""}</summary>${past.map(g => `<div class="gprow"><span><b>${esc(g.t)}</b><small>${g.st === "done" ? "Done" : "Stopped"}${g.end ? " " + esc(fmtShort(parse(g.end))) : ""} · ${esc(valueName(g.v))}</small></span>${goalTrack(g)}<button class="btn small quiet" data-act="gOpen" data-id="${esc(g.id)}">Open</button></div>`).join("")}</details>` : ""}</div>`;
+}
+function rGoalSheet() {
+  const g = goalById(S.sheet.id); if (!g) { S.sheet = null; return ""; }
+  const n = goalWeekN(g), on = g.st === "on", tw = thisWk(), cur = (g.wk || {})[tw], open = goalTasks(g.id), done = goalDone(g.id);
+  const seg = `<div class="seg" role="group" aria-label="Did this week move it?">${[[0, "Not really"], [1, "A little"], [2, "Yes"]].map(([v, l]) => `<button aria-pressed="${cur === v}" data-act="gWeek" data-id="${esc(g.id)}" data-w="${tw}" data-v="${v}">${l}</button>`).join("")}</div>`;
+  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <span class="flabel">12-week goal · ${esc(valueName(g.v))}</span>
+    <h2 style="margin:0">${esc(g.t)}</h2>
+    ${g.when ? `<p class="gwhen">Done when ${esc(g.when.replace(/^done when\s*/i, ""))}</p>` : ""}
+    ${goalTrack(g, true)}
+    <p class="hint" style="margin:0">${on ? (n < 1 ? `Starts ${esc(fmtShort(parse(g.start)))}` : n > GOAL_WEEKS ? `The 12 weeks ended ${esc(fmtShort(goalEnd(g)))}.` : `Week ${n} of ${GOAL_WEEKS} · ends ${esc(fmtShort(goalEnd(g)))}`) : `${g.st === "done" ? "Done" : "Stopped"}${g.end ? " " + esc(fmtShort(parse(g.end))) : ""}`}${done.length ? ` · ${done.length} step${done.length > 1 ? "s" : ""} done` : ""}</p>
+    ${on && n > GOAL_WEEKS ? `<div class="gover"><b>Twelve weeks are up.</b> Did you get there?<div class="row"><button class="btn primary small" data-act="gDone" data-id="${esc(g.id)}">Yes, done</button><button class="btn small" data-act="gAgain" data-id="${esc(g.id)}">Another 12 weeks</button><button class="btn small quiet" data-act="gStop" data-id="${esc(g.id)}">Let it go</button></div></div>` : ""}
+    ${on && n >= 1 && n <= GOAL_WEEKS ? `<div class="ifield"><span class="flabel">Did this week move it?</span>${seg}</div>` : ""}
+    ${on ? `<div class="ifield"><span class="flabel">Next steps</span>${open.length ? card(open.sort(listOrder).map(i => lrow(i, { showList: true, noGoal: true, noVal: true }))) : `<p class="hint" style="margin:0">A goal moves through small, concrete next steps. What's the very next one?</p>`}
+      <form class="isubadd" id="gStepForm" data-id="${esc(g.id)}"><input type="text" id="gStepIn" maxlength="200" placeholder="${open.length ? "Add another step" : "e.g. Book a 5 km run for Saturday"}" aria-label="Add a next step"><button class="btn small" type="submit">Add</button></form>
+      <p class="hint" style="margin:6px 0 0">Steps land in your Inbox; give them a day, or make one of them this week's three.</p></div>` : ""}
+    <div class="iacts">${on ? `<button class="btn" data-act="gEdit" data-id="${esc(g.id)}">Edit</button>${n <= GOAL_WEEKS ? `<button class="btn" data-act="gDone" data-id="${esc(g.id)}">Mark it done</button>` : ""}<button class="btn quiet danger" data-act="gStop" data-id="${esc(g.id)}">Stop this goal</button>`
+      : `${activeGoals().length < GOAL_MAX ? `<button class="btn" data-act="gAgain" data-id="${esc(g.id)}">Start it again</button>` : ""}<button class="btn quiet danger" data-act="gDel" data-id="${esc(g.id)}">Delete</button>`}</div></div>`;
+}
+function rGoalEdit() {
+  const d = S.sheet.draft, vals = valueList(), end = addDays(monday(new Date()), 7 * (d.startNext ? GOAL_WEEKS + 1 : GOAL_WEEKS) - 1);
+  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <h2 style="margin:0">${S.sheet.edit ? "Edit goal" : "A goal for the next 12 weeks"}</h2>
+    ${S.sheet.edit ? "" : `<p class="hint" style="margin:0">Twelve weeks is long enough to matter and short enough to keep it close. <span class="src">Moran & Lennington, The 12 Week Year</span></p>`}
+    <div class="field"><label class="flabel" for="gTitle">The goal</label><input type="text" id="gTitle" data-gd="t" maxlength="80" value="${esc(d.t)}" placeholder="e.g. Run a 10 km without stopping" autocomplete="off"></div>
+    <div class="field"><span class="flabel">It serves</span><div class="chips">${vals.map(v => `<button class="chip ${d.v === v.id ? "sel" : ""}" data-act="gVal" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div></div>
+    <div class="field"><label class="flabel" for="gWhen">You'll know it's done when… (optional)</label><input type="text" id="gWhen" data-gd="when" maxlength="160" value="${esc(d.when || "")}" placeholder="e.g. I've run 10 km in one go" autocomplete="off"></div>
+    ${S.sheet.edit ? "" : `<div class="field"><span class="flabel">Start</span><div class="seg" role="group" aria-label="Start">${[[false, "This week"], [true, "Next Monday"]].map(([v, l]) => `<button aria-pressed="${!!d.startNext === v}" data-act="gStart" data-v="${v ? 1 : 0}">${l}</button>`).join("")}</div><span class="hint">Ends ${esc(fmtShort(end))}.</span></div>`}
+    <div class="row"><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="gSave">${S.sheet.edit ? "Save" : "Start this goal"}</button></div></div>`;
+}
+
+/* ============ plan tomorrow ============
+   Two minutes in the evening: pick what tomorrow is for and give the important ones a time. Deciding the night
+   before, with a when, is what makes a plan happen (implementation intentions: Gollwitzer & Sheeran 2006). */
+const tomorrowKey = () => dkey(addDays(parse(todayKey()), 1));
+const plannedTomorrow = () => (settings().plannedFor || "") === tomorrowKey();
+const PLAN_TIMES = (() => { const a = []; for (let h = 6; h <= 22; h++) { a.push(pad(h) + ":00"); if (h < 22) a.push(pad(h) + ":30"); } return a; })();
+function planCard() {
+  if (new Date().getHours() < 16 || !L.ready || plannedTomorrow() || S.planHide === todayKey() || !onboarded()) return "";
+  const n = dueOn(tomorrowKey()).length;
+  return `<section class="plancard" aria-label="Plan tomorrow"><div><b>Plan tomorrow</b><small>${n ? `${n} already on it. ` : ""}Two minutes: choose what tomorrow is for, and when.</small></div><button class="btn primary small" data-act="ptOpen">Plan</button><button class="planx" data-act="ptHide" aria-label="Not tonight">×</button></section>`;
+}
+/* the groups are fixed when the sheet opens, so rows stay where they are while you tap them */
+function openPlan() { S.plan = { orig: {}, groups: planGroups() }; S.sheet = { type: "plan" }; }
+function planGroups() {
+  const tm = tomorrowKey(), seen = new Set(), out = [], mine = i => !i.who || i.who === ST.uid;
+  const add = (label, items) => { const keys = []; items.forEach(i => { const k = itemKey(i.lid, i.id); if (!seen.has(k) && i.st !== "some" && i.open) { seen.add(k); keys.push(k); } }); if (keys.length) out.push({ label, keys }); };
+  add("On tomorrow", dueOn(tm).filter(mine));
+  add("Left from today", overdue(tm).filter(mine));
+  add("This week's three", weekErrands().filter(mine));
+  add("Steps toward your goals", allOpen().filter(i => i.g && goalById(i.g) && goalById(i.g).st === "on" && mine(i)));
+  add("From your Inbox", inboxItems().slice().sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, 8));
+  add("Coming up this week", liveItems().filter(i => i.due && i.due > tm && daysBetween(tm, i.due) <= 6 && mine(i)).sort(listOrder).slice(0, 6));
+  return out;
+}
+function planRow(i) {
+  const on = i.due === tomorrowKey(), times = i.tm && !PLAN_TIMES.includes(i.tm) ? PLAN_TIMES.concat(i.tm).sort() : PLAN_TIMES;
+  const sub = !on && i.due ? fmtWhen(i.due) : !on && i.g && goalById(i.g) ? "◎ " + goalById(i.g).t : !on && !isInbox(i.lid) ? listName(i.lid) : "";
+  return `<div class="plrow${on ? " on" : ""}"><button class="plpick" data-act="ptPick" data-l="${esc(i.lid)}" data-id="${esc(i.id)}" aria-pressed="${on}"><span class="plbox" aria-hidden="true"></span><span class="pltx"><span>${esc(i.t)}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</span></button>
+    ${on ? `<select class="pltime" data-plantm="${esc(i.lid)}/${esc(i.id)}" aria-label="Time for ${esc(i.t)}"><option value="">Any time</option>${times.map(t => `<option value="${t}" ${i.tm === t ? "selected" : ""}>${t12(t)}</option>`).join("")}</select>` : ""}</div>`;
+}
+function rPlanSheet() {
+  const tm = tomorrowKey(), d = parse(tm), di = (d.getDay() + 6) % 7;
+  /* opened before the tasks arrived (from a notification): gather again until there's something, or you've tapped */
+  if (!S.plan) S.plan = { orig: {} };
+  if (!S.plan.groups || (!S.plan.groups.length && !Object.keys(S.plan.orig).length)) S.plan.groups = planGroups();
+  const groups = S.plan.groups.map(g => ({ label: g.label, items: g.keys.map(k => { const [l, id] = k.split("/"); return findItem(l, id); }).filter(i => i && i.open) })).filter(g => g.items.length);
+  const picked = dueOn(tm).filter(i => !i.who || i.who === ST.uid), timed = picked.filter(i => i.tm).length;
+  const floors = comps().filter(c => !c.fun && !c.paused && c.cadence === "daily" && c.auto !== "journal" && dailyOn(c, di)).map(c => ({ n: c.name, t: plannedOn(c, di) ? timeOn(c, di) : "" }))
+    .concat(dayItems(di, monday(d)).filter(x => !x.alt).map(x => ({ n: x.c.name, t: x.t }))).sort((a, b) => (a.t || "99") < (b.t || "99") ? -1 : 1);
+  return `<div class="in plan"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <span class="flabel">Plan tomorrow</span>
+    <h2 style="margin:0">${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}</h2>
+    <p class="hint" style="margin:0">Tap what tomorrow is for. Three to five is plenty; give the ones that matter a time, so they have a place in the day.</p>
+    ${floors.length ? `<p class="plfloors"><b>Your floors:</b> ${floors.map(f => esc(f.n) + (f.t ? ` <small>${esc(t12(f.t))}</small>` : "")).join(", ")}</p>` : ""}
+    ${groups.length ? groups.map(g => `<div class="plg"><span class="flabel">${g.label}</span><div class="card">${g.items.map(planRow).join("")}</div></div>`).join("") : `<p class="hint">Nothing waiting. Add tasks for tomorrow in Tasks (type “tomorrow” in the box).</p>`}
+    <div class="plfoot"><span class="hint" aria-live="polite">${picked.length ? `${picked.length} task${picked.length > 1 ? "s" : ""}${timed ? `, ${timed} with a time` : ""}${picked.length > 5 ? ". That's a full day: what could wait?" : ""}` : "Nothing picked yet"}</span><button class="btn primary" data-act="ptDone">Done</button></div></div>`;
+}
+/* tasks with a time go to the calendar feed (kept in settings, since the feed can't read shared lists) */
+const calTasks = () => liveItems().filter(i => i.due && i.tm && i.due >= todayKey() && daysBetween(todayKey(), i.due) <= 14 && (!i.who || i.who === ST.uid)).sort(listOrder).slice(0, 40).map(i => ({ i: i.id, t: i.t.slice(0, 120), d: i.due, m: i.tm }));
+function queueCalTasks() {
+  clearTimeout(S.calTT);
+  S.calTT = setTimeout(() => { if (!ST.uid || !L.ready || !settings().calFeed) return; const next = calTasks(); if (JSON.stringify(next) !== JSON.stringify(settings().calTasks || [])) editSettings(st => { st.calTasks = next; }); }, 2500);
+}
+
 /* ---- the Tasks tab ---- */
 function tvState() { if (!S.tv) { try { S.tv = localStorage.getItem("compass-tv") || "today"; } catch (e) { S.tv = "today"; } } if (!["today", "upcoming", "inbox"].includes(S.tv) && !L.meta[S.tv]) S.tv = "today"; return S.tv; }
 function setTv(v) { S.tv = v; try { localStorage.setItem("compass-tv", v); } catch (e) {} }
@@ -2654,6 +2831,7 @@ function lmeta(it, opts = {}) {
   if (opts.showList && !isInbox(it.lid)) out.push(`<span class="llist">${esc(listName(it.lid))}</span>`);
   if (it.wk === thisWk() && !opts.noFocus) out.push(`<span class="lfocus">This week</span>`);
   if (it.v && !opts.noVal) out.push(`<span class="tval${isCore(it.v) ? " iscore" : ""}">${esc(valueName(it.v))}</span>`);
+  if (it.g && !opts.noGoal) { const g = goalById(it.g); if (g) out.push(`<span class="lgoal">◎ ${esc(g.t.length > 26 ? g.t.slice(0, 24) + "…" : g.t)}</span>`); }
   if (it.sub && it.sub.length) out.push(`<span class="lsub">${it.sub.filter(x => x.d).length}/${it.sub.length}</span>`);
   if (it.n) out.push(`<span class="lnote" aria-label="Has a note">✎</span>`);
   if ((it.moves || 0) >= 3) out.push(`<span class="tslip">Moved ${it.moves}×</span>`);
@@ -2668,6 +2846,15 @@ function lrow(it, opts = {}) {
   return `<div class="lrow${closed ? " closed" : ""}${it.st === "let" ? " let" : ""}" data-k="${esc(itemKey(it.lid, it.id))}">${tick}<button class="ltx" data-act="iOpen" data-l="${esc(it.lid)}" data-id="${esc(it.id)}"><span class="tt">${esc(it.t)}</span>${meta || by ? `<span class="tm">${meta}${by}</span>` : ""}</button></div>`;
 }
 const card = rows => rows.length ? `<div class="card tl">${rows.join("")}</div>` : "";
+/* a task whose date keeps moving: after three moves, ask once what would help (again only if it moves three more times) */
+const slipN = i => (i.moves || 0) - (i.nz || 0);
+const slipping = () => liveItems().filter(i => slipN(i) >= 3 && (!i.who || i.who === ST.uid)).sort((a, b) => (b.moves || 0) - (a.moves || 0));
+function slipCard() {
+  const it = slipping()[0]; if (!it) return "";
+  const a = (act, label, extra = "") => `<button class="chip" data-act="${act}" data-l="${esc(it.lid)}" data-id="${esc(it.id)}"${extra}>${label}</button>`;
+  return `<section class="slipcard" aria-label="A task that keeps moving"><p><b>“${esc(it.t.length > 70 ? it.t.slice(0, 68) + "…" : it.t)}” has moved ${it.moves} times.</b> That usually means it's too big, unclear, or not for now. What would help?</p>
+    <div class="chips">${a("slipBreak", "Break off a first step")}${a("iSome", "Someday", ' data-v="1"')}${a("iLet", "Let it go")}${a("slipKeep", "Keep it as is")}</div></section>`;
+}
 function focusStrip() {
   const wk = weekErrands(), done = doneErrandsThisWeek(), slots = [];
   if (!wk.length && !done.length) return `<section class="focus empty" aria-label="This week's three"><div class="fhead"><b>This week's three</b></div><p class="hint" style="margin:0">Pick up to three tasks that would make this week feel done. Open a task and tap ☆, or type * when you add one.</p></section>`;
@@ -2683,11 +2870,14 @@ function vToday() {
   const wk = weekErrands().filter(i => i.due !== tk && !(i.due && i.due < tk));
   const empty = !od.length && !td.length;
   return `<div class="lday"><span class="ldate">${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]}</span><span class="ldsub">${MONTHS[d.getMonth()]} ${d.getDate()}</span></div>
+    ${planCard()}
     ${focusStrip()}
     ${od.length ? `<div class="lsh"><b>Still open from before</b><button class="linkish" data-act="odToday">Move ${od.length > 1 ? "all " : ""}to today</button></div>${card(od.map(i => lrow(i, { showList: true })))}` : ""}
     ${td.length ? `<div class="lsh"><b>Today</b><span>${td.length}</span></div>${card(td.map(i => lrow(i, { showList: true, noDue: true })))}` : ""}
     ${empty ? `<div class="tempty"><b>${dn.length ? "Today's list is clear." : "Nothing due today."}</b><span>${inboxItems().length ? `${inboxItems().length} in your Inbox wait for a day. ` : ""}Give a task a day by typing it, like “pay rent fri”.</span></div>` : ""}
     ${wk.length ? "" : ""}
+    ${slipCard()}
+    ${goalStrip()}
     ${dn.length ? tSec("dtoday", "Done today", dn.length, card(dn.map(i => lrow(i, { showList: true })))) : ""}`;
 }
 function vUpcoming() {
@@ -2738,6 +2928,7 @@ function rItemSheet() {
   return `<div class="in item"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
     <div class="ihead"><button class="tick big${it.open ? "" : " on"}" data-act="${it.open ? "iDone" : "iUndo"}" data-l="${esc(it.lid)}" data-id="${esc(it.id)}" data-close="1" aria-label="${it.open ? "Done" : "Not done"}"></button>
       <textarea id="iTitle" class="ititle" rows="1" maxlength="500" data-iv="t" aria-label="Task">${esc(it.t)}</textarea></div>
+    ${it.open && slipN(it) >= 3 ? `<p class="islip">Moved ${it.moves} times. A first small step (below) often gets it unstuck, or let it go.</p>` : ""}
     <textarea id="iNote" class="inote" rows="2" maxlength="4000" data-iv="n" placeholder="Add a note" aria-label="Note">${esc(it.n || "")}</textarea>
     <div class="ifield"><span class="flabel">When</span><div class="chips">${when.map(([l, k]) => `<button class="chip ${it.due === k ? "sel" : ""}" data-act="iDue" data-v="${k}">${l}</button>`).join("")}<button class="chip ${it.due ? "" : "sel"}" data-act="iDue" data-v="">No date</button></div>
       <div class="irow"><label class="sr" for="iDate">Date</label><input type="date" id="iDate" data-iv="due" value="${esc(it.due || "")}"><label class="sr" for="iTime">Time</label><input type="time" id="iTime" data-iv="tm" value="${esc(it.tm || "")}" ${it.due ? "" : "disabled"}>
@@ -2747,6 +2938,7 @@ function rItemSheet() {
     <div class="ifield"><label class="flabel" for="iList">List</label><select id="iList" data-iv="lid">${lists.map(l => `<option value="${esc(l.id)}" ${l.id === it.lid ? "selected" : ""}>${esc(l.name)}${isSharedList(listMeta(l.id)) ? " (shared)" : ""}</option>`).join("")}</select></div>
     ${shared ? `<div class="ifield"><span class="flabel">Who's doing it</span><div class="chips"><button class="chip ${it.who ? "" : "sel"}" data-act="iWho" data-v="">Anyone</button>${(m.members || []).map(u => `<button class="chip ${it.who === u ? "sel" : ""}" data-act="iWho" data-v="${esc(u)}">${u === ST.uid ? "Me" : esc(firstName(((m.people || {})[u] || {}).n))}</button>`).join("")}</div></div>` : ""}
     <div class="ifield"><span class="flabel">Serves</span><div class="chips">${vals.map(v => `<button class="chip ${it.v === v.id ? "sel" : ""}" data-act="iVal" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div></div>
+    ${activeGoals().length || (it.g && goalById(it.g)) ? `<div class="ifield"><span class="flabel">Moves a 12-week goal</span><div class="chips"><button class="chip ${it.g ? "" : "sel"}" data-act="iGoal" data-v="">None</button>${activeGoals().concat(it.g && goalById(it.g) && goalById(it.g).st !== "on" ? [goalById(it.g)] : []).map(g => `<button class="chip ${it.g === g.id ? "sel" : ""}" data-act="iGoal" data-v="${esc(g.id)}">◎ ${esc(g.t)}</button>`).join("")}</div></div>` : ""}
     <div class="ifield"><span class="flabel">Steps</span>
       <div class="isubs">${(it.sub || []).map(x => `<div class="isub"><button class="tick${x.d ? " on" : ""}" data-act="iSubTick" data-k="${esc(x.id)}" aria-label="${x.d ? "Not done" : "Done"}: ${esc(x.t)}"></button><span class="${x.d ? "dn" : ""}">${esc(x.t)}</span><button class="x" data-act="iSubDel" data-k="${esc(x.id)}" aria-label="Remove step">×</button></div>`).join("")}
       <form class="isubadd" id="iSubForm"><input type="text" id="iSubIn" maxlength="200" placeholder="${(it.sub || []).length ? "Add a step" : "Big? Break it into a first small step"}" aria-label="Add a step"><button class="btn small" type="submit">Add</button></form></div></div>
@@ -2992,9 +3184,11 @@ async function acceptInvite() {
     if (inv.kind === "list") {
       await FB.updateDoc(FB.doc(ST.fs, "lists", inv.list), { members: FB.arrayUnion(ST.uid), ["people." + ST.uid]: { n: myName() }, via: tok, up: Date.now() });
       setTv(inv.list); S.tab = "tasks"; toast(`You joined “${inv.listName || "the list"}”`);
+      ping(inv.from, "join", { l: inv.list, ln: inv.listName || "" });
     } else {
       await FB.updateDoc(FB.doc(ST.fs, "watch", inv.watch), { watchers: FB.arrayUnion(ST.uid), ["people." + ST.uid]: { n: myName() }, via: tok });
       S.tab = "today"; toast(`You're now ${firstName(inv.name)}'s watcher`);
+      ping(inv.watch, "join", { w: true });
     }
     dropInvite(); S.sheet = null;
   } catch (e) {
@@ -3038,7 +3232,7 @@ function subscribeWatch() {
   if (S.mode !== "db" || ST.subs.__watch || !ST.uid) return;
   ST.subs.__watch = FB.onSnapshot(FB.doc(ST.fs, "watch", ST.uid), sn => { W8.mine = sn.exists() ? sn.data() : null; W8.ready = true; soonRender(); schedulePublish(); }, () => { unsubscribe("__watch"); });
   ST.subs.__watching = FB.onSnapshot(FB.query(FB.collection(ST.fs, "watch"), FB.where("watchers", "array-contains", ST.uid)), snap => {
-    const before = Object.keys(W8.watching); W8.watching = Object.fromEntries(snap.docs.map(d => [d.id, d.data()])); soonRender();
+    const before = Object.keys(W8.watching); W8.watching = Object.fromEntries(snap.docs.map(d => [d.id, d.data()])); applyOpenReq(); soonRender();
   }, () => { unsubscribe("__watching"); });
   ST.subs.__cheers = FB.onSnapshot(FB.collection(ST.fs, "watch", ST.uid, "cheers"), snap => { W8.cheers = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => (b.at || 0) - (a.at || 0)); soonRender(); }, () => { unsubscribe("__cheers"); });
 }
@@ -3060,8 +3254,12 @@ function schedulePublish(now) { clearTimeout(S.pubT); S.pubT = setTimeout(publis
 function publishWatch() {
   if (!W8.mine || !ST.uid || !profileReady || !onboarded() || W8.mine.paused) return;
   const cur = thisWk(), prev = wid(addDays(monday(new Date()), -7));
-  const data = { name: myName(), week: watchWeek(cur), prev: anyWeek(prev) ? watchWeek(prev) : null, share: W8.mine.share || "floors" };
-  const sig = JSON.stringify(data); if (sig === S.pubSig) return; S.pubSig = sig;
+  const data = { name: myName(), week: watchWeek(cur), prev: anyWeek(prev) ? watchWeek(prev) : null, share: W8.mine.share || "floors", tz: myTz() };
+  /* the Sunday note to watchers: 6 pm Sunday here; the reminders service moves it on each week */
+  const ms = x => x ? (x.toMillis ? x.toMillis() : +new Date(x)) : 0;
+  const due = ms(W8.mine.nextDigest) < Date.now() - 864e5 || W8.mine.tz !== myTz();
+  const sig = JSON.stringify(data); if (sig === S.pubSig && !due) return; S.pubSig = sig;
+  if (due) data.nextDigest = nextLocal("18:00", Date.now(), 6);
   /* update, not merge: each field is replaced whole, so floors don't linger after switching to "only how many held" */
   FB.updateDoc(FB.doc(ST.fs, "watch", ST.uid), Object.assign({}, data, { up: Date.now() })).catch(() => { S.pubSig = null; });
 }
@@ -3069,7 +3267,7 @@ function watchSection() {
   const m = W8.mine, ws = (m && m.watchers) || [], ppl = (m && m.people) || {};
   const sum = ws.length ? `${ws.map(u => firstName((ppl[u] || {}).n)).join(", ")} ${ws.length > 1 ? "see" : "sees"} your week` : "Nobody yet";
   return cSec("watch", "Accountability partner", esc(sum), `
-    <p class="hint" style="margin:0 0 10px">Someone you trust sees how your week is going and can cheer you on. Telling someone how you're doing is one of the simplest ways to keep going. <span class="src">Harkin et al. 2016</span></p>
+    <p class="hint" style="margin:0 0 10px">Someone you trust sees how your week is going and can cheer you on, and gets a short note about it on Sunday evening. Telling someone how you're doing is one of the simplest ways to keep going. <span class="src">Harkin et al. 2016</span></p>
     ${ws.length ? `<div class="card people">${ws.map(u => `<div class="prow"><span class="avs"><i>${esc(initials((ppl[u] || {}).n))}</i></span><span class="pn">${esc((ppl[u] || {}).n || "Someone")}</span><button class="btn small quiet danger" data-act="wRemove" data-u="${esc(u)}">Remove</button></div>`).join("")}</div>` : ""}
     ${m ? `<div class="ifield" style="margin:12px 0"><span class="flabel">What they see</span><div class="seg" role="radiogroup"><button role="radio" aria-pressed="${(m.share || "floors") === "floors"}" aria-checked="${(m.share || "floors") === "floors"}" data-act="wShare" data-v="floors">Each floor and its count</button><button role="radio" aria-pressed="${m.share === "summary"}" aria-checked="${m.share === "summary"}" data-act="wShare" data-v="summary">Only how many held</button></div></div>
     <div class="ntrow"><div><b>Pause sharing</b><div class="hint">They keep seeing last week's numbers until you turn it back on.</div></div><button class="switch" role="switch" aria-checked="${!!m.paused}" data-act="wPause" aria-label="Pause sharing"></button></div>` : ""}
@@ -3107,7 +3305,7 @@ function rWatchingSheet() {
 }
 async function sendCheer(u, text) {
   text = String(text || "").trim().slice(0, 280); if (!text) return;
-  try { await FB.setDoc(FB.doc(ST.fs, "watch", u, "cheers", uidGen() + uidGen()), { from: ST.uid, name: myName(), text, at: Date.now() }); toast(`Sent to ${firstName((W8.watching[u] || {}).name)}`); S.sheet = null; render(); }
+  try { await FB.setDoc(FB.doc(ST.fs, "watch", u, "cheers", uidGen() + uidGen()), { from: ST.uid, name: myName(), text, at: Date.now() }); ping(u, "cheer", { x: text }); toast(`Sent to ${firstName((W8.watching[u] || {}).name)}`); S.sheet = null; render(); }
   catch (e) { toast("Couldn't send (" + (e && e.code || "error") + ")."); }
 }
 async function leaveWatch(u) {
@@ -3120,6 +3318,23 @@ async function removeWatcher(u) {
   const m = W8.mine; if (!m) return;
   try { await FB.updateDoc(FB.doc(ST.fs, "watch", ST.uid), { watchers: (m.watchers || []).filter(x => x !== u), ["people." + u]: FB.deleteField(), gen: (m.gen || 0) + 1 }); await stopInvite("watch"); toast("Removed. Your old watcher link no longer works."); } catch (e) { toast("Couldn't remove (" + (e && e.code || "error") + ")."); }
 }
+/* ---- telling the other person ----
+   A short note (pings/*) that the reminders service turns into a notification on their devices, then deletes.
+   The database only accepts one between people who really share a list or a watch page. */
+function ping(to, k, extra = {}) {
+  if (!ST.uid || !to || to === ST.uid || !VAPID() || S.mode !== "db") return;
+  const d = cleanObj(Object.assign({ to, from: ST.uid, k, n: myName().slice(0, 60), due: new Date(), at: Date.now() }, extra));
+  if (d.t) d.t = String(d.t).slice(0, 120); if (d.ln) d.ln = String(d.ln).slice(0, 80); if (d.x) d.x = String(d.x).slice(0, 280);
+  FB.setDoc(FB.doc(ST.fs, "pings", randTok()), d).catch(() => {});
+}
+/* opened from a notification: a list or a task, someone you watch, or tonight's plan, once they've loaded */
+function applyOpenReq() {
+  const r = S.openReq; if (!r || S.authState !== "in" || S.ob) return;
+  if (r.l && L.ready && L.meta[r.l]) { setTv(r.l); S.tab = "tasks"; if (r.i && findItem(r.l, r.i)) S.sheet = { type: "item", l: r.l, id: r.i }; S.openReq = null; soonRender(); return; }
+  if (r.w && W8.watching[r.w]) { S.tab = "today"; S.sheet = { type: "watching", u: r.w }; S.openReq = null; soonRender(); return; }
+  if (r.plan && L.ready) { S.tab = "tasks"; setTv("today"); openPlan(); S.openReq = null; soonRender(); }
+}
+
 /* account deletion: your lists, invites, watch page and cheers go; shared lists you're in carry on without you */
 async function deleteSharedData() {
   for (const [lid, m] of Object.entries(L.meta)) {
@@ -3614,6 +3829,7 @@ function rToday(id) {
   <h2>${esc(title)}</h2>
   <p class="lede">${S.selDay === tk ? `<span class="greetin">Good ${part}${first ? ", " + esc(first) : ""}.</span> ` : ""}${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
   ${dayHtml}
+  ${S.selDay === tk && id === thisWk() ? planCard() : ""}
   ${todayTasks(id)}
   ${S.selDay === tk ? watchingCard() : ""}
   ${weekly.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="chips">${weekly.map(chip).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
@@ -3978,7 +4194,7 @@ function blockSheet(sh) {
 }
 /* ---- .ics export: built by /shared/ics.js, the same code that serves the live calendar feed ---- */
 const icsPrefs = () => Object.assign({ alert: 0, daily: "each" }, settings().cal || {});
-function buildIcs() { const p = icsPrefs(); return buildIcsFor({ profile: profile(), settings: settings(), today: new Date(), now: new Date(), zone: tz(), alert: p.alert, daily: p.daily }); }
+function buildIcs() { const p = icsPrefs(); return buildIcsFor({ profile: profile(), settings: settings(), today: new Date(), now: new Date(), zone: tz(), alert: p.alert, daily: p.daily, tasks: L.ready ? calTasks() : [] }); }
 function downloadIcs() {
   const { text, n } = buildIcs(); if (!n) { toast("Plan at least one block first."); return; }
   stat("exported");
@@ -4036,7 +4252,7 @@ function icsSheet() {
         ${android ? googleBtn(true) : appleFirst ? appleBtn(true) + googleBtn(false) : googleBtn(true) + appleBtn(false)}
         <button class="btn quiet" data-act="calCopy">Copy link</button></div>
       ${android ? `<p class="hint" style="margin:0">Using another calendar app? Copy the link and add it there as a subscription (“Add calendar from URL”).</p>` : ""}
-      <p class="hint" style="margin:0">Changes in Compass reach your calendar by themselves: Apple checks every few hours, Google about once or twice a day (Google decides). Anyone with this link can see your plan's names and times, never your notes or journal.</p>
+      <p class="hint" style="margin:0">Changes in Compass reach your calendar by themselves: Apple checks every few hours, Google about once or twice a day (Google decides). Tasks you've given a time (in the next two weeks) come too. Anyone with this link can see your plan's names and times, never your notes or journal.</p>
       <div class="feedmgr">${S.confirm === "calReset" ? `<span>Make a new link? The old one stops working, so re-add it in your calendar.</span><button class="btn small danger" data-act="calReset">Make new link</button><button class="btn small quiet" data-act="calNo">Cancel</button>`
         : S.confirm === "calOff" ? `<span>Turn the link off? Your calendar stops updating and Compass events stay as they are.</span><button class="btn small danger" data-act="calOff">Turn off</button><button class="btn small quiet" data-act="calNo">Cancel</button>`
         : `<button class="textlink" data-act="calAsk" data-v="calReset">Shared it by mistake? Make a new link</button><button class="textlink" data-act="calAsk" data-v="calOff">Turn off</button>`}</div>`
@@ -4173,6 +4389,27 @@ function lookbackCard() {
   if (new Date().getDate() > 10 || seen || !monthHasData(ym) || (since && since.slice(0, 7) > ym)) return "";
   return `<button class="lookcard" data-act="lookOpen" data-v="${ym}"><span class="lk">Your ${ymName(ym)}</span><b>A look back at your month is ready</b><small>Which values held, your best week, and a few of your own words. Two minutes.</small><span class="chev" aria-hidden="true"></span></button>`;
 }
+/* where the month went, by value: each floor met in a week and each task done for a value, set against what you say
+   matters most (your Cores). Naming a gap is the point; the numbers are rough on purpose. */
+function timeWent(ym, W) {
+  const vals = valueList(); if (vals.length < 2) return "";
+  const cnt = Object.fromEntries(vals.map(v => [v.id, { f: 0, t: 0 }]));
+  W.forEach(x => x.F.forEach(f => { if (f.have >= f.need && cnt[f.c.value]) cnt[f.c.value].f++; }));
+  const loaded = ym >= monthKey(new Date(recentCut()));
+  const tasks = loaded ? allDone().filter(i => i.st === "done" && (!i.doneBy || i.doneBy === ST.uid) && i.doneAt && monthKey(new Date(i.doneAt)) === ym) : [];
+  let untagged = 0; tasks.forEach(i => { if (i.v && cnt[i.v]) cnt[i.v].t++; else untagged++; });
+  const rows = vals.map(v => ({ v, f: cnt[v.id].f, t: cnt[v.id].t, n: cnt[v.id].f + cnt[v.id].t, core: isCore(v.id) }));
+  const total = rows.reduce((a, r) => a + r.n, 0); if (total < 3) return "";
+  rows.forEach(r => { r.p = r.n / total; });
+  const fair = 1 / vals.length, cores = rows.filter(r => r.core), pc = r => Math.round(r.p * 100) + "%";
+  const starved = cores.filter(r => r.p < fair * 0.6).sort((a, b) => a.p - b.p)[0], top = rows.slice().sort((a, b) => b.n - a.n)[0];
+  const note = starved ? `You call <b>${esc(starved.v.name)}</b> a Core; it got ${pc(starved)} of what you did. One small floor for it next month would close the gap.`
+    : cores.length && cores.every(r => r.p >= fair) ? `Your Cores got their share of the month or more. That's what living by them looks like.`
+    : `<b>${esc(top.v.name)}</b> got the most of your month (${pc(top)}).${cores.length ? "" : " Star up to two Cores in Compass → Season to see whether what matters most gets its share."}`;
+  return `<h3>Where your month went</h3><div class="card pad went"><ul class="wentl">${rows.map(r => `<li><span class="nm">${esc(r.v.name)}${r.core ? ' <span class="core">Core</span>' : ""}</span><span class="wbar2" aria-hidden="true"><i style="width:${Math.max(r.n ? 2 : 0, Math.round(r.p * 100))}%;background:${valColor(r.v.id)}"></i></span><span class="n" aria-label="${esc(r.v.name)}: ${r.f} floor${r.f === 1 ? "" : "s"} met, ${r.t} task${r.t === 1 ? "" : "s"} done">${pc(r)}</span></li>`).join("")}</ul>
+    <p class="hint" style="margin:10px 0 0">${note}</p>
+    <p class="hint went-how">Counts each floor met in a week${loaded ? " and each task done for a value" : " (tasks from this long ago aren't counted)"}.${untagged ? ` ${untagged} done task${untagged > 1 ? "s" : ""} had no value; open a task and pick what it serves to sharpen this.` : ""}</p></div>`;
+}
 function rLookback(ym) {
   const weeks = monthWeeks(ym), ids = weeks.map(wid), tk = todayKey(), vals = valueList();
   const nowYm = monthKey(new Date()), partial = ym === nowYm;
@@ -4230,6 +4467,7 @@ function rLookback(ym) {
   <h3>Values</h3>
   <div class="card pad"><ul class="lkvals">${vrows.map(r => `<li><span class="nm">${esc(r.v.name)}${isCore(r.v.id) ? ' <span class="core">Core</span>' : ""}</span><span class="lkdots" role="img" aria-label="${r.held} of ${r.n} weeks held">${r.marks.map((k, i) => `<i class="${k.rest ? "rest" : k.open ? "open" : k.ok ? "ok" : "miss"}" title="Week of ${esc(fmtShort(W[i].m))}"></i>`).join("")}</span><span class="n">${r.n ? `${r.held}/${r.n}` : "–"}</span></li>`).join("")}</ul>
     ${valueNote ? `<p class="hint" style="margin:10px 0 0">${valueNote}</p>` : ""}</div>
+  ${timeWent(ym, W)}
   ${best && best.pct > 0 ? `<h3>Best week</h3><div class="card pad lkbest"><b>${esc(fmtShort(best.m))} – ${esc(fmtShort(addDays(best.m, 6)))}</b><span>${Math.round(best.pct * 100)}% of floors met${best.felt ? ` · felt ${FELT_WORDS[best.felt - 1].toLowerCase()}` : ""}</span><small>Worth asking what made it work, and keeping that.</small></div>` : ""}
   ${heldBest.length || needsCare.length ? `<h3>Floors</h3><div class="lkcols">
     ${heldBest.length ? `<div class="card pad"><span class="flabel">Held every week</span><ul class="lkfl">${heldBest.map(r => `<li>${esc(r.c.name)}<small>${r.held}/${r.n}</small></li>`).join("")}</ul></div>` : ""}
@@ -4253,6 +4491,8 @@ function rReview(id, F, trips, sugg) {
   }).join("");
   const needs = vals.map(v => v.name).concat(["Rest", "Time I own"]).filter((x, i, a) => a.indexOf(x) === i);
   const firstSunday = new Date().getDay() === 0 && new Date().getDate() <= 7;
+  let stepN = 0; const nx = () => ++stepN;
+  const ag = activeGoals().filter(g => { const n = goalWeekN(g, S.viewMon); return n >= 1 && n <= GOAL_WEEKS; });
   return `
   ${trips.length ? `<h2>Tripwires</h2><p class="lede">These trigger a review, not blame.</p>${trips.map(t => `<div class="trip">${esc(t)}</div>`).join("")}` : ""}
   ${lookbackCard()}
@@ -4260,17 +4500,22 @@ function rReview(id, F, trips, sugg) {
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
   ${reviewSetupCards()}
   ${fadeCard()}
-  <h3>1 · Floors</h3>
+  <h3>${nx()} · Floors</h3>
   <div class="card pad"><ul class="floors" style="margin:0">${vals.map(v => { const st = valueStatus(v.id, F, id); return `<li class="${st.s === "clear" ? "ok" : ""}"><span>${esc(v.name)}</span><span class="f">${st.s === "clear" ? "✓" : st.s === "rest" ? "–" : st.s === "open" && st.t === "This month" ? "…" : "✗"}</span></li>`; }).join("")}</ul></div>
   ${open.length ? `<p class="hint" style="margin:10px 0 6px">Forgot to log something?</p><div class="chips">${open.map(f => countChip(f.c, f.have)).join("")}</div>` : ""}
-  <h3>2 · Am I at peace with where this is trending?</h3>
+  ${ag.length ? `<h3>${nx()} · Did this week move your goals?</h3>
+  <div class="card pad grev">${ag.map(g => { const v = (g.wk || {})[id], n = goalWeekN(g, S.viewMon), steps = goalTasks(g.id).length;
+    return `<div class="grow"><div class="grh"><button class="linkish" data-act="gOpen" data-id="${esc(g.id)}"><b>${esc(g.t)}</b></button><small>Week ${n} of ${GOAL_WEEKS}</small></div>${goalTrack(g)}
+      <div class="seg" role="group" aria-label="Did this week move ${esc(g.t)}?">${[[0, "Not really"], [1, "A little"], [2, "Yes"]].map(([k, l]) => `<button aria-pressed="${v === k}" data-act="gWeek" data-id="${esc(g.id)}" data-w="${id}" data-v="${k}">${l}</button>`).join("")}</div>
+      ${v === 0 && !steps ? `<p class="hint" style="margin:6px 0 0">No next step yet. <button class="linkish" data-act="gOpen" data-id="${esc(g.id)}">Add one</button> and make it one of next week's three.</p>` : ""}</div>`; }).join("")}</div>` : ""}
+  <h3>${nx()} · Am I at peace with where this is trending?</h3>
   <div class="felt" role="group">${[1, 2, 3, 4, 5].map(n => `<button data-act="felt" data-v="${n}" aria-pressed="${r.felt === n}"><b>${n}</b><small>${["Adrift", "Uneasy", "Steady", "Good", "At peace"][n - 1]}</small></button>`).join("")}</div>
   ${r.felt && r.felt <= 2 ? `<p class="hint" style="margin:10px 0 6px">Which need was starved?</p><div class="chips">${needs.map(n => `<button class="chip ${(r.starved || []).includes(n) ? "sel" : ""}" data-act="starve" data-v="${esc(n)}">${esc(n)}</button>`).join("")}</div>` : ""}
-  <h3>3 · What made this week fun?</h3>
+  <h3>${nx()} · What made this week fun?</h3>
   <textarea id="r-fun" data-r="fun" rows="2" placeholder="Protect it next week">${esc(r.fun)}</textarea>
-  <h3>4 · Next week</h3>
+  <h3>${nx()} · Next week</h3>
   <div class="card pad"><div class="row"><div><b>Pre-declare a Minimum Viable Week</b><div class="hint">Travel, a deadline or a family event coming up.</div></div><button class="switch" role="switch" aria-checked="${pre}" data-act="preMvw" aria-label="Minimum Viable Week next week"></button></div></div>
-  <h3>5 · Clear your head</h3>
+  <h3>${nx()} · Clear your head</h3>
   <p class="hint" style="margin:0 0 8px">Empty everything that's circling, sort it, then choose up to ${ERRAND_CAP} errands for next week. Writing down when you'll handle something is what quiets it.</p>
   <div class="card">${capBox("capReview", "Anything else on your mind? One per line.")}</div>
   ${inboxCta() ? `<div style="margin-top:10px">${inboxCta()}</div>` : ""}
@@ -4372,10 +4617,11 @@ function rCompass(id, F, trips, sugg) {
     <div class="vgroup"><div class="gh"><b>Fun menu</b><button class="btn quiet small" data-act="addComp" data-value="__fun">+ Add</button></div>
       ${all.some(c => c.fun) ? `<div class="card">${all.filter(c => c.fun).map(compRow).join("")}</div>` : `<p class="hint" style="margin:0">Things you do purely for joy. Never scored.</p>`}</div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="addValue">+ Add a value</button></div>`)}
-  ${cSec("season", "Season", cores.length ? "Cores: " + cores.map(esc).join(" and ") : "No Cores yet · everything shares equally", `
+  ${cSec("season", "Season", [cores.length ? "Cores: " + cores.map(esc).join(" and ") : "No Cores yet", activeGoals().length ? `${activeGoals().length} 12-week goal${activeGoals().length > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "), `
     <p class="hint" style="margin:0 0 8px">Up to two Cores get most of your energy for 12 to 18 months. Everything else is a satellite, explored without guilt. Tap a value to make it a Core.</p>
     <div class="chips">${vals.map(v => `<button class="chip ${isCore(v.id) ? "sel" : ""}" data-act="toggleCore" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div>
-    ${(p.cores || []).length ? `<div style="margin-top:10px">${p.cores.map((c, i) => `<div class="field"><label for="core-${i}">Core ${i + 1} · ${esc(valueName(c.value))}</label><input type="text" id="core-${i}" data-core="${i}" value="${esc(c.text)}" placeholder="What this Core means this season"></div>`).join("")}</div>` : ""}`)}
+    ${(p.cores || []).length ? `<div style="margin-top:10px">${p.cores.map((c, i) => `<div class="field"><label for="core-${i}">Core ${i + 1} · ${esc(valueName(c.value))}</label><input type="text" id="core-${i}" data-core="${i}" value="${esc(c.text)}" placeholder="What this Core means this season"></div>`).join("")}</div>` : ""}
+    ${goalsBlock()}`)}
   ${cSec("people", "People", plist.length ? `${plist.length} ${plist.length === 1 ? "person" : "people"}${dueN ? ` · ${dueN} due` : " · all caught up"}` : "Keep in touch with the people who matter", rPeople(id, true), { dot: dueN > 0 })}
   ${cSec("ifthen", "If-then rules", rules ? `${rules} rule${rules > 1 ? "s" : ""}` : "None yet", `
     <textarea id="p-if" data-p="ifthen" rows="5" aria-label="If-then rules">${esc((p.ifthen || []).join("\n"))}</textarea>
@@ -4494,10 +4740,10 @@ function renderSheetBody() {
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Find your values">${html}</div>`;
     return;
   }
-  if (sh.type === "item" || sh.type === "list" || sh.type === "newlist" || sh.type === "share" || sh.type === "invite" || sh.type === "watch" || sh.type === "watching") {
-    const html = sh.type === "item" ? rItemSheet() : sh.type === "list" ? rListSheet() : sh.type === "newlist" ? rNewListSheet() : sh.type === "share" ? rShareSheet() : sh.type === "invite" ? rInviteSheet() : sh.type === "watch" ? rWatchSheet() : rWatchingSheet();
+  if (["item", "list", "newlist", "share", "invite", "watch", "watching", "goal", "goalEdit", "plan"].includes(sh.type)) {
+    const html = sh.type === "item" ? rItemSheet() : sh.type === "list" ? rListSheet() : sh.type === "newlist" ? rNewListSheet() : sh.type === "share" ? rShareSheet() : sh.type === "invite" ? rInviteSheet() : sh.type === "watch" ? rWatchSheet() : sh.type === "goal" ? rGoalSheet() : sh.type === "goalEdit" ? rGoalEdit() : sh.type === "plan" ? rPlanSheet() : rWatchingSheet();
     if (!html) { root.innerHTML = ""; return; }
-    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${{ item: "Task", list: "List", newlist: "New list", share: "Share list", invite: "Invitation", watch: "Watchers", watching: "Watching" }[sh.type]}">${html}</div>`;
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${{ item: "Task", list: "List", newlist: "New list", share: "Share list", invite: "Invitation", watch: "Watchers", watching: "Watching", goal: "12-week goal", goalEdit: "12-week goal", plan: "Plan tomorrow" }[sh.type]}">${html}</div>`;
     return;
   }
   if (sh.type === "sort" || sh.type === "capture") {
@@ -5309,7 +5555,7 @@ document.addEventListener("click", e => {
       renderSheet(); render(); return;
     }
     case "iNext": { const it = findItem(b.dataset.l, b.dataset.id), nx = nextWkId(); if (!it) return; if (it.wk === nx) updItem(it.lid, it.id, { wk: null }); else { if (weekErrands(nx).length >= FOCUS_CAP) toast(`That makes ${weekErrands(nx).length + 1} for next week. Three is the sweet spot.`); updItem(it.lid, it.id, { wk: nx }); } break; }
-    case "iWho": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; updItem(it.lid, it.id, { who: b.dataset.v || null }); renderSheet(); render(); return; }
+    case "iWho": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; const who = b.dataset.v || null; updItem(it.lid, it.id, { who }); if (who && who !== ST.uid && who !== it.who) { ping(who, "assign", { l: it.lid, ln: listName(it.lid), t: it.t, i: it.id }); toast(`Given to ${firstName(((listMeta(it.lid).people || {})[who] || {}).n)}`); } renderSheet(); render(); return; }
     case "iVal": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; updItem(it.lid, it.id, { v: it.v === b.dataset.v ? null : b.dataset.v }); renderSheet(); render(); return; }
     case "iSubTick": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; const sub = (it.sub || []).map(x => x.id === b.dataset.k ? Object.assign({}, x, { d: !x.d }) : x); updItem(it.lid, it.id, { sub }); if (sub.every(x => x.d) && sub.length) toast("Every step done. Tick the task when it's finished."); renderSheet(); render(); return; }
     case "iSubDel": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; const sub = (it.sub || []).filter(x => x.id !== b.dataset.k); updItem(it.lid, it.id, { sub: sub.length ? sub : null }); renderSheet(); render(); return; }
@@ -5339,6 +5585,39 @@ document.addEventListener("click", e => {
     case "wOpen": S.sheet = { type: "watching", u: b.dataset.u }; break;
     case "wLeave": leaveWatch(b.dataset.u); return;
     case "cheer": sendCheer(b.dataset.u, b.dataset.v); return;
+    case "ntSocial": ntSave({ social: !((S.nt || {}).social !== false) }); render(); return;
+    case "slipBreak": { const it = findItem(b.dataset.l, b.dataset.id); if (!it) return; updItem(it.lid, it.id, { nz: it.moves || 0 }); S.sheet = { type: "item", l: it.lid, id: it.id }; render(); setTimeout(() => { const f = $("#iSubIn"); if (f) { f.focus(); f.scrollIntoView({ block: "center" }); } }, 60); return; }
+    case "slipKeep": { const it = findItem(b.dataset.l, b.dataset.id); if (!it) return; updItem(it.lid, it.id, { nz: it.moves || 0 }); toast("Kept as is. Compass won't ask again unless it keeps moving."); break; }
+    case "iGoal": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; updItem(it.lid, it.id, { g: b.dataset.v || null }); renderSheet(); render(); return; }
+    case "gNew": { const v = coreIds()[0] || (valueList()[0] || {}).id || ""; S.sheet = { type: "goalEdit", draft: { id: "g-" + uidGen() + uidGen().slice(0, 3), t: "", v, when: "", startNext: false } }; break; }
+    case "gEdit": { const g = goalById(b.dataset.id); if (!g) return; S.sheet = { type: "goalEdit", edit: true, draft: clone(g) }; break; }
+    case "gVal": if (S.sheet && S.sheet.draft) { S.sheet.draft.v = b.dataset.v; renderSheet(); } return;
+    case "gStart": if (S.sheet && S.sheet.draft) { S.sheet.draft.startNext = b.dataset.v === "1"; renderSheet(); } return;
+    case "gSave": {
+      const d = S.sheet && S.sheet.draft; if (!d) return;
+      const tEl = $("#gTitle"), wEl = $("#gWhen"); if (tEl) d.t = tEl.value; if (wEl) d.when = wEl.value;
+      const t = String(d.t || "").trim().slice(0, 80); if (!t) { toast("Name the goal first."); const f = $("#gTitle"); if (f) f.focus(); return; }
+      const when = String(d.when || "").trim().slice(0, 160);
+      if (S.sheet.edit) editGoal(d.id, g => { g.t = t; g.v = d.v; g.when = when; });
+      else { if (activeGoals().length >= GOAL_MAX) { toast("Three at a time is the most that gets real attention."); return; } editSettings(st => { st.goals = (st.goals || []).concat({ id: d.id, t, v: d.v, when, start: dkey(addDays(monday(new Date()), d.startNext ? 7 : 0)), st: "on", wk: {}, at: Date.now() }); }); stat("goal"); toast("Goal set. What's the very next step?"); }
+      const wasEdit = !!S.sheet.edit; S.sheet = { type: "goal", id: d.id }; render(); setTimeout(() => { const f = $("#gStepIn"); if (f && !wasEdit && !matchMedia("(pointer:coarse)").matches) f.focus(); }, 60); return;
+    }
+    case "gOpen": S.sheet = { type: "goal", id: b.dataset.id }; break;
+    case "gWeek": { const id = b.dataset.id, wk = b.dataset.w, v = +b.dataset.v; editGoal(id, g => { g.wk = g.wk || {}; if (g.wk[wk] === v) delete g.wk[wk]; else g.wk[wk] = v; }); if (v === 2) burst(b, "var(--brass)", 8); if (S.sheet) renderSheet(); render(); return; }
+    case "gDone": { editGoal(b.dataset.id, g => { g.st = "done"; g.end = todayKey(); }); burst(b, "var(--brass)", 16); toast("Done. Twelve weeks well spent."); S.sheet = null; break; }
+    case "gStop": { const id = b.dataset.id, before = clone(goalById(id)); editGoal(id, g => { g.st = "stopped"; g.end = todayKey(); }); toast("Stopped. Its steps stay in your lists.", () => { editGoal(id, g => { g.st = before.st; delete g.end; }); render(); }); S.sheet = null; break; }
+    case "gAgain": { if (activeGoals().filter(g => g.id !== b.dataset.id).length >= GOAL_MAX) { toast("Three at a time is the most that gets real attention."); return; } editGoal(b.dataset.id, g => { g.st = "on"; g.start = dkey(monday(new Date())); g.wk = {}; delete g.end; g.round = (g.round || 1) + 1; }); toast("Another 12 weeks, starting this week"); break; }
+    case "gDel": { editSettings(st => { st.goals = (st.goals || []).filter(g => g.id !== b.dataset.id); }); S.sheet = null; toast("Deleted"); break; }
+    case "ptOpen": openPlan(); break;
+    case "ptHide": S.planHide = todayKey(); break;
+    case "ptPick": {
+      const it = findItem(b.dataset.l, b.dataset.id); if (!it) return;
+      const tm = tomorrowKey(), k = itemKey(it.lid, it.id), orig = S.plan && S.plan.orig;
+      if (it.due === tm) { const o = orig && orig[k]; if (o) { updItem(it.lid, it.id, { due: o.due, tm: o.tm, moves: o.moves }); delete orig[k]; } else updItem(it.lid, it.id, { due: null, tm: null }); }
+      else { if (orig) orig[k] = { due: it.due || null, tm: it.tm || null, moves: it.moves || null }; setDue(it, tm); burst(b, "var(--accent)", 6); }
+      renderSheet(); return;
+    }
+    case "ptDone": { const n = dueOn(tomorrowKey()).length; editSettings(st => { st.plannedFor = tomorrowKey(); }); S.sheet = null; S.plan = null; toast(n ? `Tomorrow is planned: ${n} task${n > 1 ? "s" : ""}.${settings().calFeed && dueOn(tomorrowKey()).some(i => i.tm) ? " Timed ones go to your calendar." : ""}` : "Tomorrow is open. That's a plan too."); stat("planned"); break; }
     case "cheerSeen": { const ids = W8.cheers.map(c => c.id); W8.cheers = []; ids.forEach(id => FB.deleteDoc(FB.doc(ST.fs, "watch", ST.uid, "cheers", id)).catch(() => {})); break; }
     case "nlPick": { const f = $("#nlName"); if (f) { f.value = b.dataset.v; f.focus(); } return; }
     case "lEdit": S.lConfirm = null; S.sheet = { type: "list", l: b.dataset.l }; break;
@@ -5597,6 +5876,7 @@ document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
   if (f.id === "authForm") { emailAuth(); return; }
   if (f.id === "iSubForm") { const inp = $("#iSubIn"), v = (inp && inp.value || "").trim().slice(0, 200); const it = S.sheet && findItem(S.sheet.l, S.sheet.id); if (!v || !it) return; if ((it.sub || []).length >= 50) { toast("That's 50 steps. Make it a list instead?"); return; } inp.value = ""; updItem(it.lid, it.id, { sub: (it.sub || []).concat({ id: uidGen(), t: v, d: false }) }); renderSheet(); render(); const n = $("#iSubIn"); if (n) n.focus(); return; }
+  if (f.id === "gStepForm") { const inp = $("#gStepIn"), v = (inp && inp.value || "").trim().slice(0, 200), id = f.dataset.id, g = goalById(id); if (!v || !g) return; if (!L.ready) { toast("Your lists are still loading. Try again in a moment."); return; } inp.value = ""; addItem(inboxId(), { t: v, g: id, v: g.v }); toast("Added to your Inbox"); renderSheet(); render(); const n = $("#gStepIn"); if (n) n.focus(); return; }
   if (f.id === "cheerForm") { const ct = $("#cheerText"), v = ct ? ct.value : ""; if (ct) ct.value = ""; sendCheer(f.dataset.u, v); return; }
   if (f.id === "newListForm") { const v = ($("#nlName").value || "").trim(); if (!v) { toast("Give the list a name."); return; } const lid = createList(v); setTv(lid); S.tab = "tasks"; S.sheet = null; toast(`Made “${v.slice(0, 40)}”. Add tasks above, or share it.`); render(); return; }
   if (f.id === "wNameForm") { const v = ($("#wName").value || "").trim().slice(0, 60); if (v) { editProfile(p => { p.name = v; }); publishName(v); toast("Saved"); } renderSheet(); return; }
@@ -5622,6 +5902,7 @@ document.addEventListener("input", e => {
   else if (ds.ob === "goal") { S.ob.d.goal = t.value; saveDraft(); if (!CSS.supports("field-sizing", "content")) { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; } }
   else if (ds.ob === "ifthen") { S.ob.d.ifthen = t.value.split("\n"); saveDraft(); }
   else if (ds.obe && S.ob) { const c = S.ob.d.comps.find(x => x.id === S.obEdit); if (c) c[ds.obe] = t.value;  saveDraft(); }
+  else if (ds.gd && S.sheet && S.sheet.type === "goalEdit") { S.sheet.draft[ds.gd] = t.value; }
   else if (ds.fx && S.sheet && S.sheet.type === "fixed" && ds.fx !== "dur") { S.sheet.draft[ds.fx] = t.value; }
   else if (ds.fx === "dur" && S.sheet && S.sheet.type === "fixed") { const h = parseDur(t.value); if (h !== null) S.sheet.draft.dur = Math.max(15, Math.round(h * 60)); }
   else if (ds.obcore !== undefined) { const c = S.ob.d.cores[+ds.obcore]; if (c) c.text = t.value;  saveDraft(); }
@@ -5637,7 +5918,8 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   if (e.target && e.target.dataset && e.target.dataset.nt) { ntSet(e.target.dataset.nt, e.target.value); return; }
-  if (e.target && e.target.dataset && e.target.dataset.iv) { clearTimeout(S.ivT); itemField(e.target); return; }   // title and note: the list behind redraws when the sheet closes
+  if (e.target && e.target.dataset && e.target.dataset.iv) { clearTimeout(S.ivT); itemField(e.target); return; }
+  if (e.target && e.target.dataset && e.target.dataset.plantm) { const [l, id] = e.target.dataset.plantm.split("/"); updItem(l, id, { tm: e.target.value || null }); renderSheet(); return; }   // title and note: the list behind redraws when the sheet closes
   if (e.target && e.target.id === "sortDate" && e.target.value) { sortPick("date", e.target.value); burst(e.target, "var(--accent)", 6); render(); return; }
   const t = e.target, ds = t.dataset;
   if (ds.mplan) {

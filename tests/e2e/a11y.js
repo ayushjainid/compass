@@ -41,6 +41,11 @@ const VAPID = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBk
   await scan('compass-all-open');
   await tap('[data-act=editComp]'); await scan('component-sheet'); await tap('.sheet .sheetx');
   await tap('#csec-values [data-act=vqStart]'); await tap('.sheet .vqopt[data-v="4"]'); await scan('values-quiz'); await tap('.sheet .sheetx');
+  await tap('#csec-season [data-act=gNew]'); await p.locator('#gTitle').fill('Run 10 km'); await scan('goal-edit-sheet'); await tap('.sheet [data-act=gSave]'); await p.waitForTimeout(400);
+  await p.locator('#gStepIn').fill('Book a run'); await p.keyboard.press('Enter'); await p.waitForTimeout(300); await scan('goal-sheet'); await tap('.sheet .sheetx');
+  await scan('compass-goals');
+  await p.goto('http://compass.test/?plan=tomorrow'); await p.waitForTimeout(1800); await tap('.sheet [data-act=ptPick]').catch(() => {}); await scan('plan-tomorrow-sheet'); await tap('.sheet .sheetx');
+  await tap('[data-act=tab][data-t=review]'); await scan('review-goals'); await tap('[data-act=tab][data-t=compass]');
   await tap('[data-act=fbOpen]'); await scan('feedback-sheet'); await tap('.sheet .sheetx');
   await tap('#csec-cal [data-act=icsOpen]'); await scan('export-sheet'); await tap('.sheet .sheetx');
   await tap('#acctBtn'); await scan('account-sheet');

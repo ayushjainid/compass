@@ -32,7 +32,7 @@ service cloud.firestore {
     match /notify/{uid} {
       allow read, delete: if signedIn(uid);
       allow create, update: if signedIn(uid)
-        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'subs', 'lost', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'nextTest', 'test', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk', 'names'])
+        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'subs', 'lost', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'nextTest', 'test', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk', 'names', 'social', 'socH', 'socN'])
         && (!('subs' in request.resource.data) || (request.resource.data.subs is map && request.resource.data.subs.size() <= 8))
         && (!('sub' in request.resource.data) || request.resource.data.sub == null
             || (request.resource.data.sub is map && request.resource.data.sub.endpoint is string && request.resource.data.sub.endpoint.size() < 1000))
@@ -141,7 +141,7 @@ service cloud.firestore {
       match /items/{iid} {
         allow read, delete: if isMember(lid);
         allow create, update: if isMember(lid)
-          && request.resource.data.keys().hasOnly(['t', 'n', 'open', 'st', 'due', 'tm', 'rep', 'wk', 'sub', 'by', 'who', 'at', 'up', 'upBy', 'doneAt', 'doneBy', 'ord', 'moves', 'v', 'was'])
+          && request.resource.data.keys().hasOnly(['t', 'n', 'open', 'st', 'due', 'tm', 'rep', 'wk', 'sub', 'by', 'who', 'at', 'up', 'upBy', 'doneAt', 'doneBy', 'ord', 'moves', 'v', 'was', 'nz', 'g'])
           && request.resource.data.t is string && request.resource.data.t.size() >= 1 && request.resource.data.t.size() <= 500
           && request.resource.data.open is bool
           && (!('n' in request.resource.data) || request.resource.data.n == null || (request.resource.data.n is string && request.resource.data.n.size() <= 4000))
@@ -171,17 +171,40 @@ service cloud.firestore {
       let inv = get(/databases/$(database)/documents/invites/$(request.resource.data.via));
       return inv != null && inv.data.kind == 'watch' && inv.data.watch == owner && inv.data.from == owner && inv.data.exp > request.time.toMillis() && sameGen(inv);
     }
+    // ---- A note for someone you share with (they joined your list, you gave them a task, a cheer). The reminders
+    // service turns it into a notification on their devices and deletes it; nobody can read it from the app.
+    // Only between people who really share a list or a watch page, and only due now (never scheduled for later).
+    function bothInList(lid, a, b) { let m = get(/databases/$(database)/documents/lists/$(lid)).data.members; return a in m && b in m; }
+    function watches(owner, u) { return u in get(/databases/$(database)/documents/watch/$(owner)).data.watchers; }
+    function shortStr(d, k, n) { return !(k in d) || (d[k] is string && d[k].size() <= n); }
+    match /pings/{id} {
+      allow create: if request.auth != null && id.matches('^[A-Za-z0-9_-]{16,48}$')
+        && request.resource.data.keys().hasOnly(['to', 'from', 'k', 'n', 'l', 'ln', 't', 'i', 'w', 'x', 'due', 'at'])
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string && request.resource.data.to != request.auth.uid
+        && request.resource.data.due is timestamp && request.resource.data.due < request.time + duration.value(5, 'm')
+        && request.resource.data.n is string && request.resource.data.n.size() <= 60
+        && shortStr(request.resource.data, 'ln', 80) && shortStr(request.resource.data, 't', 120) && shortStr(request.resource.data, 'x', 280)
+        && shortStr(request.resource.data, 'l', 64) && shortStr(request.resource.data, 'i', 64)
+        && (
+          (request.resource.data.k in ['join', 'assign'] && !('w' in request.resource.data) && request.resource.data.l is string
+            && bothInList(request.resource.data.l, request.auth.uid, request.resource.data.to))
+          || (request.resource.data.k == 'join' && request.resource.data.w == true && watches(request.resource.data.to, request.auth.uid))
+          || (request.resource.data.k == 'cheer' && watches(request.resource.data.to, request.auth.uid))
+        );
+    }
+
     match /watch/{owner} {
       allow get: if request.auth != null && (request.auth.uid == owner || resource == null || request.auth.uid in resource.data.watchers);
       allow list: if request.auth != null && request.auth.uid in resource.data.watchers;
       // created empty: watchers only ever join by accepting an invite
       allow create: if signedIn(owner)
-        && request.resource.data.keys().hasOnly(['watchers', 'people', 'name', 'week', 'prev', 'share', 'up', 'via', 'paused', 'gen'])
+        && request.resource.data.keys().hasOnly(['watchers', 'people', 'name', 'week', 'prev', 'share', 'up', 'via', 'paused', 'gen', 'tz', 'nextDigest'])
         && request.resource.data.watchers == [] && (!('people' in request.resource.data) || request.resource.data.people.size() == 0)
         && (!('week' in request.resource.data) || request.resource.data.week == null || request.resource.data.week is map);
       allow update: if request.auth != null && (
           (request.auth.uid == owner
-            && request.resource.data.keys().hasOnly(['watchers', 'people', 'name', 'week', 'prev', 'share', 'up', 'via', 'paused', 'gen'])
+            && request.resource.data.keys().hasOnly(['watchers', 'people', 'name', 'week', 'prev', 'share', 'up', 'via', 'paused', 'gen', 'tz', 'nextDigest'])
             && request.resource.data.watchers is list && request.resource.data.watchers.size() <= 5
             && resource.data.watchers.hasAll(request.resource.data.watchers)
             && request.resource.data.get('gen', 0) >= resource.data.get('gen', 0)
