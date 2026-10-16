@@ -352,6 +352,32 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .vtile .vstar[aria-pressed="false"]{color:var(--muted)}
 .vlinks{display:flex;justify-content:space-between;gap:12px;margin-top:14px}
 .vlinks .linkish{padding:8px 0;font-size:14px}
+.vqcta{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;margin:2px 0 14px;border:1px dashed var(--accent);border-radius:var(--r);background:var(--accent-soft);color:var(--ink)}
+.vqcta .glyph{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--surface);color:var(--accent);font:600 16px var(--display)}
+.vqcta>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.vqcta b{font-weight:600}.vqcta small{font-size:12.5px;color:var(--ink2)}
+.vqcta .vqgo{flex:none;color:var(--accent);font-size:22px;line-height:1}
+.csec .vqcta{margin:4px 0 12px}
+.vq{gap:14px}
+.vqtop{display:flex;flex-direction:column;gap:8px;padding-right:44px}
+.vqbar{display:flex;gap:4px}.vqbar i{flex:1;height:4px;border-radius:2px;background:var(--sunk);transition:background .2s}.vqbar i.on{background:var(--accent)}.vqbar i.cur{background:var(--accent-soft);background:color-mix(in srgb,var(--accent) 45%,var(--sunk))}
+.vqq{font:500 23px/1.3 var(--display);letter-spacing:-.01em;margin:6px 0 2px;min-height:3.9em;text-wrap:balance}
+.vqgrp{display:flex;flex-direction:column;gap:6px}
+.vqopt{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:left;min-height:46px;transition:border-color .15s,background .15s}
+.vqopt .vqdot{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--muted);display:grid;place-items:center}
+.vqopt[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft);font-weight:500}
+.vqopt[aria-checked="true"] .vqdot{border-color:var(--accent)}.vqopt[aria-checked="true"] .vqdot::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.vqlive .seg{display:grid;grid-template-columns:repeat(3,1fr)}
+.vqlive .seg button{min-height:40px}
+.vqlive .seg button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:500}
+.vqres{padding:4px 0}
+.vqrow{display:grid;grid-template-columns:minmax(0,1fr) 38%;align-items:center;gap:12px;padding:9px 14px;color:var(--muted)}
+.vqrow + .vqrow{border-top:1px solid var(--line)}
+.vqrow.pick{color:var(--ink)}.vqrow.pick .vqname{font-weight:600}
+.vqname{display:flex;flex-direction:column;gap:1px;min-width:0}.vqname small{font-weight:400;font-size:12px;color:var(--brass)}
+.vqname .cstar{color:var(--brass);margin-right:4px}
+.vqmeter{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}.vqmeter i{display:block;height:100%;border-radius:3px;background:var(--line)}
+.vqrow.pick .vqmeter i{background:var(--accent)}
+.vqnote{padding:8px 10px;border-radius:10px;background:var(--brass-soft);color:var(--ink2)}
 .vwhy{margin-top:8px;padding:14px;border-radius:var(--r);background:var(--sunk);display:grid;gap:10px}
 .vwhy p{margin:0;font-size:13.5px;line-height:1.45;color:var(--ink2)}.vwhy b{color:var(--ink);font-weight:600}.vwhy .src{font-style:italic;color:var(--muted)}
 .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
@@ -3625,6 +3651,7 @@ function rCompass(id, F, trips, sugg) {
   ${sugg.length ? cSec("sugg", "Compass suggests", `${sugg.length} idea${sugg.length > 1 ? "s" : ""} for this week`, suggCard(sugg), { dot: true }) : ""}
   ${cSec("values", "Values and floors", `${vals.length} value${vals.length === 1 ? "" : "s"} · ${all.filter(c => !c.fun).length} floors`, `
     <p class="hint" style="margin:0 0 4px">The small, trackable pieces. Each one flows into Today, the weekly floors, the review, the safety net and your calendar. Tap one to change it.</p>
+    <button class="vqcta" data-act="vqStart" data-from="compass"><span class="glyph" aria-hidden="true">?</span><span><b>Check your values: 10 questions</b><small>${p.vq ? `Last answered ${esc(fmtShort(parse(p.vq.at)))}. Values shift over the years; a yearly look is a good habit.` : "See which values stand out for you, and which get too little room lately."}</small></span><span class="vqgo" aria-hidden="true">›</span></button>
     ${vals.map((v, gi) => {
       const list = all.filter(c => c.value === v.id && !c.fun).sort((a, b) => weeklyHours(b) - weeklyHours(a));
       return `${tierLabel(vals.map(x => x.id), gi, coreIds())}<div class="vgroup">${groupHead(v.id, list, p.capacity || 20, { extra: ` <button class="btn quiet small" data-act="addComp" data-value="${esc(v.id)}">+ Add</button>` })}
@@ -3734,6 +3761,11 @@ function renderSheetBody() {
       </div>
       ${m === "up" ? `<p class="fine" style="margin:0">By continuing you agree to the <a href="/terms" target="_blank" rel="noopener">terms</a> and <a href="/privacy" target="_blank" rel="noopener">privacy policy</a>.</p>` : ""}
     </div></div>`;
+    return;
+  }
+  if (sh.type === "vquiz") {
+    const html = rVQuiz(); if (!html) { root.innerHTML = ""; return; }
+    root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Find your values">${html}</div>`;
     return;
   }
   if (sh.type === "tmenu") {
@@ -4199,6 +4231,78 @@ function obRow(c) {
 }
 function hasOldLogs() { return Object.keys(S.hist).length > 0 || Object.keys(S.docs).some(k => k.startsWith("w-") && Object.keys((S.docs[k] || {}).days || {}).length); }
 const vById = (d, id) => VALUE_LIB.find(x => x.id === id) || d.custom.find(x => x.id === id) || { name: "Other" };
+/* ============ values discovery: ten questions ============
+   Portrait items in the style of Schwartz's Portrait Values Questionnaire (PVQ: "How much is this person like you?"),
+   one per value, plus the Valued Living Questionnaire's second question ("how much have you lived it lately?",
+   Wilson et al. 2010). Answers are compared with each other, not with anyone else (PVQ "centring": most people rate
+   most things as important, so what matters is what stands out for you). Where something matters a lot but gets
+   little room, a floor helps most, so those become the stars. */
+const VQ = [
+  { v: "rel",    q: "Real time with the people I love comes before most other things." },
+  { v: "solve",  q: "I feel most alive when I'm making progress on hard, meaningful work." },
+  { v: "body",   q: "Feeling strong, rested and healthy is a priority for me, not an afterthought." },
+  { v: "mind",   q: "A calm, steady mind matters to me as much as getting things done." },
+  { v: "learn",  q: "I'm always learning something. I'd feel stuck if I stopped growing." },
+  { v: "create", q: "I need to make things (writing, music, food, code, anything) to feel like myself." },
+  { v: "serve",  q: "It matters to me that my time helps others, even people I'll never meet." },
+  { v: "money",  q: "A financial cushion, so money isn't a worry, is important to me." },
+  { v: "world",  q: "I seek out new places and experiences. Too much routine makes me restless." },
+  { v: "time",   q: "Unplanned time that's truly mine, to rest or wander, is something I protect." },
+];
+const VQ_A = ["Not like me", "A little like me", "Somewhat like me", "Like me", "Very much like me"];
+const VQ_L = ["Rarely", "Sometimes", "Often"];
+const VQ_SRC = "Schwartz et al. 2001 (Portrait Values Questionnaire); Wilson et al. 2010 (Valued Living Questionnaire)";
+function vqStart(from) { S.vq = { i: 0, a: {}, l: {}, from }; S.sheet = { type: "vquiz" }; }
+/** ranked values: importance, then how much it stands out for you, then the gap between mattering and living it */
+function vqScore(a, l) {
+  const ids = VQ.map(x => x.v).filter(v => a[v]), mean = ids.reduce((t, v) => t + a[v], 0) / Math.max(1, ids.length);
+  const rows = ids.map(v => ({ v, r: a[v], c: a[v] - mean, live: l[v] || 0, gap: a[v] >= 4 && l[v] === 1 ? 2 : a[v] >= 4 && l[v] === 2 ? 1 : 0 }));
+  rows.sort((x, y) => y.r - x.r || y.c - x.c || y.gap - x.gap);
+  /* 5 to 7: everything that is "like me" or more, kept within that range */
+  let n = rows.filter(x => x.r >= 4).length; n = Math.max(5, Math.min(7, n)); n = Math.min(n, rows.length);
+  const picks = rows.slice(0, n).map(x => x.v);
+  /* stars: up to 2 that matter most and get the least room; if nothing is short of room, the top two */
+  const byNeed = rows.slice(0, n).filter(x => x.r >= 4).sort((x, y) => y.gap - x.gap || y.r - x.r || y.c - x.c);
+  const stars = (byNeed.some(x => x.gap) ? byNeed.filter(x => x.gap) : byNeed).slice(0, 2).map(x => x.v);
+  return { rows, picks, stars, flat: rows.length && rows[0].r === rows[rows.length - 1].r };
+}
+function rVQuiz() {
+  const q = S.vq; if (!q) { S.sheet = null; return ""; }
+  const head = `<div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>`;
+  if (q.i < VQ.length) {
+    const it = VQ[q.i], a = q.a[it.v], l = q.l[it.v];
+    return `<div class="in vq">${head}
+      <div class="vqtop"><span class="flabel">Question ${q.i + 1} of ${VQ.length}</span><div class="vqbar" aria-hidden="true">${VQ.map((x, i) => `<i class="${i < q.i ? "on" : i === q.i ? "cur" : ""}"></i>`).join("")}</div></div>
+      <p class="vqq">${esc(it.q)}</p>
+      <div class="vqgrp" role="radiogroup" aria-label="How much is this like you?"><span class="flabel">How much is this like you?</span>
+        ${VQ_A.map((t, i) => `<button class="vqopt" role="radio" aria-checked="${a === i + 1}" data-act="vqA" data-v="${i + 1}"><span class="vqdot" aria-hidden="true"></span>${t}</button>`).join("")}</div>
+      <div class="vqgrp vqlive" role="radiogroup" aria-label="Lately, how much room does it get in your week?"><span class="flabel">Lately, how much room does it get in your week?</span>
+        <div class="seg">${VQ_L.map((t, i) => `<button role="radio" aria-checked="${l === i + 1}" data-act="vqL" data-v="${i + 1}">${t}</button>`).join("")}</div></div>
+      <div class="row"><button class="btn quiet" data-act="vqBack" ${q.i ? "" : "disabled"}>Back</button><button class="btn ${a && l ? "primary" : ""}" data-act="vqNext" ${a ? "" : "disabled"}>${q.i === VQ.length - 1 ? "See my values" : "Next"}</button></div>
+    </div>`;
+  }
+  const r = vqScore(q.a, q.l), max = 5;
+  const name = v => (VALUE_LIB.find(x => x.id === v) || {}).name || v;
+  const gaps = r.rows.filter(x => x.gap === 2).map(x => name(x.v));
+  return `<div class="in vq">${head}
+    <h2 style="margin:0">What your answers say</h2>
+    <p class="hint" style="margin:0">Your answers are compared with each other, not with anyone else's. The top ones are what stands out for you.</p>
+    ${r.flat ? `<p class="hint vqnote">You rated everything about the same, so these are only a starting point. Pick the ones you'd defend if you could keep only five.</p>` : ""}
+    <div class="card vqres">${r.rows.map(x => `<div class="vqrow ${r.picks.includes(x.v) ? "pick" : ""}"><span class="vqname"><span>${r.stars.includes(x.v) ? '<span class="cstar" aria-label="Star">★</span>' : ""}${esc(name(x.v))}</span>${x.gap === 2 ? `<small>Matters a lot · little room lately</small>` : x.gap === 1 ? `<small>Matters · some room lately</small>` : ""}</span><span class="vqmeter" aria-label="${x.r} of ${max}"><i style="width:${x.r / max * 100}%"></i></span></div>`).join("")}</div>
+    <p class="hint" style="margin:0">${gaps.length ? `<b>${esc(gaps.slice(0, 2).join(" and "))}</b> ${gaps.length > 1 ? "matter" : "matters"} to you but ${gaps.length > 1 ? "get" : "gets"} little room lately. That's where a small weekly floor helps most, so ${gaps.length > 1 ? "they're" : "it's"} starred.` : `Starred: the two that matter most to you.`} <span class="src">${VQ_SRC}</span></p>
+    <div class="row"><button class="btn quiet" data-act="vqRedo">Start over</button><button class="btn primary" data-act="vqUse">Use these ${r.picks.length} values</button></div>
+  </div>`;
+}
+function vqApply() {
+  const r = vqScore(S.vq.a, S.vq.l), from = S.vq.from;
+  const quiz = { at: todayKey(), a: S.vq.a, l: S.vq.l };
+  if (from === "compass") { startOnboarding(true); }
+  const d = S.ob && S.ob.d; if (!d) return;
+  d.values = r.picks.concat(d.values.filter(v => !VALUE_LIB.some(x => x.id === v)));   // your own values stay
+  d.cores = r.stars.map(v => ({ value: v }));
+  d.vq = quiz; S.ob.step = 1; S.sheet = null; S.vq = null;
+  toast(from === "compass" ? "Your answers are in. Review the values, then continue to keep or adjust your floors." : `${r.picks.length} values picked, ${r.stars.length} starred. Change anything you like.`);
+}
 function renderOnboarding() {
   applyTheme();
   const { step, d } = S.ob, key = OB_STEPS[step];
@@ -4221,6 +4325,7 @@ function renderOnboarding() {
     const cores = d.cores.map(c => c.value);
     html = `<h1>What matters to you?</h1>
       <p class="lede vlede">Pick 5 to 7 · star up to 2</p>
+      <button class="vqcta" data-act="vqStart" data-from="ob"><span class="glyph" aria-hidden="true">?</span><span><b>${d.vq ? "Answer the 10 questions again" : "Not sure? Answer 10 quick questions"}</b><small>${d.vq ? "Your picks below came from your answers." : "About two minutes. Compass suggests values from your answers."}</small></span><span class="vqgo" aria-hidden="true">›</span></button>
       <div class="goalcard">
         <label for="ob-goal"><span>This year, I'm heading toward…</span><span class="optpill">Optional</span></label>
         <textarea id="ob-goal" class="goalin" data-ob="goal" rows="2" placeholder="Calmer, fitter, closer to family">${esc(d.goal)}</textarea>
@@ -4287,7 +4392,7 @@ function finishOnboarding() {
     v: 2, onboarded: true, goal: d.goal.trim(), feel: d.feel || [], values: d.values, customValues: d.custom,
     components, capacity: d.capacity, week: d.week || null, cores, ifthen: d.ifthen.map(s => s.trim()).filter(Boolean),
     updatedAt: new Date().toISOString(),
-  }, redo ? {} : { onboardedAt: todayKey(), pending: { intro: true, week: !(d.week && d.week.adjusted) && !(d.imp && d.imp.weekWhy && d.imp.weekWhy.length), cores: true, safety: true } });
+  }, d.vq ? { vq: d.vq } : {}, redo ? {} : { onboardedAt: todayKey(), pending: { intro: true, week: !(d.week && d.week.adjusted) && !(d.imp && d.imp.weekWhy && d.imp.weekWhy.length), cores: true, safety: true } });
   touch("profile"); clearTimeout(T.profile); T.profile = null; flush("profile");
   if (d.impPeople && d.impPeople.length) editPeople(p => { d.impPeople.forEach(x => { if (!p.list.some(y => y.name.toLowerCase() === x.name.toLowerCase())) p.list.push({ id: uidGen(), name: x.name, tier: x.tier, last: null }); }); });
   const it = d.impTasks || {}, nT = (it.inbox || []).length + (it.someday || []).length;
@@ -4363,6 +4468,19 @@ document.addEventListener("click", e => {
     case "obPreset": { const v = b.dataset.v; if (v === "cal") return; ob.week = presetWeek(v, ob.week); ob.capacity = weekCalc(ob.week).floors; updateOb(); return; }
     case "obAddV": S.obAddV = !S.obAddV; updateOb(); if (S.obAddV) { const i = $("#obCv"); if (i) i.focus(); } return;
     case "obWhy": S.obWhy = !S.obWhy; updateOb(); return;
+    case "vqStart": vqStart(b.dataset.from || "ob"); if (S.ob) { renderSheet(); return; } break;
+    case "vqA": case "vqL": {
+      const q = S.vq, it = q && VQ[q.i]; if (!it) return;
+      q[act === "vqA" ? "a" : "l"][it.v] = +b.dataset.v;
+      /* both answered: on to the next one after a beat, so the choice is seen */
+      if (q.a[it.v] && q.l[it.v] && !reduced()) { renderSheet(); clearTimeout(S.vqT); const at = q.i; S.vqT = setTimeout(() => { if (S.vq === q && q.i === at) { q.i++; renderSheet(); } }, 260); return; }
+      if (q.a[it.v] && q.l[it.v]) q.i++;
+      renderSheet(); return;
+    }
+    case "vqNext": if (S.vq) { clearTimeout(S.vqT); S.vq.i++; } renderSheet(); return;
+    case "vqBack": if (S.vq && S.vq.i) { clearTimeout(S.vqT); S.vq.i--; } renderSheet(); return;
+    case "vqRedo": if (S.vq) S.vq = { i: 0, a: {}, l: {}, from: S.vq.from }; renderSheet(); return;
+    case "vqUse": { vqApply(); if (S.ob) { renderOnboarding(); renderSheet(); window.scrollTo(0, 0); return; } break; }
     case "obWeekAdv": S.obWeekAdv = !S.obWeekAdv; updateOb(); return;
     case "obMore": { const v = b.dataset.v; S.obMore = S.obMore || {}; S.obMore[v] = !S.obMore[v]; updateOb(); return; }
     case "obStarter": { const d = starterDraft(b.dataset.v, ob ? ob.goal : ""); if (!d) return; S.ob = { step: 3, d }; S.obMore = {}; S.obEdit = null; window.scrollTo(0, 0); renderOnboarding(); return; }
