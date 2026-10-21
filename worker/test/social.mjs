@@ -3,7 +3,7 @@
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const ece = require("http_ece"), nc = require("crypto");
-import { runOnce } from "../src/index.js";
+import { runOnce, health } from "../src/index.js";
 import { pingText, digestText, quietUntil, nextDigest } from "../src/social.js";
 import { toValue, fromFields } from "../src/firestore.js";
 import { b64uEncode } from "../src/push.js";
@@ -147,6 +147,17 @@ ok("paused: no note, but its schedule still moves on", got("watcher-1").length =
 put("watch/u1", { ...get("watch/u1"), nextDigest: new Date(sunday6pmKolkata - 864e5) });
 await run(sunday6pmKolkata + 60e3);
 ok("a note a day late is skipped, not sent", got("watcher-1").length === 1 && get("watch/u1").nextDigest === sunday6pmKolkata + 7 * 864e5);
+
+// ---- the health check the app reads: which key the Worker signs with, and whether its private key matches
+let h = await (await health(env)).json();
+ok("health: up, its key, and the key pair matches", h.ok && h.key === env.VAPID_PUBLIC && h.keyOk === true && h.version, h);
+const other = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign"]);
+const wrongEnv = { ...env, VAPID_PRIVATE: (await crypto.subtle.exportKey("jwk", other.privateKey)).d };
+h = await (await health(wrongEnv)).json();
+ok("health: a private key from another pair is caught", h.keyOk === false, h);
+put("pings/k1", { to: "u2", from: "u1", k: "cheer", n: "Ayush", x: "k", due: new Date(t0 + 20000e3) });
+let thrown = ""; try { await runOnce(wrongEnv, t0 + 20000e3 + 30e3, fakeFetch, () => {}); } catch (e) { thrown = e.message; }
+ok("…and a run with mismatched keys stops with a clear error instead of sending refused pushes", /VAPID_PRIVATE doesn't match VAPID_PUBLIC/.test(thrown), thrown);
 
 const f = R.filter(x => !x.pass);
 console.log(`social: ${R.length - f.length}/${R.length} passed`);

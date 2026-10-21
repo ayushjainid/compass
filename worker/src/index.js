@@ -7,7 +7,7 @@
 // over is picked up by the next minute's run.
 import { client } from "./firestore.js";
 import { decide, targets } from "./plan.js";
-import { importVapid, pushRequest, refusal } from "./push.js";
+import { importVapid, pushRequest, refusal, vapidPairOk } from "./push.js";
 import { localDay, localMonday, validTz } from "./time.js";
 import { openToday, listNames, signAction, weekId } from "./today.js";
 import { handleFeed } from "./feed.js";
@@ -102,7 +102,9 @@ async function work(env, db, now, fetchFn, log) {
   if (!env.VAPID_PUBLIC || !env.VAPID_PRIVATE) throw new Error("VAPID keys are not set");
   /* evening reminders say what's left and carry one-tap buttons; if that lookup fails, the plain reminder still goes */
   for (const s of sends) if (s.kind === "eve") { try { s.payload = await enrichEvening(env, db, s.id, s.data, s.payload, now); } catch (e) { log("enrich failed: " + e.message); } }
-  const vapid = await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE);
+  let vapid; try { vapid = await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE); } catch (e) { vapid = null; }
+  if (!vapid) throw new Error("VAPID_PRIVATE doesn't match VAPID_PUBLIC (the key couldn't be loaded): every push would be refused. Run `npx wrangler secret put VAPID_PRIVATE` with the private key for " + String(env.VAPID_PUBLIC).slice(0, 12) + "…");
+  if (!PAIR_OK.has(env.VAPID_PUBLIC)) { if (!(await vapidPairOk(vapid))) throw new Error("VAPID_PRIVATE doesn't match VAPID_PUBLIC: every push would be refused. Run `npx wrangler secret put VAPID_PRIVATE` with the private key for " + String(env.VAPID_PUBLIC).slice(0, 12) + "…"); PAIR_OK.add(env.VAPID_PUBLIC); }
   /* signed tokens saved between runs (Apple: don't make a new one more than hourly) */
   const store = await jwtStore(db, log);
   const results = new Map();   // notify doc name -> [{ d, dev, ok, s, r }]
@@ -194,6 +196,16 @@ async function jwtStore(db, log) {
   };
 }
 
+const PAIR_OK = new Set();   // keys already checked in this Worker instance
+export const VERSION = "2026-10-21";
+/** GET /health: is the Worker up, which push key it signs with, and does its private key match. The app reads this
+    so each device subscribes with the key that will actually be used (a mismatch makes Apple refuse every push). */
+export async function health(env) {
+  let keyOk = false;
+  try { keyOk = !!env.VAPID_PUBLIC && !!env.VAPID_PRIVATE && await vapidPairOk(await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE)); } catch (e) {}
+  return new Response(JSON.stringify({ ok: true, version: VERSION, key: env.VAPID_PUBLIC || "", keyOk, social: true }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } });
+}
+
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runOnce(env, event.scheduledTime || Date.now()).then(r => console.log(JSON.stringify(r))));
@@ -202,7 +214,8 @@ export default {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/cal/")) return handleFeed(request, env);
     if (url.pathname === "/act") return handleAction(request, env);
+    if (url.pathname === "/health") return health(env);
     // A tiny health check so you can see the Worker is alive in a browser.
-    return new Response("Compass reminders are running.", { headers: { "Content-Type": "text/plain" } });
+    return new Response(`Compass reminders are running. Version ${VERSION}.`, { headers: { "Content-Type": "text/plain" } });
   },
 };

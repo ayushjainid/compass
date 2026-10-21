@@ -56,6 +56,24 @@ const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Sha
   await A.tap('.sheet [data-act=iWho]:has-text("Priya")'); await A.tap('.sheet [data-act=closeSheet] >> nth=0'); await settle(B, 800);
   const pa = await pings('assign', 'u2');
   ok('giving her a task sends her a note with a link to it', pa.length === 1 && pa[0].from === 'u1' && pa[0].l === lid && pa[0].t === 'Pack sunscreen' && (await items(lid)).some(x => x.id === pa[0].i && x.t === 'Pack sunscreen'), pa);
+  /* "@name" while typing: suggestions from the list's people, and the task is hers */
+  await A.p.locator('#qAdd').fill('Buy museum tickets @pri'); await A.p.waitForTimeout(250);
+  ok('typing @ suggests the people in the list', await A.p.locator('#qChips .qchip.sugg').count() === 1 && /@Priya/.test(await A.text('#qChips .qchip.sugg')), await A.text('#qChips'));
+  await A.tap('#qChips .qchip.sugg');
+  ok('tapping a name fills it in and shows who it goes to', /@Priya $/.test(await A.p.locator('#qAdd').inputValue()) && /→ Priya/.test(await A.text('#qChips')), [await A.p.locator('#qAdd').inputValue(), await A.text('#qChips')]);
+  await A.p.keyboard.press('Enter'); await settle(A, 700);
+  const mt = (await items(lid)).find(x => x.t === 'Buy museum tickets');
+  ok('…added without the @name, given to her, and she gets a note', mt && mt.who === 'u2' && (await pings('assign', 'u2')).some(x => x.i === mt.id), mt);
+  await A.tap('[data-act=tv][data-v=today]');
+  await A.p.locator('#qAdd').fill('Call the hotel tomorrow @priya'); await A.p.waitForTimeout(250);
+  ok('outside the list, @name finds who you share with, and says which list', /→ Priya · Trip to Goa/.test(await A.text('#qChips')), await A.text('#qChips'));
+  await A.p.keyboard.press('Enter'); await settle(A, 700);
+  const ch2 = (await items(lid)).find(x => x.t === 'Call the hotel');
+  ok('…so the task goes to that list, for her', ch2 && ch2.who === 'u2' && !!ch2.due, ch2);
+  await A.tap(`[data-act=tv][data-v="${lid}"]`);
+  await A.p.locator('#qAdd').fill('Pack @nobody'); await A.p.waitForTimeout(250);
+  ok('an @name nobody has stays as text', !/→/.test(await A.text('#qChips')));
+  await A.p.locator('#qAdd').fill(''); await A.p.waitForTimeout(150);
   ok('Priya sees it is hers', /Pack sunscreen[\s\S]*You/.test(await B.text('.lview')), { b: await B.text('.lview'), who: (await items(lid)).map(x => x.t + ':' + x.who) });
   await B.tap('.lrow:has-text("Book flights") [data-act=iDone]'); await settle(A, 900);
   const bf = (await items(lid)).find(x => /Book flights/.test(x.t));

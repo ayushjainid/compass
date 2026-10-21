@@ -63,6 +63,16 @@ export async function importVapid(publicB64u, privateB64u) {
   return { key, publicB64u };
 }
 
+/** Does the private key belong to the public key? Sign with one, check with the other. A mismatch means every
+    push is refused (Apple: BadJwtToken), so the Worker reports it instead of failing quietly. */
+export async function vapidPairOk(vapid) {
+  try {
+    const pubKey = await crypto.subtle.importKey("raw", b64uDecode(vapid.publicB64u), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+    const data = enc.encode("compass-key-check"), sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, vapid.key, data);
+    return await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pubKey, sig, data);
+  } catch (e) { return false; }
+}
+
 /* Apple asks senders not to make a new signed token more than once an hour. Workers start fresh often, so
    tokens are also kept in `store` (saved by the caller between runs) and reused until an hour before expiry. */
 const jwtCache = new Map();

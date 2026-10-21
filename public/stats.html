@@ -213,7 +213,7 @@ function render() {
     <section class="card"><h2>Reminders</h2><p class="sub">Health of the Cloudflare Worker that sends check-ins.</p>
       <div class="status ${health.c}" role="status"><span class="ic" aria-hidden="true">${health.i}</span><div><b>${esc(health.t)}</b><span>${esc(health.s)}</span></div></div>
       <dl class="kv"><dt>Sent, last 7 days</dt><dd>${n0(sum7("sent"))}</dd><dt>Failed, last 7 days</dt><dd>${n0(sum7("failed"))}</dd><dt>Errors, last 7 days</dt><dd>${n0(sum7("errors"))}</dd>
-      <dt>Last sent</dt><dd>${R ? ago(ms(R.lastSendAt)) : "–"}</dd>${R && R.lastPushError ? `<dt>Last refused push</dt><dd><span class="mono">${esc(R.lastPushError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastPushErrorAt))}</span></dd>` : ""}${R && R.lastError ? `<dt>Last error</dt><dd><span class="mono">${esc(R.lastError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastErrorAt))}</span></dd>` : ""}</dl></section>
+      <dt>Last sent</dt><dd>${R ? ago(ms(R.lastSendAt)) : "–"}</dd>${R && R.lastPushError ? `<dt>Last refused push</dt><dd><span class="mono">${esc(R.lastPushError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastPushErrorAt))}</span></dd>` : ""}${D.wh ? `<dt>Service version</dt><dd>${esc(D.wh.version || "older (no /health)")}</dd><dt>Push key</dt><dd>${!D.wh.key ? "–" : !D.wh.keyOk ? `<b style="color:var(--bad,#b3261e)">Private key doesn't match</b>: run <span class="mono">npx wrangler secret put VAPID_PRIVATE</span>` : D.wh.key === String(self.COMPASS_VAPID_PUBLIC || "") ? "Matches the app ✓" : "Differs from firebase-config.js (devices use the service's key automatically)"}</dd>` : ""}${R && R.lastError ? `<dt>Last error</dt><dd><span class="mono">${esc(R.lastError)}</span><br><span style="color:var(--muted);font-size:12.5px">${ago(ms(R.lastErrorAt))}</span></dd>` : ""}</dl></section>
     <section class="card"><h2>Errors, last 7 days</h2><p class="sub">From people's devices, grouped by message. Count is accounts affected.</p>
       ${errs.length ? `<ul class="list">${errs.map(e => `<li><span class="cnt">${e.n}</span><span class="mono">${esc(e.msg)}</span><div class="meta">${esc((e.where || "").slice(0, 120))} · ${ago(e.last)}</div></li>`).join("")}</ul>` : `<p class="empty">No errors reported. 🎉</p>`}</section>
   </div>
@@ -234,7 +234,13 @@ document.addEventListener("click", e => {
 const ST = {};
 function gate(html) { $("#main").innerHTML = `<div class="gate">${html}</div>`; }
 async function signIn() { try { await FB.signInWithPopup(ST.auth, new FB.GoogleAuthProvider()); } catch (e) { if (/popup/i.test(e.code || "")) FB.signInWithRedirect(ST.auth, new FB.GoogleAuthProvider()); } }
+/* the reminders Worker's own health: its version and push key (devices must subscribe with that key) */
+async function workerHealth() {
+  const u = String(self.COMPASS_WORKER_URL || "").replace(/\/$/, ""); if (!u) return null;
+  try { const r = await fetch(u + "/health", { cache: "no-store" }); return r.ok ? await r.json() : { version: "" }; } catch (e) { return null; }
+}
 async function load() {
+  const whP = workerHealth();
   try {
     const [stats, rem, fb, er] = await Promise.all([
       FB.getDocs(FB.collection(ST.fs, "stats")),
@@ -244,8 +250,9 @@ async function load() {
     ]);
     const docs = {}; stats.docs.forEach(d => docs[d.id] = d.data());
     st.data = { at: Date.now(), sum: summarize(docs), rem: rem.exists() ? rem.data() : null,
-      feedback: fb.docs.map(d => d.data()).sort((a, b) => ms(b.at) - ms(a.at)), errors: er.docs.map(d => d.data()) };
+      feedback: fb.docs.map(d => d.data()).sort((a, b) => ms(b.at) - ms(a.at)), errors: er.docs.map(d => d.data()), wh: null };
     render();
+    whP.then(h => { if (h && st.data) { st.data.wh = h; render(); } });
   } catch (e) { gate(`<h1>Couldn't load</h1><p>${esc(e.message)}</p><button class="btn" id="reload">Try again</button>`); }
 }
 

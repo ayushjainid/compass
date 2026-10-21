@@ -1116,6 +1116,7 @@ details.fold[open] summary::before{content:"▾ ";}
 .wbar2{height:10px;border-radius:5px;background:var(--sunk);overflow:hidden}.wbar2 i{display:block;height:100%;border-radius:5px}
 .wentl .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)}
 .went-how{margin:6px 0 0;font-size:12px}
+.qchip.who{background:var(--surface);color:var(--accent);border:1px solid var(--accent);padding-right:10px}.qchip.sugg{font-weight:600}.qchip.sugg small{font-weight:400;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1873,6 +1874,32 @@ function nextLocal(hhmm, after = Date.now(), dow = null) {
   for (let i = 0; i < 9; i++) { const d = new Date(after); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i); if (dow !== null && (d.getDay() + 6) % 7 !== dow) continue; d.setHours(h, m, 0, 0); if (d.getTime() > after) return d; }
   return null;
 }
+/* The key the reminders service really signs with (from its /health), else the one in firebase-config.js. A device
+   subscribed with any other key has every push refused by Apple and Google (VapidPkHashMismatch). */
+const KEYRX = /^[A-Za-z0-9_-]{80,100}$/;
+function pushKey() { const w = S.wh || (() => { try { return JSON.parse(localStorage.getItem("compass-wh") || "null"); } catch (e) { return null; } })(); return w && w.keyOk && KEYRX.test(w.key || "") ? w.key : VAPID(); }
+async function workerHealth() {
+  if (!WORKER() || S.whAt > Date.now() - 10 * 60e3) return S.wh;
+  S.whAt = Date.now();
+  try {
+    const r = await within(fetch(WORKER() + "/health", { cache: "no-store" }), 5000, "timeout");
+    if (r.ok) { const j = await r.json(); S.wh = { ok: !!j.ok, key: String(j.key || ""), keyOk: !!j.keyOk, version: String(j.version || "") }; try { localStorage.setItem("compass-wh", JSON.stringify(S.wh)); } catch (e) {} }
+    else S.wh = S.wh || { ok: false, old: r.status === 404 };   // an older Worker has no /health
+  } catch (e) {}
+  if (S.wh && S.wh.keyOk === false && S.wh.key && !S.whLogged) { S.whLogged = true; logError("Reminders Worker key pair mismatch", (S.wh.key || "").slice(0, 12)); }
+  if (S.wh && S.wh.keyOk && S.wh.key !== VAPID() && !S.whLogged) { S.whLogged = true; logError("Reminders Worker signs with a different key than firebase-config.js", S.wh.key.slice(0, 12) + " vs " + VAPID().slice(0, 12)); }
+  return S.wh;
+}
+const b64uOf = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+/* this device's push address, made with the key in use; one made with another key (or `force`) is replaced */
+async function pushSub(reg, { force = false, ask = true } = {}) {
+  await workerHealth();
+  const key = pushKey(); let sub = await reg.pushManager.getSubscription();
+  const had = sub && sub.options && sub.options.applicationServerKey ? b64uOf(sub.options.applicationServerKey) : null;
+  if (sub && (force || (had && had !== key))) { await sub.unsubscribe().catch(() => {}); sub = null; }
+  if (!sub && ask) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(key) });
+  return sub;
+}
 function b64uBytes(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; const b = atob(s), o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; }
 /* Reminders reach every device you turned them on for: each one keeps its own push address in subs[device].
    (One shared address meant whichever device opened Compass last took the reminders, e.g. a laptop silently
@@ -1905,8 +1932,7 @@ async function loadNotify() {
   if (!n.on && !n.optOut && ntCanAsk() && Notification.permission === "granted") { await ntEnable(true); return; }
   if (n.on && pushCapable() && Notification.permission === "granted" && !(n.lost || {})[DEVICE]) {
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js"); let sub = await reg.pushManager.getSubscription();
-      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) }).catch(() => null);   // Safari may want a tap for this: then the card below asks
+      const reg = await navigator.serviceWorker.register("/sw.js"); let sub = await pushSub(reg).catch(() => null);   // Safari may want a tap for this: then the card below asks
       if (!sub) S.ntNeedsTap = true;
       else {
         const mine = (n.subs || {})[DEVICE];
@@ -1947,7 +1973,7 @@ async function ntEnable(quiet) {
   S.ntBusy = true; render();
   try {
     const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
-    const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
+    const sub = await pushSub(reg);
     const n = S.nt || {}, eve = n.eve === undefined ? defaultEve() : n.eve || defaultEve(), rev = n.rev === undefined ? "18:00" : n.rev || "18:00";
     await ntSave({ on: true, optOut: false, sub: sub.toJSON(), subs: { [DEVICE]: subEntry(sub) }, lost: { [DEVICE]: FB.deleteField() }, tz: myTz(), eve, rev, nextEve: nextLocal(eve), nextRev: nextLocal(rev, Date.now(), 6), last: todayKey(), ign: 0, revDone: reviewedMonday() });
     S.ntNeedsTap = false;
@@ -1956,15 +1982,15 @@ async function ntEnable(quiet) {
   S.ntBusy = false; render();
 }
 /* add this device, or reconnect it: a fresh push address (an old one the push service dropped can't be revived) */
-async function ntFix() {
+async function ntFix(force) {
   if (!pushCapable()) return;
   const perm = await Notification.requestPermission();
   if (perm !== "granted") { S.ntBlocked = perm === "denied"; render(); return; }
   S.ntBusy = true; render();
   try {
     const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
-    const old = await reg.pushManager.getSubscription(); if (old && (((S.nt || {}).lost || {})[DEVICE] || !old.endpoint)) await old.unsubscribe().catch(() => {});
-    const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uBytes(VAPID()) });
+    const old = await reg.pushManager.getSubscription();
+    const sub = await pushSub(reg, { force: !!force || !!(old && (((S.nt || {}).lost || {})[DEVICE] || !old.endpoint)) });
     await ntSave({ on: true, optOut: false, sub: sub.toJSON(), subs: { [DEVICE]: subEntry(sub) }, lost: { [DEVICE]: FB.deleteField() } });
     S.ntNeedsTap = false; toast("Reminders reach this device again");
   } catch (e) { console.warn(e); toast("Couldn't reconnect. Check that notifications are allowed for Compass, then try again."); }
@@ -2004,14 +2030,14 @@ async function ntTest() {
 async function ntLocalTest() {
   try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) await reg.showNotification("Psst, it's your compass", { body: "I can't point north if you don't tell me where you went today. (Just a test.)", tag: "compass-test", icon: "/icons/icon-192.png" }); else toast("Turn reminders on first."); } catch (e) { toast("Your browser blocked the test."); }
 }
-const PUSH_WHY = { BadJwtToken: "the reminders service's signature was refused", VapidPkHashMismatch: "the reminders service uses a different key than this device signed up with", BadWebPushTopic: "a header was malformed", PayloadTooLarge: "the message was too long", TooManyRequests: "too many in a row; it'll ease off", gone: "this device's address expired (reconnect it)" };
+const PUSH_WHY = { BadJwtToken: "the reminders service's signature was refused", VapidPkHashMismatch: "this device signed up with a different key than the reminders service uses (Reconnect fixes it)", BadWebPushTopic: "a header was malformed", PayloadTooLarge: "the message was too long", TooManyRequests: "too many in a row; it'll ease off", gone: "this device's address expired (reconnect it)" };
 function ntTestResult() {
   const t = S.ntTest; if (!t) return "";
   if (t.busy) return `<div class="nttest"><span class="thinking"><i></i><i></i><i></i></span><span>Sending a real test through ${isIOS() ? "Apple" : "the push service"}… usually under a minute.</span></div>`;
   if (t.none) return `<div class="nttest bad"><b>No answer from the reminders service</b><div class="hint">It may be paused or running an older version. If you look after this Compass, redeploy the Worker (<code>cd worker &amp;&amp; npx wrangler deploy</code>).</div></div>`;
   const res = (t.res && t.res.res) || [];
   if (!res.length) return `<div class="nttest bad"><b>No device to send to</b><div class="hint">Turn reminders on for this device below.</div></div>`;
-  return `<div class="nttest"><b>${res.every(r => r.ok) ? "Sent ✓" : "Some didn't go through"}</b><ul>${res.map(r => `<li class="${r.ok ? "ok" : "bad"}">${esc(r.dev || "A device")}${r.d === DEVICE ? " (this one)" : ""}: ${r.ok ? "accepted by the push service" : `refused${r.r ? " — " + esc(PUSH_WHY[r.r] || r.r) : r.s ? ` (${r.s})` : ""}`}</li>`).join("")}</ul>${res.some(r => r.ok) ? `<div class="hint">Accepted means it's on its way; it should show within seconds. Nothing on an iPhone? Check Settings → Notifications → Compass, and that Focus isn't hiding it.</div>` : ""}</div>`;
+  return `<div class="nttest"><b>${res.every(r => r.ok) ? "Sent ✓" : "Some didn't go through"}</b><ul>${res.map(r => `<li class="${r.ok ? "ok" : "bad"}">${esc(r.dev || "A device")}${r.d === DEVICE ? " (this one)" : ""}: ${r.ok ? "accepted by the push service" : `refused${r.r ? " — " + esc(PUSH_WHY[r.r] || r.r) : r.s ? ` (${r.s})` : ""}`}</li>`).join("")}</ul>${res.some(r => !r.ok && r.d === DEVICE && r.r !== "TooManyRequests") ? `<div class="row" style="justify-content:flex-start;margin:6px 0"><button class="btn small primary" data-act="ntFix" data-force="1" ${S.ntBusy ? "disabled" : ""}>Reconnect this device</button><span class="hint">Then send another test.</span></div>` : res.some(r => !r.ok && r.r === "VapidPkHashMismatch") ? `<div class="hint">Open Compass on that device once: it reconnects itself.</div>` : ""}${res.some(r => r.ok) ? `<div class="hint">Accepted means it's on its way; it should show within seconds. Nothing on an iPhone? Check Settings → Notifications → Compass, and that Focus isn't hiding it.</div>` : ""}</div>`;
 }
 /* habit fade: once checking in is steady, offer to drop the evening nudge (reminders help repetition, not habits) */
 function activeDays(n = 28) {
@@ -2650,6 +2676,24 @@ function parseQuick(raw, opts = {}) {
 }
 const tstrNow = () => { const d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); };
 const cleanLine = l => l.replace(/^\s*(?:[-*•·–—>]|\d+[.)]|\[[ xX]?\]|☐|☑)\s*/, "").trim();
+/* "@priya": give the task to someone in a shared list. In a shared list, its people; elsewhere, anyone you share a
+   list with (the task then goes to that list). Matches a first name or a full name, or the start of one. */
+const listPeople = lid => { const m = listMeta(lid); return m && isSharedList(m) ? (m.members || []).map(u => ({ u, n: ((m.people || {})[u] || {}).n || "Someone", lid })) : []; };
+function sharedPeople(lid) {
+  if (listPeople(lid).length) return listPeople(lid);
+  const seen = new Set(), out = [];
+  listsArr().filter(l => isSharedList(l)).forEach(l => listPeople(l.id).forEach(p => { if (!seen.has(p.u)) { seen.add(p.u); out.push(p); } }));
+  return out;
+}
+const AT_RX = /(^|\s)@([\p{L}\p{N}_.'-]{1,40})(?=[\s,.;:!?)]|$)/u;
+function mentionIn(text, lid) {
+  const m = AT_RX.exec(text); if (!m) return null;
+  const tok = m[2].toLowerCase().replace(/[._'-]/g, ""), people = sharedPeople(lid);
+  const keys = p => [firstName(p.n).toLowerCase().replace(/[._'-]/g, ""), p.n.toLowerCase().replace(/[\s._'-]/g, "")];
+  const p = tok === "me" ? people.find(x => x.u === ST.uid) : people.find(x => keys(x).includes(tok)) || people.find(x => keys(x).some(k => k.startsWith(tok)));
+  if (!p) return null;
+  return { who: p.u, lid: p.lid, name: p.u === ST.uid ? "You" : firstName(p.n), t: (text.slice(0, m.index) + m[1] + text.slice(m.index + m[0].length)).replace(/\s+/g, " ").trim() };
+}
 /** add one or more lines; returns [{lid,id}] */
 function quickAdd(text, ctx = {}) {
   const lines = String(text || "").split(/\n+/).map(cleanLine).filter(Boolean);
@@ -2659,13 +2703,17 @@ function quickAdd(text, ctx = {}) {
     if (!q.t) continue;
     let lid = q.lid || ctx.lid || inboxId();
     if (q.newList) lid = createList(q.newList);
-    const f = { t: q.t };
+    const at = q.newList ? null : mentionIn(q.t, lid);
+    if (at && at.lid !== lid && !q.lid && !ctx.lid) lid = at.lid;   // the person is in another list: the task goes there
+    const f = { t: at && at.lid === lid && at.t ? at.t : q.t };
+    if (at && at.lid === lid) f.who = at.who;
     if (q.due) f.due = q.due; else if (ctx.due) f.due = ctx.due;
     if (q.tm) f.tm = q.tm;
     if (q.rep) f.rep = q.rep;
     if (q.focus || ctx.focus) f.wk = thisWk();
-    const v = guessValue(q.t); if (v) f.v = v;
-    added.push({ lid, id: addItem(lid, f) });
+    const v = guessValue(f.t); if (v) f.v = v;
+    const id = addItem(lid, f); added.push({ lid, id });
+    if (f.who && f.who !== ST.uid) ping(f.who, "assign", { l: lid, ln: listName(lid), t: f.t, i: id });
   }
   return added;
 }
@@ -2820,8 +2868,8 @@ function lnav() {
 function qaddBox() {
   const q = S.qDraft ? parseQuick(S.qDraft, { ignore: S.qIgnore }) : { chips: [] };
   const tv = tvState(), here = L.meta[tv] ? `in ${esc(L.meta[tv].name)}` : tv === "upcoming" ? "" : "";
-  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}… try “call mom fri 6pm”" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="btn primary small" data-act="capAdd" data-src="qAdd">Add</button></div>
-    <div class="qchips" id="qChips" aria-live="polite">${q.chips.map(c => `<button class="qchip ${c.k}" data-act="qIgnore" data-k="${c.k}" aria-label="${esc(c.label)}: tap to keep it as text">${esc(c.label)}<span aria-hidden="true">×</span></button>`).join("")}${S.qIgnore && S.qIgnore.size ? `<button class="qchip off" data-act="qIgnoreReset">Read dates again</button>` : ""}</div>`;
+  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}… try ${L.meta[tv] && isSharedList(L.meta[tv]) ? "“book tickets fri @name”" : "“call mom fri 6pm”"}" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="btn primary small" data-act="capAdd" data-src="qAdd">Add</button></div>
+    <div class="qchips" id="qChips" aria-live="polite">${qChipsHtml()}</div>`;
 }
 function lmeta(it, opts = {}) {
   const tk = todayKey(), m = listMeta(it.lid), out = [];
@@ -2896,7 +2944,7 @@ function vList(lid) {
   const unsorted = isInbox(lid) ? inboxItems().length : 0;
   const shared = isSharedList(m), val = (settings().listV || {})[lid];
   const head = isInbox(lid) ? `<div class="lhead"><div><h3 class="lname">Inbox</h3><span class="hint">Everything you add without a list lands here.</span></div>${unsorted >= 2 ? `<button class="btn small primary" data-act="sortStart">Sort ${unsorted}</button>` : ""}</div>`
-    : `<div class="lhead"><div><h3 class="lname">${esc(m.name)}</h3><span class="hint">${shared ? `Shared with ${esc((m.members || []).filter(u => u !== ST.uid).map(u => firstName(((m.people || {})[u] || {}).n)).join(", "))}` : "Only you"}${val ? ` · ${esc(valueName(val))}` : ""}</span></div>
+    : `<div class="lhead"><div><h3 class="lname">${esc(m.name)}</h3><span class="hint">${shared ? `Shared with ${esc((m.members || []).filter(u => u !== ST.uid).map(u => firstName(((m.people || {})[u] || {}).n)).join(", "))} · type @name to give someone a task` : "Only you"}${val ? ` · ${esc(valueName(val))}` : ""}</span></div>
       <div class="lhact">${avatars(m)}<button class="btn small" data-act="lShare" data-l="${esc(lid)}">${shared ? "People" : "Share"}</button><button class="btn small quiet" data-act="lEdit" data-l="${esc(lid)}" aria-label="List settings">⋯</button></div></div>`;
   return `${head}
     ${open.length ? card(open.map(i => lrow(i))) : `<div class="tempty"><b>${isInbox(lid) ? "A clear head starts here." : "Nothing here yet."}</b><span>${isInbox(lid) ? "Write down whatever's circling: errands, ideas, things to buy. Give each a day or a list when you're ready." : shared ? "Add the first thing. Everyone in the list sees it straight away." : "Add the first thing above."}</span></div>`}
@@ -3067,13 +3115,17 @@ function todayTasks(id) {
 }
 /* where a quick-add lands: the list you're looking at, or the day you tapped + on */
 const qCtx = () => { const tv = tvState(), c = {}; if (L.meta[tv]) c.lid = tv; if (S.qDue) c.due = S.qDue; else if (tv === "today") c.due = todayKey(); return c; };
-function refreshChips() {
-  const box = $("#qChips"); if (!box) return;
-  const f = $("#qAdd"); S.qDraft = f ? f.value : S.qDraft;
+function qChipsHtml() {
   const q = S.qDraft ? parseQuick(S.qDraft, { ignore: S.qIgnore || new Set() }) : { chips: [] };
-  const ctx = qCtx(), extra = !q.due && ctx.due ? [{ k: "due ctx", label: fmtWhen(ctx.due) }] : [];
-  box.innerHTML = extra.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join("") + q.chips.map(c => `<button class="qchip ${c.k}" data-act="qIgnore" data-k="${c.k}" aria-label="${esc(c.label)}: tap to keep it as text">${esc(c.label)}<span aria-hidden="true">×</span></button>`).join("") + (S.qIgnore && S.qIgnore.size ? `<button class="qchip off" data-act="qIgnoreReset">Read dates again</button>` : "");
+  const ctx = qCtx(), extra = S.qDraft && !q.due && ctx.due ? [{ k: "due ctx", label: fmtWhen(ctx.due) }] : [];
+  const lid = q.lid || ctx.lid || inboxId(), at = S.qDraft ? mentionIn(q.t || "", lid) : null;
+  if (at) extra.push({ k: "who", label: `→ ${at.name}${at.lid !== lid ? ` · ${listName(at.lid)}` : ""}` });
+  /* typing "@…": the people you could give it to */
+  const part = /(^|\s)@([^\s@]*)$/.exec(S.qDraft || ""), pp = part ? sharedPeople(lid).filter(p => p.u !== ST.uid && firstName(p.n).toLowerCase().startsWith(part[2].toLowerCase())) : [];
+  const sugg = part ? (pp.length ? pp.slice(0, 6).map(p => `<button class="qchip who sugg" data-act="qAt" data-n="${esc(firstName(p.n))}">@${esc(firstName(p.n))}${listPeople(lid).length ? "" : `<small> ${esc(listName(p.lid))}</small>`}</button>`).join("") : `<span class="qchip off">${sharedPeople(lid).length ? "No one by that name here" : "Share a list to give tasks to people"}</span>`) : "";
+  return sugg + extra.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join("") + q.chips.map(c => `<button class="qchip ${c.k}" data-act="qIgnore" data-k="${c.k}" aria-label="${esc(c.label)}: tap to keep it as text">${esc(c.label)}<span aria-hidden="true">×</span></button>`).join("") + (S.qIgnore && S.qIgnore.size ? `<button class="qchip off" data-act="qIgnoreReset">Read dates again</button>` : "");
 }
+function refreshChips() { const box = $("#qChips"); if (!box) return; const f = $("#qAdd"); S.qDraft = f ? f.value : S.qDraft; box.innerHTML = qChipsHtml(); }
 function capBox(id, placeholder) {
   return `<div class="capbox"><textarea id="${id}" rows="3" placeholder="${esc(placeholder || "Dump everything on your mind. One thing per line; paste a whole list if you like.")}" aria-label="Capture thoughts"></textarea>
     <div class="row"><span class="hint">Ctrl/⌘ + Enter to add</span><button class="btn primary small" data-act="capAdd" data-src="${id}">Add to Inbox</button></div></div>`;
@@ -4252,11 +4304,11 @@ function icsSheet() {
         ${android ? googleBtn(true) : appleFirst ? appleBtn(true) + googleBtn(false) : googleBtn(true) + appleBtn(false)}
         <button class="btn quiet" data-act="calCopy">Copy link</button></div>
       ${android ? `<p class="hint" style="margin:0">Using another calendar app? Copy the link and add it there as a subscription (“Add calendar from URL”).</p>` : ""}
-      <p class="hint" style="margin:0">Changes in Compass reach your calendar by themselves: Apple checks every few hours, Google about once or twice a day (Google decides). Tasks you've given a time (in the next two weeks) come too. Anyone with this link can see your plan's names and times, never your notes or journal.</p>
+      <p class="hint" style="margin:0"><b>Add it once; it stays.</b> Weekly floors repeat every week on their own, with no end date, so there's nothing to redo next week. When you change your plan in Compass, your calendar catches up by itself: Apple checks every few hours, Google about once or twice a day (Google decides). Tasks you've given a time (in the next two weeks) come too. Anyone with this link can see your plan's names and times, never your notes or journal.</p>
       <div class="feedmgr">${S.confirm === "calReset" ? `<span>Make a new link? The old one stops working, so re-add it in your calendar.</span><button class="btn small danger" data-act="calReset">Make new link</button><button class="btn small quiet" data-act="calNo">Cancel</button>`
         : S.confirm === "calOff" ? `<span>Turn the link off? Your calendar stops updating and Compass events stay as they are.</span><button class="btn small danger" data-act="calOff">Turn off</button><button class="btn small quiet" data-act="calNo">Cancel</button>`
         : `<button class="textlink" data-act="calAsk" data-v="calReset">Shared it by mistake? Make a new link</button><button class="textlink" data-act="calAsk" data-v="calOff">Turn off</button>`}</div>`
-    : `<p class="hint" style="margin:0">Your calendar subscribes to a private link and updates by itself whenever your plan changes. No re-importing.</p>
+    : `<p class="hint" style="margin:0">Your calendar subscribes once to a private link and keeps itself up to date from then on: repeating floors every week, plus any change you make here. No re-importing, ever.</p>
       <button class="btn primary" data-act="calMake" ${S.calBusy ? "disabled" : ""}>${S.calBusy ? "Making your link…" : "Get my calendar link"}</button>`;
   return `<div class="in"><div class="grab"></div><h2 style="margin:0">Add your plan to a calendar</h2>
     <div class="card pad feedcard"><b>Live calendar <span class="tag good">Stays in sync</span></b>${linked}</div>
@@ -5526,6 +5578,7 @@ document.addEventListener("click", e => {
     }
     case "qIgnore": { S.qIgnore = S.qIgnore || new Set(); S.qIgnore.add(b.dataset.k); refreshChips(); return; }
     case "qIgnoreReset": S.qIgnore = new Set(); refreshChips(); return;
+    case "qAt": { const f = $("#qAdd"); if (!f) return; f.value = f.value.replace(/@[^\s@]*$/, "@" + b.dataset.n + " "); S.qDraft = f.value; f.focus(); f.setSelectionRange(f.value.length, f.value.length); refreshChips(); return; }
     case "qOn": { S.qDue = b.dataset.due || null; const f = $("#qAdd"); if (f) { f.focus(); f.scrollIntoView({ block: "center" }); } toast(`New task for ${fmtWhen(S.qDue)}: type it above`); return; }
     case "tv": setTv(b.dataset.v); S.qDue = null; window.scrollTo(0, 0); break;
     case "sortStart": startSort(); break;
@@ -5801,7 +5854,7 @@ document.addEventListener("click", e => {
     case "ntOff": ntDisable(); return;
     case "ntTest": ntTest(); return;
     case "ntLocal": ntLocalTest(); return;
-    case "ntFix": ntFix(); return;
+    case "ntFix": ntFix(b.dataset.force === "1").then(() => { if (b.dataset.force === "1") S.ntTest = null; render(); }); return;
     case "ntDrop": ntDropDevice(b.dataset.k); return;
     case "ntToggle": { const k = b.dataset.k, n = S.nt || {}; ntSet(k, n[k] ? "" : (k === "eve" ? defaultEve() : "18:00")); return; }
     case "cSec": { const k = b.dataset.k, o = cOpen(); o.has(k) ? o.delete(k) : o.add(k); try { localStorage.setItem(CSEC_KEY, JSON.stringify([...o])); } catch (e) {} render(); const sec = document.getElementById("csec-" + k); if (sec && o.has(k) && sec.getBoundingClientRect().top < 70) sec.scrollIntoView({ block: "start" }); return; }
