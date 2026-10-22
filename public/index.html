@@ -433,11 +433,10 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .iacts{display:flex;flex-wrap:wrap;gap:4px 8px;padding-top:6px;border-top:1px solid var(--line)}
 .irow.when{align-items:center}.irow.when input{flex:0 1 200px}
 .imore{border:1px solid var(--line);border-radius:12px;background:var(--bg)}
-.imore>summary{list-style:none;display:flex;flex-direction:column;gap:2px;padding:12px 40px 12px 14px;cursor:pointer;position:relative;font-weight:500;min-height:44px}
-.imore>summary::-webkit-details-marker{display:none}
-.imore>summary::after{content:"";position:absolute;right:16px;top:18px;width:8px;height:8px;border:solid var(--muted);border-width:0 2px 2px 0;transform:rotate(45deg);transition:transform .2s}
-.imore[open]>summary::after{transform:rotate(-135deg);top:22px}
-.imore>summary small{font-weight:400;color:var(--muted);font-size:13px}
+.imoresum{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:12px 40px 12px 14px;position:relative;font-weight:500;min-height:44px;border-radius:12px}
+.imoresum::after{content:"";position:absolute;right:16px;top:18px;width:8px;height:8px;border:solid var(--muted);border-width:0 2px 2px 0;transform:rotate(45deg);transition:transform .2s}
+.imore.open>.imoresum::after{transform:rotate(-135deg);top:22px}
+.imoresum small{font-weight:400;color:var(--muted);font-size:13px}
 .imorein{display:flex;flex-direction:column;gap:12px;padding:0 14px 14px}
 .imorein .fl{flex:1 1 140px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .ifoot{margin:0}
@@ -3012,8 +3011,8 @@ function rItemSheet() {
     <div class="ifield"><button class="ifocus${it.wk === thisWk() ? " on" : ""}" data-act="iFocus" ${L_()} aria-pressed="${it.wk === thisWk()}"><b>${it.wk === thisWk() ? "★ One of this week's three" : "☆ Make it one of this week's three"}</b><small>${weekErrands().length} of ${FOCUS_CAP} picked</small></button></div>
     <div class="ifield"><span class="flabel">Serves</span><div class="chips">${vals.map(v => `<button class="chip ${it.v === v.id ? "sel" : ""}" data-act="iVal" data-v="${esc(v.id)}"><i class="vdot" style="background:${valColor(v.id)}" aria-hidden="true"></i>${esc(v.name)}</button>`).join("")}</div></div>
     ${shared ? `<div class="ifield"><span class="flabel">Who's doing it</span><div class="chips"><button class="chip ${it.who ? "" : "sel"}" data-act="iWho" data-v="">Anyone</button>${(m.members || []).map(u => `<button class="chip ${it.who === u ? "sel" : ""}" data-act="iWho" data-v="${esc(u)}">${u === ST.uid ? "Me" : esc(firstName(((m.people || {})[u] || {}).n))}</button>`).join("")}</div></div>` : ""}
-    <details class="imore" id="iMore" ${moreOpen ? "open" : ""}><summary><span>Time, repeat, list${goalOn ? ", goal" : ""} and steps</span>${moreSet.length ? `<small>${esc(moreSet.join(" · "))}</small>` : ""}</summary>
-      <div class="imorein">
+    <div class="imore${moreOpen ? " open" : ""}" id="iMore"><button class="imoresum" data-act="iMoreT" aria-expanded="${moreOpen}" aria-controls="iMoreIn"><span>Time, repeat, list${goalOn ? ", goal" : ""} and steps</span>${moreSet.length ? `<small>${esc(moreSet.join(" · "))}</small>` : ""}</button>
+      ${moreOpen ? `<div class="imorein" id="iMoreIn">
         <div class="irow"><div class="fl"><label class="flabel" for="iTime">Time</label><input type="time" id="iTime" data-iv="tm" value="${esc(it.tm || "")}" ${it.due ? "" : "disabled"}></div>
           <div class="fl"><label class="flabel" for="iRep">Repeat</label><select id="iRep" data-iv="rep"><option value="">Doesn't repeat</option>${["day", "wkday", "week", "month", "year"].map(u => `<option value="${u}" ${it.rep && it.rep.u === u ? "selected" : ""}>${REP_LABEL[u]}</option>`).join("")}</select></div></div>
         ${it.due ? "" : `<p class="hint" style="margin:0">Give it a day to add a time.</p>`}
@@ -3023,7 +3022,7 @@ function rItemSheet() {
         <div class="ifield"><span class="flabel">Steps</span>
           <div class="isubs">${subs.map(x => `<div class="isub"><button class="tick${x.d ? " on" : ""}" data-act="iSubTick" data-k="${esc(x.id)}" aria-label="${x.d ? "Not done" : "Done"}: ${esc(x.t)}"></button><span class="${x.d ? "dn" : ""}">${esc(x.t)}</span><button class="x" data-act="iSubDel" data-k="${esc(x.id)}" aria-label="Remove step">×</button></div>`).join("")}
           <form class="isubadd" id="iSubForm"><input type="text" id="iSubIn" maxlength="200" placeholder="${subs.length ? "Add a step" : "Big? Break it into a first small step"}" aria-label="Add a step"><button class="btn small" type="submit">Add</button></form></div></div>
-      </div></details>
+      </div>` : ""}</div>
     <div class="iacts">
       ${it.open ? `<button class="btn quiet danger" data-act="iLet" ${L_()} data-close="1">Let it go</button>` : `<button class="btn quiet danger" data-act="iDel" ${L_()} data-close="1">Delete for good</button>`}
       ${it.st === "some" ? `<button class="btn quiet" data-act="iSome" ${L_()} data-v="0">Bring back from Someday</button>` : `<button class="btn quiet" data-act="iSome" ${L_()} data-v="1">Someday</button>`}
@@ -5680,6 +5679,7 @@ document.addEventListener("click", e => {
     case "ntSocial": ntSave({ social: !((S.nt || {}).social !== false) }); render(); return;
     case "slipBreak": { const it = findItem(b.dataset.l, b.dataset.id); if (!it) return; updItem(it.lid, it.id, { nz: it.moves || 0 }); S.sheet = { type: "item", l: it.lid, id: it.id, more: true }; render(); setTimeout(() => { const f = $("#iSubIn"); if (f) { f.focus(); f.scrollIntoView({ block: "center" }); } }, 60); return; }
     case "slipKeep": { const it = findItem(b.dataset.l, b.dataset.id); if (!it) return; updItem(it.lid, it.id, { nz: it.moves || 0 }); toast("Kept as is. Compass won't ask again unless it keeps moving."); break; }
+    case "iMoreT": { if (!S.sheet || S.sheet.type !== "item") return; const el = $("#iMore"); S.sheet.more = !(el && el.classList.contains("open")); renderSheet(); return; }
     case "iGoal": { const it = findItem(S.sheet.l, S.sheet.id); if (!it) return; updItem(it.lid, it.id, { g: b.dataset.v || null }); renderSheet(); render(); return; }
     case "gNew": { const v = coreIds()[0] || (valueList()[0] || {}).id || ""; S.sheet = { type: "goalEdit", draft: { id: "g-" + uidGen() + uidGen().slice(0, 3), t: "", v, when: "", startNext: false } }; break; }
     case "gEdit": { const g = goalById(b.dataset.id); if (!g) return; S.sheet = { type: "goalEdit", edit: true, draft: clone(g) }; break; }
@@ -5964,9 +5964,6 @@ function updateOb() {
 ["dragenter", "dragover"].forEach(ev => document.addEventListener(ev, e => { const z = e.target.closest && e.target.closest("#impDrop"); if (!z) return; e.preventDefault(); z.classList.add("over"); }));
 document.addEventListener("dragleave", e => { const z = e.target.closest && e.target.closest("#impDrop"); if (z && !z.contains(e.relatedTarget)) z.classList.remove("over"); });
 document.addEventListener("drop", e => { const z = e.target.closest && e.target.closest("#impDrop"); if (!z) return; e.preventDefault(); z.classList.remove("over"); if (e.dataTransfer && e.dataTransfer.files.length) impAddFiles([...e.dataTransfer.files]); });
-/* the task sheet's fold: remember it on the tap itself, so a redraw that lands before the browser's toggle event keeps it open */
-document.addEventListener("click", e => { const sm = e.target.closest && e.target.closest("#iMore > summary"); if (sm && S.sheet && S.sheet.type === "item") S.sheet.more = !sm.parentElement.open; }, true);
-document.addEventListener("toggle", e => { if (e.target && e.target.id === "iMore" && S.sheet && S.sheet.type === "item") S.sheet.more = e.target.open; }, true);
 document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
   if (f.id === "authForm") { emailAuth(); return; }

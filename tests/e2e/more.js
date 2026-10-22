@@ -31,7 +31,7 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   await tap('[data-act=tv][data-v=today]');
   ok('…unless it moves three more times', await p.locator('.slipcard').count() === 1 && /moved 6 times/.test(await text('.slipcard')));
   await tap('.slipcard [data-act=slipBreak]'); await settle(300);
-  ok('"Break off a first step" opens the task with the step box ready', await p.locator('.sheet #iMore[open] #iSubIn').count() === 1 && await p.evaluate(() => document.activeElement && document.activeElement.id) === 'iSubIn' && (await item('Renew passport')).nz === 6);
+  ok('"Break off a first step" opens the task with the step box ready', await p.locator('.sheet #iMore.open #iSubIn').count() === 1 && await p.evaluate(() => document.activeElement && document.activeElement.id) === 'iSubIn' && (await item('Renew passport')).nz === 6);
   await p.locator('#iSubIn').fill('Find the old passport'); await p.keyboard.press('Enter'); await settle();
   ok('…and the first step is saved', ((await item('Renew passport')).sub || []).some(x => x.t === 'Find the old passport'));
   await tap('.sheet [data-act=closeSheet] >> nth=0');
@@ -62,7 +62,7 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   await tap('[data-act=tv][data-v=inbox]');
   ok('a step shows which goal it moves', /◎ Run 10 km/.test(await text('.lrow:has-text("Book a 5 km run")')));
   await tap('.lrow:has-text("Fix the bike") [data-act=iOpen]');
-  await tap('.sheet #iMore > summary');
+  await tap('.sheet #iMore .imoresum');
   ok('any task can be tied to a goal', await p.locator('.sheet [data-act=iGoal]').count() === 2);
   await tap('.sheet [data-act=iGoal]:has-text("Run 10 km")'); await settle(300);
   ok('…and is', (await item('Fix the bike')).g === g.id);

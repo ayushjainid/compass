@@ -54,8 +54,8 @@ const day = n => { const d = new Date(); d.setDate(d.getDate() + n); return dk(d
   if (!(await p.locator('.sheet #iTitle').count())) { await p.screenshot({ path: `${S}/lists-dbg.png` }); console.log('DBG', (await p.locator('#sheetRoot').innerHTML()).slice(0, 200), (await text('.lview')).slice(0, 300)); }
   ok('tapping a task opens it', await p.locator('.sheet #iTitle').count() === 1, errs);
   await p.locator('#iTitle').fill('Sourdough bread'); await p.locator('#iNote').click(); await p.locator('#iNote').fill('From the corner bakery');
-  ok('the sheet leads with the essentials; time, repeat, list and steps are folded', await p.locator('.sheet #iMore:not([open])').count() === 1 && await p.locator('.sheet [data-act=iVal]').count() > 0);
-  await tap('.sheet #iMore > summary');
+  ok('the sheet leads with the essentials; time, repeat, list and steps are folded', await p.locator('.sheet #iMore:not(.open)').count() === 1 && await p.locator('.sheet [data-act=iVal]').count() > 0);
+  await tap('.sheet #iMore .imoresum');
   await p.locator('#iSubIn').fill('Check opening hours'); await p.locator('#iSubIn').press('Enter'); await p.waitForTimeout(300);
   await tap('.sheet [data-act=iFocus]');
   await tap('.sheet [data-act=closeSheet] >> nth=0').catch(() => p.keyboard.press('Escape')); await p.waitForTimeout(500);
