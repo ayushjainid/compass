@@ -8,7 +8,7 @@ const say = m => console.log(`::error title=${NAME} fxdebug::${String(m).replace
   p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errs.push('console: ' + m.text()); });
   await onboard(pg);
   await tap('[data-act=tab][data-t=tasks]'); await p.waitForTimeout(600);
-  await p.locator('#qAdd').fill('Buy bread #groceries'); await p.keyboard.press('Enter'); await p.waitForTimeout(600);
+  await p.locator('#qAdd').fill('Buy bread'); await p.keyboard.press('Enter'); await p.waitForTimeout(600);
   await tap('[data-act=tv][data-v=inbox]').catch(() => {});
   await tap('.lrow .ltx:has-text("bread")').catch(e => say('open: ' + e.message));
   await p.waitForTimeout(400);
