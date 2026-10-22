@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T07:00:32.119080Z",
+  "title": "Design System: Compass",
+  "extensions": {
+    "colorMeta": {
+      "harbor-navy": {
+        "role": "primary",
+        "displayName": "Harbor Navy",
+        "canonical": "#23466F",
+        "dark": "#93B3DC"
+      },
+      "brass": {
+        "role": "secondary",
+        "displayName": "Brass",
+        "canonical": "#895D18",
+        "dark": "#D8A75C"
+      },
+      "moss": {
+        "role": "tertiary",
+        "displayName": "Moss",
+        "canonical": "#2B714F",
+        "dark": "#72C69D"
+      },
+      "amber": {
+        "role": "tertiary",
+        "displayName": "Amber",
+        "canonical": "#95570C",
+        "dark": "#E3A65C"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#F3F5F2",
+        "dark": "#101514"
+      },
+      "leaf": {
+        "role": "neutral",
+        "displayName": "Leaf",
+        "canonical": "#FFFFFF",
+        "dark": "#191F1E"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#17201E",
+        "dark": "#E7ECEA"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#D9DFDB",
+        "dark": "#2D3533"
+      }
+    },
+    "shadows": [
+      {
+        "name": "leaf-rest",
+        "value": "0 1px 2px rgba(18,26,24,.04), 0 2px 8px -2px rgba(18,26,24,.06)",
+        "purpose": "Cards and sections at rest (light theme)."
+      },
+      {
+        "name": "control-thumb",
+        "value": "0 1px 2px rgba(0,0,0,.08)",
+        "purpose": "Selected segment, switch knob."
+      },
+      {
+        "name": "float",
+        "value": "0 10px 24px -8px rgba(10,20,30,.45)",
+        "purpose": "Floating add button."
+      }
+    ],
+    "motion": [
+      {
+        "name": "sheet-up",
+        "value": ".28s cubic-bezier(.2,.9,.3,1)",
+        "purpose": "Bottom sheets rising."
+      },
+      {
+        "name": "pop",
+        "value": ".28s cubic-bezier(.3,1.7,.5,1)",
+        "purpose": "A checkbox being ticked."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "420px"
+      },
+      {
+        "name": "tablet",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action on a screen.",
+      "html": "<button class=\"ds-btn-primary\">Start this goal</button>",
+      "css": ".ds-btn-primary{background:var(--accent,#23466F);color:var(--on-accent,#fff);border:1px solid var(--accent,#23466F);border-radius:10px;padding:9px 14px;min-height:40px;font:500 15px 'IBM Plex Sans',sans-serif}.ds-btn-primary:focus-visible{outline:2px solid #23466F;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other action.",
+      "html": "<button class=\"ds-btn\">Edit</button>",
+      "css": ".ds-btn{background:var(--surface,#fff);color:var(--ink,#17201E);border:1px solid var(--line,#D9DFDB);border-radius:10px;padding:9px 14px;min-height:40px;font:500 15px 'IBM Plex Sans',sans-serif}.ds-btn:focus-visible{outline:2px solid #23466F;outline-offset:2px}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Choices and quick logging.",
+      "html": "<button class=\"ds-chip\">Physical fitness</button> <button class=\"ds-chip ds-sel\">Learning</button>",
+      "css": ".ds-chip{background:#fff;border:1px solid #D9DFDB;border-radius:999px;padding:8px 12px;min-height:40px;font:400 14px 'IBM Plex Sans',sans-serif;color:#17201E;transition:transform .12s}.ds-chip:active{transform:scale(.95)}.ds-chip.ds-sel{background:#23466F;border-color:#23466F;color:#fff}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A leaf on the paper.",
+      "html": "<div class=\"ds-card\">Pay credit card bill</div>",
+      "css": ".ds-card{background:#fff;border:1px solid #D9DFDB;border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(18,26,24,.04),0 2px 8px -2px rgba(18,26,24,.06);font:400 15px/1.45 'IBM Plex Sans',sans-serif;color:#17201E}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Fields inside sheets.",
+      "html": "<input class=\"ds-input\" placeholder=\"Add a note\">",
+      "css": ".ds-input{background:#F3F5F2;border:1px solid #D9DFDB;border-radius:9px;padding:9px 10px;font:400 15px 'IBM Plex Sans',sans-serif;color:#17201E}.ds-input:focus{outline:none;border-color:#23466F;box-shadow:0 0 0 3px #E2E9F3}"
+    },
+    {
+      "name": "Goal track",
+      "kind": "custom",
+      "description": "Twelve weekly marks of a 12-week goal.",
+      "html": "<span class=\"ds-track\"><i class=\"y\"></i><i class=\"h\"></i><i class=\"n\"></i><i class=\"now\"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>",
+      "css": ".ds-track{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;width:240px}.ds-track i{height:8px;border-radius:2px;background:#E9EDEA}.ds-track .y{background:#895D18}.ds-track .h{background:linear-gradient(to top,#895D18 50%,#F4EAD8 50%)}.ds-track .n{background:#D9DFDB}.ds-track .now{box-shadow:0 0 0 1.5px #fff,0 0 0 3px #895D18}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Field Notebook",
+    "keyCharacteristics": [
+      "Cool paper background, white leaves, near-black green-tinted ink.",
+      "Serif (Newsreader) for headings and dates; IBM Plex Sans for everything you read and tap; Plex Mono only for small counts.",
+      "One navy action per screen; brass for focus; moss for done; amber for care.",
+      "Rounded, tactile controls with a small press response; bottom sheets for detail.",
+      "Calm by default: no streaks, no red, no nagging badges."
+    ],
+    "rules": [
+      {
+        "name": "The One Navy Rule",
+        "body": "A screen has at most one filled navy button. Everything else is a secondary, quiet or chip control.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Red Rule",
+        "body": "Compass never uses red for a person's own progress. Missed and overdue are amber; failure is not a state the app shows.",
+        "section": "colors"
+      },
+      {
+        "name": "The Serif Speaks, The Sans Works Rule",
+        "body": "Serif is for names, dates and headings only; never for buttons, inputs or body copy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Leaf Rule",
+        "body": "Resting surfaces are lifted only as far as paper on a desk. Anything that floats higher must be temporary (a sheet, a toast) or the one persistent action (the add button).",
+        "section": "elevation"
+      }
+    ]
+  }
+}
