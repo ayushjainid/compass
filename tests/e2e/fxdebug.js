@@ -1,4 +1,5 @@
 // Diagnostic (temporary): open a task's sheet in the current engine, edit the note, tap the fold, report the state as CI annotations.
+process.env.W = process.env.W || '1280'; process.env.H = process.env.H || '900'; process.env.T = process.env.T || '0';   // the failing variant: desktop, mouse
 const { chromium, NAME } = require('./engine');
 const { newCtx, newPage, onboard, launch } = require('./harness');
 const say = m => console.log(`::error title=${NAME} fxdebug::${String(m).replace(/\n/g, ' | ').slice(0, 900)}`);
