@@ -55,6 +55,7 @@ const day = n => { const d = new Date(); d.setDate(d.getDate() + n); return dk(d
   ok('tapping a task opens it', await p.locator('.sheet #iTitle').count() === 1, errs);
   await p.locator('#iTitle').fill('Sourdough bread'); await p.locator('#iNote').click(); await p.locator('#iNote').fill('From the corner bakery');
   ok('the sheet leads with the essentials; time, repeat, list and steps are folded', await p.locator('.sheet #iMore:not(.open)').count() === 1 && await p.locator('.sheet [data-act=iVal]').count() > 0);
+  await p.locator('#iNote').blur(); await p.waitForTimeout(700);   // the note saves as it loses focus; let that redraw settle, as a person would
   await tap('.sheet #iMore .imoresum');
   await p.locator('#iSubIn').fill('Check opening hours'); await p.locator('#iSubIn').press('Enter'); await p.waitForTimeout(300);
   await tap('.sheet [data-act=iFocus]');
