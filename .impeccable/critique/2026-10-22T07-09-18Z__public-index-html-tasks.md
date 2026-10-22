@@ -8,6 +8,7 @@ p1_count: 3
 target_identity: "file:/home/claude/compass/public/index.html#tasks"
 timestamp: 2026-10-22T07-09-18Z
 slug: public-index-html-tasks
+closed: true
 ---
 Method: dual-agent (A: design review · B: detector + browser)
 
