@@ -31,7 +31,7 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   await tap('[data-act=tv][data-v=today]');
   ok('…unless it moves three more times', await p.locator('.slipcard').count() === 1 && /moved 6 times/.test(await text('.slipcard')));
   await tap('.slipcard [data-act=slipBreak]'); await settle(300);
-  ok('"Break off a first step" opens the task with the step box ready', await p.locator('.sheet #iSubIn').count() === 1 && await p.evaluate(() => document.activeElement && document.activeElement.id) === 'iSubIn' && (await item('Renew passport')).nz === 6);
+  ok('"Break off a first step" opens the task with the step box ready', await p.locator('.sheet #iMore[open] #iSubIn').count() === 1 && await p.evaluate(() => document.activeElement && document.activeElement.id) === 'iSubIn' && (await item('Renew passport')).nz === 6);
   await p.locator('#iSubIn').fill('Find the old passport'); await p.keyboard.press('Enter'); await settle();
   ok('…and the first step is saved', ((await item('Renew passport')).sub || []).some(x => x.t === 'Find the old passport'));
   await tap('.sheet [data-act=closeSheet] >> nth=0');
@@ -62,6 +62,7 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   await tap('[data-act=tv][data-v=inbox]');
   ok('a step shows which goal it moves', /◎ Run 10 km/.test(await text('.lrow:has-text("Book a 5 km run")')));
   await tap('.lrow:has-text("Fix the bike") [data-act=iOpen]');
+  await tap('.sheet #iMore > summary');
   ok('any task can be tied to a goal', await p.locator('.sheet [data-act=iGoal]').count() === 2);
   await tap('.sheet [data-act=iGoal]:has-text("Run 10 km")'); await settle(300);
   ok('…and is', (await item('Fix the bike')).g === g.id);
@@ -112,10 +113,22 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   await onboard(E);
   await E.tap('[data-act=tab][data-t=tasks]'); await E.p.waitForTimeout(1200);
   ok('after 4 pm: "Plan tomorrow" on Tasks → Today', await E.p.locator('#lview .plancard').count() === 1);
+  /* one invitation at a time: with the plan card showing, a slipping task waits */
+  await E.p.locator('#qAdd').fill('Call mum today'); await E.p.keyboard.press('Enter'); await E.p.waitForTimeout(300);
+  await E.p.evaluate(() => { const st = window.__store; for (const k of Object.keys(st)) if (st[k] && st[k].t === 'Call mum') st[k].moves = 3; localStorage.setItem('__mockstore', JSON.stringify(st)); });
+  await E.p.reload(); await E.p.waitForTimeout(1500); await E.tap('[data-act=tab][data-t=tasks]'); await E.tap('[data-act=tv][data-v=today]');
+  ok('one invitation at a time: Plan tomorrow shows, the slipping question waits', await E.p.locator('#lview .plancard').count() === 1 && await E.p.locator('#lview .slipcard').count() === 0);
+  ok('the list comes first, then the invitation', await E.p.evaluate(() => { const r = document.querySelector('#lview .lrow'), c = document.querySelector('#lview .plancard'); return !!r && !!c && r.getBoundingClientRect().top < c.getBoundingClientRect().top; }));
+  ok('today\'s values in one line, and a value dot on the task', /Today serves\s*Deep relationships/.test(await E.text('#lview .serves')) && await E.p.locator('.lrow:has-text("Call mum") .tval .vdot').count() === 1, await E.text('#lview .serves'));
+  ok('no week switcher and no floating + on Tasks', await E.p.locator('#weeknav').isHidden() && await E.p.locator('#fab').isHidden());
+  ok('the tick has a 44px tap area', await E.p.evaluate(() => { const t = document.querySelector('#lview .lrow .tick'), b = getComputedStyle(t, '::before'); return t.offsetWidth + 2 * -parseFloat(b.left) >= 44; }));
+  ok('no coloured stripe on rounded cards', await E.p.evaluate(() => ['.focus', '.plancard'].every(sel => { const e = document.querySelector('#lview ' + sel); if (!e) return true; const c = getComputedStyle(e); return parseFloat(c.borderLeftWidth) <= 1 && parseFloat(c.borderTopWidth) <= 1; })));
   await E.tap('[data-act=tab][data-t=today]');
   ok('…and on Today', await E.p.locator('#main .plancard').count() === 1);
-  await E.tap('#main .plancard [data-act=ptHide]');
-  ok('"Not tonight" hides it', await E.p.locator('.plancard').count() === 0);
+  await E.tap('[data-act=tab][data-t=tasks]'); await E.tap('#lview [data-act=ptHide]');
+  ok('with the plan card dismissed, the slipping question can show', await E.p.locator('#lview .slipcard').count() === 1);
+  await E.tap('[data-act=tab][data-t=today]');
+  ok('"Not tonight" hides it everywhere', await E.p.locator('.plancard').count() === 0);
   ok('no page errors (evening)', E.errs.length === 0, E.errs);
   report(`more ${W}${dark ? 'd' : ''}`, R);
   await b.close();
