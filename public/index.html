@@ -5961,6 +5961,8 @@ function updateOb() {
 ["dragenter", "dragover"].forEach(ev => document.addEventListener(ev, e => { const z = e.target.closest && e.target.closest("#impDrop"); if (!z) return; e.preventDefault(); z.classList.add("over"); }));
 document.addEventListener("dragleave", e => { const z = e.target.closest && e.target.closest("#impDrop"); if (z && !z.contains(e.relatedTarget)) z.classList.remove("over"); });
 document.addEventListener("drop", e => { const z = e.target.closest && e.target.closest("#impDrop"); if (!z) return; e.preventDefault(); z.classList.remove("over"); if (e.dataTransfer && e.dataTransfer.files.length) impAddFiles([...e.dataTransfer.files]); });
+/* the task sheet's fold: remember it on the tap itself, so a redraw that lands before the browser's toggle event keeps it open */
+document.addEventListener("click", e => { const sm = e.target.closest && e.target.closest("#iMore > summary"); if (sm && S.sheet && S.sheet.type === "item") S.sheet.more = !sm.parentElement.open; }, true);
 document.addEventListener("toggle", e => { if (e.target && e.target.id === "iMore" && S.sheet && S.sheet.type === "item") S.sheet.more = e.target.open; }, true);
 document.addEventListener("submit", e => {
   e.preventDefault(); const f = e.target;
