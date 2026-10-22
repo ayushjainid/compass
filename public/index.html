@@ -3487,6 +3487,9 @@ const bigCompass = (settle = true) => `<svg viewBox="0 0 200 200" aria-hidden="t
 
 /* ============ render root ============ */
 function scheduleRender() {
+  /* a redraw mid-press (say, a field saving as it loses focus to the button being pressed) would swap the element under
+     the finger and lose the tap: wait until the press ends */
+  if (PTR_DOWN) { S.pendingRender = true; return; }
   const a = document.activeElement;
   if (a && a.closest && (a.closest("#main") || a.closest("#sheetRoot")) && /^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)) {
     /* an empty field with the cursor in it (say, the quick-add after adding): redraw now and put the cursor back */
@@ -3497,7 +3500,7 @@ function scheduleRender() {
 }
 /* A render held back while typing must not land mid-tap: tapping a button blurs the field first, and redrawing
    then would replace the button under the finger and swallow the tap. Wait until the finger lifts and the click has run. */
-let PTR_DOWN = false;
+var PTR_DOWN = false;   // var: scheduleRender reads it, and may run before this line on first load
 const flushPending = () => { if (S.pendingRender && !PTR_DOWN) { S.pendingRender = false; scheduleRender(); } };
 document.addEventListener("pointerdown", () => { PTR_DOWN = true; }, true);
 const ptrUp = () => setTimeout(() => { PTR_DOWN = false; flushPending(); }, 80);
