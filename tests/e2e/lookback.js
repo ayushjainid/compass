@@ -42,7 +42,7 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
   await p.reload(); await p.waitForTimeout(1500);
   await tap('[data-act=tab][data-t=review]'); await p.waitForTimeout(800);
   if (info.early) ok('early in the month: the review opens with the look-back card', await p.locator('.lookcard').count() === 1 && new RegExp(`Your ${info.monthName}`, 'i').test(await p.locator('.lookcard').innerText()));
-  ok('a "Look back by month" link is always there', await p.locator('.lklink').count() === 1);
+  ok('a "Look back by month" link is always there', await p.locator('.lklink:has-text("by month")').count() === 1);
   await p.screenshot({ path: `${S}/lookback-card-${W}${dark ? 'd' : ''}.png` });
   await tap(info.early ? '.lookcard' : '.lklink'); await p.waitForTimeout(500);
   const txt = await p.locator('#main').innerText();

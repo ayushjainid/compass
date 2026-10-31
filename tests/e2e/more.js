@@ -11,7 +11,8 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   const items = async () => Object.entries(await store()).filter(([k]) => /^lists\/[^/]+\/items\//.test(k)).map(([k, v]) => Object.assign({ id: k.split('/').pop(), lid: k.split('/')[1] }, v));
   const item = async t => (await items()).find(i => i.t === t);
   const settings = async () => (await store())['users/u1/docs/settings'] || {};
-  const patchItem = async (t, patch) => { const it = await item(t); await p.evaluate(([k, patch]) => { const st = JSON.parse(localStorage.getItem('__mockstore')); Object.assign(st[k], patch); localStorage.setItem('__mockstore', JSON.stringify(st)); }, [`lists/${it.lid}/items/${it.id}`, patch]); await p.reload(); await settle(1500); await tap('[data-act=tab][data-t=tasks]'); await settle(600); };
+  const patchItem = async (t, patch) => { await settle(1200); const it = await item(t);   // let pending saves land first: the mock rewrites the whole store
+ await p.evaluate(([k, patch]) => { const st = JSON.parse(localStorage.getItem('__mockstore')); Object.assign(st[k], patch); localStorage.setItem('__mockstore', JSON.stringify(st)); }, [`lists/${it.lid}/items/${it.id}`, patch]); await p.reload(); await settle(1500); await tap('[data-act=tab][data-t=tasks]'); await settle(600); };
   const today = dk(new Date()), tomorrow = dk(new Date(Date.now() + 864e5)), thisWk = 'w-' + dk(mon(new Date()));
   await onboard(A, ['rel', 'body', 'learn']);
   await tap('[data-act=tab][data-t=tasks]'); await settle(1200);

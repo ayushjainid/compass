@@ -25,6 +25,7 @@ const JOBS = [
   ["vquiz.js", PHONE], ["vquiz.js", SMALL], ["vquiz.js", DARK], ["vquiz.js", DESK],
   ["more.js", PHONE], ["more.js", SMALL], ["more.js", DARK], ["more.js", DESK],
   ["pushkey.js", PHONE],
+  ["polish.js", PHONE], ["polish.js", SMALL], ["polish.js", DARK], ["polish.js", DESK],
   ["a11y.js", X],
 ];
 /* a suite passes when it exits cleanly, prints no FAIL line, and its summary says everything passed */

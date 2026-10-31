@@ -166,6 +166,8 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 /* journal & fields */
 .jf,.field{display:flex;flex-direction:column;gap:4px;padding:12px 14px}
 .jf + .jf,.field + .field{border-top:1px solid var(--line)}
+.jf textarea{resize:none;field-sizing:content;min-height:44px;overflow:hidden}
+@media (max-width:480px){.jf textarea[data-j=spark]:placeholder-shown{min-height:66px}}
 .jf label,.field label,.flabel{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 ::placeholder{color:var(--muted);opacity:1}
 textarea,input[type=text],input[type=email],input[type=password],select,input[type=time],input[type=date],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;resize:vertical}
@@ -361,6 +363,14 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .qadd{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 14px;margin:4px 0 0;box-shadow:var(--lift)}
 .qadd:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .qadd textarea{flex:1;min-width:0;border:0;border-radius:0;background:transparent;padding:9px 0;resize:none;min-height:40px;height:auto;max-height:160px;font:inherit;font-size:16px;line-height:1.4;box-shadow:none;outline:none;field-sizing:content}
+.qq{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--muted);font:600 14px/1 var(--sans,inherit);cursor:pointer}
+.qq[aria-expanded="true"]{color:var(--accent);border-color:var(--accent)}
+.qhelp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px 12px;margin:2px 0 10px}
+.qhelp ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.qhelp li{display:flex;align-items:center;gap:10px;min-height:36px;font-size:14px;color:var(--ink2)}
+.qex{flex:none;min-width:104px;text-align:left;background:none;border:0;padding:6px 0;cursor:pointer}
+.qex code{font:500 13.5px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--accent);background:var(--accent-soft);padding:3px 7px;border-radius:9px}
+.qhelpf .linkish{white-space:nowrap}.qhelpf{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:8px;font-size:12.5px;color:var(--muted)}
 .qchips{display:flex;flex-wrap:wrap;gap:6px;min-height:6px;margin:6px 0 4px}
 .qchip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:3px 6px 3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);min-height:32px}
 .qchip.val{background:var(--surface);color:var(--ink2);border:1px solid var(--line)}.qchip.val .vdot{width:8px;height:8px;margin-right:0}
@@ -400,6 +410,16 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .lrow{display:flex;align-items:center;gap:6px;padding:0 8px 0 14px;min-height:52px;transition:opacity .3s,transform .3s}
 .lrow + .lrow{border-top:1px solid var(--line)}
 .lrow.going{opacity:0;transform:translateX(12px)}
+.lrow{position:relative;touch-action:pan-y}
+.lrow > *{transition:transform .25s ease}
+.lrow.sw-r,.lrow.sw-l{overflow:hidden}.lrow.sw-r > *,.lrow.sw-l > *{transform:translateX(var(--sx,0))}
+.lrow.sw > *{transition:none}
+.lrow.sw-r::before,.lrow.sw-l::before{position:absolute;top:0;bottom:0;display:flex;align-items:center;font-size:13.5px;font-weight:600;color:var(--muted);pointer-events:none}
+.lrow.sw-r::before{content:"✓ Done";left:16px}
+.lrow.sw-l::before{content:"Tomorrow →";right:16px}
+.lrow.sw-go.sw-r::before{color:var(--good)}
+.lrow.sw-go.sw-l::before{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.lrow > *{transition:none}}
 .ltx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 6px;color:var(--ink)}
 .ltx .tt{overflow-wrap:anywhere;line-height:1.35}
 .lrow.closed .tt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}
@@ -411,6 +431,7 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .uday{margin:0 0 4px}.uday.none .udh b{color:var(--ink2)}
 .udh{display:flex;align-items:baseline;gap:8px;padding:12px 0 6px;border-bottom:1px solid var(--line)}.udh b{font:600 17px var(--display)}.udh span{color:var(--muted);font-size:13px;flex:1}
 .uday:not(.none) .udh{border-bottom:0}
+.ugapb{display:flex;align-items:baseline;gap:8px;width:100%;min-height:48px;padding:12px 0 8px;border:0;border-bottom:1px dashed var(--line);background:none;text-align:left;cursor:pointer;color:inherit}.ugapb b{font:500 15px var(--sans);color:var(--ink2)}.ugapb span{color:var(--muted);font-size:13px}
 .uadd{width:40px;height:40px;border-radius:50%;color:var(--accent);font-size:20px;line-height:1}.uadd:hover{background:var(--accent-soft)}
 .lhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:2px 0 12px}
 .lname{font:500 26px/1.15 var(--display);letter-spacing:-.01em;margin:0 0 2px;text-transform:none;color:var(--ink)}
@@ -504,6 +525,11 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .obsum{margin:8px 0 12px}
 .obsum .chip{gap:6px}.obsum .cstar{color:var(--brass)}
 .intro{margin:8px 0 14px;border-color:var(--accent);background:var(--accent-soft);background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.tip{position:relative;border-color:var(--line);background:var(--surface);box-shadow:var(--lift)}
+.tip b{font:600 18px/1.25 var(--display);display:block;padding-right:56px}
+.tip p{margin:6px 0 12px;color:var(--ink2);font-size:14.5px;line-height:1.5;max-width:62ch}
+.tipn{position:absolute;top:14px;right:16px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tipoff{margin-left:auto}
 .intro ul{margin:8px 0 12px;padding-left:18px;display:grid;gap:6px;color:var(--ink2);font-size:14.5px;line-height:1.45}
 .progress i{height:4px;flex:1;border-radius:2px;background:var(--line);transition:background .3s}
 .progress i.on{background:var(--accent)}
@@ -615,6 +641,19 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .dots i.on{background:var(--accent)}
 .drow.done .dots i.on{background:var(--good)}
 .dfoot{font-size:12px;color:var(--muted);padding:10px 0 8px;border-top:1px solid var(--line)}
+.idea3{list-style:none;counter-reset:i;margin:22px 0 0;padding:0;display:grid;gap:18px;max-width:44em}
+.idea3 li{counter-increment:i;display:grid;grid-template-columns:2.2em 1fr;column-gap:12px}
+.idea3 li::before{content:counter(i);grid-row:span 2;font:600 26px/1 var(--display);color:var(--brass);padding-top:2px}
+.idea3 b{font:600 19px/1.3 var(--display)}
+.idea3 span{color:var(--ink2);line-height:1.55;margin-top:3px}
+.ideaex{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:26px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:var(--lift);max-width:44em;font-size:14.5px}
+.ideaex .vdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:1px}
+.ix-v{font-weight:600}.ix-a{color:var(--muted)}.ix-s{margin-left:auto;color:var(--good);font-weight:600;font-size:13.5px}
+.shots{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:26px}
+.shots figure{margin:0}
+.shots img{display:block;width:100%;height:auto;border-radius:18px;border:1px solid var(--line);box-shadow:var(--lift);background:var(--surface)}
+.shots figcaption{margin-top:10px;font-size:14px;color:var(--ink2);line-height:1.4}.shots figcaption b{display:block;color:var(--ink);font-weight:600}
+@media (max-width:820px){.shots{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(68vw,260px);overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px}.shots figure{scroll-snap-align:start}}
 .lsec{padding-block:80px;border-top:1px solid var(--line)}
 .lsec h2{font:600 clamp(30px,4vw,46px)/1.08 var(--display);letter-spacing:-.02em;margin:14px 0 14px;max-width:17em;text-wrap:balance}
 .lsec .big{margin-bottom:36px}
@@ -908,6 +947,13 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 .feedcard{display:grid;gap:10px}.feedcard .tag.good{background:var(--good-soft);color:var(--good);margin-left:6px;vertical-align:middle}
 .feedbtns{display:flex;flex-wrap:wrap;gap:8px}.feedbtns .btn{text-decoration:none}
 .feedmgr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:13.5px;color:var(--ink2)}
+.ygrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.ymo{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:64px;padding:8px 9px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+.ymo b{font-size:12.5px;font-weight:600;color:var(--ink2)}.ymo span{font:600 17px/1.2 var(--display)}.ymo small{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.ymo.empty,.ymo.future{background:none;cursor:default}.ymo.future{border-style:dashed;opacity:.55}
+@media (max-width:420px){.ygrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ystep{margin-top:10px}.ystep > b,.ystep label b{font:600 16.5px/1.3 var(--display)}.ystep .hint{margin:4px 0 10px}.ystep input{width:100%}
+.yq{margin:0 0 10px;line-height:1.5}
 .lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
 .lookcard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
 .lookcard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small{grid-column:1;color:var(--ink2);font-size:13px}
@@ -2883,8 +2929,8 @@ function lnav() {
 function qaddBox() {
   const q = S.qDraft ? parseQuick(S.qDraft, { ignore: S.qIgnore }) : { chips: [] };
   const tv = tvState(), here = L.meta[tv] ? `in ${esc(L.meta[tv].name)}` : tv === "upcoming" ? "" : "";
-  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}… try ${L.meta[tv] && isSharedList(L.meta[tv]) ? "“book tickets fri @name”" : "“call mom fri 6pm”"}" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="btn small" data-act="capAdd" data-src="qAdd">Add</button></div>
-    <div class="qchips" id="qChips" aria-live="polite">${qChipsHtml()}</div>`;
+  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}… try ${L.meta[tv] && isSharedList(L.meta[tv]) ? "“book tickets fri @name”" : "“call mom fri 6pm”"}" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="qq" data-act="qHelp" aria-label="What can I type?" aria-expanded="${!!qHelpOpen()}">?</button><button class="btn small" data-act="capAdd" data-src="qAdd">Add</button></div>
+    <div class="qchips" id="qChips" aria-live="polite">${qChipsHtml()}</div>${qHelpOpen() ? qHelpHtml() : ""}`;
 }
 function lmeta(it, opts = {}) {
   const tk = todayKey(), m = listMeta(it.lid), out = [];
@@ -2956,10 +3002,23 @@ function vUpcoming() {
   for (let i = 0; i < 14; i++) days.push(dkey(addDays(base, i)));
   const later = liveItems().filter(i => i.due && i.due > days[days.length - 1]).sort(listOrder);
   return `${overdue(tk).length ? `<div class="lsh"><b>Overdue</b><button class="linkish" data-act="odToday">Move to today</button></div>${card(overdue(tk).map(i => lrow(i, { showList: true })))}` : ""}
-    ${days.map((k, i) => { const its = dueOn(k), dd = parse(k);
-      return `<div class="uday${its.length ? "" : " none"}"><div class="udh"><b>${i === 0 ? "Today" : i === 1 ? "Tomorrow" : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dd.getDay()]}</b><span>${MON[dd.getMonth()]} ${dd.getDate()}</span><button class="uadd" data-act="qOn" data-due="${k}" aria-label="Add a task for ${esc(fmtWhen(k))}">+</button></div>
-        ${its.length ? card(its.map(x => lrow(x, { showList: true, noDue: true }))) : ""}</div>`; }).join("")}
+    ${upDays(days)}
     ${later.length ? `<div class="lsh"><b>Later</b><span>${later.length}</span></div>${card(later.map(i => lrow(i, { showList: true })))}` : ""}`;
+}
+/* the next two weeks, day by day; a run of two or more empty days (after tomorrow) folds into one quiet line */
+function upDays(days) {
+  const WDS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], lbl = k => { const d = parse(k); return `${WDS[d.getDay()]} ${MON[d.getMonth()]} ${d.getDate()}`; };
+  const one = (k, i) => { const its = dueOn(k), dd = parse(k);
+    return `<div class="uday${its.length ? "" : " none"}"><div class="udh"><b>${i === 0 ? "Today" : i === 1 ? "Tomorrow" : WDS[dd.getDay()]}</b><span>${MON[dd.getMonth()]} ${dd.getDate()}</span><button class="uadd" data-act="qOn" data-due="${k}" aria-label="Add a task for ${esc(fmtWhen(k))}">+</button></div>
+      ${its.length ? card(its.map(x => lrow(x, { showList: true, noDue: true }))) : ""}</div>`; };
+  const out = []; let i = 0; S.uExp = S.uExp || {};
+  while (i < days.length) {
+    let j = i; if (i >= 2) while (j < days.length && !dueOn(days[j]).length) j++;
+    if (j - i >= 2 && !S.uExp[days[i]]) { out.push(`<div class="uday none ugap"><button class="ugapb" data-act="uExp" data-k="${days[i]}" aria-label="${esc(lbl(days[i]))} to ${esc(lbl(days[j - 1]))}: nothing planned. Show these days"><b>${esc(lbl(days[i]))} – ${esc(lbl(days[j - 1]))}</b><span>nothing yet</span></button></div>`); i = j; continue; }
+    if (j - i >= 2) { for (let x = i; x < j; x++) out.push(one(days[x], x)); i = j; continue; }
+    out.push(one(days[i], i)); i++;
+  }
+  return out.join("");
 }
 function vList(lid) {
   const m = listMeta(lid); if (!m) return "";
@@ -3159,6 +3218,13 @@ function qChipsHtml() {
   const sugg = part ? (pp.length ? pp.slice(0, 6).map(p => `<button class="qchip who sugg" data-act="qAt" data-n="${esc(firstName(p.n))}">@${esc(firstName(p.n))}${listPeople(lid).length ? "" : `<small> ${esc(listName(p.lid))}</small>`}</button>`).join("") : `<span class="qchip off">${sharedPeople(lid).length ? "No one by that name here" : "Share a list to give tasks to people"}</span>`) : "";
   const valChip = gv ? `<button class="qchip val" data-act="qIgnore" data-k="val" aria-label="Serves ${esc(valueName(gv))}: tap to leave it out"><i class="vdot" style="background:${valColor(gv)}" aria-hidden="true"></i>${esc(valueName(gv))}<span aria-hidden="true">×</span></button>` : "";
   return sugg + extra.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join("") + valChip + q.chips.map(c => `<button class="qchip ${c.k}" data-act="qIgnore" data-k="${c.k}" aria-label="${esc(c.label)}: tap to keep it as text">${esc(c.label)}<span aria-hidden="true">×</span></button>`).join("") + (S.qIgnore && S.qIgnore.size ? `<button class="qchip off" data-act="qIgnoreReset">Read dates again</button>` : "");
+}
+/* "what can I type?": open on its own until the first few tasks are in, then only from the ? button */
+const QHELP = [["fri 6pm", "a day and a time", "call mum fri 6pm"], ["every week", "repeats", "water plants every week"], ["#groceries", "goes into that list", "oat milk #groceries"], ["@sam", "gives it to someone on a shared list", "book tickets @sam"], ["*", "one of this week's three", "finish the deck *"]];
+function qHelpOpen() { if (S.qHelp != null) return S.qHelp; const st = settings(); return !st.qhelp && (st.qadds || 0) < 3 && !S.qDraft; }
+function qHelpHtml() {
+  return `<div class="qhelp" id="qHelp"><ul>${QHELP.map(([k, v, ex]) => `<li><button class="qex" data-act="qTry" data-v="${esc(ex)}"><code>${esc(k)}</code></button><span>${esc(v)}</span></li>`).join("")}</ul>
+    <div class="qhelpf"><span>Tap one to try it. Anything Compass reads becomes a chip you can tap to undo.</span><button class="linkish" data-act="qHelpOff">Got it</button></div></div>`;
 }
 function refreshChips() { const box = $("#qChips"); if (!box) return; const f = $("#qAdd"); S.qDraft = f ? f.value : S.qDraft; box.innerHTML = qChipsHtml(); }
 function capBox(id, placeholder) {
@@ -3654,7 +3720,7 @@ function rLanding() {
   return `
   <nav class="lnav" aria-label="Compass">
     <a class="brand" href="#top" style="color:inherit;text-decoration:none">${mark}Compass</a>
-    <div class="links"><a href="#tour">Tour</a><a href="#how">How it works</a><a href="#tasks">Clear your head</a><a href="#why">Why it works</a><a href="#faq">FAQ</a></div>
+    <div class="links"><a href="#idea">The idea</a><a href="#look">Screens</a><a href="#how">How it works</a><a href="#tasks">Clear your head</a><a href="#why">Why it works</a><a href="#faq">FAQ</a></div>
     <button class="navcta" data-act="authOpen" data-v="in">Sign in</button>
   </nav>
 
@@ -3676,6 +3742,27 @@ function rLanding() {
         ${rows}
         <div class="dfoot">Example week. The needle settles as floors clear.</div>
       </div>
+    </div>
+  </section>
+
+  <section class="lsec idea" id="idea">
+    <h2>The idea, on one screen.</h2>
+    <ol class="idea3">
+      <li><b>Start from what you value.</b><span>Not from a to-do list. Pick a few things that matter, like close relationships, health or learning.</span></li>
+      <li><b>Give each one a floor.</b><span>The least that still counts as a good week: two calls with friends, three workouts. Clear it and the week counts. More is a bonus, never the bar.</span></li>
+      <li><b>Watch the trend, not a streak.</b><span>One missed day is noise. Two in a row is the pattern worth catching, and Compass shows it early, without guilt.</span></li>
+    </ol>
+    <div class="ideaex" aria-label="An example floor"><span class="ix-v"><i class="vdot" style="background:var(--s1)" aria-hidden="true"></i>Deep relationships</span><span class="ix-a" aria-hidden="true">→</span><span class="ix-f">Call someone close, twice a week</span><span class="ix-s">2 of 2 this week ✓</span></div>
+  </section>
+
+  <section class="lsec" id="look">
+    <h2>What it looks like.</h2>
+    <p class="big">Real screens from the app, filled in with a sample week.</p>
+    <div class="shots" tabindex="0" aria-label="Four app screens; scroll sideways for more">
+      <figure><img src="/img/app-today.webp" width="560" height="1211" loading="lazy" alt="Today: the day's floors to tick, a workout logged 2 of 3 times this week, and a ring for each day showing how much was cleared."><figcaption><b>Today</b>Tap what happened.</figcaption></figure>
+      <figure><img src="/img/app-week.webp" width="560" height="1211" loading="lazy" alt="Week plan: weekly floors placed into free time around work, like a one-hour workout on Tuesday evening."><figcaption><b>Week</b>Floors placed in your real free time.</figcaption></figure>
+      <figure><img src="/img/app-tasks.webp" width="560" height="1211" loading="lazy" alt="Tasks, Upcoming view: tasks grouped by day, one marked as this week's three, one repeating weekly, one tagged with the value it serves."><figcaption><b>Tasks</b>Loose ends, each with a day.</figcaption></figure>
+      <figure><img src="/img/app-review.webp" width="560" height="1211" loading="lazy" alt="Sunday review: which values held this week, and one question, am I at peace with where this is trending, answered from 1 to 5."><figcaption><b>Review</b>A short look back on Sunday.</figcaption></figure>
     </div>
   </section>
 
@@ -3731,14 +3818,14 @@ function rLanding() {
   <section class="lsec" id="why">
     <span class="eyebrow">Why it works</span>
     <h2>Built on research about what makes life feel good.</h2>
-    <p class="big">Every piece of Compass comes from published psychology. Here are the ideas it runs on.</p>
+    <p class="big">The main pieces of Compass come from published psychology. Here are the ideas it runs on.</p>
     <div class="grid3">
       <div class="tile"><h3>Floors, not ceilings</h3><p>People who aim for good enough report more satisfaction than people who chase the best possible outcome.</p><cite>Schwartz et al., 2002</cite></div>
-      <div class="tile"><h3>Two Cores per season</h3><p>Goals that compete for the same hours lower well-being. You pick two to lead for a year; the rest become satellites.</p><cite>Emmons &amp; King, 1988</cite></div>
-      <div class="tile"><h3>Plans for hard weeks</h3><p>Deciding in advance what you'll do when things go wrong makes follow-through far more likely.</p><cite>Gollwitzer &amp; Sheeran, 2006</cite></div>
+      <div class="tile"><h3>Two Cores per season</h3><p>Goals that compete for the same hours lower well-being. You pick up to two to lead this season; the rest keep their floors.</p><cite>Emmons &amp; King, 1988</cite></div>
+      <div class="tile"><h3>Plans for hard weeks</h3><p>Deciding in advance what you'll do when things go wrong makes follow-through more likely.</p><cite>Gollwitzer &amp; Sheeran, 2006</cite></div>
       <div class="tile"><h3>Fun stays unscored</h3><p>Scheduling leisure too precisely makes it feel like work, so the things you do for joy live on a menu, never a checklist.</p><cite>Tonietto &amp; Malkoc, 2016</cite></div>
       <div class="tile"><h3>Never miss twice</h3><p>One missed day barely dents a habit. Compass watches for the second miss, and suggests a smaller floor when something keeps slipping.</p><cite>Lally et al., 2010</cite></div>
-      <div class="tile"><h3>People first</h3><p>Close relationships are the strongest predictor of a long, healthy life, so staying in touch gets its own tools.</p><cite>Holt-Lunstad et al., 2010</cite></div>
+      <div class="tile"><h3>People first</h3><p>Strong social ties predict a longer life about as much as not smoking does, so staying in touch gets its own tools.</p><cite>Holt-Lunstad et al., 2010</cite></div>
     </div>
     <p class="note">Each idea is well studied on its own. How they fit together in Compass is new, so your own weekly check-in is the real test of whether it's working for you.</p>
   </section>
@@ -3914,12 +4001,14 @@ function rToday(id) {
   const jc = daily.find(c => c.auto === "journal");
   const hr = new Date().getHours(), part = hr < 5 ? "evening" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
   const first = ((S.user && S.user.name) || "").split(" ")[0];
-  return `${introCard()}${ntAskCard()}${S.selDay === tk ? cheersCard() : ""}
+  /* one invitation at a time: the reminders prompt, then tonight's plan, then the day's tip */
+  const askC = ntAskCard(), firstDay = !!((profile() || {}).pending || {}).intro, planC = !firstDay && S.selDay === tk && id === thisWk() ? planCard() : "", tipC = askC || planC ? "" : introCard();
+  return `${tipC}${askC}${S.selDay === tk ? cheersCard() : ""}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
   <p class="lede">${S.selDay === tk ? `<span class="greetin">Good ${part}${first ? ", " + esc(first) : ""}.</span> ` : ""}${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
   ${dayHtml}
-  ${S.selDay === tk && id === thisWk() ? planCard() : ""}
+  ${planC}
   ${todayTasks(id)}
   ${S.selDay === tk ? watchingCard() : ""}
   ${weekly.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="chips">${weekly.map(chip).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
@@ -4268,6 +4357,32 @@ document.addEventListener("pointerup", e => { if (DRAG.st && ownPointer(DRAG.st,
 document.addEventListener("pointercancel", e => { if (DRAG.st && !DRAG.st.touch && ownPointer(DRAG.st, e)) dragEnd(false); });
 document.addEventListener("contextmenu", e => { if (DRAG.st && DRAG.st.touch) e.preventDefault(); });
 document.addEventListener("click", e => { if (Date.now() < DRAG.until && e.target.closest("[data-drag],[data-drop]")) { e.stopPropagation(); e.preventDefault(); } }, true);
+/* swipe a task: right finishes it, left moves it to tomorrow. Touch only; a mostly-vertical move stays a scroll. */
+const SWIPE = { until: 0 };
+document.addEventListener("touchstart", e => {
+  if (e.touches.length !== 1) return;
+  const row = e.target.closest(".lrow"); if (!row || row.classList.contains("closed") || row.closest(".sheet")) return;
+  const tk = row.querySelector(".tick[data-act=iDone]"); if (!tk) return;
+  const t0 = e.touches[0], st = { x: t0.clientX, y: t0.clientY, dx: 0, on: false, dead: false }, w = row.offsetWidth || 320, far = Math.min(110, w * 0.3);
+  const set = dx => { row.style.setProperty("--sx", dx + "px"); row.classList.toggle("sw-r", dx > 0); row.classList.toggle("sw-l", dx < 0); row.classList.toggle("sw-go", Math.abs(dx) >= far); };
+  const tm = ev => { const t = ev.touches[0]; if (!t || st.dead) return; const dx = t.clientX - st.x, dy = t.clientY - st.y;
+    if (!st.on) { if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { st.dead = true; return off(); } if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.5) return; st.on = true; row.classList.add("sw"); }
+    ev.preventDefault(); st.dx = dx - Math.sign(dx) * 12; set(Math.max(-w * .6, Math.min(w * .6, st.dx))); };
+  const te = () => { off(); if (!st.on) return; SWIPE.until = Date.now() + 400;
+    const go = Math.abs(st.dx) >= far, dir = st.dx > 0 ? "r" : "l";
+    row.classList.remove("sw", "sw-go"); row.style.setProperty("--sx", "0px");
+    setTimeout(() => row.classList.remove("sw-r", "sw-l"), 250);
+    if (!go) return;
+    if (navigator.vibrate) try { navigator.vibrate(8); } catch (x) {}
+    if (dir === "r") { tk.click(); return; }
+    const lid = tk.dataset.l, id = tk.dataset.id, it = findItem(lid, id); if (!it) return;
+    const u = undoItem(lid, id), tmr = dkey(addDays(parse(todayKey()), 1));
+    setDue(it, tmr); toast(`Moved to tomorrow: “${it.t.slice(0, 40)}”`, u); render(); };
+  const tc = () => { off(); row.classList.remove("sw", "sw-go", "sw-r", "sw-l"); row.style.removeProperty("--sx"); };
+  const off = () => { row.removeEventListener("touchmove", tm); row.removeEventListener("touchend", te); row.removeEventListener("touchcancel", tc); };
+  row.addEventListener("touchmove", tm, { passive: false }); row.addEventListener("touchend", te); row.addEventListener("touchcancel", tc);
+}, { passive: true });
+document.addEventListener("click", e => { if (Date.now() < SWIPE.until && e.target.closest(".lrow .ltx")) { e.stopPropagation(); e.preventDefault(); } }, true);
 function blockSheet(sh) {
   const c = compById(sh.id); if (!c) return "";
   const di = +sh.day, mplan = sh.type === "mblock", mp = (mplan && monthPlan(sh.ym)[c.id]) || {};
@@ -4568,8 +4683,78 @@ function rLookback(ym) {
   ${adjust ? `<div class="card pad lkadj"><span class="flabel">The one adjustment you chose for ${ymName(ym)}</span><q>${esc(adjust)}</q><small>Did it help? Choose next month's in the Sunday review.</small></div>` : ""}
   <div style="margin-top:16px"><button class="btn" data-act="lookClose">Back to the review</button></div>`;
 }
+/* ============ yearly check-in ============
+   Once a year (mid-December to the end of January): the months, the 12-week goals, how the year felt, then a fresh look
+   at your values and next year's Cores. Nothing here is scored; it's a place to choose again. */
+const yearsSt = () => settings().years || {};
+function checkinYear(d = new Date()) { const m = d.getMonth(), dt = d.getDate(); return m === 11 && dt >= 15 ? d.getFullYear() : m === 0 ? d.getFullYear() - 1 : null; }
+function yearHasData(y) { for (let m = 1; m <= 12; m++) { const ym = `${y}-${String(m).padStart(2, "0")}`; if (ym > monthKey(new Date())) break; if (monthHasData(ym)) return true; } return false; }
+function yearCard() {
+  const y = checkinYear(); if (!y || (yearsSt()[y] || {}).done || !yearHasData(y)) return "";
+  return `<button class="lookcard yearcard" data-act="lookOpen" data-v="${y}"><span class="lk">Once a year</span><b>Your ${y}, and what comes next</b><small>Look back at the months and your goals, retake the values questions, and choose next year's Cores. About ten minutes.</small><span class="chev" aria-hidden="true"></span></button>`;
+}
+function rYear(y) {
+  y = +y; const nowYm = monthKey(new Date()), vals = valueList(), ys = yearsSt(), me = ys[y] || {}, next = ys[y + 1] || {};
+  const head = `<div class="lkhead"><button class="iconbtn" data-act="lookClose" aria-label="Back to the review">‹</button><div><span class="eyebrow">Year in review</span><h2 style="margin:0">Your ${y}${String(y) === nowYm.slice(0, 4) ? " so far" : ""}</h2></div></div>
+    <div class="lknav">${yearHasData(y - 1) ? `<button class="textlink" data-act="lookOpen" data-v="${y - 1}">‹ ${y - 1}</button>` : "<span></span>"}${y + 1 <= +nowYm.slice(0, 4) && yearHasData(y + 1) ? `<button class="textlink" data-act="lookOpen" data-v="${y + 1}">${y + 1} ›</button>` : ""}</div>`;
+  /* months */
+  const months = []; let held = 0, closedN = 0, felts = [], td = 0; const vstat = Object.fromEntries(vals.map(v => [v.id, { h: 0, n: 0 }]));
+  for (let m = 1; m <= 12; m++) {
+    const ym = `${y}-${String(m).padStart(2, "0")}`; if (ym > nowYm) { months.push({ ym, future: true }); continue; }
+    let mh = 0, mn = 0; const mf = [];
+    monthWeeks(ym).forEach(mon => { const id = wid(mon), w = anyWeek(id); if (!w) return; const F = floorsFor(id), done = weekOver(id) || id < wid(monday(new Date()));
+      const st = vals.map(v => ({ v, s: valueStatus(v.id, F, id).s }));
+      if (done) { mn++; if (st.every(x => x.s === "clear" || x.s === "rest")) mh++; st.forEach(x => { if (x.s !== "rest") { vstat[x.v.id].n++; if (x.s === "clear") vstat[x.v.id].h++; } }); }
+      if ((w.r || {}).felt) mf.push(w.r.felt); });
+    td += (((settings().months || {})[ym] || {}).td) || 0;
+    held += mh; closedN += mn; felts = felts.concat(mf);
+    months.push({ ym, h: mh, n: mn, felt: mf.length ? Math.round(mf.reduce((a, b) => a + b, 0) / mf.length) : null, data: monthHasData(ym) });
+  }
+  const feltAvg = felts.length ? felts.reduce((a, b) => a + b, 0) / felts.length : null;
+  const tile = (big, label, sub) => `<div class="lktile"><b>${big}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
+  const grid = months.map(x => x.future ? `<span class="ymo future" aria-hidden="true"><b>${MON[+x.ym.slice(5) - 1]}</b></span>`
+    : x.data ? `<button class="ymo" data-act="lookOpen" data-v="${x.ym}" aria-label="${ymName(x.ym)}: ${x.h} of ${x.n} weeks every value held${x.felt ? `, felt ${FELT_WORDS[x.felt - 1].toLowerCase()}` : ""}. Open the month"><b>${MON[+x.ym.slice(5) - 1]}</b><span>${x.n ? `${x.h}/${x.n}` : "–"}</span><small>${x.felt ? FELT_WORDS[x.felt - 1] : ""}</small></button>`
+    : `<span class="ymo empty"><b>${MON[+x.ym.slice(5) - 1]}</b><small>—</small></span>`).join("");
+  const vrows = vals.map(v => ({ v, ...vstat[v.id] })).filter(r => r.n);
+  /* goals that ran in this year */
+  const gs = goals().filter(g => g.start && (g.start.slice(0, 4) === String(y) || dkey(goalEnd(g)).slice(0, 4) === String(y)));
+  const gState = g => g.st === "done" ? "Done" : g.st === "stopped" ? "Stopped" : goalWeekN(g) > GOAL_WEEKS ? "12 weeks up" : "Still running";
+  /* the values questions, retaken */
+  const p = profile() || {}, vqAt = p.vq && p.vq.at, fresh = vqAt && vqAt.slice(0, 4) >= String(y) && vqAt >= `${y}-12-01`, yq = S.yq;
+  const cores = (p.cores || []).map(c => c.value), canAhead = y === checkinYear() || y === new Date().getFullYear() - 1;
+  const ahead = !canAhead ? (y !== new Date().getFullYear() ? "" : `<p class="hint" style="margin-top:18px">The yearly check-in, with the values questions and next year's Cores, opens on December 15.</p>`) : `
+  <h3>Looking ahead</h3>
+  <div class="card pad ystep"><b>1 · Do your values still fit?</b>
+    <p class="hint">Values shift over the years. Ten questions, about two minutes. Your answers are only a suggestion; nothing changes unless you say so.</p>
+    ${yq ? `<p class="yq">Your answers point to <b>${yq.picks.map(v => esc(valueName(v))).join(", ")}</b>${yq.stars.length ? `, with ${yq.stars.map(v => esc(valueName(v))).join(" and ")} standing out` : ""}.</p>
+      <div class="row" style="justify-content:flex-start;gap:8px"><button class="btn small" data-act="yValues">Update my values</button><button class="btn small quiet" data-act="vqStart" data-from="year">Answer again</button></div>`
+      : `<button class="btn small" data-act="vqStart" data-from="year">${fresh ? "Answer again" : "Answer the 10 questions"}</button>${fresh ? `<small class="hint" style="margin-left:8px">Answered ${esc(fmtShort(parse(vqAt)))}</small>` : ""}`}
+  </div>
+  <div class="card pad ystep"><b>2 · Next year's Cores</b>
+    <p class="hint">Up to two values that get more of your energy in ${y + 1}. The rest keep their floors.</p>
+    <div class="chips">${vals.map(v => `<button class="chip ${cores.includes(v.id) ? "sel" : ""}" data-act="toggleCore" data-v="${esc(v.id)}" aria-pressed="${cores.includes(v.id)}">${cores.includes(v.id) ? "★ " : ""}${esc(v.name)}</button>`).join("")}</div>
+  </div>
+  <div class="card pad ystep"><label for="y-word"><b>3 · A word for ${y + 1}</b></label>
+    <p class="hint">Optional. One word or a short line to come back to, like “steadier” or “more time outside”.</p>
+    <input id="y-word" type="text" maxlength="60" data-yword="${y + 1}" value="${esc(next.word || "")}" placeholder="A word or a short line" autocomplete="off">
+  </div>
+`;
+  return head + `
+  <div class="lktiles">
+    ${tile(closedN ? `${held}<small>/${closedN}</small>` : "–", "weeks every value held", closedN ? "" : "no finished weeks yet")}
+    ${tile(feltAvg ? FELT_WORDS[Math.round(feltAvg) - 1] : "–", "how the year felt", feltAvg ? `average of ${felts.length} review${felts.length > 1 ? "s" : ""}` : "no Sunday reviews")}
+    ${tile(td || "–", "tasks done", "")}
+  </div>
+  <h3>Month by month</h3>
+  <div class="ygrid">${grid}</div>
+  <p class="hint" style="margin:6px 0 0">Weeks every value held, and how the month felt. Tap a month to open it.</p>
+  ${vrows.length ? `<h3>Values across the year</h3><div class="card pad"><ul class="wentl">${vrows.map(r => `<li><span class="nm">${esc(r.v.name)}${isCore(r.v.id) ? ' <span class="core">Core</span>' : ""}</span><span class="wbar2" aria-hidden="true"><i style="width:${Math.round(r.h / r.n * 100)}%;background:${valColor(r.v.id)}"></i></span><span class="n" aria-label="${esc(r.v.name)}: held ${r.h} of ${r.n} weeks">${r.h}/${r.n}</span></li>`).join("")}</ul></div>` : ""}
+  ${gs.length ? `<h3>12-week goals</h3><div class="card pad">${gs.map(g => `<div class="gprow"><span><b>${esc(g.t)}</b><small>${gState(g)} · ${esc(valueName(g.v))}</small></span>${goalTrack(g)}</div>`).join("")}</div>` : ""}
+  ${ahead}
+  <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">${canAhead ? `<button class="btn primary" data-act="yDone" data-v="${y}">${me.done ? "Checked in ✓" : `Done with ${y}`}</button>` : ""}<button class="btn quiet" data-act="lookClose">Back to the review</button></div>`;
+}
 function rReview(id, F, trips, sugg) {
-  if (S.lookback) return rLookback(S.lookback);
+  if (S.lookback) return String(S.lookback).length === 4 ? rYear(S.lookback) : rLookback(S.lookback);
   const w = anyWeek(id) || { r: {} }, r = w.r || {};
   const nextId = wid(addDays(S.viewMon, 7)), pre = !!(settings().preMvw || {})[nextId];
   const inbox = settings().inbox || [], ym = monthKey(new Date()), mo = (settings().months || {})[ym] || {};
@@ -4585,7 +4770,7 @@ function rReview(id, F, trips, sugg) {
   const ag = activeGoals().filter(g => { const n = goalWeekN(g, S.viewMon); return n >= 1 && n <= GOAL_WEEKS; });
   return `
   ${trips.length ? `<h2>Tripwires</h2><p class="lede">These trigger a review, not blame.</p>${trips.map(t => `<div class="trip">${esc(t)}</div>`).join("")}` : ""}
-  ${lookbackCard()}
+  ${yearCard() || lookbackCard()}
   <h2>Sunday review</h2>
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
   ${reviewSetupCards()}
@@ -4616,6 +4801,7 @@ function rReview(id, F, trips, sugg) {
   ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
   ${coachCard()}
   ${monthHasData(lastMonth()) || monthHasData(monthKey(new Date())) ? `<button class="textlink lklink" data-act="lookOpen" data-v="${monthHasData(lastMonth()) ? lastMonth() : monthKey(new Date())}">Look back by month ›</button>` : ""}
+  ${yearHasData(new Date().getFullYear()) || yearHasData(new Date().getFullYear() - 1) ? `<button class="textlink lklink" data-act="lookOpen" data-v="${checkinYear() || (yearHasData(new Date().getFullYear() - 1) && new Date().getMonth() < 2 ? new Date().getFullYear() - 1 : new Date().getFullYear())}">Look back by year ›</button>` : ""}
   <h3>Felt-sense, last 12 weeks</h3>
   <div class="card pad">${spark()}</div>
   ${floorHistory()}
@@ -5354,12 +5540,13 @@ function rVQuiz() {
     ${r.flat ? `<p class="hint vqnote">You rated everything about the same, so these are only a starting point. Pick the ones you'd defend if you could keep only five.</p>` : ""}
     <div class="card vqres">${r.rows.map(x => `<div class="vqrow ${r.picks.includes(x.v) ? "pick" : ""}"><span class="vqname"><span>${r.stars.includes(x.v) ? '<span class="cstar" aria-label="Star">★</span>' : ""}${esc(name(x.v))}</span>${x.gap === 2 ? `<small>Matters a lot · little room lately</small>` : x.gap === 1 ? `<small>Matters · some room lately</small>` : ""}</span><span class="vqmeter" aria-label="${x.r} of ${max}"><i style="width:${x.r / max * 100}%"></i></span></div>`).join("")}</div>
     <p class="hint" style="margin:0">${gaps.length ? `<b>${esc(gaps.slice(0, 2).join(" and "))}</b> ${gaps.length > 1 ? "matter" : "matters"} to you but ${gaps.length > 1 ? "get" : "gets"} little room lately. That's where a small weekly floor helps most, so ${gaps.length > 1 ? "they're" : "it's"} starred.` : `Starred: the two that matter most to you.`} <span class="src">${VQ_SRC}</span></p>
-    <div class="row"><button class="btn quiet" data-act="vqRedo">Start over</button><button class="btn primary" data-act="vqUse">Use these ${r.picks.length} values</button></div>
+    <div class="row"><button class="btn quiet" data-act="vqRedo">Start over</button><button class="btn primary" data-act="vqUse">${S.vq.from === "year" ? "Save my answers" : `Use these ${r.picks.length} values`}</button></div>
   </div>`;
 }
 function vqApply() {
   const r = vqScore(S.vq.a, S.vq.l), from = S.vq.from;
   const quiz = { at: todayKey(), a: S.vq.a, l: S.vq.l };
+  if (from === "year") { editProfile(p => { p.vq = quiz; }); S.yq = { picks: r.picks, stars: r.stars }; S.sheet = null; S.vq = null; toast("Saved. Your values haven't changed; update them below if you like."); return; }
   if (from === "compass") { startOnboarding(true); }
   const d = S.ob && S.ob.d; if (!d) return;
   d.values = r.picks.concat(d.values.filter(v => !VALUE_LIB.some(x => x.id === v)));   // your own values stay
@@ -5470,14 +5657,36 @@ function finishOnboarding() {
 const pending = () => (profile() || {}).pending || {};
 function clearPending(k) { editProfile(p => { p.pending = Object.assign({}, p.pending || {}, { [k]: false }); }); }
 function daysSinceSetup() { const t = (profile() || {}).onboardedAt; return t ? Math.round((parse(todayKey()) - parse(t)) / 864e5) : 99; }
-function introCard() {
-  if (!pending().intro) return "";
-  return `<div class="card pad intro"><b>How Compass works</b>
-    <ul><li><b>Floors, not ceilings.</b> Clearing the minimum already counts as a good week.</li>
-    <li><b>Tick things as they happen.</b> Today shows what's due and what you planned.</li>
-    <li><b>Sunday, a short review</b> shows the trend, and asks the few questions setup skipped.</li></ul>
-    <div class="row" style="justify-content:flex-start;gap:8px"><button class="btn small primary" data-act="introDone">Got it</button><button class="btn small quiet" data-act="gotoPlan">Plan my week</button></div></div>`;
+/* ---- the first weeks: one idea a day ----
+   New people meet floors, Cores, the three, Serves and the review all at once otherwise. Here each idea arrives on its
+   own day (at most one card a day, only in the first three weeks), with the one action that makes it real. */
+const TIPS = [
+  { id: "floors", day: 0, t: "Floors, not ceilings", b: "Tap a floor when it happens. Clearing the small minimum for each value already counts as a good week; more is a bonus, never the bar." },
+  { id: "tasks", day: 1, t: "Your tasks have a home", b: "Type tasks the way you'd say them, like “call mum fri 6pm” or “pay rent every month”. Compass reads the day, time and repeat. Swipe a task right to finish it, left to move it to tomorrow.", act: ["Open Tasks", "tipGo", "tasks"] },
+  { id: "three", day: 2, t: "This week's three", b: "Pick up to three tasks that would make this week feel done. Three is what fits beside your floors.", act: ["Pick them", "tipGo", "tasks"] },
+  { id: "serves", day: 3, t: "Every task can serve a value", b: "Open a task and choose what it serves. Compass then shows which values your days actually go to, not just how much you did." },
+  { id: "plan", day: 4, t: "Plan tomorrow, tonight", b: "From 4 pm a small card offers two minutes to choose what tomorrow is for. Deciding when, the night before, makes plans more likely to happen.", src: "Gollwitzer & Sheeran 2006" },
+  { id: "review", day: 5, t: "A short review on Sunday", b: "A few quiet minutes: which values held, how the week felt, what to protect next week. Missed days are information, not failure.", act: ["See the review", "tipGo", "review"] },
+  { id: "partner", day: 6, t: "Someone in your corner", b: "Invite a friend to see a summary of your week and cheer you on. Telling someone how you're doing helps you keep going.", src: "Harkin et al. 2016", act: ["Invite someone", "tipGo", "compass"] },
+];
+const tipsState = () => (settings().tips || {});
+function nextTip() {
+  const d = daysSinceSetup(), st = tipsState(), seen = st.seen || {};
+  if (d > 21 || st.off) return null;
+  if (st.last === todayKey() && !pending().intro) return null;   // one a day
+  if (pending().intro) return TIPS[0];
+  return TIPS.find(t => t.day <= d && !seen[t.id]) || null;
 }
+function introCard() {
+  const t = nextTip(); if (!t) return "";
+  const n = TIPS.indexOf(t) + 1, first = t.id === "floors";
+  return `<section class="card pad intro tip" aria-label="Getting started, ${n} of ${TIPS.length}"><span class="tipn">${n} of ${TIPS.length}</span><b>${esc(t.t)}</b>
+    <p>${esc(t.b)}${t.src ? ` <span class="src">${esc(t.src)}</span>` : ""}</p>
+    <div class="row" style="justify-content:flex-start;gap:8px">${first ? `<button class="btn small" data-act="introDone">Got it</button><button class="btn small quiet" data-act="gotoPlan">Plan my week</button>`
+      : `${t.act ? `<button class="btn small" data-act="${t.act[1]}" data-v="${t.act[2]}" data-k="${t.id}">${t.act[0]}</button>` : ""}<button class="btn small ${t.act ? "quiet" : ""}" data-act="tipDone" data-k="${t.id}">Got it</button>`}
+      <button class="btn small quiet tipoff" data-act="tipOff">Skip the tour</button></div></section>`;
+}
+function tipSeen(id) { editSettings(st => { st.tips = st.tips || {}; st.tips.seen = Object.assign({}, st.tips.seen || {}, { [id]: todayKey() }); st.tips.last = todayKey(); }); }
 function weekCheckCard() {
   const w = (profile() || {}).week; if (!pending().week || !w) return "";
   const pn = (WEEK_PRESETS.find(p => p.id === w.preset) || {}).name;
@@ -5549,7 +5758,10 @@ document.addEventListener("click", e => {
     case "obMore": { const v = b.dataset.v; S.obMore = S.obMore || {}; S.obMore[v] = !S.obMore[v]; updateOb(); return; }
     case "obStarter": { const d = starterDraft(b.dataset.v, ob ? ob.goal : ""); if (!d) return; S.ob = { step: 3, d }; S.obMore = {}; S.obEdit = null; window.scrollTo(0, 0); renderOnboarding(); return; }
     case "obJump": { S.obEdit = null; S.obFrozen = null; S.ob.step = +b.dataset.step; window.scrollTo(0, 0); renderOnboarding(); return; }
-    case "introDone": clearPending("intro"); break;
+    case "tipDone": tipSeen(b.dataset.k); break;
+    case "tipGo": { tipSeen(b.dataset.k); S.tab = b.dataset.v; if (b.dataset.v === "tasks") setTv(b.dataset.k === "three" ? "inbox" : "today"); if (b.dataset.v === "compass") { cOpen().add("watch"); } window.scrollTo(0, 0); break; }
+    case "tipOff": { if (pending().intro) clearPending("intro"); editSettings(st => { st.tips = Object.assign({}, st.tips || {}, { off: true }); }); toast("Tour skipped. Everything's still where it was."); break; }
+    case "introDone": clearPending("intro"); tipSeen("floors"); break;
     case "weekOk": clearPending("week"); toast("Week confirmed"); break;
     case "coresDone": clearPending("cores"); toast(coreIds().length ? "Season set" : "Everything stays equal for now"); break;
     case "safetyDone": clearPending("safety"); toast("Safety net ready"); break;
@@ -5608,7 +5820,7 @@ document.addEventListener("click", e => {
       const added = quickAdd(text, b.dataset.src === "qAdd" ? qCtx() : {});
       if (!added.length) { toast("Write something first."); return; }
       const n = added.length, where = [...new Set(added.map(x => listName(x.lid)))];
-      S.capMsg = `Added ${n} to ${where.join(", ")}.`; S.capDraft = ""; if (b.dataset.src === "qAdd") { S.qDraft = ""; S.qIgnore = new Set(); }
+      S.capMsg = `Added ${n} to ${where.join(", ")}.`; S.capDraft = ""; if (b.dataset.src === "qAdd") { S.qDraft = ""; S.qIgnore = new Set(); S.qHelp = null; editSettings(st => { st.qadds = Math.min(99, (st.qadds || 0) + 1); }); }
       toast(`Added ${n === 1 ? `“${findItem(added[0].lid, added[0].id).t.slice(0, 36)}”` : n} to ${where.join(", ")}`, () => { added.forEach(x => delItem(x.lid, x.id)); S.capMsg = ""; render(); const f = $("#" + b.dataset.src); if (f) f.value = text; });
       if (S.sheet && S.sheet.type === "capture") { renderSheet(); render(); return; }
       render(); const f = $("#" + b.dataset.src); if (f && !matchMedia("(pointer:coarse)").matches) f.focus();
@@ -5627,6 +5839,12 @@ document.addEventListener("click", e => {
       if (card && !reduced() && !["recurring"].includes(k) && !(k === "list" && !b.dataset.v)) { card.style.transition = "transform .22s ease, opacity .22s ease"; card.style.transform = k === "drop" ? "translateX(-110%) rotate(-6deg)" : "translateX(110%) rotate(6deg)"; card.style.opacity = "0"; setTimeout(() => { S.noFocus = true; render(); }, 200); return; }
       break;
     }
+    case "yDone": { const y = b.dataset.v; editSettings(st => { st.years = st.years || {}; st.years[y] = Object.assign({}, st.years[y], { done: todayKey() }); }); toast(`Here's to ${+y + 1}.`); S.lookback = null; window.scrollTo(0, 0); break; }
+    case "yValues": { const yq = S.yq; if (!yq) return; startOnboarding(true); const d = S.ob && S.ob.d; if (d) { d.values = yq.picks.concat(d.values.filter(v => !VALUE_LIB.some(x => x.id === v))); d.cores = yq.stars.map(v => ({ value: v })); S.ob.step = 1; } S.yq = null; S.lookback = null; toast("Review the values, then continue to keep or adjust your floors."); window.scrollTo(0, 0); break; }
+    case "uExp": S.uExp = S.uExp || {}; S.uExp[b.dataset.k] = true; break;
+    case "qHelp": S.qHelp = !qHelpOpen(); break;
+    case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; }); break;
+    case "qTry": { S.qDraft = b.dataset.v; S.qHelp = false; render(); const f = $("#qAdd"); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } return; }
     case "iDone": {
       const lid = b.dataset.l, id = b.dataset.id, it = findItem(lid, id); if (!it) return;
       const u = undoItem(lid, id); burst(b, "var(--good)", 10);
@@ -5846,7 +6064,7 @@ document.addEventListener("click", e => {
       return;
     }
     case "mvw": editWeek(w => { w.mvw = !isMvw(w, curWid()); }); break;
-    case "lookOpen": { const ym = b.dataset.v; S.lookback = ym; if (!(settings().lookSeen || {})[ym] && ym < monthKey(new Date())) editSettings(st => { st.lookSeen = Object.assign({}, st.lookSeen, { [ym]: 1 }); }); stat("lookback"); loadHistory(); window.scrollTo(0, 0); break; }
+    case "lookOpen": { const ym = b.dataset.v; S.lookback = ym; if (ym.length === 4) S.yq = null; if (ym.length > 4 && !(settings().lookSeen || {})[ym] && ym < monthKey(new Date())) editSettings(st => { st.lookSeen = Object.assign({}, st.lookSeen, { [ym]: 1 }); }); stat("lookback"); loadHistory(); window.scrollTo(0, 0); break; }
     case "lookClose": S.lookback = null; window.scrollTo(0, 0); break;
     case "felt": editWeek(w => { const v = +b.dataset.v; w.r.felt = w.r.felt === v ? null : v; }); break;
     case "starve": editWeek(w => { const a = w.r.starved || [], v = b.dataset.v; w.r.starved = a.includes(v) ? a.filter(x => x !== v) : a.concat(v); }); break;
@@ -5985,9 +6203,10 @@ document.addEventListener("input", e => {
   if (t.id === "capSheet") { S.capDraft = t.value; const q = parseQuick(t.value), box = t.parentElement.querySelector(".qchips"); if (box) box.innerHTML = q.chips.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join(""); return; }
   if (ds.iv === "t" || ds.iv === "n") { clearTimeout(S.ivT); S.ivT = setTimeout(() => itemField(t), 500); return; }
   if (ds.mplan && !t.value) { setMonthPlan(ds.ym, ds.mplan, () => null); t.blur(); render(); return; }
-  if (ds.j) editWeek(w => { dayObj(w, S.selDay).j[ds.j] = t.value; });
+  if (ds.j) { editWeek(w => { dayObj(w, S.selDay).j[ds.j] = t.value; }); if (!CSS.supports("field-sizing", "content")) { t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; } }
   else if (ds.r) editWeek(w => { w.r[ds.r] = t.value; });
   else if (ds.m) editSettings(s => { s.months = s.months || {}; const m = s.months[monthKey()] = s.months[monthKey()] || {}; m[ds.m] = t.value; });
+  else if (ds.yword) editSettings(s => { s.years = s.years || {}; s.years[ds.yword] = Object.assign({}, s.years[ds.yword], { word: t.value.slice(0, 60) }); });
   else if (ds.p === "goal") editProfile(p => { p.goal = t.value; });
   else if (ds.p === "ifthen") editProfile(p => { p.ifthen = t.value.split("\n"); });
   else if (ds.core !== undefined) editProfile(p => { if (p.cores[+ds.core]) p.cores[+ds.core].text = t.value; });
