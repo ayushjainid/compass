@@ -6,6 +6,7 @@ const { spawn } = require("child_process"), path = require("path"), fs = require
 const OUT = path.join(__dirname, "out"); fs.mkdirSync(OUT, { recursive: true });
 const PHONE = {}, SMALL = { W: "320" }, DARK = { D: "1" }, DESK = { W: "1280", H: "900", T: "0" };
 const X = { X: "1" };
+const HOME = { SCROLLER: "1" };   // as a Home Screen app on iPhone: the body scrolls, not the page
 // [file, env] — the sizes each suite is meant to run at
 const JOBS = [
   ["full2.js", X], ["full2.js", DARK], ["full.js", X], ["fix7.js", X], ["ob3.js", X], ["persist.js", X],
@@ -27,6 +28,8 @@ const JOBS = [
   ["pushkey.js", PHONE],
   ["polish.js", PHONE], ["polish.js", SMALL], ["polish.js", DARK], ["polish.js", DESK],
   ["checkin.js", PHONE], ["checkin.js", SMALL], ["checkin.js", DARK], ["checkin.js", DESK],
+  ["standalone.js", PHONE], ["standalone.js", SMALL],
+  ["daylist.js", HOME], ["lists.js", HOME], ["checkin.js", HOME], ["more.js", HOME], ["polish.js", HOME], ["collab.js", HOME],
   ["a11y.js", X],
 ];
 /* a suite passes when it exits cleanly, prints no FAIL line, and its summary says everything passed */
