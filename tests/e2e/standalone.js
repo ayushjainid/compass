@@ -15,7 +15,8 @@ const R = []; const ok = (n, c, i) => R.push({ n, pass: !!c, i: c ? undefined : 
   const geo = () => p.evaluate(() => { const bar = document.querySelector('.tabbar').getBoundingClientRect(), fab = document.getElementById('fab'); return { body: document.body.scrollTop, win: window.scrollY, barBottom: Math.round(bar.bottom), barTop: Math.round(bar.top), vh: innerHeight, fab: fab && !fab.hidden ? Math.round(fab.getBoundingClientRect().bottom) : null, scrollable: document.body.scrollHeight > document.body.clientHeight }; });
   let g = await geo();
   ok('Today is longer than the screen, and the body is what scrolls', g.scrollable, g);
-  await p.mouse.move(W / 2, H / 2); await p.mouse.wheel(0, 700); await settle(700);
+  await p.mouse.move(W / 2, H / 2); try { await p.mouse.wheel(0, 700); } catch (e) { await p.evaluate(() => document.body.scrollBy(0, 700)); }   /* phone WebKit has no wheel */
+  await settle(700);
   const g2 = await geo();
   ok('scrolling moves the body, not the page', g2.body > 100 && g2.win === 0, g2);
   ok('the tab bar stays at the bottom of the screen', g2.barBottom === g2.vh && g2.barBottom === g.barBottom, { before: g, after: g2 });
