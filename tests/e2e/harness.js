@@ -6,6 +6,8 @@ const W = +(process.env.W || 390), H = +(process.env.H || 844), touch = process.
 
 async function newCtx(b, { config = '', mock = 'mockfb.js' } = {}) {
   const ctx = await b.newContext({ viewport: { width: W, height: H }, hasTouch: touch, isMobile: touch, colorScheme: dark ? 'dark' : 'light', deviceScaleFactor: 2 });
+  /* SCROLLER=1: the iPhone Home Screen layout, where the body scrolls instead of the page */
+  if (process.env.SCROLLER === '1') await ctx.addInitScript(() => { try { localStorage.setItem('compass-scroller', '1'); } catch (e) {} });
   await ctx.route(/^https?:\/\/(fonts\.(googleapis|gstatic)\.com|www\.google\.com|accounts\.google\.com)\//, r => r.abort());
   await ctx.route('http://compass.test/**', async route => {
     const u = new URL(route.request().url()); let p = u.pathname === '/' ? '/index.html' : u.pathname, body, type;

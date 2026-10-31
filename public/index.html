@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<script>/* iOS Home Screen apps move position:fixed bars when the page itself scrolls (the tab bar drifts up). There, the body scrolls instead of the page, which keeps them pinned. */
+try { if (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true || localStorage.getItem("compass-scroller") === "1") document.documentElement.classList.add("scroller"); } catch (e) {}</script>
 <meta name="theme-color" content="#F3F5F2">
 <meta name="description" content="Compass turns what matters to you into a few small weekly floors, and shows whether your life is trending the right way.">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -302,6 +304,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 /* sheet */
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;animation:fade .2s;touch-action:none;cursor:pointer}  /* cursor: iPhone Safari only sends taps on a plain div to the page's click handler if it looks clickable */
 html.sheet-open,html.sheet-open body{overflow:hidden;overscroll-behavior:none}
+html.scroller{height:100%;overflow:hidden;box-sizing:border-box}
+html.scroller body{height:100%;overflow-y:auto;overflow-x:clip;overscroll-behavior-y:none;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+html.scroller.sheet-open body{overflow:hidden}
+html.scroller.dragging body{scroll-behavior:auto!important;overflow-anchor:none}
 .sheet .in>h2:first-of-type,.sheet .in>div:nth-child(2) h2,.sheet .pshead h2{padding-right:44px}
 .sheetx{position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:50%;background:var(--sunk);color:var(--ink2);font-size:15px;display:grid;place-items:center;z-index:2}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-height:90vh;max-height:88dvh;overflow:auto;overscroll-behavior:contain;background:var(--surface);border-radius:18px 18px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));animation:up .28s cubic-bezier(.2,.9,.3,1)}
@@ -1250,6 +1256,11 @@ details.fold[open] summary::before{content:"▾ ";}
 
 <script src="/firebase-config.js"></script>
 <script type="module">
+/* the page scrolls in the window, or in the body on iOS Home Screen apps (see the "scroller" note in <head>) */
+const SCROLLER = document.documentElement.classList.contains("scroller") ? document.body : null;
+const pageScrollTo = (x, y) => SCROLLER ? SCROLLER.scrollTo({ top: y, left: 0, behavior: "instant" }) : window.scrollTo(x, y);
+const pageScrollBy = o => SCROLLER ? SCROLLER.scrollBy(o) : window.scrollBy(o);
+const pageY = () => SCROLLER ? SCROLLER.scrollTop : window.scrollY;
 import * as FB from "/vendor/firebase.js?v=6";
 import { VALUE_LIB } from "/shared/values.js";
 import { buildIcs as buildIcsFor } from "/shared/ics.js";
@@ -1875,7 +1886,7 @@ async function init() {
     if (ST.uid === u.uid) return;
     teardown();
     ST.uid = u.uid; S.user = { name: u.displayName || "", email: u.email || "", photo: u.photoURL || "" };
-    S.authState = "in"; S.authBusy = false; S.mode = "db"; hideBanner(); window.scrollTo(0, 0);
+    S.authState = "in"; S.authBusy = false; S.mode = "db"; hideBanner(); pageScrollTo(0, 0);
     try { localStorage.setItem("compass-was-signed-in", "1"); } catch (e) {}
     loadLocalAll(); render();
     if (!(await loadCore(u.uid))) return;
@@ -2187,7 +2198,7 @@ function remindersSection() {
 /* opened from a reminder: jump to the right tab */
 function openFromUrl(u) {
   try {
-    const q = new URL(u, location.origin).searchParams, tab = q.get("tab"); if (tab && ["today", "week", "tasks", "review", "compass"].includes(tab)) { S.tab = tab; window.scrollTo(0, 0); }
+    const q = new URL(u, location.origin).searchParams, tab = q.get("tab"); if (tab && ["today", "week", "tasks", "review", "compass"].includes(tab)) { S.tab = tab; pageScrollTo(0, 0); }
     const id = k => { const v = q.get(k); return v && /^[A-Za-z0-9_-]{1,128}$/.test(v) ? v : null; };
     const ck = q.get("from") === "checkin" || q.get("checkin") === "1";
     if (id("list") || id("watch") || q.get("plan") === "tomorrow" || ck) { S.openReq = { l: id("list"), i: id("item"), w: id("watch"), plan: q.get("plan") === "tomorrow", ck }; applyOpenReq(); }
@@ -4460,7 +4471,7 @@ function dragStart() {
     const speed = d => { const k = Math.min(1, Math.max(0, d / zone)); return (0.08 + k * k * 0.62) * dt; };
     if (y > bot - zone) dy = Math.ceil(speed(y - (bot - zone)));
     else if (st.armed && y < top + zone) dy = -Math.ceil(speed(top + zone - y));
-    if (dy) { window.scrollBy({ top: dy, left: 0, behavior: "instant" }); dragMove(st.cx, st.cy); }
+    if (dy) { pageScrollBy({ top: dy, left: 0, behavior: "instant" }); dragMove(st.cx, st.cy); }
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
@@ -4483,7 +4494,7 @@ function dragMove(x, y) {
     if (old) old.classList.remove("hot");
     day.classList.add("hot"); st.hot = day;
     const dy = day.getBoundingClientRect().top - y0;
-    if (old && Math.abs(dy) >= 1 && !matchMedia("(min-width:900px)").matches) window.scrollBy({ top: dy, left: 0, behavior: "instant" });
+    if (old && Math.abs(dy) >= 1 && !matchMedia("(min-width:900px)").matches) pageScrollBy({ top: dy, left: 0, behavior: "instant" });
     t = dragTarget(x, y);
   }
   if (t !== st.over) { if (st.over) st.over.classList.remove("over"); if (t) t.classList.add("over"); st.over = t; }
@@ -5457,7 +5468,7 @@ function msResume() {
   try { localStorage.removeItem("compass-ms-auth"); } catch (e) {}
   msFinish(msg); return true;
 }
-function impOpen() { S.imp = { view: "pick", files: [], items: [], pasted: 0, res: null, sel: null, busy: false, err: "" }; renderOnboarding(); window.scrollTo(0, 0); }
+function impOpen() { S.imp = { view: "pick", files: [], items: [], pasted: 0, res: null, sel: null, busy: false, err: "" }; renderOnboarding(); pageScrollTo(0, 0); }
 async function impAddFiles(list) {
   const im = S.imp; if (!im || !list || !list.length) return;
   im.busy = true; im.err = ""; renderOnboarding();
@@ -5493,7 +5504,7 @@ async function impRun() {
   const res = M.analyze(im.items.map(i => Object.assign({}, i)), { VALUE_LIB, COMP_LIB });
   im.res = res;
   im.sel = { values: Object.fromEntries(res.values.map(v => [v.id, v.on])), comps: Object.fromEntries(res.comps.map(c => [c.id, true])), unplaced: {}, cores: res.cores.length > 0, week: !!res.week, people: Object.fromEntries(res.people.map(p => [p.name, true])), inbox: res.tasks.inbox.length > 0, someday: res.tasks.someday.length > 0, fun: Object.fromEntries(res.fun.map(f => [f, true])) };
-  im.busy = false; im.view = "review"; renderOnboarding(); window.scrollTo(0, 0);
+  im.busy = false; im.view = "review"; renderOnboarding(); pageScrollTo(0, 0);
 }
 function impUse() {
   const im = S.imp, r = im.res, sel = im.sel, d = S.ob.d;
@@ -5516,7 +5527,7 @@ function impUse() {
   const from = [...new Set(im.files.map(f => f.src).filter(Boolean))];
   d.imp = { from, n: r.stats.total, comps: comps.length, at: Date.now(), goalHint: r.goalHint, insights: r.insights.map(i => i.t).slice(0, 3),
     ev: Object.fromEntries(r.values.map(v => [v.id, v.reasons.slice(0, 2).join(" · ")])), coreHints: Object.fromEntries(r.cores.map(c => [c.value, c.hint])), weekWhy: sel.week && r.week ? r.week.why : [] };
-  S.imp = null; S.ob.step = 1; renderOnboarding(); window.scrollTo(0, 0);
+  S.imp = null; S.ob.step = 1; renderOnboarding(); pageScrollTo(0, 0);
   toast(`Setup pre-filled from ${from.join(", ") || "your import"}`);
 }
 function impSrcLine(c) { const b = c.block, days = b && b.days && b.days.length ? b.days.map(x => WD[x]).join(", ") : ""; return [freqWords(c), days + (b && b.time ? " " + t12(b.time) : ""), c.hours ? fmtDur(c.hours) + " each" : ""].filter(Boolean).join(" · "); }
@@ -5891,12 +5902,12 @@ document.addEventListener("click", e => {
   const ob = S.ob && S.ob.d;
   switch (act) {
     /* onboarding */
-    case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) { if (ntCanAsk() && Notification.permission === "default" && !(S.nt && S.nt.optOut)) ntEnable(); return finishOnboarding(); } S.ob.step++; window.scrollTo(0, 0); return renderOnboarding();
+    case "obNext": S.obEdit = null; S.obFrozen = null; S.obRemoved = null; if (S.ob.step === OB_STEPS.length - 1) { if (ntCanAsk() && Notification.permission === "default" && !(S.nt && S.nt.optOut)) ntEnable(); return finishOnboarding(); } S.ob.step++; pageScrollTo(0, 0); return renderOnboarding();
     case "updLater": { S.updHidden = true; const el = $("#updbar"); if (el) el.remove(); return; }
     case "impOpen": return impOpen();
     case "msConnect": return msConnect();
-    case "impClose": S.imp = null; renderOnboarding(); window.scrollTo(0, 0); return;
-    case "impBack": S.imp.view = "pick"; renderOnboarding(); window.scrollTo(0, 0); return;
+    case "impClose": S.imp = null; renderOnboarding(); pageScrollTo(0, 0); return;
+    case "impBack": S.imp.view = "pick"; renderOnboarding(); pageScrollTo(0, 0); return;
     case "impRun": return impRun();
     case "impUse": return impUse();
     case "impPaste": return impPaste();
@@ -5907,7 +5918,7 @@ document.addEventListener("click", e => {
       if (grp === "comps" && sel.comps[key]) { const c = S.imp.res.comps.find(x => x.id === key); if (c) sel.values[c.value] = true; }
       return updateOb(); }
     case "impGoal": { if (!ob || !ob.imp) return; ob.goal = ob.imp.goalHint; updateOb(); const g = $("#ob-goal"); if (g) { g.focus(); g.setSelectionRange(g.value.length, g.value.length); } return; }
-    case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); window.scrollTo(0, 0); return renderOnboarding();
+    case "obBack": S.ob.step = Math.max(0, S.ob.step - 1); pageScrollTo(0, 0); return renderOnboarding();
     case "obCancel": S.ob = null; clearDraft(); return render();
     case "obTemplate": { const t = templateDraft(); S.ob = { step: 1, d: Object.assign(t, { goal: ob ? ob.goal : "" }) }; return renderOnboarding(); }
     case "obFeel": { const v = b.dataset.v; ob.feel = ob.feel.includes(v) ? ob.feel.filter(x => x !== v) : ob.feel.concat(v); const was = ob.feel.includes(v); updateOb(); if (was) burst(document.querySelector(`[data-act="obFeel"][data-v="${CSS.escape(v)}"]`), "var(--accent)", 6); return; }
@@ -5930,13 +5941,13 @@ document.addEventListener("click", e => {
     case "vqNext": if (S.vq) { clearTimeout(S.vqT); S.vq.i++; } renderSheet(); return;
     case "vqBack": if (S.vq && S.vq.i) { clearTimeout(S.vqT); S.vq.i--; } renderSheet(); return;
     case "vqRedo": if (S.vq) S.vq = { i: 0, a: {}, l: {}, from: S.vq.from }; renderSheet(); return;
-    case "vqUse": { vqApply(); if (S.ob) { renderOnboarding(); renderSheet(); window.scrollTo(0, 0); return; } break; }
+    case "vqUse": { vqApply(); if (S.ob) { renderOnboarding(); renderSheet(); pageScrollTo(0, 0); return; } break; }
     case "obWeekAdv": S.obWeekAdv = !S.obWeekAdv; updateOb(); return;
     case "obMore": { const v = b.dataset.v; S.obMore = S.obMore || {}; S.obMore[v] = !S.obMore[v]; updateOb(); return; }
-    case "obStarter": { const d = starterDraft(b.dataset.v, ob ? ob.goal : ""); if (!d) return; S.ob = { step: 3, d }; S.obMore = {}; S.obEdit = null; window.scrollTo(0, 0); renderOnboarding(); return; }
-    case "obJump": { S.obEdit = null; S.obFrozen = null; S.ob.step = +b.dataset.step; window.scrollTo(0, 0); renderOnboarding(); return; }
+    case "obStarter": { const d = starterDraft(b.dataset.v, ob ? ob.goal : ""); if (!d) return; S.ob = { step: 3, d }; S.obMore = {}; S.obEdit = null; pageScrollTo(0, 0); renderOnboarding(); return; }
+    case "obJump": { S.obEdit = null; S.obFrozen = null; S.ob.step = +b.dataset.step; pageScrollTo(0, 0); renderOnboarding(); return; }
     case "tipDone": tipSeen(b.dataset.k); break;
-    case "tipGo": { tipSeen(b.dataset.k); S.tab = b.dataset.v; if (b.dataset.v === "tasks") setTv(b.dataset.k === "three" ? "inbox" : "today"); if (b.dataset.v === "compass") { cOpen().add("watch"); } window.scrollTo(0, 0); break; }
+    case "tipGo": { tipSeen(b.dataset.k); S.tab = b.dataset.v; if (b.dataset.v === "tasks") setTv(b.dataset.k === "three" ? "inbox" : "today"); if (b.dataset.v === "compass") { cOpen().add("watch"); } pageScrollTo(0, 0); break; }
     case "tipOff": { if (pending().intro) clearPending("intro"); editSettings(st => { st.tips = Object.assign({}, st.tips || {}, { off: true }); }); toast("Tour skipped. Everything's still where it was."); break; }
     case "introDone": clearPending("intro"); tipSeen("floors"); break;
     case "weekOk": clearPending("week"); toast("Week confirmed"); break;
@@ -6007,7 +6018,7 @@ document.addEventListener("click", e => {
     case "qIgnoreReset": S.qIgnore = new Set(); refreshChips(); return;
     case "qAt": { const f = $("#qAdd"); if (!f) return; f.value = f.value.replace(/@[^\s@]*$/, "@" + b.dataset.n + " "); S.qDraft = f.value; f.focus(); f.setSelectionRange(f.value.length, f.value.length); refreshChips(); return; }
     case "qOn": { S.qDue = b.dataset.due || null; const f = $("#qAdd"); if (f) { f.focus(); f.scrollIntoView({ block: "center" }); } toast(`New task for ${fmtWhen(S.qDue)}: type it above`); return; }
-    case "tv": setTv(b.dataset.v); S.qDue = null; window.scrollTo(0, 0); break;
+    case "tv": setTv(b.dataset.v); S.qDue = null; pageScrollTo(0, 0); break;
     case "sortStart": startSort(); break;
     case "sortPick": {
       const k = b.dataset.k, card = $("#sortCard");
@@ -6016,8 +6027,8 @@ document.addEventListener("click", e => {
       if (card && !reduced() && !["recurring"].includes(k) && !(k === "list" && !b.dataset.v)) { card.style.transition = "transform .22s ease, opacity .22s ease"; card.style.transform = k === "drop" ? "translateX(-110%) rotate(-6deg)" : "translateX(110%) rotate(6deg)"; card.style.opacity = "0"; setTimeout(() => { S.noFocus = true; render(); }, 200); return; }
       break;
     }
-    case "yDone": { const y = b.dataset.v; editSettings(st => { st.years = st.years || {}; st.years[y] = Object.assign({}, st.years[y], { done: todayKey() }); }); toast(`Here's to ${+y + 1}.`); S.lookback = null; window.scrollTo(0, 0); break; }
-    case "yValues": { const yq = S.yq; if (!yq) return; startOnboarding(true); const d = S.ob && S.ob.d; if (d) { d.values = yq.picks.concat(d.values.filter(v => !VALUE_LIB.some(x => x.id === v))); d.cores = yq.stars.map(v => ({ value: v })); S.ob.step = 1; } S.yq = null; S.lookback = null; toast("Review the values, then continue to keep or adjust your floors."); window.scrollTo(0, 0); break; }
+    case "yDone": { const y = b.dataset.v; editSettings(st => { st.years = st.years || {}; st.years[y] = Object.assign({}, st.years[y], { done: todayKey() }); }); toast(`Here's to ${+y + 1}.`); S.lookback = null; pageScrollTo(0, 0); break; }
+    case "yValues": { const yq = S.yq; if (!yq) return; startOnboarding(true); const d = S.ob && S.ob.d; if (d) { d.values = yq.picks.concat(d.values.filter(v => !VALUE_LIB.some(x => x.id === v))); d.cores = yq.stars.map(v => ({ value: v })); S.ob.step = 1; } S.yq = null; S.lookback = null; toast("Review the values, then continue to keep or adjust your floors."); pageScrollTo(0, 0); break; }
     case "ckOpen": openCheckin(); break;
     case "ckYes": case "ckNo": { const el = $("#ckCard"); if (el && !reduced()) { el.classList.add(act === "ckYes" ? "fly-r" : "fly-l"); setTimeout(() => { ckAnswer(act === "ckYes"); renderSheet(); }, 170); return; } ckAnswer(act === "ckYes"); renderSheet(); return; }
     case "ckBack": ckBack(); renderSheet(); return;
@@ -6064,7 +6075,7 @@ document.addEventListener("click", e => {
       break;
     }
     case "odToday": { const tk2 = todayKey(), od = overdue(tk2); od.forEach(i => setDue(i, tk2)); toast(od.length > 1 ? `${od.length} moved to today` : "Moved to today"); break; }
-    case "fPick": { setTv("inbox"); S.tab = "tasks"; toast("Open a task and tap “Make it one of this week's three”"); window.scrollTo(0, 0); break; }
+    case "fPick": { setTv("inbox"); S.tab = "tasks"; toast("Open a task and tap “Make it one of this week's three”"); pageScrollTo(0, 0); break; }
     case "tFold": { const o = tOpen(); o[k] = !o[k]; try { localStorage.setItem("compass-topen", JSON.stringify(o)); } catch (e) {} break; }
     case "lNew": S.sheet = { type: "newlist" }; break;
     case "lShare": S.copyFallback = null; S.sheet = { type: "share", l: b.dataset.l }; break;
@@ -6131,7 +6142,7 @@ document.addEventListener("click", e => {
     case "fbOpen": S.sheet = { type: "feedback", text: "" }; break;
     case "fbSend": sendFeedback(); return;
     /* app */
-    case "tab": S.tab = b.dataset.t; S.confirm = null; S.lookback = null; if (S.tab === "review") loadHistory(); window.scrollTo(0, 0); break;
+    case "tab": S.tab = b.dataset.t; S.confirm = null; S.lookback = null; if (S.tab === "review") loadHistory(); pageScrollTo(0, 0); break;
     case "prevWk": case "nextWk": {
       const old = curWid(); S.viewMon = addDays(S.viewMon, act === "prevWk" ? -7 : 7); const nid = curWid();
       if (old !== wid(monday(new Date()))) unsubscribe(old);
@@ -6154,7 +6165,7 @@ document.addEventListener("click", e => {
       return;
     }
     case "weekView": S.weekView = b.dataset.v; S.planPick = null; break;
-    case "gotoPlan": S.tab = "week"; S.weekView = "plan"; window.scrollTo(0, 0); break;
+    case "gotoPlan": S.tab = "week"; S.weekView = "plan"; pageScrollTo(0, 0); break;
     case "planSlot": { if (!S.planPick) return; placeFloor(S.planPick, +b.dataset.d, b.dataset.t, null); return; }
     case "wkDay": { const tgt = S.ob && !S.sheet ? (S.ob.d.week = S.ob.d.week || Object.assign({}, WEEK_DEFAULT)) : S.sheet && S.sheet.type === "week" ? S.sheet.draft : null; if (!tgt) return;
       const d = +b.dataset.d, cur = workDaysOf(Object.assign({}, WEEK_DEFAULT, tgt)); const nx = cur.includes(d) ? cur.filter(x => x !== d) : cur.concat(d).sort(); if (!nx.length) return toast("Keep at least one day, or pick “Not right now”.");
@@ -6250,8 +6261,8 @@ document.addEventListener("click", e => {
       return;
     }
     case "mvw": editWeek(w => { w.mvw = !isMvw(w, curWid()); }); break;
-    case "lookOpen": { const ym = b.dataset.v; S.lookback = ym; if (ym.length === 4) S.yq = null; if (ym.length > 4 && !(settings().lookSeen || {})[ym] && ym < monthKey(new Date())) editSettings(st => { st.lookSeen = Object.assign({}, st.lookSeen, { [ym]: 1 }); }); stat("lookback"); loadHistory(); window.scrollTo(0, 0); break; }
-    case "lookClose": S.lookback = null; window.scrollTo(0, 0); break;
+    case "lookOpen": { const ym = b.dataset.v; S.lookback = ym; if (ym.length === 4) S.yq = null; if (ym.length > 4 && !(settings().lookSeen || {})[ym] && ym < monthKey(new Date())) editSettings(st => { st.lookSeen = Object.assign({}, st.lookSeen, { [ym]: 1 }); }); stat("lookback"); loadHistory(); pageScrollTo(0, 0); break; }
+    case "lookClose": S.lookback = null; pageScrollTo(0, 0); break;
     case "felt": editWeek(w => { const v = +b.dataset.v; w.r.felt = w.r.felt === v ? null : v; }); break;
     case "starve": editWeek(w => { const a = w.r.starved || [], v = b.dataset.v; w.r.starved = a.includes(v) ? a.filter(x => x !== v) : a.concat(v); }); break;
     case "reviewDone": { let done; editWeek(w => { w.r.done = !w.r.done; w.r.doneAt = tk; done = w.r.done; }); if (done) stat("reviewed"); if (S.nt && S.nt.on && curWid() === thisWk()) ntSave({ revDone: done ? thisWk().slice(2) : "" }); render(); if (done) { burst($("#reviewDoneBtn"), "var(--good)", 14); toast("Week reviewed. See you next Sunday."); } return; }
@@ -6283,7 +6294,7 @@ document.addEventListener("click", e => {
       else if (a.do === "addLib") { const lib = COMP_LIB.find(c => c.id === a.id); if (lib) { editProfile(p => { if (!p.values.includes(lib.value)) p.values.push(lib.value); p.components.push(clone(lib)); }); toast(`Added “${lib.name}”`); } }
       else if (a.do === "addComp") { S.sheet = { type: "pick", value: a.value }; }
       else if (a.do === "sort") { startSort(); }
-      else if (a.do === "gotoTasks") { S.tab = "tasks"; window.scrollTo(0, 0); }
+      else if (a.do === "gotoTasks") { S.tab = "tasks"; pageScrollTo(0, 0); }
       else if (a.do === "lower") { editProfile(p => { const c = p.components.find(x => x.id === a.id); if (c && c.target > 1) c.target--; }); toast("Floor lowered. Clear it, then raise it later."); }
       break;
     }
@@ -6349,7 +6360,7 @@ document.addEventListener("click", e => {
     case "toggleCore": editProfile(p => { p.cores = p.cores || []; const v = b.dataset.v; if (p.cores.some(c => c.value === v)) p.cores = p.cores.filter(c => c.value !== v); else if (p.cores.length < 2) p.cores.push({ value: v, text: "" }); else toast("Two Cores at most."); }); break;
     case "calAdd": { const c = compById(b.dataset.id); if (c) calAdd(c); return; }
     case "calMark": editProfile(p => { const c = p.components.find(x => x.id === b.dataset.id); if (c) c.gcal = !c.gcal; }); break;
-    case "redoOb": startOnboarding(true); window.scrollTo(0, 0); break;
+    case "redoOb": startOnboarding(true); pageScrollTo(0, 0); break;
     default: return;
   }
   render();
@@ -6357,7 +6368,7 @@ document.addEventListener("click", e => {
 function updateOb() {
   // re-render the onboarding step without replaying the entrance animation; rows that move slide into place
   const before = {}; document.querySelectorAll(".obrow[data-rid]").forEach(el => { before[el.dataset.rid] = el.getBoundingClientRect().top; });
-  const y = window.scrollY; renderOnboarding(); const st = $("#obStep"); if (st) st.classList.remove("stepin"); window.scrollTo(0, y);
+  const y = pageY(); renderOnboarding(); const st = $("#obStep"); if (st) st.classList.remove("stepin"); pageScrollTo(0, y);
   if (reduced()) return;
   document.querySelectorAll(".obrow[data-rid]").forEach(el => {
     const t = before[el.dataset.rid]; if (t === undefined) return;
