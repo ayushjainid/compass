@@ -112,7 +112,8 @@ const AYUSH = U('u1', 'Ayush Jain', 'a@example.com'), PRIYA = U('u2', 'Priya Sha
   await B.tap('[data-act=wOpen]');
   ok('opening it shows his floors this week', /Ayush Jain's week/.test(await B.text('.sheet')) && await B.p.locator('.sheet .wf').count() > 0);
   await B.p.screenshot({ path: `${S}/collab-watching-${W}${dark ? 'd' : ''}.png` });
-  await B.tap('.sheet [data-act=cheer] >> nth=0'); await settle(A, 900);
+  ok('…with "I noticed" notes made from what he actually did', await B.p.locator('.sheet .chip.noticed').count() >= 1 && /I noticed you (made time for|kept up) /.test(await B.text('.sheet .chip.noticed')), await B.text('.sheet'));
+  await B.tap('.sheet [data-act=cheer]:not(.noticed) >> nth=0'); await settle(A, 900);
   st = await store(); const ch = Object.entries(st).filter(([k]) => k.startsWith('watch/u1/cheers/'));
   ok('a cheer is sent', ch.length === 1 && ch[0][1].from === 'u2' && /Nice going/.test(ch[0][1].text));
   ok('…with a note to Ayush', (await pings('cheer', 'u1')).some(x => /Nice going/.test(x.x)));

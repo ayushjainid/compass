@@ -142,7 +142,7 @@ const nt = p => p.evaluate(() => JSON.parse(localStorage.getItem('__mockstore') 
     const d = await nt(p);
     ok('iPhone from the Home Screen: setup turns reminders on like any phone', d && d.on && d.sub && d.sub.endpoint && d.eve === '21:30', d);
     await tap('[data-act=tab][data-t=compass]'); if (!(await p.locator('[data-act=ntToggle]').count())) await tap('[data-act=cSec][data-k=remind]');
-    ok('iPhone from the Home Screen: full reminder settings, no Add-to-Home-Screen advice', await p.locator('#csec-remind [data-act=ntToggle]').count() === 2 && !/Add to Home Screen/.test(await p.locator('#csec-remind').innerText()));
+    ok('iPhone from the Home Screen: full reminder settings, no Add-to-Home-Screen advice', await p.locator('#csec-remind [data-act=ntToggle]').count() === 3 && !/Add to Home Screen/.test(await p.locator('#csec-remind').innerText()));
     ok('iPhone: the lock-screen names toggle is there', await p.locator('#csec-remind [data-act=ntNames]').count() === 1);
     // Safari dropped the subscription and only lets a tap make a new one: Today asks for that tap
     await p.evaluate(() => { localStorage.removeItem('__fakeSub'); localStorage.setItem('__gestureOnly', '1'); });

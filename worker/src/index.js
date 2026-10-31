@@ -16,13 +16,21 @@ import { pingText, digestText, nextDigest, quietUntil, hourKey, PER_HOUR, STALE_
 
 /** The evening reminder says what's left today and, when it's one or two things, offers to tick them
     right from the notification; otherwise "Remind me in an hour". Hidden names → only the snooze button. */
+/** The morning glance: today's floors by name (or just how many, when names are kept off the lock screen). */
+export async function morningList(db, uid, d, payload, now) {
+  const tz = validTz(d.tz) ? d.tz : "UTC", day = localDay(tz, now), mon = localMonday(tz, now), base = `users/${uid}/docs/`;
+  const got = await db.getMany([base + "profile", base + "settings", base + weekId(mon)]);
+  const items = openToday({ profile: got[base + "profile"], settings: got[base + "settings"], week: got[base + weekId(mon)] }, day, mon);
+  const body = !items.length ? "Nothing set for today. A free day." : d.names !== false ? `${listNames(items, 4)}.` : `${items.length} floor${items.length > 1 ? "s" : ""} today.`;
+  return { ...payload, body };
+}
 export async function enrichEvening(env, db, uid, d, payload, now) {
   const tz = validTz(d.tz) ? d.tz : "UTC", day = localDay(tz, now), mon = localMonday(tz, now);
   const base = `users/${uid}/docs/`;
   const got = await db.getMany([base + "profile", base + "settings", base + weekId(mon)]);
   const items = openToday({ profile: got[base + "profile"], settings: got[base + "settings"], week: got[base + weekId(mon)] }, day, mon);
   const x = now + 18 * 3600e3, names = d.names !== false;
-  const out = { ...payload, actions: [], act: {} };
+  const out = { ...payload, actions: [], act: {}, left: items.length };
   if (items.length && names) out.body = `${payload.body}\n${items.length === 1 ? "Left today" : `${items.length} left today`}: ${listNames(items)}.`;
   else if (items.length) out.body = `${payload.body}\n${items.length} left today.`;
   if (names && items.length && items.length <= 2) {
@@ -69,8 +77,8 @@ export async function runOnce(env, now = Date.now(), fetchFn = fetch, log = cons
 
 async function work(env, db, now, fetchFn, log) {
   const cap = Math.max(2, Math.min(400, +env.PER_RUN || PER_RUN)), revCap = Math.max(1, Math.round(cap / 5)), testCap = 2;
-  const [eve, rev, test] = await Promise.all([db.due("notify", "nextEve", now, cap - revCap), db.due("notify", "nextRev", now, revCap), db.due("notify", "nextTest", now, testCap)]);
-  const jobs = eve.map(x => ({ kind: "eve", ...x })).concat(rev.map(x => ({ kind: "rev", ...x })), test.map(x => ({ kind: "test", ...x })));
+  const [eve, rev, test, morn] = await Promise.all([db.due("notify", "nextEve", now, cap - revCap), db.due("notify", "nextRev", now, revCap), db.due("notify", "nextTest", now, testCap), db.due("notify", "nextMorn", now, revCap)]);
+  const jobs = eve.map(x => ({ kind: "eve", ...x })).concat(rev.map(x => ({ kind: "rev", ...x })), test.map(x => ({ kind: "test", ...x })), morn.map(x => ({ kind: "morn", ...x })));
   const sends = [];
   if (jobs.length) {
     // decide; a person due for several in the same minute gets all updates merged into one write
@@ -102,6 +110,9 @@ async function work(env, db, now, fetchFn, log) {
   if (!env.VAPID_PUBLIC || !env.VAPID_PRIVATE) throw new Error("VAPID keys are not set");
   /* evening reminders say what's left and carry one-tap buttons; if that lookup fails, the plain reminder still goes */
   for (const s of sends) if (s.kind === "eve") { try { s.payload = await enrichEvening(env, db, s.id, s.data, s.payload, now); } catch (e) { log("enrich failed: " + e.message); } }
+  for (const s of sends) if (s.kind === "morn") { try { s.payload = await morningList(db, s.id, s.data, s.payload, now); } catch (e) { s.payload.body = "Your floors for today are on Today."; log("morning list failed: " + e.message); } }
+  /* you opened Compass today and nothing is left: no evening nudge needed */
+  for (let i = sends.length - 1; i >= 0; i--) { const s = sends[i]; if (s.kind === "eve" && s.payload.left === 0 && s.data.last === localDay(validTz(s.data.tz) ? s.data.tz : "UTC", now)) sends.splice(i, 1); }
   let vapid; try { vapid = await importVapid(env.VAPID_PUBLIC, env.VAPID_PRIVATE); } catch (e) { vapid = null; }
   if (!vapid) throw new Error("VAPID_PRIVATE doesn't match VAPID_PUBLIC (the key couldn't be loaded): every push would be refused. Run `npx wrangler secret put VAPID_PRIVATE` with the private key for " + String(env.VAPID_PUBLIC).slice(0, 12) + "…");
   if (!PAIR_OK.has(env.VAPID_PUBLIC)) { if (!(await vapidPairOk(vapid))) throw new Error("VAPID_PRIVATE doesn't match VAPID_PUBLIC: every push would be refused. Run `npx wrangler secret put VAPID_PRIVATE` with the private key for " + String(env.VAPID_PUBLIC).slice(0, 12) + "…"); PAIR_OK.add(env.VAPID_PUBLIC); }
@@ -197,7 +208,7 @@ async function jwtStore(db, log) {
 }
 
 const PAIR_OK = new Set();   // keys already checked in this Worker instance
-export const VERSION = "2026-10-21";
+export const VERSION = "2026-11-01";
 /** GET /health: is the Worker up, which push key it signs with, and does its private key match. The app reads this
     so each device subscribes with the key that will actually be used (a mismatch makes Apple refuse every push). */
 export async function health(env) {

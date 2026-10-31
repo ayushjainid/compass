@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const nc = require("crypto");
 import { openToday, listNames, signAction, readAction } from "../src/today.js";
-import { enrichEvening } from "../src/index.js";
+import { enrichEvening, morningList } from "../src/index.js";
 import { handleAction } from "../src/act.js";
 import { handleFeed } from "../src/feed.js";
 import { client } from "../src/firestore.js";
@@ -57,6 +57,16 @@ ok("2 left: a tick button for each", p.actions.map(a => a.title).join("|") === "
 const hidden = await enrichEvening(env, db, "alice", { tz: "Asia/Kolkata", names: false }, base, now);
 ok("names hidden: count only, snooze only", /2 left today\.$/.test(hidden.body) && !/Call/.test(JSON.stringify(hidden.actions)) && hidden.actions[0].action === "snooze", hidden);
 ok("one read for all three documents", fs.calls.filter(c => c.includes("batchGet")).length === 3);
+ok("evening: says how many are left, for the caller to drop an empty one", p.left === 2 && hidden.left === 2);
+const mb = { title: "Today's floors", body: "", url: "/?tab=today&from=morning", tag: "compass-morning" };
+let mp = await morningList(db, "alice", { tz: "Asia/Kolkata" }, mb, now);
+ok("morning glance: today's open floors by name", /^Call parents and Budget review\.$/.test(mp.body), mp.body);
+mp = await morningList(db, "alice", { tz: "Asia/Kolkata", names: false }, mb, now);
+ok("…or just how many, with names off", mp.body === "2 floors today.", mp.body);
+const prof2 = JSON.parse(JSON.stringify(profile)); (prof2.components.find(c => c.cadence === "daily" && c.id !== "sleep") || {}).dflt = true;
+fs.put("users/bob/docs/profile", prof2); fs.put("users/bob/docs/settings", settings); fs.put(`users/bob/docs/${wk}`, { kind: "week", start: mon, days: {}, c: {}, r: {} });
+const bobOpen = (await enrichEvening(env, db, "bob", { tz: "Asia/Kolkata" }, base, now)).left, aliceLike = openToday({ profile, settings, week: { days: {} } }, day, mon).length;
+ok("a floor that counts by default isn't 'left'", bobOpen === aliceLike - 1, { bobOpen, aliceLike });
 
 // ---- tapping the buttons
 const post = (t, at = now) => handleAction(new Request("https://w/act", { method: "POST", body: JSON.stringify({ t }) }), env, fetchFn, at);

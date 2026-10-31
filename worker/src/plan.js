@@ -60,6 +60,15 @@ export function decide(kind, uid, d, now) {
     if (!targets(d).length) return { send: null, fields, why: "test: no device" };
     return { send: { title: "Test reminder ✓", body: "If you can read this, Compass reminders reach this device.", url: "/?tab=compass&from=test", tag: "compass-test" }, fields, why: "test" };
   }
+  if (kind === "morn") {
+    /* the morning glance: today's floors, once a day at the chosen time */
+    const today = localDay(tz, now), fields = { nextMorn: d.on && d.morn ? new Date(nextAt(tz, d.morn, now)) : null };
+    if (!d.on || !d.morn || !targets(d).length) return { send: null, fields, why: "off" };
+    if (d.nextMorn && now - d.nextMorn > STALE_MS) return { send: null, fields, why: "stale" };
+    if (d.mornDay === today) return { send: null, fields, why: "sent today" };
+    fields.mornDay = today;
+    return { send: { title: "Today's floors", body: "", url: "/?tab=today&from=morning", tag: "compass-morning" }, fields, why: "send" };
+  }
   const fields = {}, today = localDay(tz, now);
   const dueAt = kind === "eve" ? d.nextEve : d.nextRev;
   // always move the schedule forward first, so a slow or overlapping run can never send twice
@@ -70,7 +79,7 @@ export function decide(kind, uid, d, now) {
   if (dueAt && now - dueAt > STALE_MS) return skip("stale");
   if (kind === "eve") {
     if (!d.eve) return skip("off");
-    if (d.last === today) return skip("active today");
+    if (d.ckDay === today) return skip("day closed");
     const ign = d.ign || 0;
     if (ign >= STOP_AFTER) return skip("paused after being ignored");
     if (ign >= SLOW_AFTER && d.sentDay === localDay(tz, now - 864e5)) return skip("every other day");

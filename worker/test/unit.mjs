@@ -41,8 +41,16 @@ const now = Date.parse("2026-09-30T16:00:30Z"); // 9:30 pm in Kolkata
 const base = { on: true, tz: "Asia/Kolkata", eve: "21:30", rev: "18:00", sub, nextEve: Date.parse("2026-09-30T16:00:00Z"), ign: 0, last: "2026-09-29" };
 let d = decide("eve", "u1", base, now);
 ok("sends when not active today, and books tomorrow", d.send && d.fields.sentDay === "2026-09-30" && d.fields.ign === 1 && iso(d.fields.nextEve) === "2026-10-01T16:00:00.000Z", d);
+d = decide("eve", "u1", { ...base, ckDay: "2026-09-30" }, now);
+ok("skips once the day is closed (the evening check-in finished)", !d.send && d.why === "day closed" && d.fields.nextEve);
 d = decide("eve", "u1", { ...base, last: "2026-09-30" }, now);
-ok("skips if they already opened Compass today", !d.send && d.why === "active today" && d.fields.nextEve);
+ok("opening Compass alone doesn't cancel it (what's left is checked when sending)", !!d.send);
+d = decide("morn", "u1", { ...base, morn: "08:00", nextMorn: Date.parse("2026-09-30T02:30:00Z") }, Date.parse("2026-09-30T02:30:30Z"));
+ok("morning glance: sends at its time and books tomorrow's", d.send && d.send.title === "Today's floors" && d.fields.mornDay === "2026-09-30" && iso(d.fields.nextMorn) === "2026-10-01T02:30:00.000Z", d);
+d = decide("morn", "u1", { ...base, morn: "08:00", mornDay: "2026-09-30" }, Date.parse("2026-09-30T02:30:30Z"));
+ok("…once a day", !d.send && d.why === "sent today");
+d = decide("morn", "u1", { ...base, morn: "" }, now);
+ok("…and not when it's off", !d.send && d.fields.nextMorn === null);
 d = decide("eve", "u1", { ...base, ign: 3, sentDay: "2026-09-29" }, now);
 ok("after 3 ignored: every other day", !d.send && d.why === "every other day");
 d = decide("eve", "u1", { ...base, ign: 3, sentDay: "2026-09-28" }, now);

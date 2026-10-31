@@ -1002,6 +1002,16 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 .tnm{flex:1 1 200px;min-width:0}.tnm b{display:block;font-weight:600}.tnm small{color:var(--muted);font-size:13px}
 .tnm .vdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--vc);margin-right:8px;vertical-align:1px}
 .tacts{display:flex;gap:6px;flex-wrap:wrap}.tdone{color:var(--good);font-weight:600;font-size:13.5px}
+.cksay{margin-top:14px}.cksay .qadd{align-items:flex-start}.cksay textarea{min-height:64px}
+.ckmic{font-size:15px}.ckmic.on{color:var(--warn);border-color:var(--warn)}
+.ckhits{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.cksaylink{display:block;margin:12px auto 0;font-size:14px}
+.ckswap{width:100%;margin-top:10px;min-height:46px;font-size:14.5px;white-space:normal}
+.insight p{margin:0;line-height:1.5}.insight p + p{margin-top:8px}.insight .vdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.calpick{display:inline-flex;cursor:pointer}
+.calgroups{overflow:hidden}.calg{display:flex;align-items:center;gap:10px;padding:10px 14px}.calg + .calg{border-top:1px solid var(--line)}
+.calg .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.calg .nm small{display:block;color:var(--muted);font-size:12.5px}.calg select{max-width:46%;min-height:40px}
+.chip.noticed{white-space:normal;text-align:left}
 .lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
 .lookcard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
 .lookcard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small{grid-column:1;color:var(--ink2);font-size:13px}
@@ -2062,7 +2072,7 @@ function touchNotify() {
   const n = S.nt; if (!n || !n.on || !ST.uid) return;
   const patch = {}, tz = myTz();
   if (n.last !== todayKey()) { patch.last = todayKey(); patch.ign = 0; }
-  if (n.tz !== tz) { patch.tz = tz; patch.nextEve = n.eve ? nextLocal(n.eve) : null; patch.nextRev = n.rev ? nextLocal(n.rev, Date.now(), 6) : null; }
+  if (n.tz !== tz) { patch.tz = tz; patch.nextEve = n.eve ? nextLocal(n.eve) : null; patch.nextRev = n.rev ? nextLocal(n.rev, Date.now(), 6) : null; patch.nextMorn = n.morn ? nextLocal(n.morn) : null; }
   if (Object.keys(patch).length) ntSave(patch);
 }
 /* reminders are on by default: the browser still has to be asked once, so we ask at a moment the person chose to act */
@@ -2120,11 +2130,12 @@ async function ntDropDevice(dev) {
 }
 async function ntDisable() {
   try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sub.unsubscribe(); } catch (e) {}
-  await ntSave({ on: false, optOut: true, sub: null, subs: FB.deleteField(), nextEve: null, nextRev: null }); toast("Reminders off"); render();
+  await ntSave({ on: false, optOut: true, sub: null, subs: FB.deleteField(), nextEve: null, nextRev: null, nextMorn: null }); toast("Reminders off"); render();
 }
 function ntSet(kind, value) {
   const n = S.nt || {}; if (!n.on) return;
   if (kind === "eve") ntSave({ eve: value, nextEve: value ? nextLocal(value) : null });
+  else if (kind === "morn") ntSave({ morn: value, nextMorn: value ? nextLocal(value) : null });
   else ntSave({ rev: value, nextRev: value ? nextLocal(value, Date.now(), 6) : null });
   render();
 }
@@ -2226,7 +2237,9 @@ function remindersSection() {
   if (late && !S.ntLateLogged) { S.ntLateLogged = true; logError("Reminders stalled: schedule not moving", "nextEve " + new Date(ms(n.nextEve)).toISOString()); }
   let body;
   if (on) body = `${why}${late ? `<div class="ntlate"><b>Reminders look delayed</b><div class="hint">The last one due didn't go out. It's been reported automatically; nothing for you to do.</div></div>` : ""}
-    <div class="ntrow"><div><b>Evening check-in</b><div class="hint">Only if you haven't opened Compass that day.</div></div><button class="switch" role="switch" aria-checked="${!!n.eve}" data-act="ntToggle" data-k="eve" aria-label="Evening check-in"></button></div>
+    <div class="ntrow"><div><b>Morning glance</b><div class="hint">A quiet list of today's floors, so you remember them during the day. Nothing to tap.</div></div><button class="switch" role="switch" aria-checked="${!!n.morn}" data-act="ntToggle" data-k="morn" aria-label="Morning glance"></button></div>
+    ${n.morn ? `<div class="ntime"><label class="flabel" for="nt-morn">Time</label><input type="time" id="nt-morn" data-nt="morn" value="${esc(n.morn)}"></div>` : ""}
+    <div class="ntrow"><div><b>Evening check-in</b><div class="hint">Opens “Close the day”. Skipped once you've closed it.</div></div><button class="switch" role="switch" aria-checked="${!!n.eve}" data-act="ntToggle" data-k="eve" aria-label="Evening check-in"></button></div>
     ${n.eve ? `<div class="ntime"><label class="flabel" for="nt-eve">Time</label><input type="time" id="nt-eve" data-nt="eve" value="${esc(n.eve)}"></div>` : ""}
     <div class="ntrow"><div><b>Say what's left</b><div class="hint">The evening reminder names what's still open${WORKER() ? ", with buttons to tick one or two of them right there" : ""}. Turn off to keep names off your lock screen.</div></div><button class="switch" role="switch" aria-checked="${n.names !== false}" data-act="ntNames" aria-label="Say what's left"></button></div>
     <div class="ntrow"><div><b>Sunday review</b><div class="hint">Skipped once the week is reviewed.</div></div><button class="switch" role="switch" aria-checked="${!!n.rev}" data-act="ntToggle" data-k="rev" aria-label="Sunday review"></button></div>
@@ -3027,6 +3040,52 @@ document.addEventListener("keydown", e => {
   if (!S.sheet || S.sheet.type !== "checkin" || !S.ck || S.ck.step !== "cards" || e.target.closest("textarea,input")) return;
   if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); ckAnswer(e.key === "ArrowRight"); renderSheet(); const b = $(".ckyes"); if (b) b.focus(); }
 });
+/* "say it instead": one line about the day, matched against the cards still to answer. A clause that names a
+   floor or task counts it as done, unless the clause says it didn't happen ("no gym", "skipped meditation"). */
+const CK_NEG = /\b(no|not|didn'?t|did not|skip(ped)?|miss(ed)?|without|never|couldn'?t|forgot)\b/i;
+const CK_STOP = new Set(["the", "and", "with", "for", "time", "from", "your", "into", "under", "over", "session", "minutes", "mins", "min", "hours", "hour", "a", "an", "of", "to", "in", "on", "my", "am", "pm", "call", "calls"]);
+const ckWords = t => String(t || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(w => w.length > 2 && !CK_STOP.has(w));
+function ckMatch(text, cards) {
+  const clauses = String(text || "").toLowerCase().split(/[,.;\n]+|\band\b|\bbut\b|\bthen\b/).map(x => x.trim()).filter(Boolean), out = {};
+  cards.forEach((card, i) => {
+    const name = card.kind === "t" ? ((findItem(card.lid, card.iid) || {}).t || "") : ((compById(card.cid) || {}).name || "");
+    const keys = ckWords(name); if (!keys.length) return;
+    for (const cl of clauses) { const ws = ckWords(cl); if (keys.some(k => ws.some(w => w === k || (k.length > 4 && w.startsWith(k.slice(0, 5)))))) { out[i] = !CK_NEG.test(cl); break; } }
+  });
+  return out;
+}
+function ckSayHtml(st) {
+  const sv = st.say || {}, m = sv.text ? ckMatch(sv.text, st.cards.slice(st.i)) : {}, keys = Object.keys(m);
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  return `<div class="cksay"><label class="flabel" for="ckSayIn">Say or type what happened</label>
+    <div class="qadd"><textarea id="ckSayIn" rows="2" placeholder="e.g. skincare, family call, no gym" aria-label="What happened today">${esc(sv.text || "")}</textarea>${Rec ? `<button class="qq ckmic${sv.rec ? " on" : ""}" data-act="ckMic" aria-label="${sv.rec ? "Stop listening" : "Speak"}">${sv.rec ? "■" : "🎤"}</button>` : ""}</div>
+    ${sv.text ? keys.length ? `<ul class="ckhits">${keys.map(i => { const card = st.cards[st.i + +i], nm = card.kind === "t" ? (findItem(card.lid, card.iid) || {}).t : (compById(card.cid) || {}).name, yes = sv.flip && sv.flip[i] !== undefined ? sv.flip[i] : m[i];
+      return `<li><button class="chip ${yes ? "sel" : ""}" data-act="ckFlip" data-i="${i}" aria-pressed="${yes}">${yes ? "✓" : "✗"} ${esc(nm || "")}</button></li>`; }).join("")}</ul><p class="hint" style="margin:6px 0 0">Tap one to switch it. Anything not mentioned stays to answer.</p>
+      <div class="ckbtns"><button class="btn quiet" data-act="ckSayX">Cancel</button><button class="btn primary" data-act="ckSayGo">Apply ${keys.length}</button></div>` : `<p class="hint" style="margin:6px 0 0">Nothing matched yet. Use the names on the cards, like “${esc(((compById((st.cards[st.i] || {}).cid) || {}).name) || "read")}”.</p>` : ""}
+    ${sv.text ? "" : `<div class="ckbtns"><button class="btn quiet" data-act="ckSayX">Cancel</button><span></span></div>`}</div>`;
+}
+function ckSayApply() {
+  const st = S.ck, sv = st && st.say; if (!sv) return;
+  const m = ckMatch(sv.text, st.cards.slice(st.i)), keys = Object.keys(m).map(Number).sort((a, b) => a - b);
+  /* bring the matched cards to the front, in order, then answer them one by one */
+  const rest = st.cards.slice(st.i), picked = keys.map(i => rest[i]), others = rest.filter((_, i) => !keys.includes(i));
+  st.cards = st.cards.slice(0, st.i).concat(picked, others);
+  keys.forEach(i => ckAnswer(sv.flip && sv.flip[i] !== undefined ? sv.flip[i] : m[i]));
+  st.say = null;
+}
+let CK_REC = null;
+function ckMic() {
+  const st = S.ck; if (!st) return; st.say = st.say || { text: "" };
+  if (CK_REC) { try { CK_REC.stop(); } catch (e) {} CK_REC = null; st.say.rec = false; renderSheet(); return; }
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition; if (!Rec) return;
+  const r = CK_REC = new Rec(); r.lang = navigator.language || "en-US"; r.interimResults = true; r.continuous = false;
+  const base = st.say.text ? st.say.text.trim() + ", " : "";
+  r.onresult = e => { let t = ""; for (const x of e.results) t += x[0].transcript; st.say.text = base + t; const ta = $("#ckSayIn"); if (ta) ta.value = st.say.text; };
+  r.onend = () => { CK_REC = null; if (S.ck && S.ck.say) S.ck.say.rec = false; renderSheet(); };
+  r.onerror = e => { CK_REC = null; if (S.ck && S.ck.say) S.ck.say.rec = false; if (e.error === "not-allowed") toast("Microphone is off for Compass. Type it instead, or use the keyboard's mic."); renderSheet(); };
+  try { r.start(); st.say.rec = true; } catch (e) { CK_REC = null; }
+  renderSheet();
+}
 function openCheckin() { S.ck = ckBuild(); if (!S.ck.cards.length) S.ck.step = "tomorrow"; S.sheet = { type: "checkin" }; }
 /* change one day's record, whichever week it's in */
 function ckWith(k, fn) { const m = S.viewMon, sd = S.selDay; S.viewMon = monday(parse(k)); S.selDay = k; try { fn(); } finally { S.viewMon = m; S.selDay = sd; } }
@@ -3069,8 +3128,10 @@ function rCheckin() {
     const n = st.i + 1, total = st.cards.length;
     return head(card.y ? "First, yesterday" : "How did today go?", `${n} of ${total} · swipe right for done, left for skipped`) + `
       <div class="ckprog" aria-hidden="true"><i style="width:${Math.round((n - 1) / total * 100)}%"></i></div>
-      <div class="ckstage">${ckCardHtml(card, n, total)}</div>
+      ${st.say ? ckSayHtml(st) : `<div class="ckstage">${ckCardHtml(card, n, total)}</div>
+      ${card.cid && (compById(card.cid) || {}).swap ? `<button class="btn ckswap" data-act="ckSwap">Did the small version: ${esc(compById(card.cid).swap)}</button>` : ""}
       <div class="ckbtns"><button class="btn ckno" data-act="ckNo">Skipped</button><button class="btn primary ckyes" data-act="ckYes">Done</button></div>
+      ${total - n >= 1 ? `<button class="linkish cksaylink" data-act="ckSay">Say or type it all at once</button>` : ""}`}
       <div class="ckfoot">${st.hist.length ? `<button class="linkish" data-act="ckBack">‹ Back</button>` : "<span></span>"}<button class="linkish" data-act="ckSkipAll">${total - n ? `Skip the other ${total - n + 1}` : "Skip this one"}</button></div></div>`;
   }
   if (st.step === "tomorrow") {
@@ -3677,6 +3738,18 @@ function watchingCard() {
     return `<button class="comp wrow" data-act="wOpen" data-u="${esc(u)}"><span class="avs"><i>${esc(initials(d.name))}</i></span><span class="lbl"><span>${esc(d.name || "Someone")}</span><small>${fresh ? `${num(w.held)} of ${num(w.total)} floors held this week${w.mvw ? " · a lighter week" : ""}` : d.prev ? "No update yet this week" : "Nothing shared yet"}</small></span><span class="wbar" aria-hidden="true"><i style="width:${Math.round(pct * 100)}%"></i></span></button>`; }).join("")}</div>`;
 }
 const CHEERS = ["👏 Nice going this week", "💪 You've got this", "🌱 Small steps count", "☕ Proud of you"];
+/* specific beats generic: "I noticed…" lines from what they actually did this week (their own published floors) */
+function noticedLines(w) {
+  const fl = w && Array.isArray(w.floors) ? w.floors : [], num = x => { const n = Number(x); return isFinite(n) ? n : 0; }, nm = f => String(f.n || "").replace(/\s+/g, " ").trim().slice(0, 40);
+  const held = fl.filter(f => nm(f) && num(f.need) > 0 && num(f.h) >= num(f.need)), some = fl.filter(f => nm(f) && num(f.h) > 0 && num(f.h) < num(f.need));
+  const out = held.slice(0, 2).map(f => `I noticed you kept up ${nm(f)} this week. 👏`);
+  if (out.length < 2) some.slice(0, 2 - out.length).forEach(f => out.push(`I noticed you made time for ${nm(f)}. Keep going!`));
+  return out;
+}
+function noticedHtml(u, w) {
+  const lines = noticedLines(w); if (!lines.length) return "";
+  return `<div class="field"><span class="flabel">Say what you noticed</span><div class="chips">${lines.map(t => `<button class="chip noticed" data-act="cheer" data-u="${esc(u)}" data-v="${esc(t)}">${esc(t)}</button>`).join("")}</div><p class="hint" style="margin:6px 0 0">Specific notes mean more than a generic cheer.</p></div>`;
+}
 function rWatchingSheet() {
   const u = S.sheet.u, d = W8.watching[u]; if (!d) { S.sheet = null; return ""; }
   /* everything here was written by the other person: numbers are made numbers, text is escaped */
@@ -3688,6 +3761,7 @@ function rWatchingSheet() {
     <div class="whero"><span class="avs big"><i>${esc(initials(d.name))}</i></span><h2 style="margin:0">${esc(d.name || "Someone")}'s week</h2></div>
     ${fresh ? blk(d.week, "This week") : `<p class="hint">${esc(firstName(d.name))} hasn't opened Compass yet this week.</p>`}
     ${blk(d.prev, "Last week")}
+    ${noticedHtml(u, fresh ? d.week : d.prev)}
     <div class="field"><span class="flabel">Send a cheer</span><div class="chips">${CHEERS.map(t => `<button class="chip" data-act="cheer" data-u="${esc(u)}" data-v="${esc(t)}">${esc(t)}</button>`).join("")}</div>
       <form class="tmrow" id="cheerForm" data-u="${esc(u)}" style="margin-top:8px"><input type="text" id="cheerText" maxlength="280" placeholder="Or write your own" aria-label="Your cheer"><button class="btn small" type="submit">Send</button></form></div>
     <p class="hint" style="margin:0">Keep it kind: a watcher is there to notice and encourage, not to judge.</p>
@@ -4998,7 +5072,67 @@ function rYear(y) {
   ${ahead}
   <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">${canAhead ? `<button class="btn primary" data-act="yDone" data-v="${y}">${me.done ? "Checked in ✓" : `Done with ${y}`}</button>` : ""}<button class="btn quiet" data-act="lookClose">Back to the review</button></div>`;
 }
+/* ============ what your weeks show ============
+   From your own history: for each value, how weeks felt when it held vs when it slipped. Shown only when there
+   are enough weeks on both sides and the gap is real; it's a pattern in your weeks, never a claim about why. */
+function weekInsights() {
+  const cur = monday(new Date()), vals = valueList(), rows = [];
+  const weeks = []; for (let i = 1; i <= 26; i++) { const id = wid(addDays(cur, -7 * i)), w = anyWeek(id); if (w && w.r && w.r.felt) weeks.push({ id, felt: w.r.felt, F: floorsFor(id) }); }
+  if (weeks.length < 8) return [];
+  vals.forEach(v => {
+    const held = [], slip = [];
+    weeks.forEach(x => { const s = valueStatus(v.id, x.F, x.id).s; if (s === "clear") held.push(x.felt); else if (s !== "rest") slip.push(x.felt); });
+    if (held.length < 3 || slip.length < 3) return;
+    const good = a => a.filter(f => f >= 4).length, avg = a => a.reduce((t, f) => t + f, 0) / a.length, gap = avg(held) - avg(slip);
+    if (Math.abs(gap) < 0.8) return;
+    rows.push({ v, gap, held: held.length, slip: slip.length, gh: good(held), gs: good(slip) });
+  });
+  return rows.sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap)).slice(0, 2);
+}
+function insightsCard() {
+  const rows = weekInsights(); if (!rows.length) return "";
+  return `<h3>What your weeks show</h3><div class="card pad insight">${rows.map(r => `<p><i class="vdot" style="background:${valColor(r.v.id)}" aria-hidden="true"></i>${r.gap > 0
+    ? `Weeks when <b>${esc(r.v.name)}</b> held, you rated the week Good or better <b>${r.gh} of ${r.held}</b> times. When it slipped: ${r.gs} of ${r.slip}.`
+    : `Weeks when <b>${esc(r.v.name)}</b> slipped still felt Good or better ${r.gs} of ${r.slip} times; when it held, ${r.gh} of ${r.held}. Worth asking whether its floor fits.`}</p>`).join("")}
+    <p class="hint" style="margin:8px 0 0">From your own last ${Math.min(26, rows.reduce((a, r) => Math.max(a, r.held + r.slip), 0))} reviewed weeks. A pattern, not proof of cause.</p></div>`;
+}
+/* ============ where your hours went (from a calendar file) ============
+   Read one week of a calendar export (.ics), put each event under the value it served (guessed from its title,
+   corrected by you and remembered), and set that against your Cores. Nothing leaves the device. */
+function calWeekRange() { const m = addDays(monday(new Date()), -7); return { from: m, to: addDays(m, 7) }; }
+function calEvents(items) {
+  const { from, to } = calWeekRange(), out = [];
+  items.filter(x => x.kind === "event" && x.src === "calendar" && x.start && !x.allDay && !x.transp).forEach(x => {
+    const s = new Date(x.start), mins = x.dur || 30, r = x.repeat;
+    if (r && (r.freq === "daily" || r.freq === "weekly") && s < to && (!r.until || new Date(r.until) >= from)) {
+      for (let i = 0; i < 7; i++) { const d = addDays(from, i); if (d < new Date(s.getFullYear(), s.getMonth(), s.getDate())) continue;
+        const wd = (d.getDay() + 6) % 7; if (r.freq === "daily" || (r.days && r.days.length ? r.days.includes(wd) : wd === (s.getDay() + 6) % 7)) out.push({ t: x.title, mins }); }
+    } else if (s >= from && s < to) out.push({ t: x.title, mins });
+  });
+  return out;
+}
+const calKey = t => String(t || "").toLowerCase().replace(/\s+/g, " ").trim().slice(0, 80);
+function rCalVals() {
+  const st = S.calv || {}, vals = valueList(), tags = settings().calTag || {}, { from } = calWeekRange();
+  const head = `<div class="lkhead"><button class="iconbtn" data-act="calvClose" aria-label="Back to the review">‹</button><div><span class="eyebrow">Your calendar vs your values</span><h2 style="margin:0">Where your hours went</h2></div></div>`;
+  if (!st.events) return head + `<p class="lede" style="margin:6px 0 14px">Pick a calendar export (.ics) from Google Calendar, Outlook or Apple Calendar. Compass reads the week of ${esc(fmtShort(from))} on this device and shows which values your scheduled hours served. Nothing is uploaded.</p>
+    <label class="btn primary calpick">Choose a calendar file<input type="file" id="calvFile" accept=".ics,text/calendar" hidden></label>${st.err ? `<p class="banner" role="alert" style="margin-top:12px">${esc(st.err)}</p>` : ""}${st.busy ? `<p class="hint">Reading…</p>` : ""}`;
+  const groups = {}; st.events.forEach(e => { const k = calKey(e.t); const g = groups[k] = groups[k] || { k, t: e.t, mins: 0, n: 0 }; g.mins += e.mins; g.n++; });
+  const list = Object.values(groups).map(g => Object.assign(g, { v: tags[g.k] !== undefined ? tags[g.k] : (guessValue(g.t) || "") })).sort((a, b) => b.mins - a.mins);
+  const byV = {}; list.forEach(g => { byV[g.v || "none"] = (byV[g.v || "none"] || 0) + g.mins; });
+  const total = list.reduce((a, g) => a + g.mins, 0), valMins = vals.reduce((a, v) => a + (byV[v.id] || 0), 0);
+  if (!total) return head + `<div class="card pad"><p style="margin:0">No timed events in the week of ${esc(fmtShort(from))} in that file.</p></div><button class="btn" style="margin-top:12px" data-act="calvAgain">Choose another file</button>`;
+  const h = m => fmtDur(m / 60), cores = vals.filter(v => isCore(v.id)), coreMins = cores.reduce((a, v) => a + (byV[v.id] || 0), 0);
+  const note = !valMins ? "None of these events are tagged with a value yet. Pick one for the biggest ones below." : cores.length ? `Your Cores got ${h(coreMins)} of ${h(total)} scheduled (${Math.round(coreMins / total * 100)}%).${coreMins / total < 0.15 ? " Small floors for them on next week's plan would start to close the gap." : ""}` : `${h(valMins)} of ${h(total)} scheduled went to something you value.`;
+  return head + `<p class="lede" style="margin:6px 0 12px">Week of ${esc(fmtShort(from))} · ${st.events.length} events · ${h(total)} scheduled</p>
+    <div class="card pad went"><ul class="wentl">${vals.map(v => ({ v, m: byV[v.id] || 0 })).concat([{ v: { id: "none", name: "No value" }, m: byV.none || 0 }]).filter(r => r.m).sort((a, b) => b.m - a.m).map(r => `<li><span class="nm">${esc(r.v.name)}${r.v.id !== "none" && isCore(r.v.id) ? ' <span class="core">Core</span>' : ""}</span><span class="wbar2" aria-hidden="true"><i style="width:${Math.max(2, Math.round(r.m / total * 100))}%;background:${r.v.id === "none" ? "var(--line)" : valColor(r.v.id)}"></i></span><span class="n">${h(r.m)}</span></li>`).join("")}</ul>
+      <p class="hint" style="margin:10px 0 0">${note}</p></div>
+    <h3>Events</h3><div class="card calgroups">${list.slice(0, 40).map(g => `<div class="calg"><span class="nm">${esc(g.t)}<small>${g.n > 1 ? `${g.n}× · ` : ""}${h(g.mins)}</small></span><select data-calk="${esc(g.k)}" aria-label="Value for ${esc(g.t)}"><option value="">No value</option>${vals.map(v => `<option value="${esc(v.id)}" ${g.v === v.id ? "selected" : ""}>${esc(v.name)}</option>`).join("")}</select></div>`).join("")}</div>
+    <p class="hint" style="margin:8px 0 0">Your choices are remembered for next time. The calendar file itself isn't kept.</p>
+    <button class="btn" style="margin-top:12px" data-act="calvAgain">Choose another file</button>`;
+}
 function rReview(id, F, trips, sugg) {
+  if (S.calv) return rCalVals();
   if (S.tune) return rTune();
   if (S.lookback) return String(S.lookback).length === 4 ? rYear(S.lookback) : rLookback(S.lookback);
   const w = anyWeek(id) || { r: {} }, r = w.r || {};
@@ -5047,7 +5181,9 @@ function rReview(id, F, trips, sugg) {
   ${sugg.length ? `<h3>Compass suggests</h3>${suggCard(sugg)}` : ""}
   ${coachCard()}
   ${monthHasData(lastMonth()) || monthHasData(monthKey(new Date())) ? `<button class="textlink lklink" data-act="lookOpen" data-v="${monthHasData(lastMonth()) ? lastMonth() : monthKey(new Date())}">Look back by month ›</button>` : ""}
+  <button class="textlink lklink" data-act="calvOpen">Your calendar vs your values ›</button>
   ${yearHasData(new Date().getFullYear()) || yearHasData(new Date().getFullYear() - 1) ? `<button class="textlink lklink" data-act="lookOpen" data-v="${checkinYear() || (yearHasData(new Date().getFullYear() - 1) && new Date().getMonth() < 2 ? new Date().getFullYear() - 1 : new Date().getFullYear())}">Look back by year ›</button>` : ""}
+  ${insightsCard()}
   <h3>Felt-sense, last 12 weeks</h3>
   <div class="card pad">${spark()}</div>
   ${floorHistory()}
@@ -5316,6 +5452,7 @@ function renderSheetBody() {
       <div class="fl"><label class="flabel">${c.cadence === "daily" ? "Days a week (floor)" : c.cadence === "monthly" ? "Times a month (floor)" : "Per week (floor)"}</label><div class="stepper"><button data-act="cTarget" data-d="-1" aria-label="Lower floor">−</button><span class="v">${c.target}${c.unit || ""}</span><button class="plus" data-act="cTarget" data-d="1" aria-label="Raise floor">+</button></div></div>
       <div class="fl"><label class="flabel" for="c-mins">Minutes each time</label><input type="number" inputmode="numeric" id="c-mins" data-c="mins" min="0" max="720" step="5" value="${Math.round((c.hours || 0) * 60)}"></div>
     </div>
+    <div class="fl"><label class="flabel" for="c-swap">Smaller version <span class="opt">Optional</span></label><input type="text" id="c-swap" data-c="swap" value="${esc(c.swap || "")}" maxlength="60" placeholder="e.g. a 5-minute video call"><div class="hint">On a hard day, doing this still counts for ${esc(valueName(c.value))}. The evening check-in offers it.</div></div>
     ${c.cadence === "daily" ? `<div class="row"><div><b>Counts unless I say otherwise</b><div class="hint">For things that usually happen, like sleep or staying off social media. Ticked each day by itself; untick on the days it didn't. The evening check-in skips it.</div></div><button class="switch" role="switch" aria-checked="${!!c.dflt}" data-act="cToggle" data-f="dflt" aria-label="Counts unless I say otherwise"></button></div>` : ""}
     <div class="row"><div><b>Safety net</b><div class="hint">Stays on during a Minimum Viable Week.</div></div><button class="switch" role="switch" aria-checked="${!!c.mvw}" data-act="cToggle" data-f="mvw" aria-label="Safety net"></button></div>
     ${c.cadence === "weekly" ? `<div class="row"><div><b>People rotation</b><div class="hint">Logging a call in Compass → People counts here.</div></div><button class="switch" role="switch" aria-checked="${!!c.people}" data-act="cToggle" data-f="people" aria-label="People rotation"></button></div>
@@ -6097,7 +6234,7 @@ document.addEventListener("click", e => {
     case "ckAddT": { const ta = $("#ckAdd"), text = ta ? ta.value : ""; if (!text.trim()) { toast("Write something first."); return; } if (!L.ready) { toast("Your lists are still loading. Try again in a moment."); return; }
       const keep = S.qIgnore; S.qIgnore = new Set(); const added = quickAdd(text, { due: ckTomorrow() }); S.qIgnore = keep; if (ta) ta.value = ""; if (added.length) toast(`Added ${added.length} for tomorrow`); renderSheet(); render(); const f = $("#ckAdd"); if (f) f.focus(); return; }
     case "ckPlan": openPlan(); renderSheet(); return;
-    case "ckFinish": { const st = S.ck; if (!st) return; ckWith(st.day, () => editWeek(w => { dayObj(w, st.day).ckAt = Date.now(); })); st.step = "done"; renderSheet(); render(); return; }
+    case "ckFinish": { const st = S.ck; if (!st) return; ckWith(st.day, () => editWeek(w => { dayObj(w, st.day).ckAt = Date.now(); })); if (S.nt && S.nt.on) ntSave({ ckDay: st.day }).catch(() => {}); st.step = "done"; renderSheet(); render(); return; }
     case "wbLight": editWeek(w => { w.mvw = true; }); editSettings(st => { st.wb = todayKey(); }); toast("A lighter week: only your safety-net floors count."); break;
     case "wbOk": editSettings(st => { st.wb = todayKey(); }); break;
     case "tuneOpen": S.tune = true; S.tuneDone = {}; loadHistory(); pageScrollTo(0, 0); break;
@@ -6106,6 +6243,15 @@ document.addEventListener("click", e => {
     case "tunePause": { const id = b.dataset.id, c = compById(id); if (!c) return; const mon = dkey(monday(new Date())); editProfile(p => { const x = p.components.find(y => y.id === id); if (x) x.paused = mon; }); stat("paused"); S.tuneDone[id] = "Paused"; toast(`Paused “${c.name}”`, () => { editProfile(p => { const x = p.components.find(y => y.id === id); if (x) delete x.paused; }); delete S.tuneDone[id]; render(); }); break; }
     case "tuneKeep": S.tuneDone[b.dataset.id] = "Kept"; break;
     case "tuneFinish": editSettings(st => { st.tuneAt = todayKey(); }); S.tune = false; toast("Floors tuned. Next check in about two months."); pageScrollTo(0, 0); break;
+    case "ckSay": if (S.ck) S.ck.say = { text: "" }; renderSheet(); { const f = $("#ckSayIn"); if (f) f.focus(); } return;
+    case "ckSayX": if (CK_REC) { try { CK_REC.stop(); } catch (e) {} CK_REC = null; } if (S.ck) S.ck.say = null; renderSheet(); return;
+    case "ckSayGo": ckSayApply(); renderSheet(); return;
+    case "ckFlip": { const sv = S.ck && S.ck.say; if (!sv) return; const i = b.dataset.i, m = ckMatch(sv.text, S.ck.cards.slice(S.ck.i)); sv.flip = sv.flip || {}; sv.flip[i] = !(sv.flip[i] !== undefined ? sv.flip[i] : m[i]); renderSheet(); return; }
+    case "ckMic": ckMic(); return;
+    case "ckSwap": { const st = S.ck, card = st && st.cards[st.i]; if (!card) return; ckWith(card.k, () => editWeek(w => { const d = dayObj(w, card.k); d.sw = d.sw || {}; d.sw[card.cid] = 1; })); ckAnswer(true); renderSheet(); return; }
+    case "calvOpen": S.calv = {}; pageScrollTo(0, 0); break;
+    case "calvClose": S.calv = null; pageScrollTo(0, 0); break;
+    case "calvAgain": S.calv = {}; break;
     case "uExp": S.uExp = S.uExp || {}; S.uExp[b.dataset.k] = true; break;
     case "qHelp": S.qHelp = !qHelpOpen(); break;
     case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; }); break;
@@ -6210,7 +6356,7 @@ document.addEventListener("click", e => {
     case "fbOpen": S.sheet = { type: "feedback", text: "" }; break;
     case "fbSend": sendFeedback(); return;
     /* app */
-    case "tab": S.tab = b.dataset.t; S.confirm = null; S.lookback = null; S.tune = false; if (S.tab === "review") loadHistory(); pageScrollTo(0, 0); break;
+    case "tab": S.tab = b.dataset.t; S.confirm = null; S.lookback = null; S.tune = false; S.calv = null; if (S.tab === "review") loadHistory(); pageScrollTo(0, 0); break;
     case "prevWk": case "nextWk": {
       const old = curWid(); S.viewMon = addDays(S.viewMon, act === "prevWk" ? -7 : 7); const nid = curWid();
       if (old !== wid(monday(new Date()))) unsubscribe(old);
@@ -6378,7 +6524,7 @@ document.addEventListener("click", e => {
     case "ntLocal": ntLocalTest(); return;
     case "ntFix": ntFix(b.dataset.force === "1").then(() => { if (b.dataset.force === "1") S.ntTest = null; render(); }); return;
     case "ntDrop": ntDropDevice(b.dataset.k); return;
-    case "ntToggle": { const k = b.dataset.k, n = S.nt || {}; ntSet(k, n[k] ? "" : (k === "eve" ? defaultEve() : "18:00")); return; }
+    case "ntToggle": { const k = b.dataset.k, n = S.nt || {}; ntSet(k, n[k] ? "" : (k === "eve" ? defaultEve() : k === "morn" ? "08:00" : "18:00")); return; }
     case "cSec": { const k = b.dataset.k, o = cOpen(); o.has(k) ? o.delete(k) : o.add(k); try { localStorage.setItem(CSEC_KEY, JSON.stringify([...o])); } catch (e) {} render(); const sec = document.getElementById("csec-" + k); if (sec && o.has(k) && sec.getBoundingClientRect().top < 70) sec.scrollIntoView({ block: "start" }); return; }
     case "editComp": { const c = compById(b.dataset.id); if (c) openComp(c, false); break; }
     case "addComp": S.sheet = { type: "pick", value: b.dataset.value }; break;
@@ -6464,6 +6610,7 @@ document.addEventListener("submit", e => {
 });
 document.addEventListener("input", e => {
   const t = e.target, ds = t.dataset;
+  if (t.id === "ckSayIn" && S.ck && S.ck.say) { S.ck.say.text = t.value; S.ck.say.flip = {}; clearTimeout(S.ckSayT); S.ckSayT = setTimeout(() => { renderSheet(); }, 350); return; }
   if (t.id === "qAdd") { S.qDraft = t.value; if (!t.value) S.qIgnore = new Set(); refreshChips(); return; }
   if (t.id === "capSheet") { S.capDraft = t.value; const q = parseQuick(t.value), box = t.parentElement.querySelector(".qchips"); if (box) box.innerHTML = q.chips.map(c => `<span class="qchip ${c.k}">${esc(c.label)}</span>`).join(""); return; }
   if (ds.iv === "t" || ds.iv === "n") { clearTimeout(S.ivT); S.ivT = setTimeout(() => itemField(t), 500); return; }
@@ -6494,6 +6641,10 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   if (e.target && e.target.dataset && e.target.dataset.nt) { ntSet(e.target.dataset.nt, e.target.value); return; }
+  if (e.target && e.target.dataset && e.target.dataset.calk !== undefined) { const k = e.target.dataset.calk, v = e.target.value; editSettings(st => { st.calTag = Object.assign({}, st.calTag, { [k]: v }); const keys = Object.keys(st.calTag); if (keys.length > 300) keys.slice(0, keys.length - 300).forEach(x => delete st.calTag[x]); }); render(); return; }
+  if (e.target && e.target.id === "calvFile" && e.target.files && e.target.files[0]) { const f = e.target.files[0]; S.calv = { busy: true }; render();
+    impMod().then(M => M.readFiles([f])).then(items => { S.calv = { events: calEvents(items) }; if (!items.some(x => x.src === "calendar")) S.calv = { err: "That file has no calendar events in it. Export an .ics from your calendar app and try again." }; render(); })
+      .catch(() => { S.calv = { err: "Couldn't read that file. Export an .ics from your calendar app and try again." }; render(); }); return; }
   if (e.target && e.target.dataset && e.target.dataset.iv) { clearTimeout(S.ivT); itemField(e.target); return; }
   if (e.target && e.target.dataset && e.target.dataset.plantm) { const [l, id] = e.target.dataset.plantm.split("/"); updItem(l, id, { tm: e.target.value || null }); renderSheet(); return; }   // title and note: the list behind redraws when the sheet closes
   if (e.target && e.target.id === "sortDate" && e.target.value) { sortPick("date", e.target.value); burst(e.target, "var(--accent)", 6); render(); return; }
