@@ -105,6 +105,13 @@ const at = (d, h, m = 0) => { const t = new Date(d); t.setHours(h, m, 0, 0); ret
   ok('at 12:40 am the invitation is for the evening before', await p.locator('.ckinvite').count() === 1);
   await tap('.ckinvite [data-act=ckOpen]'); await settle();
   ok('…and asks about that day', /Today|Yesterday|Task/.test(await text('#ckCard .ckwhen')) || /Anything for tomorrow/.test(await text('.ck h2')));
+  /* the calmer Today and Tasks */
+  await tap('.sheetx').catch(() => {}); await settle(300);
+  ok('Today: no coloured stripes on rows', await p.evaluate(() => [...document.querySelectorAll('.dayrow')].every(r => getComputedStyle(r).boxShadow === 'none' && parseFloat(getComputedStyle(r).borderLeftWidth) <= 1)));
+  ok('Today: a weekly floor planned today isn\'t listed twice', await p.evaluate(() => { const rows = [...document.querySelectorAll('.dayrow')].map(r => r.dataset.k), logs = [...document.querySelectorAll('.logrow [data-act=inc]')].map(b => b.dataset.k); return logs.every(k => !rows.includes(k)); }));
+  await tap('[data-act=tab][data-t=tasks]'); await settle(400);
+  ok('Tasks: a short placeholder that fits', ((await p.locator('#qAdd').getAttribute('placeholder')) || '').length <= 24);
+  ok('Tasks: the values summary stays on Today and Week', (await p.locator('#heading').innerText()) === '');
   ok('no page errors', !errs.length, errs);
   report(`checkin ${W}`, R);
   await b.close();

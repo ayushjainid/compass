@@ -92,6 +92,8 @@ button:disabled{cursor:default}
 .bname{display:flex;flex-direction:column;gap:3px}
 .bname .sync{font:400 11.5px/1.2 var(--sans);letter-spacing:0;color:var(--muted)}
 .bname .sync[hidden]{display:none}
+.bname .sync.ok span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bname:has(.sync.ok){flex-direction:row;align-items:center;gap:8px}
 .island .statusline[hidden]{display:none}
 .islandx:empty{display:none}
 .islandx{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
@@ -160,7 +162,7 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 .check[aria-pressed="true"] .box::after{content:"";width:6px;height:11px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
 .check .lbl{display:flex;flex-direction:column;min-width:0}
 .check .lbl small{color:var(--muted);font-size:12.5px}
-.check .tail{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.check .tail{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 @keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
 
 /* journal & fields */
@@ -381,14 +383,14 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .capbox .qchips{margin:2px 0 8px}
 .tnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px -16px 14px;padding:2px 16px 4px;scroll-snap-type:x proximity;scroll-padding-inline:16px}
 .tnav::-webkit-scrollbar{display:none}
-.tpill{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:500;color:var(--ink2);min-height:38px;scroll-snap-align:start;white-space:nowrap}
+.tpill{flex:none;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;border:1px solid transparent;background:none;font-size:14.5px;font-weight:500;color:var(--ink2);min-height:36px;scroll-snap-align:start;white-space:nowrap}
 .tpill .n{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
-.tpill.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}.tpill.on .n{color:var(--bg);opacity:.75}
-.tpill.add{border-style:dashed;color:var(--accent)}
+.tpill.on{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}.tpill.on .n{color:var(--accent);opacity:.8}
+.tpill.add{color:var(--accent);font-weight:500}
 .avs{display:inline-flex;align-items:center}
 .avs i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:600;letter-spacing:0;background:var(--brass-soft);color:var(--brass);border:2px solid var(--surface);margin-left:-6px}
 .avs i:first-child{margin-left:0}
-.tpill .avs i{width:20px;height:20px;font-size:10px}.tpill.on .avs i{border-color:var(--ink)}
+.tpill .avs i{width:20px;height:20px;font-size:10px}.tpill.on .avs i{border-color:var(--accent-soft)}
 .avs.big i{width:44px;height:44px;font-size:16px;border:0}
 .lday{display:flex;align-items:baseline;gap:10px;margin:2px 0 6px}
 .serves{margin:0 0 12px;font-size:13.5px;color:var(--ink2)}.serves .sv{white-space:nowrap}.serves .vdot{width:8px;height:8px;margin-right:5px}.serves .sep{color:var(--muted)}
@@ -422,7 +424,9 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 @media (prefers-reduced-motion:reduce){.lrow > *{transition:none}}
 .ltx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 6px;color:var(--ink)}
 .ltx .tt{overflow-wrap:anywhere;line-height:1.35}
-.lrow.closed .tt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}
+.lrow.closed .tt{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 55%,transparent);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.lrow.closed{min-height:44px}.lrow.closed .ltx{padding-block:8px}.lrow.closed .tm > :not(.lwho){display:none}.lrow.closed .tm:not(:has(.lwho)){display:none}
+.lrow.closed .tick.on{width:20px;height:20px;margin:0 2px;background:var(--good-soft);border-color:transparent}.lrow.closed .tick.on::after{border-color:var(--good);height:9px;width:4.5px}
 .lrow.let .tt{text-decoration:none;font-style:italic}
 .tick.core{border-color:var(--brass)}
 .ldue{color:var(--ink2);font-weight:500}.ldue.today{color:var(--good)}.ldue.late{color:var(--warn)}
@@ -434,7 +438,7 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .ugapb{display:flex;align-items:baseline;gap:8px;width:100%;min-height:48px;padding:12px 0 8px;border:0;border-bottom:1px dashed var(--line);background:none;text-align:left;cursor:pointer;color:inherit}.ugapb b{font:500 15px var(--sans);color:var(--ink2)}.ugapb span{color:var(--muted);font-size:13px}
 .uadd{width:40px;height:40px;border-radius:50%;color:var(--accent);font-size:20px;line-height:1}.uadd:hover{background:var(--accent-soft)}
 .lhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:2px 0 12px}
-.lname{font:500 26px/1.15 var(--display);letter-spacing:-.01em;margin:0 0 2px;text-transform:none;color:var(--ink)}
+.lname{font:500 22px/1.2 var(--display);letter-spacing:-.01em;margin:0 0 2px;text-transform:none;color:var(--ink)}
 .lhead .hint{display:block}
 .lhact{display:flex;align-items:center;gap:6px;flex:none}
 .item .ihead{display:flex;align-items:flex-start;gap:12px;padding-right:44px}
@@ -774,6 +778,16 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .updbar .x{flex:none;width:32px;height:32px;border-radius:50%;background:transparent;color:var(--muted);font-size:18px;line-height:1}
 .updbar.stale{border-color:var(--brass)}
 @keyframes updIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.loglist{overflow:hidden}
+.logrow{display:flex;align-items:stretch}.logrow + .logrow{border-top:1px solid var(--line)}
+.logmain{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 10px 6px 14px;text-align:left;color:var(--ink)}
+.logmain .lnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logmain .vdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--vc);margin-right:10px;vertical-align:1px}
+.logmain .n{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.logrow.done .n{color:var(--good);font-weight:600}
+.lplus{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);color:var(--accent);font-size:19px;line-height:1}
+.logmain:hover .lplus{border-color:var(--accent)}.logmain:active .lplus{transform:scale(.92)}
+.logrow .cminus{min-width:44px;border-left:1px solid var(--line);font-size:18px}
 .cpair{display:inline-flex;align-items:stretch;border:1px solid var(--line);background:var(--surface);border-radius:999px;overflow:hidden}
 .cpair .chip{border:0;background:transparent;border-radius:0}
 .cpair.done{background:var(--good-soft);border-color:transparent}
@@ -910,7 +924,7 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 .dnrow .tt{font-size:17px;font-weight:500}
 .tick.big{width:30px;height:30px}
 .dnic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:16px}
-.tempty{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px dashed var(--line);border-radius:14px;margin:0 0 16px;color:var(--ink2)}
+.tempty{display:flex;flex-direction:column;gap:4px;padding:18px 4px 22px;margin:0 0 8px;color:var(--muted);font-size:14.5px;line-height:1.5;max-width:46ch}
 .tempty b{color:var(--ink)}
 .tsec{margin:0 0 6px}
 .tsh{display:flex;align-items:center;gap:8px;min-height:44px}
@@ -1133,8 +1147,8 @@ details.fold[open] summary::before{content:"▾ ";}
 .dtime{color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
 .h3n{font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--muted);margin-left:6px}
 .dayrow .lbl small{display:block}.dayrow .sep{opacity:.7}
-.dayrow.weekly,.dayrow.monthly{box-shadow:inset 3px 0 0 var(--vc)}
-.ktag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:var(--sunk);background:color-mix(in srgb,var(--vc) 18%,transparent);color:var(--ink2);vertical-align:1px}
+.dayrow .lbl small{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.ktag{display:inline;font-size:inherit;font-weight:500;color:var(--ink2)}.ktag::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--vc);margin-right:6px;vertical-align:1px}
 .dayrow.going{animation:rowout .38s ease forwards}
 @keyframes rowout{0%{opacity:1}60%{opacity:.5}100%{opacity:0;transform:translateY(6px)}}
 .donefold{margin-top:8px;border:1px dashed var(--line);border-radius:var(--r)}
@@ -2928,7 +2942,9 @@ function ckBuild() {
 function bindCkSwipe() {
   const el = $("#ckCard"); if (!el || el.__sw) return; el.__sw = true;
   let st = null;
-  el.addEventListener("pointerdown", e => { if (e.button > 0) return; st = { x: e.clientX, y: e.clientY, dx: 0, id: e.pointerId, on: false }; });
+  /* a mouse drag would otherwise start the browser's own drag-and-drop or a text selection (Firefox), which cancels it */
+  el.addEventListener("dragstart", e => e.preventDefault());
+  el.addEventListener("pointerdown", e => { if (e.button > 0) return; if (e.pointerType === "mouse") e.preventDefault(); st = { x: e.clientX, y: e.clientY, dx: 0, id: e.pointerId, on: false }; });
   el.addEventListener("pointermove", e => { if (!st || e.pointerId !== st.id) return; const dx = e.clientX - st.x, dy = e.clientY - st.y;
     if (!st.on) { if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return; st.on = true; try { el.setPointerCapture(e.pointerId); } catch (x) {} el.classList.add("drag"); }
     st.dx = dx; el.style.setProperty("--dx", dx + "px"); el.style.setProperty("--rot", (dx / 40).toFixed(2) + "deg"); el.classList.toggle("lean-r", dx > 40); el.classList.toggle("lean-l", dx < -40); });
@@ -2971,11 +2987,11 @@ function ckCardHtml(card, n, total) {
   const k = card.k, when = card.y ? "Yesterday" : k === ckDay() ? "Today" : WD[dayIdx(k)];
   if (card.kind === "t") {
     const it = findItem(card.lid, card.iid); if (!it) return "";
-    return `<div class="ckcard" id="ckCard" data-kind="t"><span class="ckwhen">${esc(it.due && it.due < k ? "Still open" : when)} · Task</span><b class="cknm">${esc(it.t)}</b>${it.v ? `<span class="ckv"><i class="vdot" style="background:${valColor(it.v)}" aria-hidden="true"></i>${esc(valueName(it.v))}</span>` : ""}<p class="ckq">Done?</p></div>`;
+    return `<div class="ckcard" id="ckCard" data-kind="t" draggable="false"><span class="ckwhen">${esc(it.due && it.due < k ? "Still open" : when)} · Task</span><b class="cknm">${esc(it.t)}</b>${it.v ? `<span class="ckv"><i class="vdot" style="background:${valColor(it.v)}" aria-hidden="true"></i>${esc(valueName(it.v))}</span>` : ""}<p class="ckq">Done?</p></div>`;
   }
   const c = compById(card.cid); if (!c) return "";
   const q = card.kind === "w" ? `${esc(c.name)}: ${hFmt(card.have)} of ${c.target}${c.unit || ""} this week. Did you do it ${card.y ? "yesterday" : "today"}?` : card.y ? "Did it happen yesterday?" : "Did it happen?";
-  return `<div class="ckcard" id="ckCard" data-kind="${card.kind}" style="--vc:${valColor(c.value)}"><span class="ckwhen">${when}${card.t ? ` · ${t12(card.t)}` : ""}</span><b class="cknm">${esc(c.name)}</b><span class="ckv"><i class="vdot" style="background:${valColor(c.value)}" aria-hidden="true"></i>${esc(valueName(c.value))}</span><p class="ckq">${q}</p></div>`;
+  return `<div class="ckcard" id="ckCard" draggable="false" data-kind="${card.kind}" style="--vc:${valColor(c.value)}"><span class="ckwhen">${when}${card.t ? ` · ${t12(card.t)}` : ""}</span><b class="cknm">${esc(c.name)}</b><span class="ckv"><i class="vdot" style="background:${valColor(c.value)}" aria-hidden="true"></i>${esc(valueName(c.value))}</span><p class="ckq">${q}</p></div>`;
 }
 function rCheckin() {
   const st = S.ck; if (!st) return "";
@@ -3082,7 +3098,7 @@ function lnav() {
 function qaddBox() {
   const q = S.qDraft ? parseQuick(S.qDraft, { ignore: S.qIgnore }) : { chips: [] };
   const tv = tvState(), here = L.meta[tv] ? `in ${esc(L.meta[tv].name)}` : tv === "upcoming" ? "" : "";
-  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}… try ${L.meta[tv] && isSharedList(L.meta[tv]) ? "“book tickets fri @name”" : "“call mom fri 6pm”"}" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="qq" data-act="qHelp" aria-label="What can I type?" aria-expanded="${!!qHelpOpen()}">?</button><button class="btn small" data-act="capAdd" data-src="qAdd">Add</button></div>
+  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="qq" data-act="qHelp" aria-label="What can I type?" aria-expanded="${!!qHelpOpen()}">?</button><button class="btn small" data-act="capAdd" data-src="qAdd">Add</button></div>
     <div class="qchips" id="qChips" aria-live="polite">${qChipsHtml()}</div>${qHelpOpen() ? qHelpHtml() : ""}`;
 }
 function lmeta(it, opts = {}) {
@@ -4080,7 +4096,7 @@ function render() {
   const st = vals.map(v => valueStatus(v.id, F, id));
   const cleared = st.filter(s => s.s === "clear").length, scoredN = st.filter(s => s.s !== "rest").length;
   const mvw = isMvw(anyWeek(id), id);
-  $("#heading").textContent = (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared";
+  $("#heading").textContent = S.tab === "tasks" ? "" : (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared";
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
   let tabsHtml = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
@@ -4099,6 +4115,11 @@ function render() {
 function countChip(c, v) {
   const need = c.target, u = c.unit || "";
   return `<span class="cpair ${v >= need ? "done" : ""}"><button class="chip" data-act="inc" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><b>+</b>${esc(c.name)}<span class="n">${hFmt(v)}${u}/${need}${u}</span></button>${v > 0 ? `<button class="cminus" data-act="dec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</span>`;
+}
+/* a weekly or monthly floor you log whenever it happens: one quiet row, + to add one */
+function logRow(c, v) {
+  const need = c.target, u = c.unit || "", done = v >= need;
+  return `<div class="logrow${done ? " done" : ""}" style="--vc:${valColor(c.value)}"><button class="logmain" data-act="inc" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><span class="lnm"><i class="vdot" aria-hidden="true"></i>${esc(c.name)}</span><span class="n">${hFmt(v)}${u}/${need}${u}${done ? " ✓" : ""}</span><span class="lplus" aria-hidden="true">+</span></button>${v > 0 ? `<button class="cminus" data-act="dec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</div>`;
 }
 function funChip(c, v) {
   return `<span class="cpair fun"><button class="chip" data-act="fun" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><b>♥</b>${esc(c.name)}${v ? `<span class="n">${v}</span>` : ""}</button>${v > 0 ? `<button class="cminus" data-act="funDec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</span>`;
@@ -4165,8 +4186,9 @@ function rToday(id) {
   ${planC}
   ${todayTasks(id)}
   ${S.selDay === tk ? watchingCard() : ""}
-  ${weekly.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="chips">${weekly.map(chip).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
-  ${monthly.length ? `<h3>This month</h3><div class="chips">${monthly.map(chip).join("")}</div>` : ""}
+  ${(() => { const logW = weekly.filter(c => !plannedOn(c, di)), logM = monthly.filter(c => !(mpToday[c.id] && mpToday[c.id].date === S.selDay));
+    return `${logW.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="card loglist">${logW.map(c => logRow(c, compHave(c, w, id))).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
+  ${logM.length ? `<h3>This month</h3><div class="card loglist">${logM.map(c => logRow(c, compHave(c, w, id))).join("")}</div>` : ""}`; })()}
   ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => funChip(c, (w.c || {})[c.id] || 0)).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it, − to take one back.</p>` : ""}
   <h3>Journal · three lines${jc ? ` · ${compHave(jc, w, id)}/${jc.target} days` : ""}</h3>
   <div class="card">
