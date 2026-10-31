@@ -39,7 +39,8 @@ const at = (d, h, m = 0) => { const t = new Date(d); t.setHours(h, m, 0, 0); ret
   d = await day(D0);
   ok('Back undoes it and shows the card again', !(d.a || {}).reach && (d.ck || {}).reach === undefined && /1 of 5/.test(await step()) && await cardName() === first, { a: d.a, ck: d.ck });
   /* answer by dragging */
-  const drag = async dx => { const c = await p.locator('#ckCard').boundingBox(); await p.mouse.move(c.x + c.width / 2, c.y + 60); await p.mouse.down(); await p.mouse.move(c.x + c.width / 2 + dx / 2, c.y + 62, { steps: 5 }); await p.mouse.move(c.x + c.width / 2 + dx, c.y + 64, { steps: 5 }); await p.mouse.up(); await settle(600); };
+  /* start near the far edge so the pointer stays inside the window (Firefox stops reporting moves outside it) */
+  const drag = async dx => { const c = await p.locator('#ckCard').boundingBox(), x0 = dx > 0 ? c.x + 24 : c.x + c.width - 24; await p.mouse.move(x0, c.y + 60); await p.mouse.down(); await p.mouse.move(x0 + dx / 2, c.y + 62, { steps: 5 }); await p.mouse.move(x0 + dx, c.y + 64, { steps: 5 }); await p.mouse.up(); await settle(600); };
   await drag(40);
   ok('a short drag springs back: still the same card', /1 of 5/.test(await step()) && await cardName() === first);
   await drag(260);
