@@ -92,6 +92,8 @@ button:disabled{cursor:default}
 .bname{display:flex;flex-direction:column;gap:3px}
 .bname .sync{font:400 11.5px/1.2 var(--sans);letter-spacing:0;color:var(--muted)}
 .bname .sync[hidden]{display:none}
+.bname .sync.ok span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bname:has(.sync.ok){flex-direction:row;align-items:center;gap:8px}
 .island .statusline[hidden]{display:none}
 .islandx:empty{display:none}
 .islandx{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
@@ -160,7 +162,7 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 .check[aria-pressed="true"] .box::after{content:"";width:6px;height:11px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
 .check .lbl{display:flex;flex-direction:column;min-width:0}
 .check .lbl small{color:var(--muted);font-size:12.5px}
-.check .tail{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.check .tail{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 @keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
 
 /* journal & fields */
@@ -381,14 +383,14 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .capbox .qchips{margin:2px 0 8px}
 .tnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px -16px 14px;padding:2px 16px 4px;scroll-snap-type:x proximity;scroll-padding-inline:16px}
 .tnav::-webkit-scrollbar{display:none}
-.tpill{flex:none;display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:500;color:var(--ink2);min-height:38px;scroll-snap-align:start;white-space:nowrap}
+.tpill{flex:none;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;border:1px solid transparent;background:none;font-size:14.5px;font-weight:500;color:var(--ink2);min-height:36px;scroll-snap-align:start;white-space:nowrap}
 .tpill .n{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
-.tpill.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}.tpill.on .n{color:var(--bg);opacity:.75}
-.tpill.add{border-style:dashed;color:var(--accent)}
+.tpill.on{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}.tpill.on .n{color:var(--accent);opacity:.8}
+.tpill.add{color:var(--accent);font-weight:500}
 .avs{display:inline-flex;align-items:center}
 .avs i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:600;letter-spacing:0;background:var(--brass-soft);color:var(--brass);border:2px solid var(--surface);margin-left:-6px}
 .avs i:first-child{margin-left:0}
-.tpill .avs i{width:20px;height:20px;font-size:10px}.tpill.on .avs i{border-color:var(--ink)}
+.tpill .avs i{width:20px;height:20px;font-size:10px}.tpill.on .avs i{border-color:var(--accent-soft)}
 .avs.big i{width:44px;height:44px;font-size:16px;border:0}
 .lday{display:flex;align-items:baseline;gap:10px;margin:2px 0 6px}
 .serves{margin:0 0 12px;font-size:13.5px;color:var(--ink2)}.serves .sv{white-space:nowrap}.serves .vdot{width:8px;height:8px;margin-right:5px}.serves .sep{color:var(--muted)}
@@ -422,7 +424,9 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 @media (prefers-reduced-motion:reduce){.lrow > *{transition:none}}
 .ltx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;text-align:left;padding:10px 6px;color:var(--ink)}
 .ltx .tt{overflow-wrap:anywhere;line-height:1.35}
-.lrow.closed .tt{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--muted)}
+.lrow.closed .tt{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 55%,transparent);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.lrow.closed{min-height:44px}.lrow.closed .ltx{padding-block:8px}.lrow.closed .tm > :not(.lwho){display:none}.lrow.closed .tm:not(:has(.lwho)){display:none}
+.lrow.closed .tick.on{width:20px;height:20px;margin:0 2px;background:var(--good-soft);border-color:transparent}.lrow.closed .tick.on::after{border-color:var(--good);height:9px;width:4.5px}
 .lrow.let .tt{text-decoration:none;font-style:italic}
 .tick.core{border-color:var(--brass)}
 .ldue{color:var(--ink2);font-weight:500}.ldue.today{color:var(--good)}.ldue.late{color:var(--warn)}
@@ -434,7 +438,7 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .ugapb{display:flex;align-items:baseline;gap:8px;width:100%;min-height:48px;padding:12px 0 8px;border:0;border-bottom:1px dashed var(--line);background:none;text-align:left;cursor:pointer;color:inherit}.ugapb b{font:500 15px var(--sans);color:var(--ink2)}.ugapb span{color:var(--muted);font-size:13px}
 .uadd{width:40px;height:40px;border-radius:50%;color:var(--accent);font-size:20px;line-height:1}.uadd:hover{background:var(--accent-soft)}
 .lhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:2px 0 12px}
-.lname{font:500 26px/1.15 var(--display);letter-spacing:-.01em;margin:0 0 2px;text-transform:none;color:var(--ink)}
+.lname{font:500 22px/1.2 var(--display);letter-spacing:-.01em;margin:0 0 2px;text-transform:none;color:var(--ink)}
 .lhead .hint{display:block}
 .lhact{display:flex;align-items:center;gap:6px;flex:none}
 .item .ihead{display:flex;align-items:flex-start;gap:12px;padding-right:44px}
@@ -774,6 +778,16 @@ button.textlink{background:none;border:0;padding:8px 2px;font:inherit;font-weigh
 .updbar .x{flex:none;width:32px;height:32px;border-radius:50%;background:transparent;color:var(--muted);font-size:18px;line-height:1}
 .updbar.stale{border-color:var(--brass)}
 @keyframes updIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.loglist{overflow:hidden}
+.logrow{display:flex;align-items:stretch}.logrow + .logrow{border-top:1px solid var(--line)}
+.logmain{flex:1;min-width:0;display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 10px 6px 14px;text-align:left;color:var(--ink)}
+.logmain .lnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logmain .vdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--vc);margin-right:10px;vertical-align:1px}
+.logmain .n{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.logrow.done .n{color:var(--good);font-weight:600}
+.lplus{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);color:var(--accent);font-size:19px;line-height:1}
+.logmain:hover .lplus{border-color:var(--accent)}.logmain:active .lplus{transform:scale(.92)}
+.logrow .cminus{min-width:44px;border-left:1px solid var(--line);font-size:18px}
 .cpair{display:inline-flex;align-items:stretch;border:1px solid var(--line);background:var(--surface);border-radius:999px;overflow:hidden}
 .cpair .chip{border:0;background:transparent;border-radius:0}
 .cpair.done{background:var(--good-soft);border-color:transparent}
@@ -910,7 +924,7 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 .dnrow .tt{font-size:17px;font-weight:500}
 .tick.big{width:30px;height:30px}
 .dnic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:16px}
-.tempty{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px dashed var(--line);border-radius:14px;margin:0 0 16px;color:var(--ink2)}
+.tempty{display:flex;flex-direction:column;gap:4px;padding:18px 4px 22px;margin:0 0 8px;color:var(--muted);font-size:14.5px;line-height:1.5;max-width:46ch}
 .tempty b{color:var(--ink)}
 .tsec{margin:0 0 6px}
 .tsh{display:flex;align-items:center;gap:8px;min-height:44px}
@@ -954,6 +968,29 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 @media (max-width:420px){.ygrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .ystep{margin-top:10px}.ystep > b,.ystep label b{font:600 16.5px/1.3 var(--display)}.ystep .hint{margin:4px 0 10px}.ystep input{width:100%}
 .yq{margin:0 0 10px;line-height:1.5}
+.ckinvite{display:flex;align-items:center;gap:12px;margin:14px 0 4px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--lift)}
+.ckinvite div{flex:1;min-width:0}.ckinvite b{display:block;font:600 18px/1.25 var(--display)}.ckinvite small{color:var(--ink2);font-size:13.5px}
+.ck .ckprog{height:3px;border-radius:2px;background:var(--line);margin:12px 0 0;overflow:hidden}.ck .ckprog i{display:block;height:100%;background:var(--accent);transition:width .25s}
+.ckstage{padding:16px 0 6px;overflow:hidden}
+.ckcard{position:relative;min-height:190px;display:flex;flex-direction:column;gap:6px;padding:20px 20px 18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--lift);touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;transform:translateX(var(--dx,0px)) rotate(var(--rot,0deg));transition:transform .22s ease,opacity .22s ease;animation:ckin .2s ease}
+.ckcard.drag{transition:none;cursor:grabbing}
+.ckcard.lean-r{border-color:var(--good)}.ckcard.lean-l{border-color:var(--muted)}
+.ckcard.fly-r{transform:translateX(120%) rotate(8deg);opacity:0}.ckcard.fly-l{transform:translateX(-120%) rotate(-8deg);opacity:0}
+@keyframes ckin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ckwhen{font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.cknm{font:600 24px/1.2 var(--display);overflow-wrap:anywhere}
+.ckv{font-size:13.5px;color:var(--ink2)}.ckv .vdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.ckq{margin:auto 0 0;padding-top:12px;color:var(--ink2);font-size:15px;line-height:1.45}
+.ckbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.ckbtns .btn{min-height:52px;font-size:16px}
+.ckfoot{display:flex;justify-content:space-between;margin-top:10px;font-size:14px}
+.ckadd{margin-top:12px}.cktm{list-style:none;margin:10px 0 0;padding:0;font-size:14.5px;color:var(--ink2)}.cktm li{padding:6px 0;border-top:1px solid var(--line)}.cktm li span{color:var(--muted);margin-right:8px;font-variant-numeric:tabular-nums}
+.ckneedle{display:flex;justify-content:center;margin:6px 0 10px}.ckneedle svg{width:72px;height:72px}
+.ckneedle .nd{transform-origin:32px 32px;animation:cksettle 1.4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cksettle{0%{transform:rotate(-140deg)}55%{transform:rotate(18deg)}75%{transform:rotate(-7deg)}100%{transform:rotate(0)}}
+.ckvals{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.ckvals li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:11px 14px;font-size:14.5px}.ckvals li + li{border-top:1px solid var(--line)}
+.ckvals .vdot{width:9px;height:9px;border-radius:50%;flex:none}.ckvals .nm{flex:1;min-width:0;font-weight:600}.ckvals .st{margin-left:auto;color:var(--muted);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.ckvals li.ok .st{color:var(--good);font-weight:600}
+@media (prefers-reduced-motion:reduce){.ckcard,.ck .ckprog i{transition:none;animation:none}.ckneedle .nd{animation:none}}
 .lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
 .lookcard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
 .lookcard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small{grid-column:1;color:var(--ink2);font-size:13px}
@@ -1110,8 +1147,8 @@ details.fold[open] summary::before{content:"▾ ";}
 .dtime{color:var(--accent);font-weight:500;font-variant-numeric:tabular-nums}
 .h3n{font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--muted);margin-left:6px}
 .dayrow .lbl small{display:block}.dayrow .sep{opacity:.7}
-.dayrow.weekly,.dayrow.monthly{box-shadow:inset 3px 0 0 var(--vc)}
-.ktag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:5px;background:var(--sunk);background:color-mix(in srgb,var(--vc) 18%,transparent);color:var(--ink2);vertical-align:1px}
+.dayrow .lbl small{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.ktag{display:inline;font-size:inherit;font-weight:500;color:var(--ink2)}.ktag::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--vc);margin-right:6px;vertical-align:1px}
 .dayrow.going{animation:rowout .38s ease forwards}
 @keyframes rowout{0%{opacity:1}60%{opacity:.5}100%{opacity:0;transform:translateY(6px)}}
 .donefold{margin-top:8px;border:1px dashed var(--line);border-radius:var(--r)}
@@ -2152,12 +2189,13 @@ function openFromUrl(u) {
   try {
     const q = new URL(u, location.origin).searchParams, tab = q.get("tab"); if (tab && ["today", "week", "tasks", "review", "compass"].includes(tab)) { S.tab = tab; window.scrollTo(0, 0); }
     const id = k => { const v = q.get(k); return v && /^[A-Za-z0-9_-]{1,128}$/.test(v) ? v : null; };
-    if (id("list") || id("watch") || q.get("plan") === "tomorrow") { S.openReq = { l: id("list"), i: id("item"), w: id("watch"), plan: q.get("plan") === "tomorrow" }; applyOpenReq(); }
+    const ck = q.get("from") === "checkin" || q.get("checkin") === "1";
+    if (id("list") || id("watch") || q.get("plan") === "tomorrow" || ck) { S.openReq = { l: id("list"), i: id("item"), w: id("watch"), plan: q.get("plan") === "tomorrow", ck }; applyOpenReq(); }
   } catch (e) {}
 }
 if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => { if (e.data && e.data.type === "open") { openFromUrl(e.data.url); render(); } });
 const START_URL = location.href;
-if (/[?&](tab|from|list|watch|plan)=/.test(location.search)) history.replaceState(null, "", location.pathname);
+if (/[?&](tab|from|list|watch|plan|checkin)=/.test(location.search)) history.replaceState(null, "", location.pathname);
 /* no pinch zoom on phones and tablets: iOS ignores user-scalable=no, so cancel its gesture events */
 if (matchMedia("(pointer:coarse)").matches) ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
@@ -2869,6 +2907,137 @@ function planCard() {
   return `<section class="plancard" aria-label="Plan tomorrow"><div><b>Plan tomorrow</b><small>${n ? `${n} already on it. ` : ""}Two minutes: choose what tomorrow is for, and when.</small></div><button class="btn small" data-act="ptOpen">Plan</button><button class="planx" data-act="ptHide" aria-label="Not tonight">✕</button></section>`;
 }
 /* the groups are fixed when the sheet opens, so rows stay where they are while you tap them */
+/* ============ the evening check-in ============
+   One card at a time: what was due today (and anything left unanswered yesterday), weekly floors still short, and
+   today's tasks. Right (or ✓) = done, left (or Skip) = skipped; both are answers, so nothing is asked twice. Then
+   "anything for tomorrow?", then where the week stands. After midnight, until 4 am, "today" is still the evening before. */
+const CK_FROM = 16;
+const ckDay = () => { const n = new Date(); return n.getHours() < 4 ? dkey(addDays(parse(todayKey()), -1)) : todayKey(); };
+const ckTomorrow = () => dkey(addDays(parse((S.ck && S.ck.day) || ckDay()), 1));
+function ckInfo(k) { const id = wid(monday(parse(k))), w = anyWeek(id) || { days: {}, c: {} }; return { id, w, d: (w.days || {})[k] || {} }; }
+function ckFloorCards(k, withWeekly) {
+  const { id, w, d } = ckInfo(k), di = dayIdx(k), a = d.a || {}, pd = d.p || {}, ck = d.ck || {}, mp = monthPlan(monthKey(parse(k))), out = [];
+  const act = activeComps(id, w), F = floorsFor(id), need = c => ((F.find(f => f.c.id === c.id) || {}).need ?? c.target);
+  act.forEach(c => {
+    if (ck[c.id] !== undefined) return;
+    if (c.cadence === "daily" && c.auto !== "journal" && dailyOn(c, di) && !a[c.id]) out.push({ k, cid: c.id, kind: "a", t: plannedOn(c, di) ? timeOn(c, di) : "" });
+    else if (c.cadence === "weekly" && plannedOn(c, di) && !pd[c.id]) out.push({ k, cid: c.id, kind: "p", t: timeOn(c, di) });
+    else if (c.cadence === "monthly" && mp[c.id] && mp[c.id].date === k && !pd[c.id]) out.push({ k, cid: c.id, kind: "p", t: mp[c.id].time || "" });
+  });
+  out.sort((x, y) => (x.t ? 0 : 1) - (y.t ? 0 : 1) || (x.t < y.t ? -1 : x.t > y.t ? 1 : 0));
+  if (withWeekly) act.filter(c => c.cadence === "weekly" && !plannedOn(c, di) && ck[c.id] === undefined && compHave(c, w, id) < need(c)).forEach(c => out.push({ k, cid: c.id, kind: "w", have: compHave(c, w, id), need: need(c) }));
+  return out;
+}
+function ckBuild() {
+  const k = ckDay(), y = dkey(addDays(parse(k), -1)), since = (profile() || {}).onboardedAt || "";
+  const cards = (since && y >= since ? ckFloorCards(y, false).map(x => Object.assign(x, { y: true })) : []).concat(ckFloorCards(k, true));
+  if (L.ready) {
+    const ck = ckInfo(k).d.ck || {}, mine = i => !i.who || i.who === ST.uid, seen = new Set();
+    overdue(dkey(addDays(parse(k), 1))).filter(i => mine(i) && i.open && !seen.has(i.id) && seen.add(i.id) && ck["t:" + i.id] === undefined).slice(0, 8)
+      .forEach(i => cards.push({ k, kind: "t", lid: i.lid, iid: i.id }));
+  }
+  return { day: k, cards, i: 0, hist: [], step: "cards", logged: 0, skippedT: [] };
+}
+/* drag the card: past a third of its width it goes; otherwise it springs back. Arrow keys work too. */
+function bindCkSwipe() {
+  const el = $("#ckCard"); if (!el || el.__sw) return; el.__sw = true;
+  let st = null;
+  /* a mouse drag would otherwise start the browser's own drag-and-drop or a text selection (Firefox), which cancels it */
+  el.addEventListener("dragstart", e => e.preventDefault());
+  el.addEventListener("pointerdown", e => { if (e.button > 0) return; if (e.pointerType === "mouse") e.preventDefault(); st = { x: e.clientX, y: e.clientY, dx: 0, id: e.pointerId, on: false }; });
+  el.addEventListener("pointermove", e => { if (!st || e.pointerId !== st.id) return; const dx = e.clientX - st.x, dy = e.clientY - st.y;
+    if (!st.on) { if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return; st.on = true; try { el.setPointerCapture(e.pointerId); } catch (x) {} el.classList.add("drag"); }
+    st.dx = dx; el.style.setProperty("--dx", dx + "px"); el.style.setProperty("--rot", (dx / 40).toFixed(2) + "deg"); el.classList.toggle("lean-r", dx > 40); el.classList.toggle("lean-l", dx < -40); });
+  const end = e => { if (!st || (e && e.pointerId !== st.id)) return; const s = st; st = null; el.classList.remove("drag");
+    if (!s.on) return;
+    const far = Math.max(80, el.offsetWidth / 3);
+    if (Math.abs(s.dx) >= far && e.type === "pointerup") { const yes = s.dx > 0; el.classList.add(yes ? "fly-r" : "fly-l"); setTimeout(() => { ckAnswer(yes); renderSheet(); }, 170); }
+    else { el.style.setProperty("--dx", "0px"); el.style.setProperty("--rot", "0deg"); el.classList.remove("lean-r", "lean-l"); } };
+  el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
+}
+document.addEventListener("keydown", e => {
+  if (!S.sheet || S.sheet.type !== "checkin" || !S.ck || S.ck.step !== "cards" || e.target.closest("textarea,input")) return;
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); ckAnswer(e.key === "ArrowRight"); renderSheet(); const b = $(".ckyes"); if (b) b.focus(); }
+});
+function openCheckin() { S.ck = ckBuild(); if (!S.ck.cards.length) S.ck.step = "tomorrow"; S.sheet = { type: "checkin" }; }
+/* change one day's record, whichever week it's in */
+function ckWith(k, fn) { const m = S.viewMon, sd = S.selDay; S.viewMon = monday(parse(k)); S.selDay = k; try { fn(); } finally { S.viewMon = m; S.selDay = sd; } }
+const ckMark = (k, key, v) => ckWith(k, () => editWeek(w => { const d = dayObj(w, k); d.ck = d.ck || {}; if (v === undefined) delete d.ck[key]; else d.ck[key] = v; }));
+function ckAnswer(yes) {
+  const st = S.ck; if (!st || st.step !== "cards") return; const card = st.cards[st.i]; if (!card) return;
+  const c = card.cid ? compById(card.cid) : null, key = card.kind === "t" ? "t:" + card.iid : card.cid;
+  let undo = () => {};
+  if (yes && card.kind === "a" && c) { ckWith(card.k, () => editWeek(w => { dayObj(w, card.k).a[c.id] = true; })); stat("logged"); undo = () => ckWith(card.k, () => editWeek(w => { delete dayObj(w, card.k).a[c.id]; })); }
+  else if (yes && card.kind === "p" && c) { ckWith(card.k, () => { editWeek(w => { const d = dayObj(w, card.k); d.p = d.p || {}; d.p[c.id] = true; }); bump(c, 1); }); undo = () => ckWith(card.k, () => { editWeek(w => { const d = dayObj(w, card.k); if (d.p) delete d.p[c.id]; }); bump(c, -1); }); }
+  else if (yes && card.kind === "w" && c) { ckWith(card.k, () => bump(c, 1)); undo = () => ckWith(card.k, () => bump(c, -1)); }
+  else if (yes && card.kind === "t") { const r = completeItem(card.lid, card.iid); const u = undoItem(card.lid, card.iid); undo = () => { if (r && !r.repeat) bumpMonthDone(-1); u(); }; }
+  if (!yes && card.kind === "t") st.skippedT.push(card.iid);
+  ckMark(card.k, key, yes ? 1 : 0);
+  st.hist.push({ i: st.i, key, k: card.k, yes, undo, tid: !yes && card.kind === "t" ? card.iid : null });
+  if (yes) st.logged++;
+  try { if (navigator.vibrate) navigator.vibrate(yes ? 12 : 6); } catch (e) {}
+  st.i++; if (st.i >= st.cards.length) st.step = "tomorrow";
+}
+function ckBack() {
+  const st = S.ck; if (!st) return; const h = st.hist.pop(); if (!h) return;
+  h.undo(); ckMark(h.k, h.key, undefined); if (h.yes) st.logged--; if (h.tid) st.skippedT = st.skippedT.filter(x => x !== h.tid);
+  st.i = h.i; st.step = "cards";
+}
+function ckCardHtml(card, n, total) {
+  const k = card.k, when = card.y ? "Yesterday" : k === ckDay() ? "Today" : WD[dayIdx(k)];
+  if (card.kind === "t") {
+    const it = findItem(card.lid, card.iid); if (!it) return "";
+    return `<div class="ckcard" id="ckCard" data-kind="t" draggable="false"><span class="ckwhen">${esc(it.due && it.due < k ? "Still open" : when)} · Task</span><b class="cknm">${esc(it.t)}</b>${it.v ? `<span class="ckv"><i class="vdot" style="background:${valColor(it.v)}" aria-hidden="true"></i>${esc(valueName(it.v))}</span>` : ""}<p class="ckq">Done?</p></div>`;
+  }
+  const c = compById(card.cid); if (!c) return "";
+  const q = card.kind === "w" ? `${esc(c.name)}: ${hFmt(card.have)} of ${c.target}${c.unit || ""} this week. Did you do it ${card.y ? "yesterday" : "today"}?` : card.y ? "Did it happen yesterday?" : "Did it happen?";
+  return `<div class="ckcard" id="ckCard" draggable="false" data-kind="${card.kind}" style="--vc:${valColor(c.value)}"><span class="ckwhen">${when}${card.t ? ` · ${t12(card.t)}` : ""}</span><b class="cknm">${esc(c.name)}</b><span class="ckv"><i class="vdot" style="background:${valColor(c.value)}" aria-hidden="true"></i>${esc(valueName(c.value))}</span><p class="ckq">${q}</p></div>`;
+}
+function rCheckin() {
+  const st = S.ck; if (!st) return "";
+  const head = (t, sub) => `<div class="in ck"><div class="grab"></div><span class="flabel">Close the day</span><h2 style="margin:0">${t}</h2>${sub ? `<p class="hint" style="margin:2px 0 0">${sub}</p>` : ""}`;
+  if (st.step === "cards") {
+    const card = st.cards[st.i]; if (!card) { st.step = "tomorrow"; return rCheckin(); }
+    const n = st.i + 1, total = st.cards.length;
+    return head(card.y ? "First, yesterday" : "How did today go?", `${n} of ${total} · swipe right for done, left for skipped`) + `
+      <div class="ckprog" aria-hidden="true"><i style="width:${Math.round((n - 1) / total * 100)}%"></i></div>
+      <div class="ckstage">${ckCardHtml(card, n, total)}</div>
+      <div class="ckbtns"><button class="btn ckno" data-act="ckNo">Skipped</button><button class="btn primary ckyes" data-act="ckYes">Done</button></div>
+      <div class="ckfoot">${st.hist.length ? `<button class="linkish" data-act="ckBack">‹ Back</button>` : "<span></span>"}<button class="linkish" data-act="ckSkipAll">${total - n ? `Skip the other ${total - n + 1}` : "Skip this one"}</button></div></div>`;
+  }
+  if (st.step === "tomorrow") {
+    const tm = ckTomorrow(), on = dueOn(tm).filter(i => !i.who || i.who === ST.uid), skipped = st.skippedT.map(id => allOpen().find(i => i.id === id)).filter(i => i && i.open && i.due !== tm);
+    const d = parse(tm);
+    return head("Anything for tomorrow?", `${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]}. Optional; a line or two is plenty.`) + `
+      ${skipped.length ? `<span class="flabel" style="margin-top:6px">Skipped today</span><div class="chips">${skipped.map(i => `<button class="chip" data-act="ckMove" data-l="${esc(i.lid)}" data-id="${esc(i.id)}">→ Tomorrow: ${esc(i.t.slice(0, 40))}</button>`).join("")}</div>` : ""}
+      <div class="qadd ckadd"><textarea id="ckAdd" rows="1" placeholder="Add for tomorrow… e.g. “call the bank 10am”" aria-label="Add a task for tomorrow" enterkeyhint="done"></textarea><button class="btn small" data-act="ckAddT">Add</button></div>
+      ${on.length ? `<ul class="cktm">${on.slice(0, 8).map(i => `<li>${i.tm ? `<span>${esc(t12(i.tm))}</span>` : ""}${esc(i.t)}</li>`).join("")}</ul>` : `<p class="hint" style="margin:8px 0 0">Nothing on tomorrow yet.</p>`}
+      <div class="ckbtns"><button class="btn quiet" data-act="ckPlan">Plan it properly</button><button class="btn primary" data-act="ckFinish">${on.length ? "Done" : "Nothing for now"}</button></div>
+      ${st.cards.length ? `<div class="ckfoot"><button class="linkish" data-act="ckBack">‹ Back</button><span></span></div>` : ""}</div>`;
+  }
+  /* finish: where the week stands, in words */
+  const id = wid(monday(parse(st.day))), F = floorsFor(id), vals = valueList();
+  const rows = vals.map(v => { const vs = valueStatus(v.id, F, id); if (vs.s === "rest") return null;
+    const short = vs.it.filter(f => f.have < f.need && f.c.cadence !== "monthly").map(f => `${f.c.name} ${hFmt(f.have)}/${hFmt(f.need)}${f.c.unit || ""}`);
+    return { v, ok: vs.s === "clear" || (vs.s === "open" && !short.length), short }; }).filter(Boolean);
+  const held = rows.filter(r => r.ok).length, wkLeft = 6 - dayIdx(st.day);
+  const since = (profile() || {}).onboardedAt || "", firstWk = since && wid(monday(parse(since))) === id;
+  const line = !rows.length ? "A quiet week by design." : held === rows.length ? "Every value has held this week. That's the whole game."
+    : held ? `${held} of ${rows.length} values held so far${wkLeft > 0 ? `, with ${wkLeft} day${wkLeft > 1 ? "s" : ""} to go` : ""}.`
+    : firstWk ? "Your first week. Every tick from here counts." : wkLeft > 2 ? "Early days. Plenty of week left." : "A light week. Monday starts a fresh one.";
+  return `<div class="in ck ckdone"><div class="grab"></div>
+    <div class="ckneedle" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="var(--line)" stroke-width="2"/><g class="nd"><path d="M32 8l5 24h-10z" fill="var(--brass)"/><path d="M32 56l-5-24h10z" fill="var(--muted)"/></g><circle cx="32" cy="32" r="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.4"/></svg></div>
+    <h2 style="margin:0;text-align:center">${st.logged ? `${st.logged} thing${st.logged > 1 ? "s" : ""} logged. Day closed.` : "Day closed."}</h2>
+    <p class="lede" style="text-align:center;margin:4px 0 12px">${line}</p>
+    ${rows.length ? `<ul class="ckvals">${rows.map(r => `<li class="${r.ok ? "ok" : ""}"><i class="vdot" style="background:${valColor(r.v.id)}" aria-hidden="true"></i><span class="nm">${esc(r.v.name)}</span><span class="st">${r.ok ? "Held ✓" : esc(r.short.slice(0, 2).join(" · "))}</span></li>`).join("")}</ul>` : ""}
+    <button class="btn primary" style="width:100%;margin-top:14px" data-act="closeSheet">Good night</button></div>`;
+}
+function ckCard() {
+  const tk = todayKey(), h = new Date().getHours(), k = ckDay();
+  if ((h < CK_FROM && h >= 4) || !onboarded() || S.selDay !== tk && k === tk) return "";
+  const { d } = ckInfo(k); if (d.ckAt) return "";
+  return `<section class="ckinvite" aria-label="Close the day"><div><b>Close the day</b><small>A minute: swipe through what happened, then anything for tomorrow.</small></div><button class="btn small" data-act="ckOpen">Start</button></section>`;
+}
 function openPlan() { S.plan = { orig: {}, groups: planGroups() }; S.sheet = { type: "plan" }; }
 function planGroups() {
   const tm = tomorrowKey(), seen = new Set(), out = [], mine = i => !i.who || i.who === ST.uid;
@@ -2929,7 +3098,7 @@ function lnav() {
 function qaddBox() {
   const q = S.qDraft ? parseQuick(S.qDraft, { ignore: S.qIgnore }) : { chips: [] };
   const tv = tvState(), here = L.meta[tv] ? `in ${esc(L.meta[tv].name)}` : tv === "upcoming" ? "" : "";
-  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}… try ${L.meta[tv] && isSharedList(L.meta[tv]) ? "“book tickets fri @name”" : "“call mom fri 6pm”"}" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="qq" data-act="qHelp" aria-label="What can I type?" aria-expanded="${!!qHelpOpen()}">?</button><button class="btn small" data-act="capAdd" data-src="qAdd">Add</button></div>
+  return `<div class="qadd"><textarea id="qAdd" rows="1" placeholder="Add a task${here ? " " + here : ""}" aria-label="Add a task" enterkeyhint="done">${esc(S.qDraft || "")}</textarea><button class="qq" data-act="qHelp" aria-label="What can I type?" aria-expanded="${!!qHelpOpen()}">?</button><button class="btn small" data-act="capAdd" data-src="qAdd">Add</button></div>
     <div class="qchips" id="qChips" aria-live="polite">${qChipsHtml()}</div>${qHelpOpen() ? qHelpHtml() : ""}`;
 }
 function lmeta(it, opts = {}) {
@@ -3486,6 +3655,7 @@ function applyOpenReq() {
   if (r.l && L.ready && L.meta[r.l]) { setTv(r.l); S.tab = "tasks"; if (r.i && findItem(r.l, r.i)) S.sheet = { type: "item", l: r.l, id: r.i }; S.openReq = null; soonRender(); return; }
   if (r.w && W8.watching[r.w]) { S.tab = "today"; S.sheet = { type: "watching", u: r.w }; S.openReq = null; soonRender(); return; }
   if (r.plan && L.ready) { S.tab = "tasks"; setTv("today"); openPlan(); S.openReq = null; soonRender(); }
+  if (r.ck && L.ready) { S.tab = "today"; S.selDay = todayKey(); openCheckin(); S.openReq = null; soonRender(); }
 }
 
 /* account deletion: your lists, invites, watch page and cheers go; shared lists you're in carry on without you */
@@ -3926,7 +4096,7 @@ function render() {
   const st = vals.map(v => valueStatus(v.id, F, id));
   const cleared = st.filter(s => s.s === "clear").length, scoredN = st.filter(s => s.s !== "rest").length;
   const mvw = isMvw(anyWeek(id), id);
-  $("#heading").textContent = (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared";
+  $("#heading").textContent = S.tab === "tasks" ? "" : (mvw ? "Minimum Viable Week · " : "") + cleared + " of " + vals.length + " values cleared";
   setNeedle(scoredN ? cleared / scoredN : 0);
   const trips = tripwires(), sugg = suggestions();
   let tabsHtml = TABS.filter(t => t.t !== "people").map(t => `<button role="tab" data-act="tab" data-t="${t.t}" aria-selected="${S.tab === t.t}"><svg viewBox="0 0 24 24">${t.svg}</svg>${t.name}${t.t === "review" && trips.length ? '<span class="dot" aria-label="needs attention"></span>' : ""}</button>`).join("");
@@ -3945,6 +4115,11 @@ function render() {
 function countChip(c, v) {
   const need = c.target, u = c.unit || "";
   return `<span class="cpair ${v >= need ? "done" : ""}"><button class="chip" data-act="inc" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><b>+</b>${esc(c.name)}<span class="n">${hFmt(v)}${u}/${need}${u}</span></button>${v > 0 ? `<button class="cminus" data-act="dec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</span>`;
+}
+/* a weekly or monthly floor you log whenever it happens: one quiet row, + to add one */
+function logRow(c, v) {
+  const need = c.target, u = c.unit || "", done = v >= need;
+  return `<div class="logrow${done ? " done" : ""}" style="--vc:${valColor(c.value)}"><button class="logmain" data-act="inc" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><span class="lnm"><i class="vdot" aria-hidden="true"></i>${esc(c.name)}</span><span class="n">${hFmt(v)}${u}/${need}${u}${done ? " ✓" : ""}</span><span class="lplus" aria-hidden="true">+</span></button>${v > 0 ? `<button class="cminus" data-act="dec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</div>`;
 }
 function funChip(c, v) {
   return `<span class="cpair fun"><button class="chip" data-act="fun" data-k="${esc(c.id)}" aria-label="Add one ${esc(c.name)}"><b>♥</b>${esc(c.name)}${v ? `<span class="n">${v}</span>` : ""}</button>${v > 0 ? `<button class="cminus" data-act="funDec" data-k="${esc(c.id)}" aria-label="Remove one ${esc(c.name)}">−</button>` : ""}</span>`;
@@ -4002,7 +4177,7 @@ function rToday(id) {
   const hr = new Date().getHours(), part = hr < 5 ? "evening" : hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
   const first = ((S.user && S.user.name) || "").split(" ")[0];
   /* one invitation at a time: the reminders prompt, then tonight's plan, then the day's tip */
-  const askC = ntAskCard(), firstDay = !!((profile() || {}).pending || {}).intro, planC = !firstDay && S.selDay === tk && id === thisWk() ? planCard() : "", tipC = askC || planC ? "" : introCard();
+  const askC = ntAskCard(), firstDay = !!((profile() || {}).pending || {}).intro, planC = !firstDay && S.selDay === tk && id === thisWk() ? ckCard() : "", tipC = askC || planC ? "" : introCard();
   return `${tipC}${askC}${S.selDay === tk ? cheersCard() : ""}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
@@ -4011,8 +4186,9 @@ function rToday(id) {
   ${planC}
   ${todayTasks(id)}
   ${S.selDay === tk ? watchingCard() : ""}
-  ${weekly.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="chips">${weekly.map(chip).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
-  ${monthly.length ? `<h3>This month</h3><div class="chips">${monthly.map(chip).join("")}</div>` : ""}
+  ${(() => { const logW = weekly.filter(c => !plannedOn(c, di)), logM = monthly.filter(c => !(mpToday[c.id] && mpToday[c.id].date === S.selDay));
+    return `${logW.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="card loglist">${logW.map(c => logRow(c, compHave(c, w, id))).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
+  ${logM.length ? `<h3>This month</h3><div class="card loglist">${logM.map(c => logRow(c, compHave(c, w, id))).join("")}</div>` : ""}`; })()}
   ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => funChip(c, (w.c || {})[c.id] || 0)).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it, − to take one back.</p>` : ""}
   <h3>Journal · three lines${jc ? ` · ${compHave(jc, w, id)}/${jc.target} days` : ""}</h3>
   <div class="card">
@@ -5011,6 +5187,7 @@ function renderSheetBody() {
     </div></div>`;
     return;
   }
+  if (sh.type === "checkin") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet cksheet" role="dialog" aria-label="Close the day">${rCheckin()}</div>`; bindCkSwipe(); return; }
   if (sh.type === "vquiz") {
     const html = rVQuiz(); if (!html) { root.innerHTML = ""; return; }
     root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Find your values">${html}</div>`;
@@ -5841,6 +6018,15 @@ document.addEventListener("click", e => {
     }
     case "yDone": { const y = b.dataset.v; editSettings(st => { st.years = st.years || {}; st.years[y] = Object.assign({}, st.years[y], { done: todayKey() }); }); toast(`Here's to ${+y + 1}.`); S.lookback = null; window.scrollTo(0, 0); break; }
     case "yValues": { const yq = S.yq; if (!yq) return; startOnboarding(true); const d = S.ob && S.ob.d; if (d) { d.values = yq.picks.concat(d.values.filter(v => !VALUE_LIB.some(x => x.id === v))); d.cores = yq.stars.map(v => ({ value: v })); S.ob.step = 1; } S.yq = null; S.lookback = null; toast("Review the values, then continue to keep or adjust your floors."); window.scrollTo(0, 0); break; }
+    case "ckOpen": openCheckin(); break;
+    case "ckYes": case "ckNo": { const el = $("#ckCard"); if (el && !reduced()) { el.classList.add(act === "ckYes" ? "fly-r" : "fly-l"); setTimeout(() => { ckAnswer(act === "ckYes"); renderSheet(); }, 170); return; } ckAnswer(act === "ckYes"); renderSheet(); return; }
+    case "ckBack": ckBack(); renderSheet(); return;
+    case "ckSkipAll": { const st = S.ck; if (!st) return; while (st.step === "cards") ckAnswer(false); renderSheet(); return; }
+    case "ckMove": { const it = findItem(b.dataset.l, b.dataset.id); if (it) { setDue(it, ckTomorrow()); toast(`On tomorrow: “${it.t.slice(0, 36)}”`); } renderSheet(); render(); return; }
+    case "ckAddT": { const ta = $("#ckAdd"), text = ta ? ta.value : ""; if (!text.trim()) { toast("Write something first."); return; } if (!L.ready) { toast("Your lists are still loading. Try again in a moment."); return; }
+      const keep = S.qIgnore; S.qIgnore = new Set(); const added = quickAdd(text, { due: ckTomorrow() }); S.qIgnore = keep; if (ta) ta.value = ""; if (added.length) toast(`Added ${added.length} for tomorrow`); renderSheet(); render(); const f = $("#ckAdd"); if (f) f.focus(); return; }
+    case "ckPlan": openPlan(); renderSheet(); return;
+    case "ckFinish": { const st = S.ck; if (!st) return; ckWith(st.day, () => editWeek(w => { dayObj(w, st.day).ckAt = Date.now(); })); st.step = "done"; renderSheet(); render(); return; }
     case "uExp": S.uExp = S.uExp || {}; S.uExp[b.dataset.k] = true; break;
     case "qHelp": S.qHelp = !qHelpOpen(); break;
     case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; }); break;
@@ -6257,6 +6443,7 @@ document.addEventListener("change", e => {
 });
 document.addEventListener("keydown", e => {
   const t = e.target, typing = t && /^(TEXTAREA|INPUT|SELECT)$/.test(t.tagName);
+  if (typing && t.id === "ckAdd" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); const btn = document.querySelector('[data-act="ckAddT"]'); if (btn) btn.click(); return; }
   if (typing && t.id === "qAdd" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); const btn = document.querySelector('[data-act="capAdd"][data-src="qAdd"]'); if (btn) btn.click(); return; }
   if (typing && t.id === "iTitle" && e.key === "Enter") { e.preventDefault(); t.blur(); return; }
   if (typing && t.tagName === "TEXTAREA" && t.closest(".capbox") && e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); const btn = t.closest(".capbox").querySelector('[data-act="capAdd"]'); if (btn) btn.click(); return; }
