@@ -14,6 +14,7 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   const patchItem = async (t, patch) => { await settle(1200); const it = await item(t);   // let pending saves land first: the mock rewrites the whole store
  await p.evaluate(([k, patch]) => { const st = JSON.parse(localStorage.getItem('__mockstore')); Object.assign(st[k], patch); localStorage.setItem('__mockstore', JSON.stringify(st)); }, [`lists/${it.lid}/items/${it.id}`, patch]); await p.reload(); await settle(1500); await tap('[data-act=tab][data-t=tasks]'); await settle(600); };
   const today = dk(new Date()), tomorrow = dk(new Date(Date.now() + 864e5)), thisWk = 'w-' + dk(mon(new Date()));
+  { const t = new Date(); t.setHours(11, 0, 0, 0); await p.clock.setFixedTime(t); }   // daytime: after 4 pm the evening card takes the slipping nudge's place
   await onboard(A, ['rel', 'body', 'learn']);
   await tap('[data-act=tab][data-t=tasks]'); await settle(1200);
   for (const t of ['Renew passport today', 'Call the bank', 'Fix the bike']) { await p.locator('#qAdd').fill(t); await p.keyboard.press('Enter'); await settle(350); }
@@ -125,7 +126,7 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   ok('the tick has a 44px tap area', await E.p.evaluate(() => { const t = document.querySelector('#lview .lrow .tick'), b = getComputedStyle(t, '::before'); return t.offsetWidth + 2 * -parseFloat(b.left) >= 44; }));
   ok('no coloured stripe on rounded cards', await E.p.evaluate(() => ['.focus', '.plancard'].every(sel => { const e = document.querySelector('#lview ' + sel); if (!e) return true; const c = getComputedStyle(e); return parseFloat(c.borderLeftWidth) <= 1 && parseFloat(c.borderTopWidth) <= 1; })));
   await E.tap('[data-act=tab][data-t=today]');
-  ok('…and on Today', await E.p.locator('#main .plancard').count() === 1);
+  ok('…and on Today it\'s the evening check-in, which ends with tomorrow', await E.p.locator('#main .ckinvite').count() === 1 && await E.p.locator('#main .plancard').count() === 0);
   await E.tap('[data-act=tab][data-t=tasks]'); await E.tap('#lview [data-act=ptHide]');
   ok('with the plan card dismissed, the slipping question can show', await E.p.locator('#lview .slipcard').count() === 1);
   await E.tap('[data-act=tab][data-t=today]');
