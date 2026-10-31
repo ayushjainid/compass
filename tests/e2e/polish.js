@@ -79,7 +79,7 @@ const at = (d, h = 11) => { const t = new Date(d); t.setHours(h, 0, 0, 0); retur
 
   /* ---- swipe ---- */
   await tap('[data-act=tv][data-v=inbox]'); await settle(400);
-  const canTouch = touch && await p.evaluate(() => typeof Touch === 'function' && typeof TouchEvent === 'function');
+  const canTouch = touch && await p.evaluate(() => { try { new TouchEvent('touchstart', { touches: [new Touch({ identifier: 1, target: document.body, clientX: 0, clientY: 0 })] }); return true; } catch (e) { return false; } });   // WebKit can't build touches from script
   if (canTouch) {
     const swipe = (title, dx, dy = 0) => p.evaluate(([title, dx, dy]) => {
       const row = [...document.querySelectorAll('.lrow')].find(r => r.innerText.includes(title)); if (!row) return 'no row';
