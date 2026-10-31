@@ -29,6 +29,7 @@ const JOBS = [
   ["polish.js", PHONE], ["polish.js", SMALL], ["polish.js", DARK], ["polish.js", DESK],
   ["checkin.js", PHONE], ["checkin.js", SMALL], ["checkin.js", DARK], ["checkin.js", DESK],
   ["standalone.js", PHONE], ["standalone.js", SMALL],
+  ["tune.js", PHONE], ["tune.js", DARK], ["tune.js", DESK],
   ["daylist.js", HOME], ["lists.js", HOME], ["checkin.js", HOME], ["more.js", HOME], ["polish.js", HOME], ["collab.js", HOME],
   ["a11y.js", X],
 ];

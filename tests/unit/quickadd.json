@@ -281,6 +281,26 @@
      "t": "milk, eggs",
      "due": "2026-10-17"
     }
+   ],
+   [
+    "Talk to papa about Air India options: 7:45 AM Indore, or 8:20 AM Udaipur TUE. Jiju's flight on 7:00 AM WED",
+    {
+     "t": "Talk to papa about Air India options: 7:45 AM Indore, or 8:20 AM Udaipur TUE. Jiju's flight on 7:00 AM WED"
+    }
+   ],
+   [
+    "Write the long email to the landlord about the broken boiler tomorrow 6pm",
+    {
+     "t": "Write the long email to the landlord about the broken boiler",
+     "tm": "18:00"
+    }
+   ],
+   [
+    "call mom fri 6pm",
+    {
+     "t": "call mom",
+     "tm": "18:00"
+    }
    ]
   ],
   "nd": [

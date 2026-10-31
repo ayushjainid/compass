@@ -16,7 +16,8 @@ export function openToday({ profile, settings, week }, day, mondayKey) {
   const mplan = ((((settings || {}).months || {})[monthKey(parse(day))] || {}).plan) || {};
   const out = [], active = comps.filter(c => !mvw || c.mvw);
   for (const c of active) {
-    if (c.cadence === "daily" && c.auto !== "journal" && (!planDays(c).length || planDays(c).includes(di)) && !ticked[c.id]) out.push({ id: c.id, name: c.name, kind: "a", t: planDays(c).includes(di) ? timeOn(c, di) : "" });
+    const byDefault = c.dflt && day >= (c.dfltFrom || "") && ticked[c.id] !== false;   // "counts unless I say otherwise"
+    if (c.cadence === "daily" && c.auto !== "journal" && !byDefault && (!planDays(c).length || planDays(c).includes(di)) && !ticked[c.id]) out.push({ id: c.id, name: c.name, kind: "a", t: planDays(c).includes(di) ? timeOn(c, di) : "" });
     else if (c.cadence === "weekly" && planDays(c).includes(di) && !done[c.id]) out.push({ id: c.id, name: c.name, kind: "p", t: timeOn(c, di), step: c.step || 1 });
   }
   return out.sort((x, y) => (x.t ? 0 : 1) - (y.t ? 0 : 1) || (x.t < y.t ? -1 : x.t > y.t ? 1 : 0)).map(({ t, ...x }) => x).concat(

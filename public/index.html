@@ -997,6 +997,11 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 .ckvals li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:11px 14px;font-size:14.5px}.ckvals li + li{border-top:1px solid var(--line)}
 .ckvals .vdot{width:9px;height:9px;border-radius:50%;flex:none}.ckvals .nm{flex:1;min-width:0;font-weight:600}.ckvals .st{margin-left:auto;color:var(--muted);font-size:13px;text-align:right;font-variant-numeric:tabular-nums}.ckvals li.ok .st{color:var(--good);font-weight:600}
 @media (prefers-reduced-motion:reduce){.ckcard,.ck .ckprog i{transition:none;animation:none}.ckneedle .nd{animation:none}}
+.wback{margin:4px 0 14px}.wback b{font:600 19px/1.25 var(--display)}.wback p{margin:6px 0 12px;color:var(--ink2);line-height:1.5}
+.tunelist{overflow:hidden}.tunerow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px}.tunerow + .tunerow{border-top:1px solid var(--line)}
+.tnm{flex:1 1 200px;min-width:0}.tnm b{display:block;font-weight:600}.tnm small{color:var(--muted);font-size:13px}
+.tnm .vdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--vc);margin-right:8px;vertical-align:1px}
+.tacts{display:flex;gap:6px;flex-wrap:wrap}.tdone{color:var(--good);font-weight:600;font-size:13.5px}
 .lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
 .lookcard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
 .lookcard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small{grid-column:1;color:var(--ink2);font-size:13px}
@@ -1924,6 +1929,7 @@ function stat(ev) {
   try {
     if (S.mode !== "db" || !ST.fs || !ST.uid || S.tooOld || !STAT_EVENTS.includes(ev) || !FB.increment) return;
     const d = todayKey(), w = dkey(monday(new Date())), seen = settings().seen || {};
+    if (ev === "active" && seen.d && seen.d < d && !S.awayFrom) S.awayFrom = seen.d;   // the last day you opened Compass, before today
     const asMap = x => Array.isArray(x) ? Object.fromEntries(x.map(k => [k, 1])) : (x || {});
     const de = seen.d === d ? asMap(seen.de) : {}, we = seen.w === w ? asMap(seen.we) : {}, out = [];
     if (!de[ev]) out.push(["d-" + d, ev]);
@@ -2157,6 +2163,48 @@ function activeDays(n = 28) {
   }
   return act;
 }
+/* ============ welcome back ============
+   After a week or more away: one calm card instead of a wall of 0/7s. A lighter week (the Minimum Viable Week)
+   is one tap; nothing about the gap is counted against you. */
+function welcomeCard() {
+  const from = S.awayFrom, since = (profile() || {}).onboardedAt; if (!from || !since) return "";
+  const gap = daysBetween(from, todayKey()); if (gap < 7 || (settings().wb || "") >= todayKey() || S.selDay !== todayKey()) return "";
+  const id = thisWk(), light = isMvw(anyWeek(id), id);
+  return `<section class="card pad wback" aria-label="Welcome back"><b>Welcome back.</b><p>${gap >= 14 ? "It's been a little while." : "It's been about a week."} Nothing to catch up on: this week starts now, from wherever you are.</p>
+    <div class="row" style="justify-content:flex-start;gap:8px">${light ? "" : `<button class="btn small" data-act="wbLight">Start lighter this week</button>`}<button class="btn small quiet" data-act="wbOk">${light ? "Got it" : "Start as normal"}</button></div></section>`;
+}
+/* ============ floor tune-up ============
+   After two weeks (and every eight after that): every floor beside how often it really happened over the last two
+   finished weeks, with one tap to lower it to that, pause it or keep it. A floor you hold beats one you miss. */
+const TUNE_EVERY = 56;
+function tuneRows() {
+  const cur = monday(new Date()), ids = [wid(addDays(cur, -14)), wid(addDays(cur, -7))].filter(id => anyWeek(id));
+  if (ids.length < 2) return [];
+  return comps().filter(c => !c.fun && !c.paused && c.auto !== "journal").map(c => {
+    let have = 0, need = 0, wk = 0;
+    ids.forEach(id => { if (!activeComps(id).some(x => x.id === c.id)) return; wk++; have += Math.min(compHave(c, anyWeek(id), id), c.target); need += c.target; });
+    if (!wk) return null;
+    const avg = have / wk, step = c.step || 1, sug = Math.max(step, Math.round(avg / step) * step);
+    return { c, have, need, wk, rate: need ? have / need : 1, sug: sug < c.target ? sug : null };
+  }).filter(Boolean).sort((a, b) => a.rate - b.rate);
+}
+function tuneCard() {
+  const since = (profile() || {}).onboardedAt, last = settings().tuneAt;
+  if (!since || daysBetween(since, todayKey()) < 14 || (last && daysBetween(last, todayKey()) < TUNE_EVERY)) return "";
+  const rows = tuneRows(); if (!rows.some(r => r.sug)) return "";
+  return `<button class="lookcard tunecard" data-act="tuneOpen"><span class="lk">Two-minute tune-up</span><b>Make your floors match your real weeks</b><small>${rows.filter(r => r.sug).length} floor${rows.filter(r => r.sug).length > 1 ? "s" : ""} happened less often than planned. Lower, pause or keep each one.</small><span class="chev" aria-hidden="true"></span></button>`;
+}
+function rTune() {
+  const rows = tuneRows(), done = S.tuneDone || {}, unit = c => c.cadence === "daily" ? "days" : c.unit ? c.unit : "times";
+  const per = c => c.cadence === "monthly" ? "a month" : "a week";
+  const head = `<div class="lkhead"><button class="iconbtn" data-act="tuneClose" aria-label="Back to the review">‹</button><div><span class="eyebrow">Tune-up</span><h2 style="margin:0">Your floors, honestly</h2></div></div>
+    <p class="lede" style="margin:4px 0 14px">The last two weeks, floor by floor. A floor you hold beats one you miss; you can raise it again any time.</p>`;
+  if (!rows.length) return head + `<div class="card pad"><p style="margin:0">Two finished weeks are needed first.</p></div>`;
+  return head + `<div class="card tunelist">${rows.map(r => { const c = r.c, d = done[c.id];
+    return `<div class="tunerow" style="--vc:${valColor(c.value)}"><div class="tnm"><b><i class="vdot" aria-hidden="true"></i>${esc(c.name)}</b><small>${hFmt(r.have)} of ${hFmt(r.need)} ${unit(c)} over ${r.wk} weeks · floor ${hFmt(c.target)} ${per(c)}</small></div>
+      ${d ? `<span class="tdone">${esc(d)}</span>` : `<div class="tacts">${r.sug ? `<button class="btn small" data-act="tuneLower" data-id="${esc(c.id)}" data-v="${r.sug}">Lower to ${hFmt(r.sug)}</button>` : ""}<button class="btn small quiet" data-act="tunePause" data-id="${esc(c.id)}">Pause</button><button class="btn small quiet" data-act="tuneKeep" data-id="${esc(c.id)}">Keep</button></div>`}</div>`; }).join("")}</div>
+    <div style="margin-top:16px"><button class="btn primary" data-act="tuneFinish">Done</button></div>`;
+}
 function fadeCard() {
   const n = S.nt, since = (profile() || {}).onboardedAt;
   if (!n || !n.on || !n.eve || !since || daysBetween(since, todayKey()) < 28) return "";
@@ -2286,10 +2334,13 @@ function isMvw(w, id) {
   return w && w.mvw !== undefined ? !!w.mvw : pre;
 }
 const hasJournal = d => { const j = (d && d.j) || {}; return [j.win, j.spark, j.grat].some(s => (s || "").trim()); };
+/* a daily floor ticked on day k; one set to "counts unless I say otherwise" is done on every day from when that was
+   turned on up to today, unless it was unticked (false) */
+function aOn(c, d, k) { const v = ((d || {}).a || {})[c.id]; if (c.dflt && k && k >= (c.dfltFrom || "") && k <= todayKey()) return v !== false; return !!v; }
 function compHave(c, w, id) {
   if (c.cadence === "daily") {
     if (!w) return 0; const mon = parse(id.slice(2)); let n = 0;
-    for (let i = 0; i < 7; i++) { const d = (w.days || {})[dkey(addDays(mon, i))]; if (!d) continue; if (c.auto === "journal" ? hasJournal(d) : (d.a || {})[c.id]) n++; }
+    for (let i = 0; i < 7; i++) { const k = dkey(addDays(mon, i)), d = (w.days || {})[k]; if (!d && !c.dflt) continue; if (c.auto === "journal" ? hasJournal(d || {}) : aOn(c, d, k)) n++; }
     return n;
   }
   if (c.cadence === "monthly") {
@@ -2722,8 +2773,13 @@ const END = "(?=[\\s,.;:!?)]|$)";
 const nextWeekday = (from, di, strict) => { let d = new Date(from); if (strict) d = addDays(d, 1); while ((d.getDay() + 6) % 7 !== di) d = addDays(d, 1); return d; };
 const normName = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 function parseQuick(raw, opts = {}) {
-  const ign = opts.ignore || new Set(), base = parse(todayKey()), todayIdx = (base.getDay() + 6) % 7;
+  const base = parse(todayKey()), todayIdx = (base.getDay() + 6) % 7;
   let t = " " + String(raw || "").replace(/\s+/g, " ") + " ";
+  /* a long note keeps its words: only its last few can be a date, time, repeat or list ("…options: 7:45 AM Indore, or 8:20 Udaipur TUE" stays as typed) */
+  let head = ""; const words = t.trim().split(" ");
+  if (words.length > 10) { head = " " + words.slice(0, -5).join(" "); t = " " + words.slice(-5).join(" ") + " "; }
+  /* …and a note that already mentions times or days in its body is a note about them, not a reminder */
+  const ign = head && new RegExp(`\\b(\\d{1,2}(:\\d\\d)?\\s?(am|pm)|\\d{1,2}:\\d\\d|${DAY_FULL}|${DAY_SHORT})\\b`, "i").test(head) ? new Set([...(opts.ignore || []), "due", "time", "rep"]) : (opts.ignore || new Set());
   const out = { chips: [] };
   const take = (kind, re, fn) => { if (ign.has(kind)) return false; const m = t.match(re); if (!m) return false; if (fn(m) === false) return false; t = t.slice(0, m.index) + " " + t.slice(m.index + m[0].length); return true; };
   take("rep", new RegExp(`\\s(?:every\\s+(day|weekday|week|weekend|month|year|${DAY_FULL}|${DAY_SHORT}|sat|sun)|(daily|weekdays|weekly|monthly|yearly|annually))${END}`, "i"), m => {
@@ -2775,6 +2831,7 @@ function parseQuick(raw, opts = {}) {
   if (out.tm && !out.due) out.due = later ? dkey(addDays(base, 1)) : todayKey();
   if (out.rep && out.rep.u === "week" && (out.rep.d === undefined || out.rep.d === null) && out.due) out.rep.d = (parse(out.due).getDay() + 6) % 7;
   if (out.rep && ["month", "year"].includes(out.rep.u) && out.due) out.rep.dom = parse(out.due).getDate();
+  t = head + t;
   /* punctuation left behind by a taken word: "call mom tomorrow, 6pm." → "call mom" */
   out.t = t.replace(/\s+[,.;:]+(?=\s*$)/, "").replace(/\s+([,;:])(?=\s)/g, "$1").replace(/\s+/g, " ").trim().replace(/[,;:]+$/, "").trim();
   if (out.due) out.chips.push({ k: "due", label: fmtWhen(out.due) });
@@ -2931,7 +2988,7 @@ function ckFloorCards(k, withWeekly) {
   const act = activeComps(id, w), F = floorsFor(id), need = c => ((F.find(f => f.c.id === c.id) || {}).need ?? c.target);
   act.forEach(c => {
     if (ck[c.id] !== undefined) return;
-    if (c.cadence === "daily" && c.auto !== "journal" && dailyOn(c, di) && !a[c.id]) out.push({ k, cid: c.id, kind: "a", t: plannedOn(c, di) ? timeOn(c, di) : "" });
+    if (c.cadence === "daily" && c.auto !== "journal" && !c.dflt && dailyOn(c, di) && !a[c.id]) out.push({ k, cid: c.id, kind: "a", t: plannedOn(c, di) ? timeOn(c, di) : "" });
     else if (c.cadence === "weekly" && plannedOn(c, di) && !pd[c.id]) out.push({ k, cid: c.id, kind: "p", t: timeOn(c, di) });
     else if (c.cadence === "monthly" && mp[c.id] && mp[c.id].date === k && !pd[c.id]) out.push({ k, cid: c.id, kind: "p", t: mp[c.id].time || "" });
   });
@@ -4148,18 +4205,18 @@ function rToday(id) {
   if (!keys.includes(S.selDay)) S.selDay = keys.includes(tk) ? tk : keys[0];
   const act = activeComps(id, w);
   const allDaily = act.filter(c => c.cadence === "daily");
-  const isDone = (c, d) => c.auto === "journal" ? hasJournal(d) : !!(d.a || {})[c.id];
+  const isDone = (c, d, k) => c.auto === "journal" ? hasJournal(d) : aOn(c, d, k);
   const strip = keys.map((k, i) => {
     const d = (w.days || {})[k] || {};
-    const due = allDaily.filter(c => dailyOn(c, i) || isDone(c, d));
-    const n = due.filter(c => isDone(c, d)).length, tot = Math.max(due.length, 1);
+    const due = allDaily.filter(c => dailyOn(c, i) || isDone(c, d, k));
+    const n = due.filter(c => isDone(c, d, k)).length, tot = Math.max(due.length, 1);
     const p = Math.round(n / tot * 100);
     return `<button data-act="day" data-k="${k}" aria-pressed="${k === S.selDay}" class="${k === tk ? "today" : ""} ${k > tk ? "future" : ""}" aria-label="${WD[i]} ${parse(k).getDate()}${k > tk ? ", upcoming" : ""}, ${n} of ${due.length} done">
       <span class="wd">${WD[i]}</span><span class="ring ${p >= 100 ? "full" : ""}" style="--p:${p}"><span>${parse(k).getDate()}</span></span></button>`;
   }).join("");
   const d = (w.days || {})[S.selDay] || {}, a = d.a || {}, j = d.j || {};
   /* a daily floor with picked days only shows on those days (or if it was already ticked here) */
-  const daily = allDaily.filter(c => dailyOn(c, dayIdx(S.selDay)) || isDone(c, d));
+  const daily = allDaily.filter(c => dailyOn(c, dayIdx(S.selDay)) || isDone(c, d, S.selDay));
   const selDate = parse(S.selDay);
   const title = S.selDay === tk ? "Today" : WD[(selDate.getDay() + 6) % 7] + ", " + fmtShort(selDate);
   const dIdx = dayIdx(S.selDay), dTime = c => plannedOn(c, dIdx) ? timeOn(c, dIdx) : "";
@@ -4172,12 +4229,12 @@ function rToday(id) {
   const pd = (d.p || {});
   /* one list for the day: daily floors + weekly/monthly floors planned on this day, in time order; done ones fold away at the bottom */
   const KORD = { daily: 0, weekly: 1, monthly: 2 };
-  const items = daily.filter(c => c.auto !== "journal").map((c, i) => ({ c, i, kind: "daily", t: dTime(c), done: !!a[c.id], act: "anchor" }))
+  const items = daily.filter(c => c.auto !== "journal").map((c, i) => ({ c, i, kind: "daily", t: dTime(c), done: aOn(c, d, S.selDay), act: "anchor" }))
     .concat(plannedList.map((x, i) => ({ c: x.c, i, kind: x.c.cadence, t: x.t || "", done: !!pd[x.c.id], act: "planDone" })))
     .sort((x, y) => (x.t ? 0 : 1) - (y.t ? 0 : 1) || (x.t < y.t ? -1 : x.t > y.t ? 1 : 0) || KORD[x.kind] - KORD[y.kind] || x.i - y.i);
   const pending = items.filter(x => !x.done), doneL = items.filter(x => x.done);
   const dayRow = x => { const c = x.c, have = compHave(c, w, id), u = c.unit || "";
-    const sub = [x.t ? `<span class="dtime">${t12(x.t)}</span>` : "", x.kind !== "daily" ? `<span class="ktag ${x.kind}">${x.kind === "weekly" ? (everyN(c) > 1 ? everyText(c) : "Weekly") : "Monthly"}</span>` : "", x.kind !== "daily" ? fmtDur(durOf(c) / 60) : "", esc(c.note || "")].filter(Boolean).join('<span class="sep"> · </span>');
+    const sub = [x.t ? `<span class="dtime">${t12(x.t)}</span>` : "", x.kind !== "daily" ? `<span class="ktag ${x.kind}">${x.kind === "weekly" ? (everyN(c) > 1 ? everyText(c) : "Weekly") : "Monthly"}</span>` : "", x.kind !== "daily" ? fmtDur(durOf(c) / 60) : "", c.dflt && c.cadence === "daily" ? "Counts by default" : "", esc(c.note || "")].filter(Boolean).join('<span class="sep"> · </span>');
     return `<button class="check dayrow ${x.kind}${x.done ? " isdone" : ""}" data-act="${x.act}" data-k="${esc(c.id)}" aria-pressed="${x.done}" style="--vc:${valColor(c.value)}"><span class="box"></span><span class="lbl"><span class="nm">${esc(c.name)}</span>${sub ? `<small>${sub}</small>` : ""}</span><span class="tail">${hFmt(have)}${u}/${c.target}${u}</span></button>`; };
   const dayHtml = items.length ? `<h3>${S.selDay === tk ? "Your day" : WD[di] + "'s list"} <span class="h3n">${doneL.length} of ${items.length} done</span></h3>
     ${pending.length ? `<div class="card daylist">${pending.map(dayRow).join("")}</div>` : `<div class="card pad alldone">All done for ${S.selDay === tk ? "today" : WD[di]}. Nicely held.</div>`}
@@ -4189,7 +4246,8 @@ function rToday(id) {
   const first = ((S.user && S.user.name) || "").split(" ")[0];
   /* one invitation at a time: the reminders prompt, then tonight's plan, then the day's tip */
   const askC = ntAskCard(), firstDay = !!((profile() || {}).pending || {}).intro, planC = !firstDay && S.selDay === tk && id === thisWk() ? ckCard() : "", tipC = askC || planC ? "" : introCard();
-  return `${tipC}${askC}${S.selDay === tk ? cheersCard() : ""}
+  const wbC = welcomeCard();
+  return `${wbC}${wbC ? "" : tipC}${askC}${S.selDay === tk ? cheersCard() : ""}
   <div class="strip" role="group" aria-label="Days of this week">${strip}</div>
   <h2>${esc(title)}</h2>
   <p class="lede">${S.selDay === tk ? `<span class="greetin">Good ${part}${first ? ", " + esc(first) : ""}.</span> ` : ""}${S.selDay > tk ? "Still ahead. Plan it, or tick anything you've already done early; it counts for this week." : "Tap what happened. One miss is noise; two in a row is the pattern to catch."}</p>
@@ -4941,6 +4999,7 @@ function rYear(y) {
   <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">${canAhead ? `<button class="btn primary" data-act="yDone" data-v="${y}">${me.done ? "Checked in ✓" : `Done with ${y}`}</button>` : ""}<button class="btn quiet" data-act="lookClose">Back to the review</button></div>`;
 }
 function rReview(id, F, trips, sugg) {
+  if (S.tune) return rTune();
   if (S.lookback) return String(S.lookback).length === 4 ? rYear(S.lookback) : rLookback(S.lookback);
   const w = anyWeek(id) || { r: {} }, r = w.r || {};
   const nextId = wid(addDays(S.viewMon, 7)), pre = !!(settings().preMvw || {})[nextId];
@@ -4957,7 +5016,7 @@ function rReview(id, F, trips, sugg) {
   const ag = activeGoals().filter(g => { const n = goalWeekN(g, S.viewMon); return n >= 1 && n <= GOAL_WEEKS; });
   return `
   ${trips.length ? `<h2>Tripwires</h2><p class="lede">These trigger a review, not blame.</p>${trips.map(t => `<div class="trip">${esc(t)}</div>`).join("")}` : ""}
-  ${yearCard() || lookbackCard()}
+  ${yearCard() || tuneCard() || lookbackCard()}
   <h2>Sunday review</h2>
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
   ${reviewSetupCards()}
@@ -5257,6 +5316,7 @@ function renderSheetBody() {
       <div class="fl"><label class="flabel">${c.cadence === "daily" ? "Days a week (floor)" : c.cadence === "monthly" ? "Times a month (floor)" : "Per week (floor)"}</label><div class="stepper"><button data-act="cTarget" data-d="-1" aria-label="Lower floor">−</button><span class="v">${c.target}${c.unit || ""}</span><button class="plus" data-act="cTarget" data-d="1" aria-label="Raise floor">+</button></div></div>
       <div class="fl"><label class="flabel" for="c-mins">Minutes each time</label><input type="number" inputmode="numeric" id="c-mins" data-c="mins" min="0" max="720" step="5" value="${Math.round((c.hours || 0) * 60)}"></div>
     </div>
+    ${c.cadence === "daily" ? `<div class="row"><div><b>Counts unless I say otherwise</b><div class="hint">For things that usually happen, like sleep or staying off social media. Ticked each day by itself; untick on the days it didn't. The evening check-in skips it.</div></div><button class="switch" role="switch" aria-checked="${!!c.dflt}" data-act="cToggle" data-f="dflt" aria-label="Counts unless I say otherwise"></button></div>` : ""}
     <div class="row"><div><b>Safety net</b><div class="hint">Stays on during a Minimum Viable Week.</div></div><button class="switch" role="switch" aria-checked="${!!c.mvw}" data-act="cToggle" data-f="mvw" aria-label="Safety net"></button></div>
     ${c.cadence === "weekly" ? `<div class="row"><div><b>People rotation</b><div class="hint">Logging a call in Compass → People counts here.</div></div><button class="switch" role="switch" aria-checked="${!!c.people}" data-act="cToggle" data-f="people" aria-label="People rotation"></button></div>
     <div class="fl"><span class="flabel">Repeats <span class="opt">Optional</span></span><div class="seg">${[1, 2, 3, 4].map(n => `<button data-act="cEvery" data-v="${n}" aria-pressed="${everyN(c) === n}">${n === 1 ? "Every week" : `Every ${n}`}</button>`).join("")}</div></div>
@@ -6038,6 +6098,14 @@ document.addEventListener("click", e => {
       const keep = S.qIgnore; S.qIgnore = new Set(); const added = quickAdd(text, { due: ckTomorrow() }); S.qIgnore = keep; if (ta) ta.value = ""; if (added.length) toast(`Added ${added.length} for tomorrow`); renderSheet(); render(); const f = $("#ckAdd"); if (f) f.focus(); return; }
     case "ckPlan": openPlan(); renderSheet(); return;
     case "ckFinish": { const st = S.ck; if (!st) return; ckWith(st.day, () => editWeek(w => { dayObj(w, st.day).ckAt = Date.now(); })); st.step = "done"; renderSheet(); render(); return; }
+    case "wbLight": editWeek(w => { w.mvw = true; }); editSettings(st => { st.wb = todayKey(); }); toast("A lighter week: only your safety-net floors count."); break;
+    case "wbOk": editSettings(st => { st.wb = todayKey(); }); break;
+    case "tuneOpen": S.tune = true; S.tuneDone = {}; loadHistory(); pageScrollTo(0, 0); break;
+    case "tuneClose": S.tune = false; pageScrollTo(0, 0); break;
+    case "tuneLower": { const id = b.dataset.id, v = +b.dataset.v, c = compById(id); if (!c) return; const before = c.target; editProfile(p => { const x = p.components.find(y => y.id === id); if (x) x.target = v; }); S.tuneDone[id] = `Lowered to ${hFmt(v)}`; toast(`${c.name}: ${hFmt(before)} → ${hFmt(v)}`, () => { editProfile(p => { const x = p.components.find(y => y.id === id); if (x) x.target = before; }); delete S.tuneDone[id]; render(); }); break; }
+    case "tunePause": { const id = b.dataset.id, c = compById(id); if (!c) return; const mon = dkey(monday(new Date())); editProfile(p => { const x = p.components.find(y => y.id === id); if (x) x.paused = mon; }); stat("paused"); S.tuneDone[id] = "Paused"; toast(`Paused “${c.name}”`, () => { editProfile(p => { const x = p.components.find(y => y.id === id); if (x) delete x.paused; }); delete S.tuneDone[id]; render(); }); break; }
+    case "tuneKeep": S.tuneDone[b.dataset.id] = "Kept"; break;
+    case "tuneFinish": editSettings(st => { st.tuneAt = todayKey(); }); S.tune = false; toast("Floors tuned. Next check in about two months."); pageScrollTo(0, 0); break;
     case "uExp": S.uExp = S.uExp || {}; S.uExp[b.dataset.k] = true; break;
     case "qHelp": S.qHelp = !qHelpOpen(); break;
     case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; }); break;
@@ -6142,7 +6210,7 @@ document.addEventListener("click", e => {
     case "fbOpen": S.sheet = { type: "feedback", text: "" }; break;
     case "fbSend": sendFeedback(); return;
     /* app */
-    case "tab": S.tab = b.dataset.t; S.confirm = null; S.lookback = null; if (S.tab === "review") loadHistory(); pageScrollTo(0, 0); break;
+    case "tab": S.tab = b.dataset.t; S.confirm = null; S.lookback = null; S.tune = false; if (S.tab === "review") loadHistory(); pageScrollTo(0, 0); break;
     case "prevWk": case "nextWk": {
       const old = curWid(); S.viewMon = addDays(S.viewMon, act === "prevWk" ? -7 : 7); const nid = curWid();
       if (old !== wid(monday(new Date()))) unsubscribe(old);
@@ -6150,7 +6218,7 @@ document.addEventListener("click", e => {
       subscribe(nid); break;
     }
     case "day": S.selDay = k; break;
-    case "anchor": { let on; editWeek(w => { const d = dayObj(w, S.selDay); d.a[k] = !d.a[k]; on = d.a[k]; }); settleRow(b, on); if (on) stat("logged"); return; }
+    case "anchor": { let on; const cc = compById(k); editWeek(w => { const d = dayObj(w, S.selDay); on = !(cc ? aOn(cc, d, S.selDay) : d.a[k]); d.a[k] = cc && cc.dflt ? on : on || undefined; if (d.a[k] === undefined) delete d.a[k]; }); settleRow(b, on); if (on) stat("logged"); return; }
     case "doneFold": S.doneOpen = !S.doneOpen; break;
     case "cp": editWeek(w => { const d = dayObj(w, S.selDay); d.cp = d.cp === b.dataset.v ? null : b.dataset.v; }); break;
     case "inc": case "dec": {
@@ -6326,7 +6394,7 @@ document.addEventListener("click", e => {
     case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
     case "closeSheet": if (S.sheet && S.sheet.type === "item") { clearTimeout(S.ivT); ["iTitle", "iNote"].forEach(x => { const el = $("#" + x); if (el) itemField(el); }); }
       if (S.sheet && S.sheet.type === "auth") { S.sheet = null; renderSheet(); return; } { const back = S.sheet && S.sheet.fromTask && !S.sheet.fromMenu && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
-    case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
+    case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "dflt") { if (c.dflt) c.dfltFrom = todayKey(); else delete c.dfltFrom; } if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
     case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.every; delete c.from; c.people = false; } break; }
     case "cTarget": { const c = S.sheet.draft, max = c.cadence === "monthly" ? 4 : c.cadence === "daily" ? 7 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, (c.target || 0) + (+b.dataset.d) * st)); break; }
     case "cEvery": { const c = S.sheet.draft, n = +b.dataset.v; if (n > 1) { c.every = n; const cur = dkey(monday(new Date())); if (!c.from || !everyPhases(n).some(m => m === nextOn({ every: n, from: c.from }))) c.from = cur; } else { delete c.every; delete c.from; } c.gcal = false; break; }
