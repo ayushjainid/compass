@@ -1012,10 +1012,18 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 .calgroups{overflow:hidden}.calg{display:flex;align-items:center;gap:10px;padding:10px 14px}.calg + .calg{border-top:1px solid var(--line)}
 .calg .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.calg .nm small{display:block;color:var(--muted);font-size:12.5px}.calg select{max-width:46%;min-height:40px}
 .chip.noticed{white-space:normal;text-align:left}
-.lookcard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
-.lookcard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
-.lookcard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small{grid-column:1;color:var(--ink2);font-size:13px}
-.lookcard .chev{grid-column:2;grid-row:1/4;align-self:center;width:9px;height:9px;border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(-45deg)}
+.tourspot{position:fixed;z-index:70;border-radius:14px;pointer-events:none;box-shadow:0 0 0 3px var(--accent),0 0 0 9999px rgba(8,12,20,.5);transition:top .2s,left .2s,width .2s,height .2s}
+.tourspot.full{inset:0;border-radius:0;box-shadow:none;background:rgba(8,12,20,.5)}.tourspot[hidden]{display:none}
+.tourcoach{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:71;max-width:520px;margin:0 auto;padding:14px 16px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.tourcoach b{display:block;font:600 17px/1.25 var(--display)}.tourcoach p{margin:4px 0 10px;color:var(--ink2);font-size:14.5px;line-height:1.45}
+.tch{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;font-size:12.5px;color:var(--muted)}.tcn{font-variant-numeric:tabular-nums}
+.tcb{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.tourcoach.attop{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}
+@media (prefers-reduced-motion:reduce){.tourspot{transition:none}}
+.lookcard,.tunecard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
+.lookcard .lk,.tunecard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
+.lookcard b,.tunecard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small,.tunecard small{grid-column:1;color:var(--ink2);font-size:13px}
+.lookcard .chev,.tunecard .chev{grid-column:2;grid-row:1/4;align-self:center;width:9px;height:9px;border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(-45deg)}
 .lkhead{display:flex;align-items:center;gap:10px;margin:6px 0 2px}.lkhead .eyebrow{display:block}
 .iconbtn{flex:none;width:40px;height:40px;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:22px;line-height:1}
 .lknav{display:flex;justify-content:space-between;margin:0 0 12px}
@@ -1276,6 +1284,8 @@ const SCROLLER = document.documentElement.classList.contains("scroller") ? docum
 const pageScrollTo = (x, y) => SCROLLER ? SCROLLER.scrollTo({ top: y, left: 0, behavior: "instant" }) : window.scrollTo(x, y);
 const pageScrollBy = o => SCROLLER ? SCROLLER.scrollBy(o) : window.scrollBy(o);
 const pageY = () => SCROLLER ? SCROLLER.scrollTop : window.scrollY;
+/* the hands-on tour follows every render (see "the hands-on tour") */
+{ const r0 = render, s0 = renderSheet; render = function () { const x = r0.apply(this, arguments); htAfter(); return x; }; renderSheet = function () { const x = s0.apply(this, arguments); htAfter(); return x; }; }
 import * as FB from "/vendor/firebase.js?v=6";
 import { VALUE_LIB } from "/shared/values.js";
 import { buildIcs as buildIcsFor } from "/shared/ics.js";
@@ -1553,7 +1563,8 @@ async function flush(id) {
       const remote = sn.exists() ? sn.data() : undefined;
       if (remote === undefined && isObj(base) && base._w !== undefined && !force) return { gone: true };   // was on the server, now deleted elsewhere (e.g. the account): don't bring it back
       const b = remote && pend && remote._w === pend ? remote : base;   // our earlier save did land: it is the true base
-      const m = force ? cpU(sent) : b !== undefined ? merge3(b, sent, remote) : remote === undefined ? cpU(sent) : deepMerge(remote, sent);
+      let m = force ? cpU(sent) : b !== undefined ? merge3(b, sent, remote) : remote === undefined ? cpU(sent) : deepMerge(remote, sent);
+      if (m === undefined) m = cpU(sent);   // nothing changed on a document the server doesn't have yet: write ours
       if (remote && pend && remote._w === pend && same(merge3(remote, sent, remote), remote)) return { merged: remote, wrote: false };
       m._w = DEVICE + ":" + (++WSEQ) + ":" + Date.now();
       LS.set("pend:" + id, m._w);
@@ -2203,7 +2214,7 @@ function tuneCard() {
   const since = (profile() || {}).onboardedAt, last = settings().tuneAt;
   if (!since || daysBetween(since, todayKey()) < 14 || (last && daysBetween(last, todayKey()) < TUNE_EVERY)) return "";
   const rows = tuneRows(); if (!rows.some(r => r.sug)) return "";
-  return `<button class="lookcard tunecard" data-act="tuneOpen"><span class="lk">Two-minute tune-up</span><b>Make your floors match your real weeks</b><small>${rows.filter(r => r.sug).length} floor${rows.filter(r => r.sug).length > 1 ? "s" : ""} happened less often than planned. Lower, pause or keep each one.</small><span class="chev" aria-hidden="true"></span></button>`;
+  return `<button class="tunecard" data-act="tuneOpen"><span class="lk">Two-minute tune-up</span><b>Make your floors match your real weeks</b><small>${rows.filter(r => r.sug).length} floor${rows.filter(r => r.sug).length > 1 ? "s" : ""} happened less often than planned. Lower, pause or keep each one.</small><span class="chev" aria-hidden="true"></span></button>`;
 }
 function rTune() {
   const rows = tuneRows(), done = S.tuneDone || {}, unit = c => c.cadence === "daily" ? "days" : c.unit ? c.unit : "times";
@@ -2680,6 +2691,7 @@ function addItem(lid, fields) {
   data.t = String(data.t).slice(0, 500);
   putLocal(lid, id, data); stat("tasks");
   FB.setDoc(iref(lid, id), data).catch(listErr);
+  if (S.ht) S.ht.made.push({ lid, id });
   return id;
 }
 function updItem(lid, id, patch) {
@@ -3014,7 +3026,7 @@ function ckBuild() {
   const cards = (since && y >= since ? ckFloorCards(y, false).map(x => Object.assign(x, { y: true })) : []).concat(ckFloorCards(k, true));
   if (L.ready) {
     const ck = ckInfo(k).d.ck || {}, mine = i => !i.who || i.who === ST.uid, seen = new Set();
-    overdue(dkey(addDays(parse(k), 1))).filter(i => mine(i) && i.open && !seen.has(i.id) && seen.add(i.id) && ck["t:" + i.id] === undefined).slice(0, 8)
+    overdue(dkey(addDays(parse(k), 1))).filter(i => (!S.ht || S.ht.made.some(m => m.id === i.id)) && mine(i) && i.open && !seen.has(i.id) && seen.add(i.id) && ck["t:" + i.id] === undefined).slice(0, 8)
       .forEach(i => cards.push({ k, kind: "t", lid: i.lid, iid: i.id }));
   }
   return { day: k, cards, i: 0, hist: [], step: "cards", logged: 0, skippedT: [] };
@@ -3086,6 +3098,87 @@ function ckMic() {
   try { r.start(); st.say.rec = true; } catch (e) { CK_REC = null; }
   renderSheet();
 }
+/* ============ the hands-on tour ============
+   An optional two-minute practice run: one real control at a time is lit up and you do the thing yourself. It's a
+   practice copy: setup, settings and this week are put back exactly as they were at the end, and the tasks it made
+   are removed. */
+const HT = [
+  { id: "hi", t: "A two-minute practice run", b: "You'll do each thing yourself. Everything you do here is cleared at the end.", next: "Start" },
+  { id: "tick", t: "Tick a floor when it happens", b: "Tap this one.", enter: () => { S.tab = "today"; S.selDay = todayKey(); S.ht.k = null; },
+    target: () => { if (!S.ht.k) { const r = document.querySelector('#main .dayrow[data-act=anchor][aria-pressed=false]'); if (r) S.ht.k = r.dataset.k; } return S.ht.k && document.querySelector(`#main .dayrow[data-k="${CSS.escape(S.ht.k)}"]`); },
+    done: () => { const c = S.ht.k && compById(S.ht.k), d = (((anyWeek(thisWk()) || {}).days) || {})[todayKey()]; return c && aOn(c, d, todayKey()); } },
+  { id: "type", t: "Add a task the way you'd say it", b: "Try “call mum fri 6pm”, then Add. Compass reads the day and time.", enter: () => { S.tab = "tasks"; setTv("inbox"); S.qHelp = false; },
+    target: () => document.querySelector(".qadd"), extra: ["Type it for me", "htType"], done: () => S.ht.made.length >= 1 },
+  { id: "swipe", t: "Finish it or move it", b: "Swipe it right to finish, or left for tomorrow. On a computer, tap its circle.", enter: () => { S.tab = "tasks"; setTv("inbox"); const m = S.ht.made[0], it = m && findItem(m.lid, m.id); S.ht.due0 = it ? it.due || "" : ""; },
+    target: () => { const m = S.ht.made[0]; const t = m && document.querySelector(`.lrow .tick[data-id="${CSS.escape(m.id)}"]`); return t && t.closest(".lrow"); },
+    done: () => { const m = S.ht.made[0], it = m && findItem(m.lid, m.id); return !it || it.st === "done" || (it.due || "") !== S.ht.due0; } },
+  { id: "close", t: "Close the day", b: "Each evening, one card at a time: swipe right or tap Done, left or Skipped. Answer this one.", enter: () => { S.tab = "today"; S.selDay = todayKey(); openCheckin(); },
+    target: () => document.querySelector("#ckCard") || document.querySelector(".ck .ckadd"), done: () => !!S.ck && (S.ck.hist.length >= 1 || S.ck.step !== "cards") },
+  { id: "tmrw", t: "Then, anything for tomorrow", b: "Type something for tomorrow if you like, then tap Done.", enter: () => { if (!S.sheet || S.sheet.type !== "checkin") openCheckin(); S.ck.step = "tomorrow"; },
+    target: () => document.querySelector('.ck [data-act=ckFinish]'), done: () => !!S.ck && S.ck.step === "done" },
+  { id: "dflt", t: "Some floors can count by default", b: "For things that usually happen, like sleep. Flip this on; untick on the days it didn't happen.", enter: () => { const c = comps().find(x => x.cadence === "daily" && !x.fun && !x.paused); S.tab = "compass"; if (c) openComp(c, false); },
+    target: () => document.querySelector('.sheet [data-act=cToggle][data-f=dflt]'), done: () => !!(S.sheet && S.sheet.draft && S.sheet.draft.dflt), leave: () => { S.sheet = null; } },
+  { id: "rev", t: "On Sunday, a short review", b: "What held, what slipped, one thing to adjust. Tap Review.", enter: () => { S.sheet = null; S.tab = "today"; },
+    target: () => document.querySelector('#tabs [data-act=tab][data-t=review]'), done: () => S.tab === "review" },
+  { id: "end", t: "That's the whole loop", b: "Tick as you go, close the day each evening, review on Sunday. Finishing clears everything from this practice run.", next: "Finish" },
+];
+function htStart() {
+  S.viewMon = monday(new Date()); const wk = thisWk(), cp = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
+  if (!S.docs[wk]) editWeek(() => {});   // so there is a "before" to put back
+  S.ht = { i: 0, made: [], snap: { profile: cp(S.docs.profile), settings: cp(S.docs.settings), wk, week: cp(S.docs[wk]) } };
+  S.sheet = null; S.tab = "today"; S.selDay = todayKey(); pageScrollTo(0, 0); render();
+  clearInterval(S.htTick); S.htTick = setInterval(() => { if (S.ht) htPaint(); else clearInterval(S.htTick); }, 350);   // follows sheets as they slide in
+}
+function htGo(i) {
+  const T = S.ht; if (!T) return; const cur = HT[T.i]; if (cur && cur.leave) cur.leave();
+  T.i = i; T.adv = false; T.seen = null; if (i >= HT.length) return htEnd();
+  const st = HT[i]; if (st.enter) st.enter(); render();
+}
+function htEnd() {
+  const T = S.ht; if (!T) return; S.ht = null;
+  (T.made || []).forEach(m => { if (findItem(m.lid, m.id)) delItem(m.lid, m.id); });
+  const put = (id, v) => { if (v === undefined) return; S.docs[id] = v; touch(id); };
+  put("profile", T.snap.profile); put("settings", T.snap.settings); put(T.snap.wk, T.snap.week);
+  if (CK_REC) { try { CK_REC.stop(); } catch (e) {} CK_REC = null; }
+  S.sheet = null; S.ck = null; S.tab = "today"; S.selDay = todayKey(); htPaint(true);
+  pageScrollTo(0, 0); render(); toast("Tour done. The practice run is cleared.");
+}
+function htAfter() {
+  if (!S.ht && !$("#htCoach")) return;
+  cancelAnimationFrame(S.htRaf); S.htRaf = requestAnimationFrame(() => {
+    const T = S.ht; if (!T) { htPaint(true); return; }
+    const st = HT[T.i];
+    if (st.done && !T.adv && st.done()) { T.adv = true; setTimeout(() => { if (S.ht === T && T.adv) htGo(T.i + 1); }, 650); }
+    htPaint();
+  });
+}
+/* the light: a ring around the control on a dimmed page, drawn as a separate layer so no card clips it; taps go through */
+function htPaint(off) {
+  let coach = $("#htCoach"), spot = $("#htSpot");
+  if (off || !S.ht) { if (coach) coach.remove(); if (spot) spot.remove(); return; }
+  const T = S.ht, st = HT[T.i], n = HT.filter(x => x.target).length, k = HT.slice(0, T.i + 1).filter(x => x.target).length;
+  if (!coach) { coach = document.createElement("div"); coach.id = "htCoach"; coach.className = "tourcoach"; coach.setAttribute("role", "dialog"); coach.setAttribute("aria-live", "polite"); document.body.appendChild(coach); }
+  if (!spot) { spot = document.createElement("div"); spot.id = "htSpot"; spot.className = "tourspot"; spot.setAttribute("aria-hidden", "true"); document.body.appendChild(spot); }
+  coach.setAttribute("aria-label", "Tour: " + st.t);
+  const html = `<div class="tch"><span class="tcn">${st.target ? `${k} of ${n}` : "Practice run"}</span><button class="linkish" data-act="htEnd">End tour</button></div>
+    <b>${esc(st.t)}</b><p>${esc(st.b)}</p>
+    <div class="tcb">${st.next ? `<button class="btn primary small" data-act="htNext">${esc(st.next)}</button>` : `${st.extra ? `<button class="btn small" data-act="${st.extra[1]}">${esc(st.extra[0])}</button>` : ""}<button class="linkish" data-act="htNext">Skip this step</button>`}</div>`;
+  if (coach.__h !== html) { coach.innerHTML = html; coach.__h = html; }
+  const el = st.target ? st.target() : null;
+  if (!el) { spot.hidden = !st.target ? false : true; spot.classList.toggle("full", !st.target); if (!st.target) spot.removeAttribute("style"); return; }
+  spot.hidden = false; spot.classList.remove("full");
+  /* keep the lit control clear of the card: scroll it into the upper part of the page, or move the card to the top */
+  const inSheet = !!el.closest(".sheet"), pad = 6;
+  if (T.seen !== el) { T.seen = el;
+    const r0 = el.getBoundingClientRect(), room = innerHeight - coach.offsetHeight - 100;
+    if (inSheet) el.scrollIntoView({ block: "nearest", behavior: "instant" });
+    else if (r0.top < 70 || r0.bottom > room) pageScrollBy({ top: r0.top - innerHeight * 0.3, behavior: "instant" });
+    const r1 = el.getBoundingClientRect(); coach.classList.toggle("attop", inSheet || r1.bottom + pad > room); }
+  const r = el.getBoundingClientRect();
+  Object.assign(spot.style, { top: (r.top - pad) + "px", left: (r.left - pad) + "px", width: (r.width + pad * 2) + "px", height: (r.height + pad * 2) + "px" });
+}
+addEventListener("scroll", () => { if (S.ht) htPaint(); }, true);
+addEventListener("resize", () => { if (S.ht) htPaint(); });
 function openCheckin() { S.ck = ckBuild(); if (!S.ck.cards.length) S.ck.step = "tomorrow"; S.sheet = { type: "checkin" }; }
 /* change one day's record, whichever week it's in */
 function ckWith(k, fn) { const m = S.viewMon, sd = S.selDay; S.viewMon = monday(parse(k)); S.selDay = k; try { fn(); } finally { S.viewMon = m; S.selDay = sd; } }
@@ -3519,7 +3612,7 @@ function qChipsHtml() {
 }
 /* "what can I type?": open on its own until the first few tasks are in, then only from the ? button */
 const QHELP = [["fri 6pm", "a day and a time", "call mum fri 6pm"], ["every week", "repeats", "water plants every week"], ["#groceries", "goes into that list", "oat milk #groceries"], ["@sam", "gives it to someone on a shared list", "book tickets @sam"], ["*", "one of this week's three", "finish the deck *"]];
-function qHelpOpen() { if (S.qHelp != null) return S.qHelp; const st = settings(); return !st.qhelp && (st.qadds || 0) < 3 && !S.qDraft; }
+function qHelpOpen() { if (S.ht) return false; if (S.qHelp != null) return S.qHelp; const st = settings(); return !st.qhelp && (st.qadds || 0) < 3 && !S.qDraft; }
 function qHelpHtml() {
   return `<div class="qhelp" id="qHelp"><ul>${QHELP.map(([k, v, ex]) => `<li><button class="qex" data-act="qTry" data-v="${esc(ex)}"><code>${esc(k)}</code></button><span>${esc(v)}</span></li>`).join("")}</ul>
     <div class="qhelpf"><span>Tap one to try it. Anything Compass reads becomes a chip you can tap to undo.</span><button class="linkish" data-act="qHelpOff">Got it</button></div></div>`;
@@ -5150,7 +5243,7 @@ function rReview(id, F, trips, sugg) {
   const ag = activeGoals().filter(g => { const n = goalWeekN(g, S.viewMon); return n >= 1 && n <= GOAL_WEEKS; });
   return `
   ${trips.length ? `<h2>Tripwires</h2><p class="lede">These trigger a review, not blame.</p>${trips.map(t => `<div class="trip">${esc(t)}</div>`).join("")}` : ""}
-  ${yearCard() || tuneCard() || lookbackCard()}
+  ${yearCard() || lookbackCard()}${tuneCard()}
   <h2>Sunday review</h2>
   <p class="lede">About 25 minutes. Week of ${esc(fmtShort(S.viewMon))}.${r.done ? " Reviewed ✓" : ""}</p>
   ${reviewSetupCards()}
@@ -5297,6 +5390,7 @@ function rCompass(id, F, trips, sugg) {
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Send feedback</b><div class="hint">Found a bug or have an idea? It goes straight to the maker.</div></div><button class="btn" data-act="fbOpen">Write</button></div>
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Restore from a backup</b><div class="hint">Choose a file you downloaded here. You'll see what's in it before anything changes.</div></div>
       <label class="btn" for="restoreFile">Choose file</label><input type="file" id="restoreFile" accept=".json,application/json" class="sr"></div>
+    <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Hands-on tour</b><div class="hint">Two minutes, trying each thing yourself. Nothing you do in it is kept.</div></div><button class="btn" data-act="htStart">Start</button></div>
     <div class="row" style="padding:12px 0 0;border-top:1px solid var(--line)"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div>`)}
   </div>`;
 }
@@ -6067,7 +6161,7 @@ function introCard() {
   const n = TIPS.indexOf(t) + 1, first = t.id === "floors";
   return `<section class="card pad intro tip" aria-label="Getting started, ${n} of ${TIPS.length}"><span class="tipn">${n} of ${TIPS.length}</span><b>${esc(t.t)}</b>
     <p>${esc(t.b)}${t.src ? ` <span class="src">${esc(t.src)}</span>` : ""}</p>
-    <div class="row" style="justify-content:flex-start;gap:8px">${first ? `<button class="btn small" data-act="introDone">Got it</button><button class="btn small quiet" data-act="gotoPlan">Plan my week</button>`
+    <div class="row" style="justify-content:flex-start;gap:8px">${first ? `<button class="btn small" data-act="introDone">Got it</button><button class="btn small quiet" data-act="htStart">Try a 2-minute tour</button>`
       : `${t.act ? `<button class="btn small" data-act="${t.act[1]}" data-v="${t.act[2]}" data-k="${t.id}">${t.act[0]}</button>` : ""}<button class="btn small ${t.act ? "quiet" : ""}" data-act="tipDone" data-k="${t.id}">Got it</button>`}
       <button class="btn small quiet tipoff" data-act="tipOff">Skip the tour</button></div></section>`;
 }
@@ -6234,7 +6328,7 @@ document.addEventListener("click", e => {
     case "ckAddT": { const ta = $("#ckAdd"), text = ta ? ta.value : ""; if (!text.trim()) { toast("Write something first."); return; } if (!L.ready) { toast("Your lists are still loading. Try again in a moment."); return; }
       const keep = S.qIgnore; S.qIgnore = new Set(); const added = quickAdd(text, { due: ckTomorrow() }); S.qIgnore = keep; if (ta) ta.value = ""; if (added.length) toast(`Added ${added.length} for tomorrow`); renderSheet(); render(); const f = $("#ckAdd"); if (f) f.focus(); return; }
     case "ckPlan": openPlan(); renderSheet(); return;
-    case "ckFinish": { const st = S.ck; if (!st) return; ckWith(st.day, () => editWeek(w => { dayObj(w, st.day).ckAt = Date.now(); })); if (S.nt && S.nt.on) ntSave({ ckDay: st.day }).catch(() => {}); st.step = "done"; renderSheet(); render(); return; }
+    case "ckFinish": { const st = S.ck; if (!st) return; ckWith(st.day, () => editWeek(w => { dayObj(w, st.day).ckAt = Date.now(); })); if (S.nt && S.nt.on && !S.ht) ntSave({ ckDay: st.day }).catch(() => {}); st.step = "done"; renderSheet(); render(); return; }
     case "wbLight": editWeek(w => { w.mvw = true; }); editSettings(st => { st.wb = todayKey(); }); toast("A lighter week: only your safety-net floors count."); break;
     case "wbOk": editSettings(st => { st.wb = todayKey(); }); break;
     case "tuneOpen": S.tune = true; S.tuneDone = {}; loadHistory(); pageScrollTo(0, 0); break;
@@ -6252,6 +6346,10 @@ document.addEventListener("click", e => {
     case "calvOpen": S.calv = {}; pageScrollTo(0, 0); break;
     case "calvClose": S.calv = null; pageScrollTo(0, 0); break;
     case "calvAgain": S.calv = {}; break;
+    case "htStart": if (pending().intro) clearPending("intro"); htStart(); return;
+    case "htNext": if (S.ht) htGo(S.ht.i + 1); return;
+    case "htEnd": htEnd(); return;
+    case "htType": S.qDraft = "call mum fri 6pm"; S.qIgnore = new Set(); render(); { const f = $("#qAdd"); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } } return;
     case "uExp": S.uExp = S.uExp || {}; S.uExp[b.dataset.k] = true; break;
     case "qHelp": S.qHelp = !qHelpOpen(); break;
     case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; }); break;

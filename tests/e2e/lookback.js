@@ -26,7 +26,8 @@ const results = []; const ok = (n, c, i) => results.push({ n, pass: !!c, i: c ? 
     const comps = pr.components.filter(c => !c.fun);
     weeks.forEach((w, i) => {
       const days = {}; const c = {};
-      for (let k = 0; k < 7; k++) { const d = new Date(+w.slice(0, 4), +w.slice(5, 7) - 1, +w.slice(8) + k); const a = {}; if (i === 0) comps.filter(x => x.cadence === 'daily').forEach(x => a[x.id] = true); days[dk(d)] = { a, j: k === 2 ? { win: i === 0 ? 'Finished the <b>draft</b> & called Mum' : 'Small walk in the rain' } : {} }; }
+      let wrote = false;   /* the journal line goes on a day inside the month (a week can start in the month before) */
+      for (let k = 0; k < 7; k++) { const d = new Date(+w.slice(0, 4), +w.slice(5, 7) - 1, +w.slice(8) + k); const a = {}; if (i === 0) comps.filter(x => x.cadence === 'daily').forEach(x => a[x.id] = true); const here = !wrote && d.getMonth() === lm.getMonth() && k >= 2; if (here) wrote = true; days[dk(d)] = { a, j: here ? { win: i === 0 ? 'Finished the <b>draft</b> & called Mum' : 'Small walk in the rain' } : {} }; }
       if (i === 0) comps.filter(x => x.cadence !== 'daily').forEach(x => c[x.id] = x.target);
       st['users/u1/docs/w-' + w] = { kind: 'week', start: w, days, c, r: i === 0 ? { felt: 4 } : {} };
     });
