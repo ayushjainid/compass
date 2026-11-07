@@ -76,7 +76,7 @@ ok("unknown kinds say nothing", pingText({ k: "spam", n: "x" }) === null);
 const sunday6pmKolkata = Date.parse("2026-10-18T12:30:00Z");
 const dg = digestText("u1", { name: "Ayush Jain", tz: "Asia/Kolkata", week: { id: "w-2026-10-12", held: 4, total: 5, cleared: 2, vals: 3 } }, sunday6pmKolkata);
 ok("Sunday note: this week's numbers", dg.title === "Ayush's week" && /^4 of 5 floors held · 2 of 3 values cleared\./.test(dg.body) && dg.url === "/?tab=today&watch=u1&from=digest", dg);
-ok("Sunday note: a quiet week says so kindly", /quiet this week/.test(digestText("u1", { name: "Ayush", tz: "Asia/Kolkata", week: { id: "w-2026-10-05", held: 4, total: 5 } }, sunday6pmKolkata).title));
+ok("Sunday note: a quiet week says so kindly", /hasn't checked in this week/.test(digestText("u1", { name: "Ayush", tz: "Asia/Kolkata", week: { id: "w-2026-10-05", held: 4, total: 5 } }, sunday6pmKolkata).title));
 ok("numbers someone typed are made numbers", /^0 of 0|A week without floors/.test(digestText("u1", { name: "<b>", tz: "UTC", week: { id: "w-2026-10-12", held: "<img>", total: "x" } }, Date.parse("2026-10-18T18:00:00Z")).body));
 ok("quiet hours: 11 pm waits until 8 am", quietUntil("Asia/Kolkata", Date.parse("2026-10-16T17:30:00Z")) === Date.parse("2026-10-17T02:30:00Z"));
 ok("quiet hours: 3 pm is fine", quietUntil("Asia/Kolkata", Date.parse("2026-10-16T09:30:00Z")) === null);

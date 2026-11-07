@@ -24,26 +24,26 @@ function makeSW({ worker = "https://w.test", fetchImpl } = {}) {
 }
 const ok200 = msg => async () => new Response(JSON.stringify({ ok: true, msg }), { status: 200 });
 const pushEvent = d => ({ data: { json: () => d, text: () => JSON.stringify(d) } });
-const payload = { title: "Quick one", body: "2 left today: Gym and Read.", tag: "compass-checkin", url: "/?from=checkin",
+const payload = { title: "Close the day", body: "A minute to mark what happened today.\nOpen: Gym and Read.", tag: "compass-checkin", url: "/?from=checkin",
   actions: [{ action: "tick0", title: "✓ Gym" }, { action: "tick1", title: "✓ Read" }], act: { tick0: "T0", tick1: "T1" } };
 
 // showing
-let sw = makeSW({ fetchImpl: ok200("Gym ✓ Logged for today.") });
+let sw = makeSW({ fetchImpl: ok200("Gym: done for today.") });
 await sw.fire("push", pushEvent(payload));
 ok("shows both buttons and keeps the tokens with it", sw.shown[0].actions.length === 2 && sw.shown[0].data.act.tick0 === "T0", sw.shown[0]);
 const noWorker = makeSW({ worker: "", fetchImpl: ok200("") });
 await noWorker.fire("push", pushEvent(payload));
 ok("no Worker address configured: no buttons", noWorker.shown[0].actions.length === 0 && noWorker.shown[0].data.act === null);
 const plain = makeSW({ fetchImpl: ok200("") });
-await plain.fire("push", pushEvent({ title: "Sunday review o'clock", body: "x", tag: "compass-review", url: "/?tab=review" }));
-ok("reminders without buttons still show", plain.shown[0].title === "Sunday review o'clock" && plain.shown[0].actions.length === 0);
+await plain.fire("push", pushEvent({ title: "Sunday review", body: "x", tag: "compass-review", url: "/?tab=review" }));
+ok("reminders without buttons still show", plain.shown[0].title === "Sunday review" && plain.shown[0].actions.length === 0);
 
 // tapping a tick button
 const note = Object.assign({}, sw.shown[0], { close() {} });
 await sw.fire("notificationclick", { action: "tick0", notification: note });
 ok("tick: posts its token to the Worker", sw.posted[0].u === "https://w.test/act" && sw.posted[0].body.t === "T0", sw.posted);
 const after = sw.shown[1];
-ok("…then shows the result with only the other button left", after.body === "Gym ✓ Logged for today." && after.actions.length === 1 && after.actions[0].action === "tick1" && after.data.act.tick1 === "T1" && !after.data.act.tick0, after);
+ok("…then shows the result with only the other button left", after.body === "Gym: done for today." && after.actions.length === 1 && after.actions[0].action === "tick1" && after.data.act.tick1 === "T1" && !after.data.act.tick0, after);
 ok("…quietly (no second buzz)", after.silent === true && after.tag === "compass-checkin");
 ok("…and doesn't open the app", sw.opened.length === 0);
 // last button: a plain confirmation that tidies itself away
@@ -52,7 +52,7 @@ const last = sw.shown[2];
 ok("last tick: confirmation without buttons, closed after a moment", last.actions.length === 0 && sw.closed.length >= 1, last);
 
 // snooze
-const sn = makeSW({ fetchImpl: ok200("OK, I'll nudge you again in an hour.") });
+const sn = makeSW({ fetchImpl: ok200("You'll get a reminder in an hour.") });
 await sn.fire("notificationclick", { action: "snooze", notification: { title: "Quick one", tag: "compass-checkin", data: { url: "/", act: { snooze: "S" } }, actions: [{ action: "snooze", title: "Remind me in an hour" }], close() {} } });
 ok("snooze: posts and confirms", sn.posted[0].body.t === "S" && /an hour/.test(sn.shown[0].body));
 

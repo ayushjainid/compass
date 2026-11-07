@@ -50,12 +50,12 @@ const seed = (uid, extra = {}) => { fs.put(`users/${uid}/docs/profile`, profile)
 seed("alice");
 const base = { title: "Quick one", body: "Did today count?", url: "/?from=checkin", tag: "compass-checkin" };
 let p = await enrichEvening(env, db, "alice", { tz: "Asia/Kolkata" }, base, now);
-ok("4 left: lists them, offers snooze (too many to tick)", /4 left today: Gym, Call parents and 2 more\./.test(p.body) && p.actions.length === 1 && p.actions[0].action === "snooze" && p.act.snooze, p);
+ok("4 left: lists them, offers snooze (too many to tick)", /Open: Gym, Call parents and 2 more\./.test(p.body) && p.actions.length === 1 && p.actions[0].action === "snooze" && p.act.snooze, p);
 fs.put(`users/alice/docs/${wk}`, { kind: "week", start: mon, days: { [day]: { a: { sleep: true, gym: true }, p: { read: true } } }, c: { read: 2 }, r: {} });
 p = await enrichEvening(env, db, "alice", { tz: "Asia/Kolkata" }, base, now);
 ok("2 left: a tick button for each", p.actions.map(a => a.title).join("|") === "✓ Call parents|✓ Budget review" && p.act.tick0 && p.act.tick1, p.actions);
 const hidden = await enrichEvening(env, db, "alice", { tz: "Asia/Kolkata", names: false }, base, now);
-ok("names hidden: count only, snooze only", /2 left today\.$/.test(hidden.body) && !/Call/.test(JSON.stringify(hidden.actions)) && hidden.actions[0].action === "snooze", hidden);
+ok("names hidden: count only, snooze only", /2 still open\.$/.test(hidden.body) && !/Call/.test(JSON.stringify(hidden.actions)) && hidden.actions[0].action === "snooze", hidden);
 ok("one read for all three documents", fs.calls.filter(c => c.includes("batchGet")).length === 3);
 ok("evening: says how many are left, for the caller to drop an empty one", p.left === 2 && hidden.left === 2);
 const mb = { title: "Today's floors", body: "", url: "/?tab=today&from=morning", tag: "compass-morning" };
@@ -143,11 +143,11 @@ r = await feed(`/cal/${token}.ics`); ok("account gone: 404", r.status === 404);
 const { decide } = await import("../src/plan.js");
 const sub = { endpoint: "https://push.example/x" };
 let dr = decide("rev", "alice", { on: true, sub, tz: "Asia/Kolkata", rev: "18:00", nextRev: Date.parse("2026-10-04T12:30:00Z") }, Date.parse("2026-10-04T12:30:10Z"));
-ok("first Sunday of October: mentions September's look-back", /If you logged in September, its look-back is in the review too\./.test(dr.send.body), dr.send);
+ok("first Sunday of October: mentions September's look-back", /Your September look-back is ready too\./.test(dr.send.body), dr.send);
 dr = decide("rev", "alice", { on: true, sub, tz: "Asia/Kolkata", rev: "18:00", nextRev: Date.parse("2026-10-11T12:30:00Z") }, Date.parse("2026-10-11T12:30:10Z"));
 ok("later Sundays don't", !/look-back/.test(dr.send.body), dr.send);
 dr = decide("rev", "alice", { on: true, sub, tz: "Asia/Kolkata", rev: "18:00", nextRev: Date.parse("2027-01-03T12:30:00Z") }, Date.parse("2027-01-03T12:30:10Z"));
-ok("January's first Sunday names December", /If you logged in December/.test(dr.send.body), dr.send);
+ok("January's first Sunday names December", /Your December look-back is ready too/.test(dr.send.body), dr.send);
 
 const f = R.filter(x => !x.pass); f.forEach(x => console.log("  FAIL", x.n, String(JSON.stringify(x.i)).slice(0, 500)));
 console.log(`features: ${R.length - f.length}/${R.length} passed`); process.exit(f.length ? 1 : 0);

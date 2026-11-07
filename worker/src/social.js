@@ -26,7 +26,7 @@ export const hourKey = (tz, now) => { const z = validTz(tz) ? tz : "UTC"; return
 /** What a ping says. Everything in it was typed by another person, so it's trimmed and never trusted as a link. */
 export function pingText(p) {
   const who = first(p.n), ln = str(p.ln, 60), t = str(p.t, 100);
-  if (p.k === "join" && p.w) return { title: `${who} is now your accountability partner`, body: "They'll see your week's summary and can cheer you on. You choose what they see in Compass.", url: "/?tab=compass&from=social", tag: "compass-join-watch" };
+  if (p.k === "join" && p.w) return { title: `${who} is now your accountability partner`, body: "They'll see your weekly summary and can cheer you on. You choose what they see.", url: "/?tab=compass&from=social", tag: "compass-join-watch" };
   if (p.k === "join") return { title: `${who} joined “${ln || "your list"}”`, body: "You can plan it together now.", url: idOk(p.l) ? `/?tab=tasks&list=${p.l}&from=social` : "/?tab=tasks&from=social", tag: "compass-join-" + (idOk(p.l) ? p.l : "list") };
   if (p.k === "assign") return { title: `${who} gave you a task`, body: `“${t || "A task"}”${ln ? ` in ${ln}` : ""}`, url: idOk(p.l) && idOk(p.i) ? `/?tab=tasks&list=${p.l}&item=${p.i}&from=social` : "/?tab=tasks&from=social", tag: "compass-assign-" + (idOk(p.i) ? p.i : "task") };
   if (p.k === "cheer") return { title: `${who} cheered you on`, body: str(p.x, 200) || "👏", url: "/?tab=today&from=cheer", tag: "compass-cheer" };
@@ -42,9 +42,9 @@ export function digestText(owner, w, now) {
   if (wk && wk.id === weekId(localMonday(tz, now))) {
     const total = num(wk.total), held = num(wk.held), vals = num(wk.vals), cleared = num(wk.cleared);
     const line = total ? `${held} of ${total} floors held${vals ? ` · ${cleared} of ${vals} values cleared` : ""}.` : "A week without floors.";
-    return { title: `${who}'s week`, body: `${line}${wk.mvw ? " A lighter week, on purpose." : ""}\nA quick cheer goes a long way.`, url, tag };
+    return { title: `${who}'s week`, body: `${line}${wk.mvw ? " A lighter week, on purpose." : ""}\nA quick note goes a long way.`, url, tag };
   }
-  return { title: `${who} has been quiet this week`, body: "No check-ins yet. A kind word might help them pick it back up.", url, tag };
+  return { title: `${who} hasn't checked in this week`, body: "A kind word can help them pick it back up.", url, tag };
 }
 
 /** When the next Sunday note is due for a watch page (its owner's 6 pm on Sunday). */

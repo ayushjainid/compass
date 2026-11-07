@@ -66,8 +66,8 @@ d = decide("rev", "u1", { ...base, nextRev: Date.parse("2026-10-04T12:30:00Z") }
 ok("Sunday review sends and books next Sunday", d.send && /review/i.test(d.send.url) && iso(d.fields.nextRev) === "2026-10-11T12:30:00.000Z", d);
 d = decide("rev", "u1", { ...base, nextRev: Date.parse("2026-10-04T12:30:00Z"), revDone: "2026-09-28" }, sun);
 ok("skips review already done this week", !d.send && d.why === "review done");
-const titles = new Set(); for (let i = 0; i < 6; i++) { const x = decide("eve", "u1", { ...base, nextEve: base.nextEve + i * 864e5 }, now + i * 864e5); titles.add(x.send.title); }
-ok("wording rotates: 6 evenings, 6 different messages", titles.size === 6, [...titles]);
+const titles = new Set(); for (let i = 0; i < 4; i++) { const x = decide("eve", "u1", { ...base, nextEve: base.nextEve + i * 864e5 }, now + i * 864e5); titles.add(x.send.title); }
+ok("wording rotates: 4 evenings, 4 different messages", titles.size === 4, [...titles]);
 // CPU cost of one push (Workers free plan allows 10 ms per run)
 const t0 = performance.now(); for (let i = 0; i < 40; i++) await pushRequest(sub, { title: "x", body: "y" }, vapid); const per = (performance.now() - t0) / 40;
 console.log(`crypto per push ≈ ${per.toFixed(2)} ms (Node)`);

@@ -7,31 +7,21 @@ export const STOP_AFTER = 6;           // ignored evening nudges before evenings
 
 // Light and warm, never guilt-trippy. Rotated so the same line never shows two evenings running.
 const EVENING = [
-  ["Your floors are waiting", "Not judging. Just waiting. Ten seconds to tick today."],
-  ["Psst, it's your compass", "I can't point north if you don't tell me where you went today."],
-  ["Day's almost done", "Tick what happened before it turns into \"what even happened\"."],
-  ["Quick one", "Did today count? Spoiler: probably more than you think."],
-  ["Your needle is spinning", "Two taps and it settles. Promise."],
-  ["Tiny check-in, big vibes", "Log today faster than you can pick a show."],
-  ["Knock knock", "Who's there? Today. Today who? Today, waiting to be ticked."],
-  ["Floors, not ceilings", "Even one cleared floor is a win. Come claim it."],
-  ["Before the couch wins", "A quick tick now, guilt-free scrolling after."],
-  ["Hey, you did stuff today", "Probably. Let's find out together."],
-  ["Compass here 🧭", "Recalibrating needs data. You are the data."],
-  ["Evening, legend", "Ten seconds of ticking, then the night is all yours."],
+  ["Close the day", "A minute to mark what happened today."],
+  ["How did today go?", "Swipe through today's floors. It takes about a minute."],
+  ["Evening check-in", "Mark what happened, then add anything for tomorrow."],
+  ["Before you wind down", "Take a minute to close the day."],
 ];
-// after a few ignored nights: softer, zero pressure
+/* after a few ignored evenings: lighter, and no catching up */
 const COMEBACK = [
-  ["No streak police here", "Missed a few days? Happens. Today's a clean page."],
-  ["Still rooting for you", "One tap and you're back on the map."],
-  ["The compass missed you", "No catching up needed. Just today."],
+  ["Just today", "No need to catch up. Mark today and leave the rest."],
+  ["Whenever you're ready", "Today's a fresh page. A minute is enough."],
+  ["A fresh start", "Skip the missed days. Close today in a minute."],
 ];
 const REVIEW = [
-  ["Sunday review o'clock", "Grab a tea. Let's see what the week actually looked like."],
-  ["Your week: the director's cut", "25 minutes to watch the plot and plan the sequel."],
-  ["Weekly debrief, captain", "What held, what slipped, one thing to tweak. That's it."],
-  ["The week called", "It wants a quick review before it leaves forever."],
-  ["Plot twist: you did more than you think", "Your Sunday review is ready to prove it."],
+  ["Sunday review", "What held this week, what slipped, and one thing to adjust."],
+  ["Your week in review", "A few quiet minutes to look back and set up next week."],
+  ["Time for your weekly review", "See how the week went and plan the next one."],
 ];
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -58,7 +48,7 @@ export function decide(kind, uid, d, now) {
     /* "Send a test" in the app: once, to every device, whatever the schedule says */
     const fields = { nextTest: null };
     if (!targets(d).length) return { send: null, fields, why: "test: no device" };
-    return { send: { title: "Test reminder ✓", body: "If you can read this, Compass reminders reach this device.", url: "/?tab=compass&from=test", tag: "compass-test" }, fields, why: "test" };
+    return { send: { title: "Test reminder", body: "Reminders are working on this device.", url: "/?tab=compass&from=test", tag: "compass-test" }, fields, why: "test" };
   }
   if (kind === "morn") {
     /* the morning glance: today's floors, once a day at the chosen time */
@@ -94,5 +84,6 @@ export function decide(kind, uid, d, now) {
   const [title, body] = pick(REVIEW, uid, Math.floor(dayNumber(today) / 7));
   /* the first Sunday of a month also brings last month's look-back */
   const dom = +today.slice(8, 10), lastMonth = MONTHS[(+today.slice(5, 7) + 10) % 12];
-  return { send: { title, body: dom <= 7 ? `${body}\nIf you logged in ${lastMonth}, its look-back is in the review too.` : body, url: "/?tab=review&from=review", tag: "compass-review" }, fields, why: "send" };
+  return { send: { title, body: dom <= 7 ? `${body}
+Your ${lastMonth} look-back is ready too.` : body, url: "/?tab=review&from=review", tag: "compass-review" }, fields, why: "send" };
 }

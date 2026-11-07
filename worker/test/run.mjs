@@ -83,7 +83,7 @@ let r = await runOnce(env, now, fakeFetch, m => logs.push(m));
 const doc = id => fromFields(store.get(`${P}/notify/${id}`));
 ok("sends to the person who hasn't checked in", users.a.got.length === 1 && users.a.got[0].tag === "compass-checkin", users.a.got);
 const pa = users.a.got[0] || {};
-ok("evening push says what's left and carries a tick button for each", /2 left today: Gym and Read\./.test(pa.body) && (pa.actions || []).map(x => x.title).join("|") === "✓ Gym|✓ Read" && pa.act && pa.act.tick0 && pa.act.tick1, pa);
+ok("evening push says what's left and carries a tick button for each", /Open: Gym and Read\./.test(pa.body) && (pa.actions || []).map(x => x.title).join("|") === "✓ Gym|✓ Read" && pa.act && pa.act.tick0 && pa.act.tick1, pa);
 ok("skips the person active today", users.b.got.length === 0);
 ok("does not touch people not yet due", users.c.got.length === 0 && doc("c").nextEve === Date.parse("2026-10-01T01:30:00Z"));
 ok("books tomorrow for everyone it handled", doc("a").nextEve === Date.parse("2026-10-01T16:00:00Z") && doc("b").nextEve === Date.parse("2026-10-01T16:00:00Z"));

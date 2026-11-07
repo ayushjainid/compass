@@ -20,9 +20,9 @@ export async function handleAction(request, env, fetchFn = fetch, now = Date.now
     const tz = validTz(a.z) ? a.z : "UTC", today = localDay(tz, now);
     if (a.k === "snooze") {
       /* only within the same evening: never a nudge after midnight about tomorrow */
-      if (localDay(tz, now + 3600e3) !== a.d) return reply(200, { ok: true, late: true, msg: "It's late, so no more nudges today. See you tomorrow." });
+      if (localDay(tz, now + 3600e3) !== a.d) return reply(200, { ok: true, late: true, msg: "It's late, so no more reminders today." });
       await db.setPaths(`notify/${a.u}`, [[["nextEve"], new Date(now + 3600e3)], [["ign"], 0]], [], { mustExist: true });
-      return reply(200, { ok: true, msg: "OK, I'll nudge you again in an hour." });
+      return reply(200, { ok: true, msg: "You'll get a reminder in an hour." });
     }
     if (a.k === "tick" && /^w-\d{4}-\d{2}-\d{2}$/.test(a.w) && /^\d{4}-\d{2}-\d{2}$/.test(a.d) && typeof a.c === "string" && ["a", "p", "m"].includes(a.t)) {
       /* the person's notify doc must still exist (an account deleted since the reminder gets nothing written) */
@@ -31,7 +31,7 @@ export async function handleAction(request, env, fetchFn = fetch, now = Date.now
       const path = `users/${a.u}/docs/${a.w}`, marker = [["_w"], `srv:0:${now}`];   // a fresh save marker, so the app merges this as a change from elsewhere
       for (let attempt = 0; attempt < 3; attempt++) {
         const got = await db.getMany([path], { times: true }), week = got[path], day = ((week || {}).days || {})[a.d] || {};
-        if (a.t === "a" ? (day.a || {})[a.c] : (day.p || {})[a.c]) return reply(200, { ok: true, already: true, msg: `${a.n || "That"} was already ticked.` });
+        if (a.t === "a" ? (day.a || {})[a.c] : (day.p || {})[a.c]) return reply(200, { ok: true, already: true, msg: `${a.n || "That"} was already done.` });
         const sets = [[["kind"], "week"], [["start"], a.w.slice(2)], [["days", a.d, a.t === "a" ? "a" : "p", a.c], true], marker];
         try {
           /* only if nobody changed the week since we looked: two taps at once can't count twice */
@@ -39,7 +39,7 @@ export async function handleAction(request, env, fetchFn = fetch, now = Date.now
         } catch (e) { if (/ (400|409) /.test(String(e.message)) && /FAILED_PRECONDITION|ALREADY_EXISTS|precondition/i.test(String(e.message))) continue; throw e; }
         /* monthly floors count in the month of the week's Monday, by one, like the app does */
         if (a.t === "m") await db.setPaths(`users/${a.u}/docs/settings`, [[["_w"], `srv:0:${now}`]], [[["months", monthKey(parse(a.w.slice(2))), "c", a.c], 1]]);
-        return reply(200, { ok: true, msg: `${a.n || "Done"} ✓ Logged for today.` });
+        return reply(200, { ok: true, msg: `${a.n ? a.n + ": done" : "Done"} for today.` });
       }
       return reply(409, { ok: false, why: "busy, try again" });
     }

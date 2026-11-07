@@ -21,7 +21,7 @@ export async function morningList(db, uid, d, payload, now) {
   const tz = validTz(d.tz) ? d.tz : "UTC", day = localDay(tz, now), mon = localMonday(tz, now), base = `users/${uid}/docs/`;
   const got = await db.getMany([base + "profile", base + "settings", base + weekId(mon)]);
   const items = openToday({ profile: got[base + "profile"], settings: got[base + "settings"], week: got[base + weekId(mon)] }, day, mon);
-  const body = !items.length ? "Nothing set for today. A free day." : d.names !== false ? `${listNames(items, 4)}.` : `${items.length} floor${items.length > 1 ? "s" : ""} today.`;
+  const body = !items.length ? "Nothing planned today." : d.names !== false ? `${listNames(items, 4)}.` : `${items.length} floor${items.length > 1 ? "s" : ""} today.`;
   return { ...payload, body };
 }
 export async function enrichEvening(env, db, uid, d, payload, now) {
@@ -31,8 +31,8 @@ export async function enrichEvening(env, db, uid, d, payload, now) {
   const items = openToday({ profile: got[base + "profile"], settings: got[base + "settings"], week: got[base + weekId(mon)] }, day, mon);
   const x = now + 18 * 3600e3, names = d.names !== false;
   const out = { ...payload, actions: [], act: {}, left: items.length };
-  if (items.length && names) out.body = `${payload.body}\n${items.length === 1 ? "Left today" : `${items.length} left today`}: ${listNames(items)}.`;
-  else if (items.length) out.body = `${payload.body}\n${items.length} left today.`;
+  if (items.length && names) out.body = `${payload.body}\n${items.length === 1 ? "Still open" : "Open"}: ${listNames(items)}.`;
+  else if (items.length) out.body = `${payload.body}\n${items.length} still open.`;
   if (names && items.length && items.length <= 2) {
     for (const [i, it] of items.entries()) {
       const key = "tick" + i;
@@ -40,7 +40,7 @@ export async function enrichEvening(env, db, uid, d, payload, now) {
       out.act[key] = await signAction(env, { k: "tick", u: uid, d: day, w: weekId(mon), c: it.id, t: it.kind, s: it.step || 1, n: it.name.slice(0, 40), z: tz, x });
     }
   } else {
-    out.actions.push({ action: "snooze", title: "Remind me in an hour" });
+    out.actions.push({ action: "snooze", title: "Later" });
     out.act.snooze = await signAction(env, { k: "snooze", u: uid, d: day, z: tz, x: now + 6 * 3600e3 });
   }
   return out;
