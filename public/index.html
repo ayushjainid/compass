@@ -1020,6 +1020,14 @@ html.dragging{scroll-behavior:auto!important;overflow-anchor:none}  /* the drag 
 .tcb{display:flex;align-items:center;gap:10px;justify-content:space-between}
 .tourcoach.attop{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}
 @media (prefers-reduced-motion:reduce){.tourspot{transition:none}}
+.gletter{margin:10px 0 4px;padding:12px 14px;border-radius:12px;background:var(--accent-soft)}.gletter p{margin:4px 0 0;white-space:pre-wrap;line-height:1.5}
+.lastyear{margin:10px 0}.lastyear p{margin:4px 0 2px;font:500 16px/1.45 var(--display)}.lastyear small{color:var(--muted)}
+.energy{margin:10px 0 0}.en.r{color:var(--good);font-weight:600}.en.d{color:var(--warn);font-weight:600}
+.ckcue{font-size:13.5px;color:var(--ink2)}
+.spin{margin:0 0 10px}.spin b{display:block;font:600 19px/1.3 var(--display);margin:2px 0 10px}.spinb{display:block;margin:0 0 10px}
+.sclist{list-style:none;margin:0;padding:0}.sclist li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.sclist span{flex:1;min-width:0}.sclist small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.keys{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px;color:var(--ink2)}.keys kbd{display:inline-block;min-width:34px;margin-right:10px;padding:2px 6px;border:1px solid var(--line);border-radius:6px;text-align:center;font:600 12.5px/1.4 var(--sans,inherit);color:var(--ink)}
+.obdflt{display:inline-flex;margin:2px 0 6px 44px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:none;font-size:12.5px;color:var(--ink2);cursor:pointer}.obdflt[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
 .lookcard,.tunecard{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:14px 16px;margin:4px 0 16px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--line);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);color:var(--ink)}
 .lookcard .lk,.tunecard .lk{grid-column:1;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
 .lookcard b,.tunecard b{grid-column:1;font:600 18px/1.25 var(--display)}.lookcard small,.tunecard small{grid-column:1;color:var(--ink2);font-size:13px}
@@ -2273,12 +2281,14 @@ function openFromUrl(u) {
     const q = new URL(u, location.origin).searchParams, tab = q.get("tab"); if (tab && ["today", "week", "tasks", "review", "compass"].includes(tab)) { S.tab = tab; pageScrollTo(0, 0); }
     const id = k => { const v = q.get(k); return v && /^[A-Za-z0-9_-]{1,128}$/.test(v) ? v : null; };
     const ck = q.get("from") === "checkin" || q.get("checkin") === "1";
+    if (q.get("do") === "add") { S.tab = "tasks"; setTv("inbox"); setTimeout(() => { const f = $("#qAdd"); if (f) f.focus(); }, 300); }
+    if (q.get("do") === "fun") { S.tab = "today"; S.selDay = todayKey(); const fun = comps().filter(c => c.fun && !c.paused); if (fun.length) S.spin = fun[Math.floor(Math.random() * fun.length)].id; }
     if (id("list") || id("watch") || q.get("plan") === "tomorrow" || ck) { S.openReq = { l: id("list"), i: id("item"), w: id("watch"), plan: q.get("plan") === "tomorrow", ck }; applyOpenReq(); }
   } catch (e) {}
 }
 if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => { if (e.data && e.data.type === "open") { openFromUrl(e.data.url); render(); } });
 const START_URL = location.href;
-if (/[?&](tab|from|list|watch|plan|checkin)=/.test(location.search)) history.replaceState(null, "", location.pathname);
+if (/[?&](tab|from|list|watch|plan|checkin|do)=/.test(location.search)) history.replaceState(null, "", location.pathname);
 /* no pinch zoom on phones and tablets: iOS ignores user-scalable=no, so cancel its gesture events */
 if (matchMedia("(pointer:coarse)").matches) ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 addEventListener("online", () => updSync()); addEventListener("offline", () => updSync());
@@ -2944,7 +2954,7 @@ function goalTrack(g, big) {
 }
 function goalCard(g) {
   const n = goalWeekN(g), open = goalTasks(g.id).length;
-  return `<button class="goal" data-act="gOpen" data-id="${esc(g.id)}"><span class="gtop"><b>${esc(g.t)}</b><small>${n > GOAL_WEEKS ? "12 weeks are up" : n < 1 ? "Starts Monday" : `Week ${n} of ${GOAL_WEEKS}`}</small></span>${goalTrack(g)}<span class="gsub">${esc(valueName(g.v))} · ${open ? `${open} next step${open > 1 ? "s" : ""}` : "no next step yet"}</span></button>`;
+  return `<button class="goal" data-act="gOpen" data-id="${esc(g.id)}"><span class="gtop"><b>${esc(g.t)}</b><small>${n > GOAL_WEEKS ? (g.letter ? "12 weeks are up · a note from you" : "12 weeks are up") : n < 1 ? "Starts Monday" : `Week ${n} of ${GOAL_WEEKS}`}</small></span>${goalTrack(g)}<span class="gsub">${esc(valueName(g.v))} · ${open ? `${open} next step${open > 1 ? "s" : ""}` : "no next step yet"}</span></button>`;
 }
 /* on Tasks → Today: the goals, small, so the week's tasks can be weighed against them */
 function goalStrip() {
@@ -2965,6 +2975,8 @@ function rGoalSheet() {
   return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
     <span class="flabel">12-week goal · ${esc(valueName(g.v))}</span>
     <h2 style="margin:0">${esc(g.t)}</h2>
+    ${g.letter && n > GOAL_WEEKS ? `<div class="gletter"><span class="flabel">A note from you, 12 weeks ago</span><p>${esc(g.letter)}</p></div>` : ""}
+    ${g.obst ? `<p class="hint" style="margin:6px 0 0"><b>If</b> ${esc(g.obst)}${g.plan ? `, <b>then</b> ${esc(g.plan)}` : ""}.</p>` : ""}
     ${g.when ? `<p class="gwhen">Done when ${esc(g.when.replace(/^done when\s*/i, ""))}</p>` : ""}
     ${goalTrack(g, true)}
     <p class="hint" style="margin:0">${on ? (n < 1 ? `Starts ${esc(fmtShort(parse(g.start)))}` : n > GOAL_WEEKS ? `The 12 weeks ended ${esc(fmtShort(goalEnd(g)))}.` : `Week ${n} of ${GOAL_WEEKS} · ends ${esc(fmtShort(goalEnd(g)))}`) : `${g.st === "done" ? "Done" : "Stopped"}${g.end ? " " + esc(fmtShort(parse(g.end))) : ""}`}${done.length ? ` · ${done.length} step${done.length > 1 ? "s" : ""} done` : ""}</p>
@@ -2984,6 +2996,10 @@ function rGoalEdit() {
     <div class="field"><label class="flabel" for="gTitle">The goal</label><input type="text" id="gTitle" data-gd="t" maxlength="80" value="${esc(d.t)}" placeholder="e.g. Run a 10 km without stopping" autocomplete="off"></div>
     <div class="field"><span class="flabel">It serves</span><div class="chips">${vals.map(v => `<button class="chip ${d.v === v.id ? "sel" : ""}" data-act="gVal" data-v="${esc(v.id)}">${esc(v.name)}</button>`).join("")}</div></div>
     <div class="field"><label class="flabel" for="gWhen">You'll know it's done when… (optional)</label><input type="text" id="gWhen" data-gd="when" maxlength="160" value="${esc(d.when || "")}" placeholder="e.g. I've run 10 km in one go" autocomplete="off"></div>
+    <div class="field"><label class="flabel" for="gObst">What could get in the way? (optional)</label><input type="text" id="gObst" data-gd="obst" maxlength="120" value="${esc(d.obst || "")}" placeholder="e.g. late meetings on weekdays" autocomplete="off">
+      <div class="hint">Picture it's 12 weeks from now and this didn't happen. What stopped it?</div></div>
+    <div class="field"><label class="flabel" for="gPlan">If that happens, I will… (optional)</label><input type="text" id="gPlan" data-gd="plan" maxlength="120" value="${esc(d.plan || "")}" placeholder="e.g. run at lunch instead" autocomplete="off"></div>
+    <div class="field"><label class="flabel" for="gLetter">A note to yourself at the end (optional)</label><textarea id="gLetter" data-gd="letter" maxlength="600" rows="3" placeholder="Why this matters to you now. You'll see it when the 12 weeks are up.">${esc(d.letter || "")}</textarea></div>
     ${S.sheet.edit ? "" : `<div class="field"><span class="flabel">Start</span><div class="seg" role="group" aria-label="Start">${[[false, "This week"], [true, "Next Monday"]].map(([v, l]) => `<button aria-pressed="${!!d.startNext === v}" data-act="gStart" data-v="${v ? 1 : 0}">${l}</button>`).join("")}</div><span class="hint">Ends ${esc(fmtShort(end))}.</span></div>`}
     <div class="row"><button class="btn quiet" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="gSave">${S.sheet.edit ? "Save" : "Start this goal"}</button></div></div>`;
 }
@@ -3179,6 +3195,25 @@ function htPaint(off) {
 }
 addEventListener("scroll", () => { if (S.ht) htPaint(); }, true);
 addEventListener("resize", () => { if (S.ht) htPaint(); });
+/* ============ shortcuts (Siri, the Shortcuts app, home-screen icons) and keys ============ */
+const SHORTCUTS = [["Close the day", "/?checkin=1"], ["Add a task", "/?do=add"], ["Pick something fun", "/?do=fun"], ["This week's plan", "/?tab=week"], ["Sunday review", "/?tab=review"]];
+function rShortcuts() {
+  const base = location.origin;
+  return `<div class="in"><div class="grab"></div><button class="sheetx" data-act="closeSheet" aria-label="Close">✕</button>
+    <h2 style="margin:0">Shortcuts</h2>
+    <p class="hint" style="margin:4px 0 12px">On iPhone: open the Shortcuts app → + → Add Action → “Open URLs”, paste a link, then name the shortcut (say, “Close the day”) to use it with Siri. On Android, long-press the Compass icon.</p>
+    <ul class="sclist">${SHORTCUTS.map(([n, u]) => `<li><span><b>${esc(n)}</b><small>${esc(base + u)}</small></span><button class="btn small" data-act="scCopy" data-v="${esc(base + u)}">Copy</button></li>`).join("")}</ul>
+    ${!matchMedia("(pointer:coarse)").matches ? `<h3>Keys on a computer</h3><ul class="keys">${[["1–5", "Today, Week, Tasks, Review, Compass"], ["n", "New task"], ["e", "Close the day"], ["?", "This list"]].map(([k, v]) => `<li><kbd>${k}</kbd>${esc(v)}</li>`).join("")}</ul>` : ""}</div>`;
+}
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.target.closest("input,textarea,select,[contenteditable]") || !onboarded() || S.ht) return;
+  if (S.sheet && e.key !== "?") return;
+  const tabs = ["today", "week", "tasks", "review", "compass"];
+  if (/^[1-5]$/.test(e.key)) { S.tab = tabs[+e.key - 1]; S.sheet = null; pageScrollTo(0, 0); render(); e.preventDefault(); }
+  else if (e.key === "n") { S.tab = "tasks"; render(); setTimeout(() => { const f = $("#qAdd"); if (f) f.focus(); }, 30); e.preventDefault(); }
+  else if (e.key === "e") { S.tab = "today"; S.selDay = todayKey(); openCheckin(); render(); e.preventDefault(); }
+  else if (e.key === "?") { S.sheet = S.sheet && S.sheet.type === "shortcuts" ? null : { type: "shortcuts" }; render(); e.preventDefault(); }
+});
 function openCheckin() { S.ck = ckBuild(); if (!S.ck.cards.length) S.ck.step = "tomorrow"; S.sheet = { type: "checkin" }; }
 /* change one day's record, whichever week it's in */
 function ckWith(k, fn) { const m = S.viewMon, sd = S.selDay; S.viewMon = monday(parse(k)); S.selDay = k; try { fn(); } finally { S.viewMon = m; S.selDay = sd; } }
@@ -3211,7 +3246,7 @@ function ckCardHtml(card, n, total) {
   }
   const c = compById(card.cid); if (!c) return "";
   const q = card.kind === "w" ? `${esc(c.name)}: ${hFmt(card.have)} of ${c.target}${c.unit || ""} this week. Did you do it ${card.y ? "yesterday" : "today"}?` : card.y ? "Did it happen yesterday?" : "Did it happen?";
-  return `<div class="ckcard" id="ckCard" draggable="false" data-kind="${card.kind}" style="--vc:${valColor(c.value)}"><span class="ckwhen">${when}${card.t ? ` · ${t12(card.t)}` : ""}</span><b class="cknm">${esc(c.name)}</b><span class="ckv"><i class="vdot" style="background:${valColor(c.value)}" aria-hidden="true"></i>${esc(valueName(c.value))}</span><p class="ckq">${q}</p></div>`;
+  return `<div class="ckcard" id="ckCard" draggable="false" data-kind="${card.kind}" style="--vc:${valColor(c.value)}"><span class="ckwhen">${when}${card.t ? ` · ${t12(card.t)}` : ""}</span><b class="cknm">${esc(c.name)}</b>${c.cue ? `<span class="ckcue">After ${esc(c.cue)}</span>` : ""}<span class="ckv"><i class="vdot" style="background:${valColor(c.value)}" aria-hidden="true"></i>${esc(valueName(c.value))}</span><p class="ckq">${q}</p></div>`;
 }
 function rCheckin() {
   const st = S.ck; if (!st) return "";
@@ -4401,7 +4436,7 @@ function rToday(id) {
     .sort((x, y) => (x.t ? 0 : 1) - (y.t ? 0 : 1) || (x.t < y.t ? -1 : x.t > y.t ? 1 : 0) || KORD[x.kind] - KORD[y.kind] || x.i - y.i);
   const pending = items.filter(x => !x.done), doneL = items.filter(x => x.done);
   const dayRow = x => { const c = x.c, have = compHave(c, w, id), u = c.unit || "";
-    const sub = [x.t ? `<span class="dtime">${t12(x.t)}</span>` : "", x.kind !== "daily" ? `<span class="ktag ${x.kind}">${x.kind === "weekly" ? (everyN(c) > 1 ? everyText(c) : "Weekly") : "Monthly"}</span>` : "", x.kind !== "daily" ? fmtDur(durOf(c) / 60) : "", c.dflt && c.cadence === "daily" ? "Counts by default" : "", esc(c.note || "")].filter(Boolean).join('<span class="sep"> · </span>');
+    const sub = [x.t ? `<span class="dtime">${t12(x.t)}</span>` : "", x.kind !== "daily" ? `<span class="ktag ${x.kind}">${x.kind === "weekly" ? (everyN(c) > 1 ? everyText(c) : "Weekly") : "Monthly"}</span>` : "", x.kind !== "daily" ? fmtDur(durOf(c) / 60) : "", c.dflt && c.cadence === "daily" ? "Counts by default" : "", c.cue ? `After ${esc(c.cue)}` : "", esc(c.note || "")].filter(Boolean).join('<span class="sep"> · </span>');
     return `<button class="check dayrow ${x.kind}${x.done ? " isdone" : ""}" data-act="${x.act}" data-k="${esc(c.id)}" aria-pressed="${x.done}" style="--vc:${valColor(c.value)}"><span class="box"></span><span class="lbl"><span class="nm">${esc(c.name)}</span>${sub ? `<small>${sub}</small>` : ""}</span><span class="tail">${hFmt(have)}${u}/${c.target}${u}</span></button>`; };
   const dayHtml = items.length ? `<h3>${S.selDay === tk ? "Your day" : WD[di] + "'s list"} <span class="h3n">${doneL.length} of ${items.length} done</span></h3>
     ${pending.length ? `<div class="card daylist">${pending.map(dayRow).join("")}</div>` : `<div class="card pad alldone">All done for ${S.selDay === tk ? "today" : WD[di]}. Nicely held.</div>`}
@@ -4425,7 +4460,7 @@ function rToday(id) {
   ${(() => { const logW = weekly.filter(c => !plannedOn(c, di)), logM = monthly.filter(c => !(mpToday[c.id] && mpToday[c.id].date === S.selDay));
     return `${logW.length ? `<h3>${plannedList.length ? "Anytime this week" : "Log for the week"}</h3><div class="card loglist">${logW.map(c => logRow(c, compHave(c, w, id))).join("")}</div>${!weekly.some(c => planDays(c).length) ? `<p class="hint" style="margin-top:8px">Give these a day in <button class="linkish" data-act="gotoPlan">Week → Plan</button>.</p>` : ""}` : ""}
   ${logM.length ? `<h3>This month</h3><div class="card loglist">${logM.map(c => logRow(c, compHave(c, w, id))).join("")}</div>` : ""}`; })()}
-  ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3><div class="chips">${fun.map(c => funChip(c, (w.c || {})[c.id] || 0)).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it, − to take one back.</p>` : ""}
+  ${fun.length ? `<h3>Fun menu${funCount ? ` · ${funCount} this week` : ""}</h3>${S.spin && compById(S.spin) ? `<div class="spin card pad"><span class="flabel">How about</span><b>${esc(compById(S.spin).name)}</b><div class="row" style="justify-content:flex-start;gap:8px"><button class="btn small" data-act="inc" data-k="${esc(S.spin)}">Doing it</button><button class="btn small quiet" data-act="spin">Another</button><button class="btn small quiet" data-act="spinX">Not now</button></div></div>` : fun.length > 1 ? `<button class="linkish spinb" data-act="spin">Got some free time? Pick one for me</button>` : ""}<div class="chips">${fun.map(c => funChip(c, (w.c || {})[c.id] || 0)).join("")}</div><p class="hint" style="margin-top:8px">Never scored. Tap to savour it, − to take one back.</p>` : ""}
   <h3>Journal · three lines${jc ? ` · ${compHave(jc, w, id)}/${jc.target} days` : ""}</h3>
   <div class="card">
     <div class="jf"><label for="j-win">Win</label><textarea id="j-win" data-j="win" rows="1" placeholder="One thing that moved forward">${esc(j.win)}</textarea></div>
@@ -5224,6 +5259,22 @@ function rCalVals() {
     <p class="hint" style="margin:8px 0 0">Your choices are remembered for next time. The calendar file itself isn't kept.</p>
     <button class="btn" style="margin-top:12px" data-act="calvAgain">Choose another file</button>`;
 }
+/* one of your own lines from the same week a year ago */
+function lastYearLine() {
+  const id = wid(addDays(monday(new Date()), -364)), w = anyWeek(id); if (!w) return "";
+  const lines = Object.keys(w.days || {}).sort().map(k => (w.days[k].j || {}).win).filter(x => x && String(x).trim());
+  const felt = w.r && w.r.felt ? FELT_WORDS[w.r.felt - 1] : "";
+  if (!lines.length && !felt) return "";
+  return `<div class="card pad lastyear"><span class="flabel">This week last year</span>${lines.length ? `<p>“${esc(String(lines[0]).slice(0, 200))}”</p>` : ""}${felt ? `<small>The week felt ${esc(felt.toLowerCase())}.</small>` : ""}</div>`;
+}
+/* restoring vs draining floors this week, when they're tagged */
+function energyLine(id) {
+  const w = anyWeek(id); if (!w) return "";
+  let r = 0, d = 0; activeComps(id, w).forEach(c => { if (!c.energy) return; const h = compHave(c, w, id); if (c.energy === "restore") r += h; else d += h; });
+  if (!r && !d) return "";
+  const tilt = d > r * 2 && d >= 4 ? " A draining week. One restoring floor next week would balance it." : r >= d ? " A good balance." : "";
+  return `<p class="hint energy"><span class="en r">${hFmt(r)} restoring</span> · <span class="en d">${hFmt(d)} draining</span> this week.${tilt}</p>`;
+}
 function rReview(id, F, trips, sugg) {
   if (S.calv) return rCalVals();
   if (S.tune) return rTune();
@@ -5276,6 +5327,8 @@ function rReview(id, F, trips, sugg) {
   ${monthHasData(lastMonth()) || monthHasData(monthKey(new Date())) ? `<button class="textlink lklink" data-act="lookOpen" data-v="${monthHasData(lastMonth()) ? lastMonth() : monthKey(new Date())}">Look back by month ›</button>` : ""}
   <button class="textlink lklink" data-act="calvOpen">Your calendar vs your values ›</button>
   ${yearHasData(new Date().getFullYear()) || yearHasData(new Date().getFullYear() - 1) ? `<button class="textlink lklink" data-act="lookOpen" data-v="${checkinYear() || (yearHasData(new Date().getFullYear() - 1) && new Date().getMonth() < 2 ? new Date().getFullYear() - 1 : new Date().getFullYear())}">Look back by year ›</button>` : ""}
+  ${energyLine(id)}
+  ${lastYearLine()}
   ${insightsCard()}
   <h3>Felt-sense, last 12 weeks</h3>
   <div class="card pad">${spark()}</div>
@@ -5390,6 +5443,7 @@ function rCompass(id, F, trips, sugg) {
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Send feedback</b><div class="hint">Found a bug or have an idea? It goes straight to the maker.</div></div><button class="btn" data-act="fbOpen">Write</button></div>
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Restore from a backup</b><div class="hint">Choose a file you downloaded here. You'll see what's in it before anything changes.</div></div>
       <label class="btn" for="restoreFile">Choose file</label><input type="file" id="restoreFile" accept=".json,application/json" class="sr"></div>
+    <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Shortcuts</b><div class="hint">Open Compass straight to an action from Siri, the Shortcuts app or a home-screen icon.</div></div><button class="btn" data-act="scOpen">Show</button></div>
     <div class="row" style="padding:12px 0;border-top:1px solid var(--line)"><div><b>Hands-on tour</b><div class="hint">Two minutes, trying each thing yourself. Nothing you do in it is kept.</div></div><button class="btn" data-act="htStart">Start</button></div>
     <div class="row" style="padding:12px 0 0;border-top:1px solid var(--line)"><div><b>Run setup again</b><div class="hint">Your logs stay. Components you keep keep their history.</div></div><button class="btn" data-act="redoOb">Run setup</button></div>`)}
   </div>`;
@@ -5487,6 +5541,7 @@ function renderSheetBody() {
     </div></div>`;
     return;
   }
+  if (sh.type === "shortcuts") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Shortcuts">${rShortcuts()}</div>`; return; }
   if (sh.type === "checkin") { root.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet cksheet" role="dialog" aria-label="Close the day">${rCheckin()}</div>`; bindCkSwipe(); return; }
   if (sh.type === "vquiz") {
     const html = rVQuiz(); if (!html) { root.innerHTML = ""; return; }
@@ -5546,6 +5601,8 @@ function renderSheetBody() {
       <div class="fl"><label class="flabel">${c.cadence === "daily" ? "Days a week (floor)" : c.cadence === "monthly" ? "Times a month (floor)" : "Per week (floor)"}</label><div class="stepper"><button data-act="cTarget" data-d="-1" aria-label="Lower floor">−</button><span class="v">${c.target}${c.unit || ""}</span><button class="plus" data-act="cTarget" data-d="1" aria-label="Raise floor">+</button></div></div>
       <div class="fl"><label class="flabel" for="c-mins">Minutes each time</label><input type="number" inputmode="numeric" id="c-mins" data-c="mins" min="0" max="720" step="5" value="${Math.round((c.hours || 0) * 60)}"></div>
     </div>
+    <div class="fl"><label class="flabel" for="c-cue">After I… <span class="opt">Optional</span></label><input type="text" id="c-cue" data-c="cue" value="${esc(c.cue || "")}" maxlength="60" placeholder="e.g. pour my morning coffee"><div class="hint">Tie it to something you already do. Shown with the floor as “After you pour my morning coffee”.</div></div>
+    <div class="fl"><span class="flabel">How it leaves you <span class="opt">Optional</span></span><div class="seg" role="group" aria-label="How it leaves you">${[["", "Not sure"], ["restore", "Restored"], ["drain", "Drained"]].map(([v, l]) => `<button aria-pressed="${(c.energy || "") === v}" data-act="cEnergy" data-v="${v}">${l}</button>`).join("")}</div></div>
     <div class="fl"><label class="flabel" for="c-swap">Smaller version <span class="opt">Optional</span></label><input type="text" id="c-swap" data-c="swap" value="${esc(c.swap || "")}" maxlength="60" placeholder="e.g. a 5-minute video call"><div class="hint">On a hard day, doing this still counts for ${esc(valueName(c.value))}. The evening check-in offers it.</div></div>
     ${c.cadence === "daily" ? `<div class="row"><div><b>Counts unless I say otherwise</b><div class="hint">For things that usually happen, like sleep or staying off social media. Ticked each day by itself; untick on the days it didn't. The evening check-in skips it.</div></div><button class="switch" role="switch" aria-checked="${!!c.dflt}" data-act="cToggle" data-f="dflt" aria-label="Counts unless I say otherwise"></button></div>` : ""}
     <div class="row"><div><b>Safety net</b><div class="hint">Stays on during a Minimum Viable Week.</div></div><button class="switch" role="switch" aria-checked="${!!c.mvw}" data-act="cToggle" data-f="mvw" aria-label="Safety net"></button></div>
@@ -5942,10 +5999,13 @@ function byTime(list) {
 }
 /* extra library ideas stay behind "More ideas" until ticked; everything you chose, imported or tailored stays in view */
 const obShown = c => c.on || c.touched || c.imp || c.ai || !c.extra;
+/* floors that usually happen (sleep, staying off a screen or a habit) start as "counts unless I say otherwise" */
+const byDefaultLike = c => c.cadence === "daily" && !c.fun && /\b(sleep|slept|bed by|social media|screen|phone|caffeine|alcohol|drink|sugar|smok|no )/i.test(c.name || "");
 function obRow(c) {
   const tags = `${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}${c.imp ? ` <span class="tag imp">${esc(c.imp)}</span>` : ""}`;
   const sub = c.on ? `${freqWords(c)}${c.unit || !c.hours ? "" : ` · ${fmtDur(c.hours)}`}` : (c.note || cadenceText(c));
-  const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${tags}</span><small>${esc(sub)}</small></span></button>${c.on && S.obEdit !== c.id ? `<button class="obpen" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}">✎</button>` : ""}</div>`;
+  const dfl = c.on && byDefaultLike(c) ? `<button class="obdflt" data-act="obDflt" data-id="${esc(c.id)}" aria-pressed="${!!c.dflt}">${c.dflt ? "✓ " : ""}Counts unless I untick it</button>` : "";
+  const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${tags}</span><small>${esc(sub)}</small></span></button>${c.on && S.obEdit !== c.id ? `<button class="obpen" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}">✎</button>` : ""}</div>${dfl}`;
   if (!c.on || S.obEdit !== c.id) return `<div class="obrow" data-rid="${esc(c.id)}">${top}</div>`;
   return `<div class="obrow" data-rid="${esc(c.id)}">${top}<div class="obedit">
     ${c.unit ? "" : `<div class="seg">${["daily", "weekly", "monthly"].map(k => `<button data-act="obCad" data-id="${esc(c.id)}" data-v="${k}" aria-pressed="${c.cadence === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join("")}</div>`}
@@ -6113,7 +6173,7 @@ function renderOnboarding() {
 function finishOnboarding() {
   const d = S.ob.d; clearDraft();
   const cores = d.cores.filter(c => d.values.includes(c.value)), coreV = cores.map(c => c.value);
-  const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; delete x.sugg; delete x.starter; delete x.extra; return x; });
+  const components = d.comps.filter(c => c.on && (c.fun || d.values.includes(c.value))).map(c => { const x = Object.assign({}, c); delete x.on; delete x.touched; delete x.sugg; delete x.starter; delete x.extra; if (x.dflt) x.dfltFrom = todayKey(); else delete x.dflt; return x; });
   /* safety net defaults until the first Sunday review asks: sleep and the journal, plus one floor per Core */
   components.forEach(c => { if (c.id === "sleep" || c.id === "journal") c.mvw = true; });
   coreV.forEach(v => { const f = components.find(c => c.value === v && !c.fun); if (f && !components.some(c => c.value === v && c.mvw)) f.mvw = true; });
@@ -6143,8 +6203,8 @@ const TIPS = [
   { id: "floors", day: 0, t: "Floors, not ceilings", b: "Tap a floor when it happens. Clearing the small minimum for each value already counts as a good week; more is a bonus, never the bar." },
   { id: "tasks", day: 1, t: "Your tasks have a home", b: "Type tasks the way you'd say them, like “call mum fri 6pm” or “pay rent every month”. Compass reads the day, time and repeat. Swipe a task right to finish it, left to move it to tomorrow.", act: ["Open Tasks", "tipGo", "tasks"] },
   { id: "three", day: 2, t: "This week's three", b: "Pick up to three tasks that would make this week feel done. Three is what fits beside your floors.", act: ["Pick them", "tipGo", "tasks"] },
-  { id: "serves", day: 3, t: "Every task can serve a value", b: "Open a task and choose what it serves. Compass then shows which values your days actually go to, not just how much you did." },
-  { id: "plan", day: 4, t: "Plan tomorrow, tonight", b: "From 4 pm a small card offers two minutes to choose what tomorrow is for. Deciding when, the night before, makes plans more likely to happen.", src: "Gollwitzer & Sheeran 2006" },
+  { id: "close", day: 3, t: "Close the day in a minute", b: "In the evening, “Close the day” on Today asks one card at a time: swipe right for done, left for skipped, or say it all at once. Then anything for tomorrow." },
+  { id: "dflt", day: 4, t: "Some floors can count by default", b: "For things that usually happen, like sleep or staying off social media: open the floor and turn on “Counts unless I say otherwise”. Then you only untick the days it didn't happen.", act: ["Open my floors", "tipGo", "compass"] },
   { id: "review", day: 5, t: "A short review on Sunday", b: "A few quiet minutes: which values held, how the week felt, what to protect next week. Missed days are information, not failure.", act: ["See the review", "tipGo", "review"] },
   { id: "partner", day: 6, t: "Someone in your corner", b: "Invite a friend to see a summary of your week and cheer you on. Telling someone how you're doing helps you keep going.", src: "Harkin et al. 2016", act: ["Invite someone", "tipGo", "compass"] },
 ];
@@ -6234,6 +6294,7 @@ document.addEventListener("click", e => {
     case "vqRedo": if (S.vq) S.vq = { i: 0, a: {}, l: {}, from: S.vq.from }; renderSheet(); return;
     case "vqUse": { vqApply(); if (S.ob) { renderOnboarding(); renderSheet(); pageScrollTo(0, 0); return; } break; }
     case "obWeekAdv": S.obWeekAdv = !S.obWeekAdv; updateOb(); return;
+    case "obDflt": { const c = ob.comps.find(x => x.id === b.dataset.id); if (c) { c.dflt = !c.dflt; c.touched = true; } updateOb(); return; }
     case "obMore": { const v = b.dataset.v; S.obMore = S.obMore || {}; S.obMore[v] = !S.obMore[v]; updateOb(); return; }
     case "obStarter": { const d = starterDraft(b.dataset.v, ob ? ob.goal : ""); if (!d) return; S.ob = { step: 3, d }; S.obMore = {}; S.obEdit = null; pageScrollTo(0, 0); renderOnboarding(); return; }
     case "obJump": { S.obEdit = null; S.obFrozen = null; S.ob.step = +b.dataset.step; pageScrollTo(0, 0); renderOnboarding(); return; }
@@ -6350,6 +6411,10 @@ document.addEventListener("click", e => {
     case "htNext": if (S.ht) htGo(S.ht.i + 1); return;
     case "htEnd": htEnd(); return;
     case "htType": S.qDraft = "call mum fri 6pm"; S.qIgnore = new Set(); render(); { const f = $("#qAdd"); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } } return;
+    case "scOpen": S.sheet = { type: "shortcuts" }; break;
+    case "scCopy": { const v = b.dataset.v; (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(() => toast("Link copied"), () => { prompt("Copy this link", v); }); return; }
+    case "spin": { const fun = comps().filter(c => c.fun && !c.paused), pool = fun.filter(c => c.id !== S.spin); const pick = (pool.length ? pool : fun)[Math.floor(Math.random() * (pool.length || fun.length))]; S.spin = pick ? pick.id : null; break; }
+    case "spinX": S.spin = null; break;
     case "uExp": S.uExp = S.uExp || {}; S.uExp[b.dataset.k] = true; break;
     case "qHelp": S.qHelp = !qHelpOpen(); break;
     case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; }); break;
@@ -6417,8 +6482,10 @@ document.addEventListener("click", e => {
       const tEl = $("#gTitle"), wEl = $("#gWhen"); if (tEl) d.t = tEl.value; if (wEl) d.when = wEl.value;
       const t = String(d.t || "").trim().slice(0, 80); if (!t) { toast("Name the goal first."); const f = $("#gTitle"); if (f) f.focus(); return; }
       const when = String(d.when || "").trim().slice(0, 160);
-      if (S.sheet.edit) editGoal(d.id, g => { g.t = t; g.v = d.v; g.when = when; });
-      else { if (activeGoals().length >= GOAL_MAX) { toast("Three at a time is the most that gets real attention."); return; } editSettings(st => { st.goals = (st.goals || []).concat({ id: d.id, t, v: d.v, when, start: dkey(addDays(monday(new Date()), d.startNext ? 7 : 0)), st: "on", wk: {}, at: Date.now() }); }); stat("goal"); toast("Goal set. What's the very next step?"); }
+      ["gObst", "gPlan", "gLetter"].forEach(id => { const el = $("#" + id); if (el) d[{ gObst: "obst", gPlan: "plan", gLetter: "letter" }[id]] = el.value; });
+      const extra = { obst: String(d.obst || "").trim().slice(0, 120), plan: String(d.plan || "").trim().slice(0, 120), letter: String(d.letter || "").trim().slice(0, 600) };
+      if (S.sheet.edit) editGoal(d.id, g => { g.t = t; g.v = d.v; g.when = when; Object.assign(g, extra); });
+      else { if (activeGoals().length >= GOAL_MAX) { toast("Three at a time is the most that gets real attention."); return; } editSettings(st => { st.goals = (st.goals || []).concat({ id: d.id, t, v: d.v, when, ...extra, start: dkey(addDays(monday(new Date()), d.startNext ? 7 : 0)), st: "on", wk: {}, at: Date.now() }); }); stat("goal"); toast("Goal set. What's the very next step?"); }
       const wasEdit = !!S.sheet.edit; S.sheet = { type: "goal", id: d.id }; render(); setTimeout(() => { const f = $("#gStepIn"); if (f && !wasEdit && !matchMedia("(pointer:coarse)").matches) f.focus(); }, 60); return;
     }
     case "gOpen": S.sheet = { type: "goal", id: b.dataset.id }; break;
@@ -6638,6 +6705,7 @@ document.addEventListener("click", e => {
     case "customComp": { const v = S.sheet.value; openComp(v === "__fun" ? { id: "fun-" + uidGen(), fun: true, name: "", cadence: "weekly", target: 0, hours: 0 } : { id: "c-" + uidGen(), value: v, name: "", cadence: "weekly", target: 1, hours: 0.5 }, true); break; }
     case "closeSheet": if (S.sheet && S.sheet.type === "item") { clearTimeout(S.ivT); ["iTitle", "iNote"].forEach(x => { const el = $("#" + x); if (el) itemField(el); }); }
       if (S.sheet && S.sheet.type === "auth") { S.sheet = null; renderSheet(); return; } { const back = S.sheet && S.sheet.fromTask && !S.sheet.fromMenu && inboxItems().some(i => !S.sortSkip.has(i.id)); S.sheet = back ? { type: "sort" } : null; S.confirm = null; if (S.ob) { renderSheet(); return; } break; }
+    case "cEnergy": { const c = S.sheet.draft; if (b.dataset.v) c.energy = b.dataset.v; else delete c.energy; renderSheet(); return; }
     case "cToggle": { const c = S.sheet.draft, f = b.dataset.f; c[f] = !c[f]; if (f === "dflt") { if (c.dflt) c.dfltFrom = todayKey(); else delete c.dfltFrom; } if (f === "fun" && c.fun) { c.target = 0; delete c.block; } if (f === "fun" && !c.fun) { c.target = 1; c.value = c.value || (valueList()[0] || {}).id; } break; }
     case "cCad": { const c = S.sheet.draft; c.cadence = b.dataset.v; const max = c.cadence === "monthly" ? 4 : 7; c.target = Math.min(max, Math.max(1, c.target || 1)); if (c.cadence !== "weekly") { delete c.every; delete c.from; c.people = false; } break; }
     case "cTarget": { const c = S.sheet.draft, max = c.cadence === "monthly" ? 4 : c.cadence === "daily" ? 7 : (c.unit ? 40 : 14), st = c.step || 1; c.target = Math.max(st, Math.min(max, (c.target || 0) + (+b.dataset.d) * st)); break; }

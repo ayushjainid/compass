@@ -89,6 +89,7 @@ jobs:
     timeout-minutes: 15
     env:
       HAS_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+      HAS_CF: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -105,3 +106,15 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
           npx -y firebase-tools@15 deploy --only hosting,firestore:rules --project compass-ayush --non-interactive --force
           rm -f "$RUNNER_TEMP/sa.json"
+      - name: Deploy the reminders Worker
+        if: env.HAS_CF == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        working-directory: worker
+        run: |
+          npm ci --no-audit --no-fund
+          npx wrangler deploy
+      - name: Reminders Worker not deployed (no Cloudflare token yet)
+        if: env.HAS_CF != 'true'
+        run: echo "::notice::Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets to deploy the reminders Worker automatically."
