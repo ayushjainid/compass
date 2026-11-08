@@ -12,6 +12,7 @@ import { localDay, localMonday, validTz } from "./time.js";
 import { openToday, listNames, signAction, weekId } from "./today.js";
 import { handleFeed } from "./feed.js";
 import { handleAction } from "./act.js";
+import { mailWork } from "./mail.js";
 import { pingText, digestText, nextDigest, quietUntil, hourKey, PER_HOUR, STALE_DIGEST_MS, STALE_PING_MS } from "./social.js";
 
 /** The evening reminder says what's left today and, when it's one or two things, offers to tick them
@@ -71,6 +72,7 @@ export async function runOnce(env, now = Date.now(), fetchFn = fetch, log = cons
   let r;
   try { r = await work(env, db, now, fetchFn, log); }
   catch (e) { try { await heartbeat(db, now, null, e); } catch (e2) { log("heartbeat failed: " + e2.message); } throw e; }
+  try { const m = await mailWork(env, db, now, fetchFn, log); if (m.mailed) r = Object.assign({}, r, m); } catch (e) { log("mail: " + e.message); }
   try { await heartbeat(db, now, r); } catch (e) { log("heartbeat failed: " + e.message); }
   return r;
 }

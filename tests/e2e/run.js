@@ -30,6 +30,7 @@ const JOBS = [
   ["checkin.js", PHONE], ["checkin.js", SMALL], ["checkin.js", DARK], ["checkin.js", DESK],
   ["standalone.js", PHONE], ["standalone.js", SMALL],
   ["tune.js", PHONE], ["tune.js", DARK], ["tune.js", DESK],
+  ["together.js", PHONE], ["together.js", DESK],
   ["extras.js", PHONE], ["extras.js", DESK], ["extras.js", DARK],
   ["handson.js", PHONE], ["handson.js", DESK], ["handson.js", DARK], ["handson.js", HOME],
   ["say.js", PHONE], ["say.js", DESK], ["calvals.js", PHONE], ["calvals.js", DESK],

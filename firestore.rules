@@ -32,7 +32,7 @@ service cloud.firestore {
     match /notify/{uid} {
       allow read, delete: if signedIn(uid);
       allow create, update: if signedIn(uid)
-        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'subs', 'lost', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'nextTest', 'test', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk', 'names', 'social', 'socH', 'socN', 'morn', 'nextMorn', 'mornDay', 'ckDay'])
+        && request.resource.data.keys().hasOnly(['on', 'optOut', 'sub', 'subs', 'lost', 'tz', 'eve', 'rev', 'nextEve', 'nextRev', 'nextTest', 'test', 'last', 'ign', 'revDone', 'sentDay', 'sentRev', 'fadeAsk', 'names', 'social', 'socH', 'socN', 'morn', 'nextMorn', 'mornDay', 'ckDay', 'eveAuto', 'mail', 'mailTo', 'nextMail', 'mailDay'])
         && (!('subs' in request.resource.data) || (request.resource.data.subs is map && request.resource.data.subs.size() <= 8))
         && (!('sub' in request.resource.data) || request.resource.data.sub == null
             || (request.resource.data.sub is map && request.resource.data.sub.endpoint is string && request.resource.data.sub.endpoint.size() < 1000))
@@ -141,9 +141,10 @@ service cloud.firestore {
       match /items/{iid} {
         allow read, delete: if isMember(lid);
         allow create, update: if isMember(lid)
-          && request.resource.data.keys().hasOnly(['t', 'n', 'open', 'st', 'due', 'tm', 'rep', 'wk', 'sub', 'by', 'who', 'at', 'up', 'upBy', 'doneAt', 'doneBy', 'ord', 'moves', 'v', 'was', 'nz', 'g'])
+          && request.resource.data.keys().hasOnly(['t', 'n', 'open', 'st', 'due', 'tm', 'rep', 'wk', 'sub', 'by', 'who', 'at', 'up', 'upBy', 'doneAt', 'doneBy', 'ord', 'moves', 'v', 'was', 'nz', 'g', 'tk', 'fl'])
           && request.resource.data.t is string && request.resource.data.t.size() >= 1 && request.resource.data.t.size() <= 500
           && request.resource.data.open is bool
+          && (!('tk' in request.resource.data) || (request.resource.data.tk is map && request.resource.data.tk.size() <= 70))
           && (!('n' in request.resource.data) || request.resource.data.n == null || (request.resource.data.n is string && request.resource.data.n.size() <= 4000))
           && (!('sub' in request.resource.data) || request.resource.data.sub == null || (request.resource.data.sub is list && request.resource.data.sub.size() <= 50));
       }

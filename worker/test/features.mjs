@@ -149,5 +149,24 @@ ok("later Sundays don't", !/look-back/.test(dr.send.body), dr.send);
 dr = decide("rev", "alice", { on: true, sub, tz: "Asia/Kolkata", rev: "18:00", nextRev: Date.parse("2027-01-03T12:30:00Z") }, Date.parse("2027-01-03T12:30:10Z"));
 ok("January's first Sunday names December", /Your December look-back is ready too/.test(dr.send.body), dr.send);
 
+/* ---- the Sunday email ---- */
+{
+  const { mailBody, mailWork } = await import("../src/mail.js");
+  const m = mailBody({ days: { "2026-11-02": { a: { read: true, gym: false }, j: { win: "Walked <home> with Dad" } }, "2026-11-03": { a: { read: true } } }, c: { gym: 2 } }, "https://app.test");
+  ok("email: counts what was logged, in plain words", /^4 things logged across 2 days this week\./.test(m.text), m.text);
+  ok("…quotes your own lines, escaped in the HTML", /Walked <home> with Dad/.test(m.text) && /Walked &lt;home&gt; with Dad/.test(m.html) && !/<home>/.test(m.html));
+  ok("…links to the review and says how to turn it off", /https:\/\/app\.test\/\?tab=review&from=mail/.test(m.text) && /Compass → Reminders/.test(m.text));
+  const sent = [], patched = [];
+  const db = { due: async () => [{ name: "n/u1", id: "u1", data: { mail: true, mailTo: "me@example.com", tz: "UTC", rev: "18:00", nextMail: Date.parse("2026-11-08T18:00:00Z") } }, { name: "n/u2", id: "u2", data: { mail: true, mailTo: "not an email", tz: "UTC", nextMail: Date.parse("2026-11-08T18:00:00Z") } }],
+    patch: async w => patched.push(...w), getMany: async ps => Object.fromEntries(ps.map(p => [p, { days: {}, c: {} }])) };
+  const fetchFn = async (url, init) => { sent.push({ url, body: JSON.parse(init.body) }); return { ok: true, status: 200 }; };
+  let r = await mailWork({}, db, Date.parse("2026-11-08T18:00:30Z"), fetchFn, () => {});
+  ok("email: off without a Resend key", r.mailed === 0 && !sent.length);
+  r = await mailWork({ RESEND_API_KEY: "k", MAIL_FROM: "Compass <hi@x.test>" }, db, Date.parse("2026-11-08T18:00:30Z"), fetchFn, () => {});
+  ok("…sends to the address they gave, only that one", r.mailed === 1 && sent.length === 1 && sent[0].body.to[0] === "me@example.com" && sent[0].url === "https://api.resend.com/emails", sent);
+  ok("…and books next Sunday for each", patched.length === 2 && patched.every(p => p.fields.nextMail && new Date(p.fields.nextMail).toISOString() === "2026-11-15T18:00:00.000Z"), patched.map(p => p.fields));
+}
+
 const f = R.filter(x => !x.pass); f.forEach(x => console.log("  FAIL", x.n, String(JSON.stringify(x.i)).slice(0, 500)));
 console.log(`features: ${R.length - f.length}/${R.length} passed`); process.exit(f.length ? 1 : 0);
+
