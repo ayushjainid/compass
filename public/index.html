@@ -143,7 +143,7 @@ h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute
 
 /* day strip */
 .strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
-.strip button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;border-radius:10px;font-variant-numeric:tabular-nums}
+.strip button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;min-height:48px;min-width:40px;border-radius:10px;font-variant-numeric:tabular-nums}
 .strip .wd{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
 .strip .ring{--p:0;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--sunk) 0);font-weight:600;font-size:13px;transition:--p .4s}
 .strip .ring span{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center}
@@ -3752,10 +3752,10 @@ function qChipsHtml() {
 }
 /* "what can I type?": open on its own until the first few tasks are in, then only from the ? button */
 const QHELP = [["fri 6pm", "a day and a time", "call mum fri 6pm"], ["every week", "repeats", "water plants every week"], ["#groceries", "goes into that list", "oat milk #groceries"], ["@sam", "gives it to someone on a shared list", "book tickets @sam"], ["*", "one of this week's three", "finish the deck *"]];
-function qHelpOpen() { if (S.ht) return false; if (S.qHelp != null) return S.qHelp; const st = settings(); return !st.qhelp && (st.qadds || 0) < 3 && !S.qDraft; }
+function qHelpOpen() { if (S.ht) return false; if (S.qHelp != null) return S.qHelp; const st = settings(); if (st.qhelp && !st.qhelp2 && !S.qDraft) return true; return !st.qhelp && (st.qadds || 0) < 3 && !S.qDraft; }
 function qHelpHtml() {
   return `<div class="qhelp" id="qHelp"><ul>${QHELP.map(([k, v, ex]) => `<li><button class="qex" data-act="qTry" data-v="${esc(ex)}"><code>${esc(k)}</code></button><span>${esc(v)}</span></li>`).join("")}</ul>
-    <div class="qhelpf"><span>Tap one to try it. Anything Compass reads becomes a chip you can tap to undo.</span><button class="linkish" data-act="qHelpOff">Got it</button></div></div>`;
+    <div class="qhelpf"><span>Tap one to try it. Anything Compass reads becomes a chip you can tap to undo. Swipe a task right to finish it, left for tomorrow.</span><button class="linkish" data-act="qHelpOff">Got it</button></div></div>`;
 }
 function refreshChips() { const box = $("#qChips"); if (!box) return; const f = $("#qAdd"); S.qDraft = f ? f.value : S.qDraft; box.innerHTML = qChipsHtml(); }
 function capBox(id, placeholder) {
@@ -4543,8 +4543,9 @@ function rToday(id) {
   const dayRow = x => { const c = x.c, have = compHave(c, w, id), u = c.unit || "";
     const sub = [x.t ? `<span class="dtime">${t12(x.t)}</span>` : "", x.kind !== "daily" ? `<span class="ktag ${x.kind}">${x.kind === "weekly" ? (everyN(c) > 1 ? everyText(c) : "Weekly") : "Monthly"}</span>` : "", x.kind !== "daily" ? fmtDur(durOf(c) / 60) : "", c.dflt && c.cadence === "daily" ? "Counts by default" : "", c.tog ? (togWho(c, S.selDay).length ? `${esc(togWho(c, S.selDay).join(" and "))} ticked it` : "Together") : "", c.cue ? `After ${esc(c.cue)}` : "", esc(c.note || "")].filter(Boolean).join('<span class="sep"> · </span>');
     return `<button class="check dayrow ${x.kind}${x.done ? " isdone" : ""}" data-act="${x.act}" data-k="${esc(c.id)}" aria-pressed="${x.done}" style="--vc:${valColor(c.value)}"><span class="box"></span><span class="lbl"><span class="nm">${esc(c.name)}</span>${sub ? `<small>${sub}</small>` : ""}</span><span class="tail">${hFmt(have)}${u}/${c.target}${u}</span></button>`; };
+  if (S.selDay === tk) document.title = pending.length && items.length ? `Compass · ${pending.length} left` : "Compass";
   const dayHtml = items.length ? `<h3>${S.selDay === tk ? "Your day" : WD[di] + "'s list"} <span class="h3n">${doneL.length} of ${items.length} done</span></h3>
-    ${pending.length ? `<div class="card daylist">${pending.map(dayRow).join("")}</div>` : `<div class="card pad alldone">All done for ${S.selDay === tk ? "today" : WD[di]}. Nicely held.</div>`}
+    ${pending.length ? `<div class="card daylist">${pending.map(dayRow).join("")}</div>` : `<div class="card pad alldone">${S.selDay === tk ? `Everything's done. Enjoy the rest of your ${new Date().getHours() >= 17 ? "evening" : "day"}.` : `All done for ${WD[di]}. Nicely held.`}</div>`}
     ${doneL.length ? `<div class="donefold${S.doneOpen ? " open" : ""}"><button class="donehead" data-act="doneFold" aria-expanded="${!!S.doneOpen}"><span class="dck">✓</span><span class="dtx"><b>${doneL.length} done</b>${S.doneOpen ? "" : `<small>${doneL.map(x => esc(x.c.name)).join(", ")}</small>`}</span><span class="chev" aria-hidden="true"></span></button>${S.doneOpen ? `<div class="donelist">${doneL.map(dayRow).join("")}</div>` : ""}</div>` : ""}` : "";
   const fun = comps().filter(c => c.fun);
   const funCount = fun.reduce((s, c) => s + ((w.c || {})[c.id] || 0), 0);
@@ -6113,7 +6114,7 @@ const byDefaultLike = c => c.cadence === "daily" && !c.fun && /\b(sleep|slept|be
 function obRow(c) {
   const tags = `${c.ai ? ' <span class="tag ai">Tailored</span>' : ""}${c.imp ? ` <span class="tag imp">${esc(c.imp)}</span>` : ""}`;
   const sub = c.on ? `${freqWords(c)}${c.unit || !c.hours ? "" : ` · ${fmtDur(c.hours)}`}` : (c.note || cadenceText(c));
-  const dfl = c.on && byDefaultLike(c) ? `<button class="obdflt" data-act="obDflt" data-id="${esc(c.id)}" aria-pressed="${!!c.dflt}">${c.dflt ? "✓ " : ""}Counts unless I untick it</button>` : "";
+  const dfl = c.on && byDefaultLike(c) ? `<button class="obdflt" data-act="obDflt" data-id="${esc(c.id)}" aria-pressed="${!!c.dflt}">${c.dflt ? "✓ " : ""}Counts unless I untick it${/sleep|slept/i.test(c.name) && !c.dflt ? " · recommended" : ""}</button>` : "";
   const top = `<div class="obtop"><button class="check" data-act="obComp" data-id="${esc(c.id)}" aria-pressed="${!!c.on}"><span class="box"></span><span class="lbl"><span>${esc(c.name)}${tags}</span><small>${esc(sub)}</small></span></button>${c.on && S.obEdit !== c.id ? `<button class="obpen" data-act="obEdit" data-id="${esc(c.id)}" aria-label="Adjust ${esc(c.name)}">✎</button>` : ""}</div>${dfl}`;
   if (!c.on || S.obEdit !== c.id) return `<div class="obrow" data-rid="${esc(c.id)}">${top}</div>`;
   return `<div class="obrow" data-rid="${esc(c.id)}">${top}<div class="obedit">
@@ -6491,7 +6492,7 @@ document.addEventListener("click", e => {
     case "yDone": { const y = b.dataset.v; editSettings(st => { st.years = st.years || {}; st.years[y] = Object.assign({}, st.years[y], { done: todayKey() }); }); toast(`Here's to ${+y + 1}.`); S.lookback = null; pageScrollTo(0, 0); break; }
     case "yValues": { const yq = S.yq; if (!yq) return; startOnboarding(true); const d = S.ob && S.ob.d; if (d) { d.values = yq.picks.concat(d.values.filter(v => !VALUE_LIB.some(x => x.id === v))); d.cores = yq.stars.map(v => ({ value: v })); S.ob.step = 1; } S.yq = null; S.lookback = null; toast("Review the values, then continue to keep or adjust your floors."); pageScrollTo(0, 0); break; }
     case "ckOpen": openCheckin(); break;
-    case "ckYes": case "ckNo": { const el = $("#ckCard"); if (el && !reduced()) { el.classList.add(act === "ckYes" ? "fly-r" : "fly-l"); setTimeout(() => { ckAnswer(act === "ckYes"); renderSheet(); }, 170); return; } ckAnswer(act === "ckYes"); renderSheet(); return; }
+    case "ckYes": case "ckNo": { const el = $("#ckCard"), cd = S.ck && S.ck.cards[S.ck.i], nm = cd ? (cd.kind === "t" ? (findItem(cd.lid, cd.iid) || {}).t : (compById(cd.cid) || {}).name) : ""; if (nm) setTimeout(() => toast(`${act === "ckYes" ? "Done" : "Skipped"}: ${String(nm).slice(0, 40)}`, () => { ckBack(); renderSheet(); }), 200); if (el && !reduced()) { el.classList.add(act === "ckYes" ? "fly-r" : "fly-l"); setTimeout(() => { ckAnswer(act === "ckYes"); renderSheet(); }, 170); return; } ckAnswer(act === "ckYes"); renderSheet(); return; }
     case "ckBack": ckBack(); renderSheet(); return;
     case "ckSkipAll": { const st = S.ck; if (!st) return; while (st.step === "cards") ckAnswer(false); renderSheet(); return; }
     case "ckMove": { const it = findItem(b.dataset.l, b.dataset.id); if (it) { setDue(it, ckTomorrow()); toast(`On tomorrow: “${it.t.slice(0, 36)}”`); } renderSheet(); render(); return; }
@@ -6540,7 +6541,7 @@ document.addEventListener("click", e => {
     case "spinX": S.spin = null; break;
     case "uExp": S.uExp = S.uExp || {}; S.uExp[b.dataset.k] = true; break;
     case "qHelp": S.qHelp = !qHelpOpen(); break;
-    case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; }); break;
+    case "qHelpOff": S.qHelp = false; editSettings(st => { st.qhelp = 1; st.qhelp2 = 1; }); break;
     case "qTry": { S.qDraft = b.dataset.v; S.qHelp = false; render(); const f = $("#qAdd"); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } return; }
     case "iDone": {
       const lid = b.dataset.l, id = b.dataset.id, it = findItem(lid, id); if (!it) return;
@@ -6652,7 +6653,7 @@ document.addEventListener("click", e => {
       subscribe(nid); break;
     }
     case "day": S.selDay = k; break;
-    case "anchor": { let on; const cc = compById(k); const togWas = cc && cc.tog ? aOn(cc, ((anyWeek(curWid()) || {}).days || {})[S.selDay], S.selDay) : null; editWeek(w => { const d = dayObj(w, S.selDay); on = !(cc ? aOn(cc, d, S.selDay) : d.a[k]); d.a[k] = cc && cc.dflt ? on : on || undefined; if (d.a[k] === undefined) delete d.a[k]; }); if (cc && cc.tog) togWrite(cc, S.selDay, on ? 1 : -99); settleRow(b, on); if (on) stat("logged"); return; }
+    case "anchor": { let on; const cc = compById(k); const togWas = cc && cc.tog ? aOn(cc, ((anyWeek(curWid()) || {}).days || {})[S.selDay], S.selDay) : null; editWeek(w => { const d = dayObj(w, S.selDay); on = !(cc ? aOn(cc, d, S.selDay) : d.a[k]); d.a[k] = cc && cc.dflt ? on : on || undefined; if (d.a[k] === undefined) delete d.a[k]; }); if (cc && cc.tog) togWrite(cc, S.selDay, on ? 1 : -99); if (on) { try { if (navigator.vibrate) navigator.vibrate(10); } catch (e) {} } settleRow(b, on); if (on) stat("logged"); return; }
     case "doneFold": S.doneOpen = !S.doneOpen; break;
     case "cp": editWeek(w => { const d = dayObj(w, S.selDay); d.cp = d.cp === b.dataset.v ? null : b.dataset.v; }); break;
     case "inc": case "dec": {
