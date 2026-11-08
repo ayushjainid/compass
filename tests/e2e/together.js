@@ -23,7 +23,8 @@ const mon = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()
   await B.p.goto(link); await B.p.waitForTimeout(1500); await B.tap('.sheet [data-act=invYes]'); await settle(B, 900); await settle(A, 900);
   /* Ayush makes "Reach out to someone close" a floor they do together */
   await A.tap('[data-act=tab][data-t=compass]'); await A.tap('[data-act=cSec][data-k=values]'); await A.tap('[data-act=editComp][data-id=reach]'); await settle(A, 300);
-  ok('a floor can be done together with the people in a shared list', await A.p.locator('#c-tog option').count() === 2 && /With the people in “Home”/.test(await A.text('#c-tog')));
+  const opts = await A.p.locator('#c-tog option').evaluateAll(o => o.map(x => x.textContent));   /* a <select>'s innerText differs between engines */
+  ok('a floor can be done together with the people in a shared list', opts.length === 2 && opts.some(t => /With the people in “Home”/.test(t)), opts);
   await A.p.locator('#c-tog').selectOption(lid); await A.tap('.sheet [data-act=saveComp]'); await settle(A, 1300);
   st = await store();
   const reach = st['users/u1/docs/profile'].components.find(c => c.id === 'reach'), item = reach.tog && st[`lists/${lid}/items/${reach.tog.iid}`];
